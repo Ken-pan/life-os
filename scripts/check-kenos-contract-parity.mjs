@@ -17,6 +17,12 @@ import {
   KenosEntityRefSchema,
   KenosOutboxRecordSchema,
   KenosMutationEnvelopeSchema,
+  KenosWorkProjectSchema,
+  KenosWorkDeliverableSchema,
+  KenosWorkMeetingSchema,
+  KenosWorkDecisionSchema,
+  KenosWorkActionProposalSchema,
+  KenosConnectorRegistryEntrySchema,
 } from '../packages/contracts/src/kenos.ts'
 
 const root = process.cwd()
@@ -36,6 +42,12 @@ const schemaByContract = {
   outboxRecord: KenosOutboxRecordSchema,
   captureEnvelope: KenosCaptureEnvelopeSchema,
   commandFailure: KenosCommandFailureSchema,
+  workProject: KenosWorkProjectSchema,
+  workDeliverable: KenosWorkDeliverableSchema,
+  workMeeting: KenosWorkMeetingSchema,
+  workDecision: KenosWorkDecisionSchema,
+  workActionProposal: KenosWorkActionProposalSchema,
+  connectorRegistryEntry: KenosConnectorRegistryEntrySchema,
 }
 
 assert.equal(manifest.contractVersion, '1')

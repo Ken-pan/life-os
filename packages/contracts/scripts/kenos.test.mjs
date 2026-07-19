@@ -29,6 +29,19 @@ import {
   KenosPhase1ActionTypeValues,
   KenosRiskLevelValues,
   KenosSecurityDomainValues,
+  KenosWorkActionProposalSchema,
+  KenosWorkActionProposalStatusValues,
+  KenosWorkActionProposalTransitionSchema,
+  KenosWorkActionProposalTransitions,
+  KenosWorkDecisionSchema,
+  KenosWorkDecisionStatusValues,
+  KenosWorkDeliverableSchema,
+  KenosWorkDeliverableStatusValues,
+  KenosWorkPriorityValues,
+  KenosWorkProjectSchema,
+  KenosWorkProjectStatusValues,
+  KenosWorkMeetingSchema,
+  KenosConnectorRegistryEntrySchema,
 } from '../src/kenos.ts'
 
 const manifest = JSON.parse(readFileSync(new URL('../fixtures/kenos/v1/manifest.json', import.meta.url), 'utf8'))
@@ -48,6 +61,12 @@ const schemaByContract = {
   outboxRecord: KenosOutboxRecordSchema,
   captureEnvelope: KenosCaptureEnvelopeSchema,
   commandFailure: KenosCommandFailureSchema,
+  workProject: KenosWorkProjectSchema,
+  workDeliverable: KenosWorkDeliverableSchema,
+  workMeeting: KenosWorkMeetingSchema,
+  workDecision: KenosWorkDecisionSchema,
+  workActionProposal: KenosWorkActionProposalSchema,
+  connectorRegistryEntry: KenosConnectorRegistryEntrySchema,
 }
 
 function materialize(fixture) {
@@ -78,6 +97,12 @@ for (const [actual, expected, label] of [
 }
 assert.deepEqual(KenosOutboxTransitions, manifest.outboxTransitions, 'manifest drift: Outbox transitions')
 assert.deepEqual(KenosApprovalTransitions, manifest.approvalTransitions, 'manifest drift: Approval transitions')
+assert.deepEqual([...KenosWorkProjectStatusValues], manifest.workProjectStatuses, 'manifest drift: work project statuses')
+assert.deepEqual([...KenosWorkDeliverableStatusValues], manifest.workDeliverableStatuses, 'manifest drift: work deliverable statuses')
+assert.deepEqual([...KenosWorkDecisionStatusValues], manifest.workDecisionStatuses, 'manifest drift: work decision statuses')
+assert.deepEqual([...KenosWorkActionProposalStatusValues], manifest.workActionProposalStatuses, 'manifest drift: work action proposal statuses')
+assert.deepEqual([...KenosWorkPriorityValues], manifest.workPriorities, 'manifest drift: work priorities')
+assert.deepEqual(KenosWorkActionProposalTransitions, manifest.workActionProposalTransitions, 'manifest drift: work proposal transitions')
 assert.deepEqual(corpus.valid.map(({ id }) => id), manifest.validFixtureIds, 'valid fixture coverage drift')
 assert.deepEqual(corpus.invalid.map(({ id }) => id), manifest.invalidFixtureIds, 'invalid fixture coverage drift')
 
@@ -93,12 +118,14 @@ const unknownFieldResult = KenosActionRequestSchema.parse(unknownFieldFixture.va
 assert.equal('futureOptionalField' in unknownFieldResult, false, 'unknown additive fields must be accepted and ignored')
 
 for (const fixture of corpus.invalid) {
-  if (fixture.contract === 'serverAction' || fixture.contract === 'serverScenario' || fixture.contract === 'serverApproval') continue
+  if (fixture.contract === 'serverAction' || fixture.contract === 'serverScenario' || fixture.contract === 'serverApproval' || fixture.contract === 'serverWorkScenario') continue
   const value = materialize(fixture)
   const schema = fixture.contract === 'outboxTransition'
     ? KenosOutboxTransitionSchema
     : fixture.contract === 'approvalTransition'
       ? KenosApprovalTransitionSchema
+    : fixture.contract === 'workActionProposalTransition'
+      ? KenosWorkActionProposalTransitionSchema
     : schemaByContract[fixture.contract]
   assert.ok(schema, `no TypeScript schema for invalid fixture ${fixture.id}`)
   assert.equal(schema.safeParse(value).success, false, `${fixture.id} should fail TypeScript validation`)

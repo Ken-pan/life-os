@@ -3,145 +3,1601 @@
     {
       "id": "entity-ref-minimal",
       "contract": "entityRef",
-      "value": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001" }
+      "value": {
+        "id": "50000000-0000-4000-8000-000000000001",
+        "type": "plan.task",
+        "ownerDomain": "plan",
+        "ownerId": "50000000-0000-4000-8000-000000000001"
+      }
     },
     {
       "id": "entity-ref-full",
       "contract": "entityRef",
-      "value": { "id": "50000000-0000-4000-8000-000000000002", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000002", "version": 1 }
+      "value": {
+        "id": "50000000-0000-4000-8000-000000000002",
+        "type": "plan.task",
+        "ownerDomain": "plan",
+        "ownerId": "50000000-0000-4000-8000-000000000002",
+        "version": 1
+      }
     },
     {
       "id": "action-create-task-r1",
       "contract": "actionRequest",
       "value": {
-        "schemaVersion": "1", "id": "10000000-0000-4000-8000-000000000001", "actionType": "plan.create_task", "producer": "assistant", "targetDomain": "plan",
-        "actor": { "type": "assistant", "id": "20000000-0000-4000-8000-000000000001" }, "deviceId": "30000000-0000-4000-8000-000000000001",
-        "securityDomain": "personal", "dataClassification": "personal", "requestedRisk": "R1",
-        "payload": { "title": "Fixture task", "notes": "redacted before activity" }, "reason": "Explicit user-requested task creation",
-        "idempotencyKey": "fixture-create-task-001", "requestedAt": "2026-07-19T00:00:00.000Z", "expiresAt": "2099-07-19T00:05:00.000Z", "correlationId": "40000000-0000-4000-8000-000000000001"
+        "schemaVersion": "1",
+        "id": "10000000-0000-4000-8000-000000000001",
+        "actionType": "plan.create_task",
+        "producer": "assistant",
+        "targetDomain": "plan",
+        "actor": {
+          "type": "assistant",
+          "id": "20000000-0000-4000-8000-000000000001"
+        },
+        "deviceId": "30000000-0000-4000-8000-000000000001",
+        "securityDomain": "personal",
+        "dataClassification": "personal",
+        "requestedRisk": "R1",
+        "payload": {
+          "title": "Fixture task",
+          "notes": "redacted before activity"
+        },
+        "reason": "Explicit user-requested task creation",
+        "idempotencyKey": "fixture-create-task-001",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "expiresAt": "2099-07-19T00:05:00.000Z",
+        "correlationId": "40000000-0000-4000-8000-000000000001"
       }
     },
     {
       "id": "action-create-task-unknown-optional",
       "contract": "actionRequest",
       "value": {
-        "schemaVersion": "1", "id": "10000000-0000-4000-8000-000000000002", "actionType": "plan.create_task", "producer": "plan", "targetDomain": "plan",
-        "actor": { "type": "user", "id": "20000000-0000-4000-8000-000000000001" }, "deviceId": "30000000-0000-4000-8000-000000000001",
-        "securityDomain": "personal", "dataClassification": "personal", "requestedRisk": "R1", "payload": { "title": "Forward-compatible task" },
-        "idempotencyKey": "fixture-create-task-unknown-001", "requestedAt": "2026-07-19T00:00:00.000Z", "correlationId": "40000000-0000-4000-8000-000000000002",
-        "futureOptionalField": { "consumerMayIgnore": true }
+        "schemaVersion": "1",
+        "id": "10000000-0000-4000-8000-000000000002",
+        "actionType": "plan.create_task",
+        "producer": "plan",
+        "targetDomain": "plan",
+        "actor": {
+          "type": "user",
+          "id": "20000000-0000-4000-8000-000000000001"
+        },
+        "deviceId": "30000000-0000-4000-8000-000000000001",
+        "securityDomain": "personal",
+        "dataClassification": "personal",
+        "requestedRisk": "R1",
+        "payload": {
+          "title": "Forward-compatible task"
+        },
+        "idempotencyKey": "fixture-create-task-unknown-001",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "correlationId": "40000000-0000-4000-8000-000000000002",
+        "futureOptionalField": {
+          "consumerMayIgnore": true
+        }
       }
     },
     {
-      "id": "action-decision-accepted", "contract": "actionDecision",
-      "value": { "requestId": "10000000-0000-4000-8000-000000000001", "outcome": "allow", "evaluatedRisk": "R1", "policyVersion": "kenos-phase1-v1", "reasons": ["explicit user request"], "decidedAt": "2026-07-19T00:00:00.000Z" }
+      "id": "action-decision-accepted",
+      "contract": "actionDecision",
+      "value": {
+        "requestId": "10000000-0000-4000-8000-000000000001",
+        "outcome": "allow",
+        "evaluatedRisk": "R1",
+        "policyVersion": "kenos-phase1-v1",
+        "reasons": [
+          "explicit user request"
+        ],
+        "decidedAt": "2026-07-19T00:00:00.000Z"
+      }
     },
     {
-      "id": "action-result-success", "contract": "actionResult",
-      "value": { "requestId": "10000000-0000-4000-8000-000000000001", "status": "succeeded", "result": { "taskId": "50000000-0000-4000-8000-000000000001" }, "affectedEntities": [{ "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001", "version": 1 }], "activityId": "70000000-0000-4000-8000-000000000001", "completedAt": "2026-07-19T00:00:01.000Z" }
+      "id": "action-result-success",
+      "contract": "actionResult",
+      "value": {
+        "requestId": "10000000-0000-4000-8000-000000000001",
+        "status": "succeeded",
+        "result": {
+          "taskId": "50000000-0000-4000-8000-000000000001"
+        },
+        "affectedEntities": [
+          {
+            "id": "50000000-0000-4000-8000-000000000001",
+            "type": "plan.task",
+            "ownerDomain": "plan",
+            "ownerId": "50000000-0000-4000-8000-000000000001",
+            "version": 1
+          }
+        ],
+        "activityId": "70000000-0000-4000-8000-000000000001",
+        "completedAt": "2026-07-19T00:00:01.000Z"
+      }
     },
     {
-      "id": "approval-request", "contract": "approvalRequest",
-      "value": { "id": "80000000-0000-4000-8000-000000000001", "actionRequestId": "10000000-0000-4000-8000-000000000001", "risk": "R3", "summary": "Confirm sensitive action", "impact": ["One Plan task will be changed"], "sensitiveFieldsRedacted": true, "reversible": true, "expiresAt": "2026-07-19T00:05:00.000Z", "createdAt": "2026-07-19T00:00:00.000Z" }
+      "id": "approval-request",
+      "contract": "approvalRequest",
+      "value": {
+        "id": "80000000-0000-4000-8000-000000000001",
+        "actionRequestId": "10000000-0000-4000-8000-000000000001",
+        "risk": "R3",
+        "summary": "Confirm sensitive action",
+        "impact": [
+          "One Plan task will be changed"
+        ],
+        "sensitiveFieldsRedacted": true,
+        "reversible": true,
+        "expiresAt": "2026-07-19T00:05:00.000Z",
+        "createdAt": "2026-07-19T00:00:00.000Z"
+      }
     },
     {
-      "id": "approval-decision", "contract": "approvalDecision",
-      "value": { "approvalId": "80000000-0000-4000-8000-000000000001", "decision": "approved", "decidedBy": "20000000-0000-4000-8000-000000000001", "authStrength": "reauthenticated", "constraints": { "singleActionOnly": true }, "decidedAt": "2026-07-19T00:01:00.000Z" }
+      "id": "approval-decision",
+      "contract": "approvalDecision",
+      "value": {
+        "approvalId": "80000000-0000-4000-8000-000000000001",
+        "decision": "approved",
+        "decidedBy": "20000000-0000-4000-8000-000000000001",
+        "authStrength": "reauthenticated",
+        "constraints": {
+          "singleActionOnly": true
+        },
+        "decidedAt": "2026-07-19T00:01:00.000Z"
+      }
     },
     {
-      "id": "approval-record-pending-r2", "contract": "approvalRecord",
-      "value": { "id": "81000000-0000-4000-8000-000000000001", "version": "1", "ownerId": "20000000-0000-4000-8000-000000000001", "actionId": "11000000-0000-4000-8000-000000000001", "correlationId": "41000000-0000-4000-8000-000000000001", "requestingActor": { "type": "assistant", "id": "21000000-0000-4000-8000-000000000001" }, "requestingDomain": "assistant", "actionType": "plan.reschedule_task", "risk": "R2", "status": "pending", "reasonCode": "policy_r2_preview", "safeSummary": "Move one Plan task to tomorrow afternoon", "dataClassification": "personal", "requestedAt": "2026-07-19T00:00:00.000Z", "expiresAt": "2099-07-19T00:30:00.000Z", "entityRefs": [{ "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001" }], "createdAt": "2026-07-19T00:00:00.000Z", "updatedAt": "2026-07-19T00:00:00.000Z" }
+      "id": "approval-record-pending-r2",
+      "contract": "approvalRecord",
+      "value": {
+        "id": "81000000-0000-4000-8000-000000000001",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "actionId": "11000000-0000-4000-8000-000000000001",
+        "correlationId": "41000000-0000-4000-8000-000000000001",
+        "requestingActor": {
+          "type": "assistant",
+          "id": "21000000-0000-4000-8000-000000000001"
+        },
+        "requestingDomain": "assistant",
+        "actionType": "plan.reschedule_task",
+        "risk": "R2",
+        "status": "pending",
+        "reasonCode": "policy_r2_preview",
+        "safeSummary": "Move one Plan task to tomorrow afternoon",
+        "dataClassification": "personal",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "expiresAt": "2099-07-19T00:30:00.000Z",
+        "entityRefs": [
+          {
+            "id": "50000000-0000-4000-8000-000000000001",
+            "type": "plan.task",
+            "ownerDomain": "plan",
+            "ownerId": "50000000-0000-4000-8000-000000000001"
+          }
+        ],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:00:00.000Z"
+      }
     },
     {
-      "id": "approval-record-pending-r3", "contract": "approvalRecord",
-      "value": { "id": "81000000-0000-4000-8000-000000000002", "version": "1", "ownerId": "20000000-0000-4000-8000-000000000001", "actionId": "11000000-0000-4000-8000-000000000002", "correlationId": "41000000-0000-4000-8000-000000000002", "requestingActor": { "type": "connector", "id": "21000000-0000-4000-8000-000000000002" }, "requestingDomain": "work", "actionType": "work.send_external_update", "risk": "R3", "status": "pending", "reasonCode": "external_write_confirmation", "safeSummary": "Send one redacted external project update", "dataClassification": "work_confidential", "requestedAt": "2026-07-19T00:02:00.000Z", "expiresAt": "2099-07-19T00:32:00.000Z", "entityRefs": [], "createdAt": "2026-07-19T00:02:00.000Z", "updatedAt": "2026-07-19T00:02:00.000Z" }
+      "id": "approval-record-pending-r3",
+      "contract": "approvalRecord",
+      "value": {
+        "id": "81000000-0000-4000-8000-000000000002",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "actionId": "11000000-0000-4000-8000-000000000002",
+        "correlationId": "41000000-0000-4000-8000-000000000002",
+        "requestingActor": {
+          "type": "connector",
+          "id": "21000000-0000-4000-8000-000000000002"
+        },
+        "requestingDomain": "work",
+        "actionType": "work.send_external_update",
+        "risk": "R3",
+        "status": "pending",
+        "reasonCode": "external_write_confirmation",
+        "safeSummary": "Send one redacted external project update",
+        "dataClassification": "work_confidential",
+        "requestedAt": "2026-07-19T00:02:00.000Z",
+        "expiresAt": "2099-07-19T00:32:00.000Z",
+        "entityRefs": [],
+        "createdAt": "2026-07-19T00:02:00.000Z",
+        "updatedAt": "2026-07-19T00:02:00.000Z"
+      }
     },
     {
-      "id": "approval-record-approved", "contract": "approvalRecord",
-      "value": { "id": "81000000-0000-4000-8000-000000000003", "version": "1", "ownerId": "20000000-0000-4000-8000-000000000001", "actionId": "11000000-0000-4000-8000-000000000003", "correlationId": "41000000-0000-4000-8000-000000000003", "requestingActor": { "type": "assistant", "id": "21000000-0000-4000-8000-000000000001" }, "requestingDomain": "assistant", "actionType": "plan.reschedule_task", "risk": "R2", "status": "approved", "reasonCode": "policy_r2_preview", "safeSummary": "Move one Plan task", "dataClassification": "personal", "requestedAt": "2026-07-19T00:00:00.000Z", "expiresAt": "2026-07-19T01:00:00.000Z", "decidedAt": "2026-07-19T00:10:00.000Z", "decidedBy": "20000000-0000-4000-8000-000000000001", "decisionReason": "Approved for this action only; execution remains separate", "entityRefs": [], "createdAt": "2026-07-19T00:00:00.000Z", "updatedAt": "2026-07-19T00:10:00.000Z" }
+      "id": "approval-record-approved",
+      "contract": "approvalRecord",
+      "value": {
+        "id": "81000000-0000-4000-8000-000000000003",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "actionId": "11000000-0000-4000-8000-000000000003",
+        "correlationId": "41000000-0000-4000-8000-000000000003",
+        "requestingActor": {
+          "type": "assistant",
+          "id": "21000000-0000-4000-8000-000000000001"
+        },
+        "requestingDomain": "assistant",
+        "actionType": "plan.reschedule_task",
+        "risk": "R2",
+        "status": "approved",
+        "reasonCode": "policy_r2_preview",
+        "safeSummary": "Move one Plan task",
+        "dataClassification": "personal",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "expiresAt": "2026-07-19T01:00:00.000Z",
+        "decidedAt": "2026-07-19T00:10:00.000Z",
+        "decidedBy": "20000000-0000-4000-8000-000000000001",
+        "decisionReason": "Approved for this action only; execution remains separate",
+        "entityRefs": [],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:10:00.000Z"
+      }
     },
     {
-      "id": "approval-record-rejected", "contract": "approvalRecord",
-      "value": { "id": "81000000-0000-4000-8000-000000000004", "version": "1", "ownerId": "20000000-0000-4000-8000-000000000001", "actionId": "11000000-0000-4000-8000-000000000004", "correlationId": "41000000-0000-4000-8000-000000000004", "requestingActor": { "type": "assistant", "id": "21000000-0000-4000-8000-000000000001" }, "requestingDomain": "assistant", "actionType": "plan.reschedule_task", "risk": "R2", "status": "rejected", "reasonCode": "policy_r2_preview", "safeSummary": "Move one Plan task", "dataClassification": "personal", "requestedAt": "2026-07-19T00:00:00.000Z", "expiresAt": "2026-07-19T01:00:00.000Z", "decidedAt": "2026-07-19T00:08:00.000Z", "decidedBy": "20000000-0000-4000-8000-000000000001", "decisionReason": "Requested timing was not appropriate", "entityRefs": [], "createdAt": "2026-07-19T00:00:00.000Z", "updatedAt": "2026-07-19T00:08:00.000Z" }
+      "id": "approval-record-rejected",
+      "contract": "approvalRecord",
+      "value": {
+        "id": "81000000-0000-4000-8000-000000000004",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "actionId": "11000000-0000-4000-8000-000000000004",
+        "correlationId": "41000000-0000-4000-8000-000000000004",
+        "requestingActor": {
+          "type": "assistant",
+          "id": "21000000-0000-4000-8000-000000000001"
+        },
+        "requestingDomain": "assistant",
+        "actionType": "plan.reschedule_task",
+        "risk": "R2",
+        "status": "rejected",
+        "reasonCode": "policy_r2_preview",
+        "safeSummary": "Move one Plan task",
+        "dataClassification": "personal",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "expiresAt": "2026-07-19T01:00:00.000Z",
+        "decidedAt": "2026-07-19T00:08:00.000Z",
+        "decidedBy": "20000000-0000-4000-8000-000000000001",
+        "decisionReason": "Requested timing was not appropriate",
+        "entityRefs": [],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:08:00.000Z"
+      }
     },
     {
-      "id": "approval-record-expired", "contract": "approvalRecord",
-      "value": { "id": "81000000-0000-4000-8000-000000000005", "version": "1", "ownerId": "20000000-0000-4000-8000-000000000001", "actionId": "11000000-0000-4000-8000-000000000005", "correlationId": "41000000-0000-4000-8000-000000000005", "requestingActor": { "type": "assistant", "id": "21000000-0000-4000-8000-000000000001" }, "requestingDomain": "assistant", "actionType": "plan.reschedule_task", "risk": "R2", "status": "expired", "reasonCode": "policy_r2_preview", "safeSummary": "Move one Plan task", "dataClassification": "personal", "requestedAt": "2026-07-19T00:00:00.000Z", "expiresAt": "2026-07-19T00:05:00.000Z", "decidedAt": "2026-07-19T00:05:00.000Z", "decidedBy": "22000000-0000-4000-8000-000000000001", "decisionReason": "Approval window expired without a decision", "entityRefs": [], "createdAt": "2026-07-19T00:00:00.000Z", "updatedAt": "2026-07-19T00:05:00.000Z" }
+      "id": "approval-record-expired",
+      "contract": "approvalRecord",
+      "value": {
+        "id": "81000000-0000-4000-8000-000000000005",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "actionId": "11000000-0000-4000-8000-000000000005",
+        "correlationId": "41000000-0000-4000-8000-000000000005",
+        "requestingActor": {
+          "type": "assistant",
+          "id": "21000000-0000-4000-8000-000000000001"
+        },
+        "requestingDomain": "assistant",
+        "actionType": "plan.reschedule_task",
+        "risk": "R2",
+        "status": "expired",
+        "reasonCode": "policy_r2_preview",
+        "safeSummary": "Move one Plan task",
+        "dataClassification": "personal",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "expiresAt": "2026-07-19T00:05:00.000Z",
+        "decidedAt": "2026-07-19T00:05:00.000Z",
+        "decidedBy": "22000000-0000-4000-8000-000000000001",
+        "decisionReason": "Approval window expired without a decision",
+        "entityRefs": [],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:05:00.000Z"
+      }
     },
     {
-      "id": "approval-record-cancelled", "contract": "approvalRecord",
-      "value": { "id": "81000000-0000-4000-8000-000000000006", "version": "1", "ownerId": "20000000-0000-4000-8000-000000000001", "actionId": "11000000-0000-4000-8000-000000000006", "correlationId": "41000000-0000-4000-8000-000000000006", "requestingActor": { "type": "user", "id": "20000000-0000-4000-8000-000000000001" }, "requestingDomain": "plan", "actionType": "plan.reschedule_task", "risk": "R2", "status": "cancelled", "reasonCode": "request_withdrawn", "safeSummary": "Move one Plan task", "dataClassification": "personal", "requestedAt": "2026-07-19T00:00:00.000Z", "expiresAt": "2026-07-19T01:00:00.000Z", "decidedAt": "2026-07-19T00:04:00.000Z", "decidedBy": "20000000-0000-4000-8000-000000000001", "decisionReason": "The requesting action was withdrawn", "entityRefs": [], "createdAt": "2026-07-19T00:00:00.000Z", "updatedAt": "2026-07-19T00:04:00.000Z" }
+      "id": "approval-record-cancelled",
+      "contract": "approvalRecord",
+      "value": {
+        "id": "81000000-0000-4000-8000-000000000006",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "actionId": "11000000-0000-4000-8000-000000000006",
+        "correlationId": "41000000-0000-4000-8000-000000000006",
+        "requestingActor": {
+          "type": "user",
+          "id": "20000000-0000-4000-8000-000000000001"
+        },
+        "requestingDomain": "plan",
+        "actionType": "plan.reschedule_task",
+        "risk": "R2",
+        "status": "cancelled",
+        "reasonCode": "request_withdrawn",
+        "safeSummary": "Move one Plan task",
+        "dataClassification": "personal",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "expiresAt": "2026-07-19T01:00:00.000Z",
+        "decidedAt": "2026-07-19T00:04:00.000Z",
+        "decidedBy": "20000000-0000-4000-8000-000000000001",
+        "decisionReason": "The requesting action was withdrawn",
+        "entityRefs": [],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:04:00.000Z"
+      }
     },
     {
-      "id": "approval-record-superseded", "contract": "approvalRecord",
-      "value": { "id": "81000000-0000-4000-8000-000000000007", "version": "1", "ownerId": "20000000-0000-4000-8000-000000000001", "actionId": "11000000-0000-4000-8000-000000000007", "correlationId": "41000000-0000-4000-8000-000000000007", "requestingActor": { "type": "assistant", "id": "21000000-0000-4000-8000-000000000001" }, "requestingDomain": "assistant", "actionType": "plan.reschedule_task", "risk": "R2", "status": "superseded", "reasonCode": "payload_changed", "safeSummary": "Move one Plan task", "dataClassification": "personal", "requestedAt": "2026-07-19T00:00:00.000Z", "expiresAt": "2026-07-19T01:00:00.000Z", "decidedAt": "2026-07-19T00:03:00.000Z", "decidedBy": "22000000-0000-4000-8000-000000000001", "decisionReason": "A newer payload-bound approval replaced this request", "supersedesApprovalId": "81000000-0000-4000-8000-000000000099", "entityRefs": [], "createdAt": "2026-07-19T00:00:00.000Z", "updatedAt": "2026-07-19T00:03:00.000Z" }
+      "id": "approval-record-superseded",
+      "contract": "approvalRecord",
+      "value": {
+        "id": "81000000-0000-4000-8000-000000000007",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "actionId": "11000000-0000-4000-8000-000000000007",
+        "correlationId": "41000000-0000-4000-8000-000000000007",
+        "requestingActor": {
+          "type": "assistant",
+          "id": "21000000-0000-4000-8000-000000000001"
+        },
+        "requestingDomain": "assistant",
+        "actionType": "plan.reschedule_task",
+        "risk": "R2",
+        "status": "superseded",
+        "reasonCode": "payload_changed",
+        "safeSummary": "Move one Plan task",
+        "dataClassification": "personal",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "expiresAt": "2026-07-19T01:00:00.000Z",
+        "decidedAt": "2026-07-19T00:03:00.000Z",
+        "decidedBy": "22000000-0000-4000-8000-000000000001",
+        "decisionReason": "A newer payload-bound approval replaced this request",
+        "supersedesApprovalId": "81000000-0000-4000-8000-000000000099",
+        "entityRefs": [],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:03:00.000Z"
+      }
     },
     {
-      "id": "approval-record-redacted-sensitive", "contract": "approvalRecord",
-      "value": { "id": "81000000-0000-4000-8000-000000000008", "version": "1", "ownerId": "20000000-0000-4000-8000-000000000001", "actionId": "11000000-0000-4000-8000-000000000008", "correlationId": "41000000-0000-4000-8000-000000000008", "requestingActor": { "type": "connector", "id": "21000000-0000-4000-8000-000000000002" }, "requestingDomain": "work", "actionType": "work.send_external_update", "risk": "R3", "status": "pending", "reasonCode": "sensitive_external_write", "safeSummary": "Send one external update; sensitive fields are redacted", "dataClassification": "work_confidential", "requestedAt": "2026-07-19T00:00:00.000Z", "expiresAt": "2099-07-19T01:00:00.000Z", "entityRefs": [], "createdAt": "2026-07-19T00:00:00.000Z", "updatedAt": "2026-07-19T00:00:00.000Z" }
+      "id": "approval-record-redacted-sensitive",
+      "contract": "approvalRecord",
+      "value": {
+        "id": "81000000-0000-4000-8000-000000000008",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "actionId": "11000000-0000-4000-8000-000000000008",
+        "correlationId": "41000000-0000-4000-8000-000000000008",
+        "requestingActor": {
+          "type": "connector",
+          "id": "21000000-0000-4000-8000-000000000002"
+        },
+        "requestingDomain": "work",
+        "actionType": "work.send_external_update",
+        "risk": "R3",
+        "status": "pending",
+        "reasonCode": "sensitive_external_write",
+        "safeSummary": "Send one external update; sensitive fields are redacted",
+        "dataClassification": "work_confidential",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "expiresAt": "2099-07-19T01:00:00.000Z",
+        "entityRefs": [],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:00:00.000Z"
+      }
     },
     {
-      "id": "approval-record-multiple-entity-refs", "contract": "approvalRecord",
-      "value": { "id": "81000000-0000-4000-8000-000000000009", "version": "1", "ownerId": "20000000-0000-4000-8000-000000000001", "actionId": "11000000-0000-4000-8000-000000000009", "correlationId": "41000000-0000-4000-8000-000000000009", "requestingActor": { "type": "assistant", "id": "21000000-0000-4000-8000-000000000001" }, "requestingDomain": "assistant", "actionType": "plan.reschedule_task", "risk": "R2", "status": "pending", "reasonCode": "cross_domain_context", "safeSummary": "Adjust one Plan task using redacted Money context", "dataClassification": "sensitive", "requestedAt": "2026-07-19T00:00:00.000Z", "expiresAt": "2099-07-19T01:00:00.000Z", "entityRefs": [{ "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001" }, { "id": "52000000-0000-4000-8000-000000000001", "type": "money.transaction", "ownerDomain": "money", "ownerId": "52000000-0000-4000-8000-000000000001" }], "createdAt": "2026-07-19T00:00:00.000Z", "updatedAt": "2026-07-19T00:00:00.000Z" }
+      "id": "approval-record-multiple-entity-refs",
+      "contract": "approvalRecord",
+      "value": {
+        "id": "81000000-0000-4000-8000-000000000009",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "actionId": "11000000-0000-4000-8000-000000000009",
+        "correlationId": "41000000-0000-4000-8000-000000000009",
+        "requestingActor": {
+          "type": "assistant",
+          "id": "21000000-0000-4000-8000-000000000001"
+        },
+        "requestingDomain": "assistant",
+        "actionType": "plan.reschedule_task",
+        "risk": "R2",
+        "status": "pending",
+        "reasonCode": "cross_domain_context",
+        "safeSummary": "Adjust one Plan task using redacted Money context",
+        "dataClassification": "sensitive",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "expiresAt": "2099-07-19T01:00:00.000Z",
+        "entityRefs": [
+          {
+            "id": "50000000-0000-4000-8000-000000000001",
+            "type": "plan.task",
+            "ownerDomain": "plan",
+            "ownerId": "50000000-0000-4000-8000-000000000001"
+          },
+          {
+            "id": "52000000-0000-4000-8000-000000000001",
+            "type": "money.transaction",
+            "ownerDomain": "money",
+            "ownerId": "52000000-0000-4000-8000-000000000001"
+          }
+        ],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:00:00.000Z"
+      }
     },
     {
-      "id": "mutation-envelope", "contract": "mutationEnvelope",
-      "value": { "schemaVersion": "1", "mutationId": "90000000-0000-4000-8000-000000000001", "idempotencyKey": "fixture-mutation-001", "entity": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001", "version": 1 }, "actorId": "20000000-0000-4000-8000-000000000001", "deviceId": "30000000-0000-4000-8000-000000000001", "baseVersion": 1, "operation": "plan.rename_task", "payload": { "title": "Updated fixture task" }, "occurredAt": "2026-07-19T00:02:00.000Z" }
+      "id": "mutation-envelope",
+      "contract": "mutationEnvelope",
+      "value": {
+        "schemaVersion": "1",
+        "mutationId": "90000000-0000-4000-8000-000000000001",
+        "idempotencyKey": "fixture-mutation-001",
+        "entity": {
+          "id": "50000000-0000-4000-8000-000000000001",
+          "type": "plan.task",
+          "ownerDomain": "plan",
+          "ownerId": "50000000-0000-4000-8000-000000000001",
+          "version": 1
+        },
+        "actorId": "20000000-0000-4000-8000-000000000001",
+        "deviceId": "30000000-0000-4000-8000-000000000001",
+        "baseVersion": 1,
+        "operation": "plan.rename_task",
+        "payload": {
+          "title": "Updated fixture task"
+        },
+        "occurredAt": "2026-07-19T00:02:00.000Z"
+      }
     },
     {
-      "id": "command-failure", "contract": "commandFailure",
-      "value": { "ok": false, "error": { "code": "permission_denied", "message": "The command is not allowed.", "class": "permanent", "retryable": false, "userAction": "Review permissions." } }
+      "id": "command-failure",
+      "contract": "commandFailure",
+      "value": {
+        "ok": false,
+        "error": {
+          "code": "permission_denied",
+          "message": "The command is not allowed.",
+          "class": "permanent",
+          "retryable": false,
+          "userAction": "Review permissions."
+        }
+      }
     },
     {
-      "id": "activity-success", "contract": "activityRecord",
-      "value": { "schemaVersion": "1", "id": "70000000-0000-4000-8000-000000000001", "eventType": "plan.task_created", "actor": { "type": "assistant", "id": "20000000-0000-4000-8000-000000000001" }, "actionRequestId": "10000000-0000-4000-8000-000000000001", "targetRefs": [{ "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001", "version": 1 }], "securityDomain": "personal", "summary": "Created Plan task", "result": "succeeded", "correlationId": "40000000-0000-4000-8000-000000000001", "occurredAt": "2026-07-19T00:00:00.000Z" }
+      "id": "activity-success",
+      "contract": "activityRecord",
+      "value": {
+        "schemaVersion": "1",
+        "id": "70000000-0000-4000-8000-000000000001",
+        "eventType": "plan.task_created",
+        "actor": {
+          "type": "assistant",
+          "id": "20000000-0000-4000-8000-000000000001"
+        },
+        "actionRequestId": "10000000-0000-4000-8000-000000000001",
+        "targetRefs": [
+          {
+            "id": "50000000-0000-4000-8000-000000000001",
+            "type": "plan.task",
+            "ownerDomain": "plan",
+            "ownerId": "50000000-0000-4000-8000-000000000001",
+            "version": 1
+          }
+        ],
+        "securityDomain": "personal",
+        "summary": "Created Plan task",
+        "result": "succeeded",
+        "correlationId": "40000000-0000-4000-8000-000000000001",
+        "occurredAt": "2026-07-19T00:00:00.000Z"
+      }
     },
     {
-      "id": "activity-rejection", "contract": "activityRecord",
-      "value": { "schemaVersion": "1", "id": "70000000-0000-4000-8000-000000000002", "eventType": "plan.create_task_rejected", "actor": { "type": "assistant", "id": "20000000-0000-4000-8000-000000000001" }, "actionRequestId": "10000000-0000-4000-8000-000000000001", "targetRefs": [], "securityDomain": "personal", "summary": "Create task request was rejected", "reason": "Work-sourced task creation is excluded", "result": "failed", "correlationId": "40000000-0000-4000-8000-000000000001", "occurredAt": "2026-07-19T00:00:00.000Z" }
+      "id": "activity-rejection",
+      "contract": "activityRecord",
+      "value": {
+        "schemaVersion": "1",
+        "id": "70000000-0000-4000-8000-000000000002",
+        "eventType": "plan.create_task_rejected",
+        "actor": {
+          "type": "assistant",
+          "id": "20000000-0000-4000-8000-000000000001"
+        },
+        "actionRequestId": "10000000-0000-4000-8000-000000000001",
+        "targetRefs": [],
+        "securityDomain": "personal",
+        "summary": "Create task request was rejected",
+        "reason": "Work-sourced task creation is excluded",
+        "result": "failed",
+        "correlationId": "40000000-0000-4000-8000-000000000001",
+        "occurredAt": "2026-07-19T00:00:00.000Z"
+      }
     },
     {
-      "id": "activity-redacted-sensitive", "contract": "activityRecord",
-      "value": { "schemaVersion": "1", "id": "70000000-0000-4000-8000-000000000003", "eventType": "plan.task_created", "actor": { "type": "assistant", "id": "20000000-0000-4000-8000-000000000001" }, "targetRefs": [], "securityDomain": "personal", "summary": "Created a redacted Plan task", "result": "succeeded", "redactedPayload": { "title": "Fixture task", "notes": "[REDACTED]", "token": "[REDACTED]" }, "correlationId": "40000000-0000-4000-8000-000000000003", "occurredAt": "2026-07-19T00:00:00.000Z" }
+      "id": "activity-redacted-sensitive",
+      "contract": "activityRecord",
+      "value": {
+        "schemaVersion": "1",
+        "id": "70000000-0000-4000-8000-000000000003",
+        "eventType": "plan.task_created",
+        "actor": {
+          "type": "assistant",
+          "id": "20000000-0000-4000-8000-000000000001"
+        },
+        "targetRefs": [],
+        "securityDomain": "personal",
+        "summary": "Created a redacted Plan task",
+        "result": "succeeded",
+        "redactedPayload": {
+          "title": "Fixture task",
+          "notes": "[REDACTED]",
+          "token": "[REDACTED]"
+        },
+        "correlationId": "40000000-0000-4000-8000-000000000003",
+        "occurredAt": "2026-07-19T00:00:00.000Z"
+      }
     },
-    { "id": "outbox-pending", "contract": "outboxRecord", "value": { "id": "60000000-0000-4000-8000-000000000001", "topic": "plan.create_task", "aggregate": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001", "version": 1 }, "payload": { "taskId": "50000000-0000-4000-8000-000000000001" }, "schemaVersion": "1", "actionRequestId": "10000000-0000-4000-8000-000000000001", "idempotencyKey": "fixture-create-task-001", "correlationId": "40000000-0000-4000-8000-000000000001", "occurredAt": "2026-07-19T00:00:00.000Z", "availableAt": "2026-07-19T00:00:00.000Z", "attempts": 0, "maxAttempts": 5, "status": "pending" } },
-    { "id": "outbox-processing", "contract": "outboxRecord", "value": { "id": "60000000-0000-4000-8000-000000000002", "topic": "plan.create_task", "aggregate": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001" }, "payload": {}, "schemaVersion": "1", "idempotencyKey": "fixture-processing", "correlationId": "40000000-0000-4000-8000-000000000002", "occurredAt": "2026-07-19T00:00:00.000Z", "availableAt": "2026-07-19T00:00:00.000Z", "attempts": 1, "status": "processing" } },
-    { "id": "outbox-published", "contract": "outboxRecord", "value": { "id": "60000000-0000-4000-8000-000000000003", "topic": "plan.create_task", "aggregate": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001" }, "payload": {}, "schemaVersion": "1", "idempotencyKey": "fixture-published", "correlationId": "40000000-0000-4000-8000-000000000003", "occurredAt": "2026-07-19T00:00:00.000Z", "availableAt": "2026-07-19T00:00:00.000Z", "attempts": 1, "status": "published" } },
-    { "id": "outbox-retry", "contract": "outboxRecord", "value": { "id": "60000000-0000-4000-8000-000000000004", "topic": "plan.create_task", "aggregate": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001" }, "payload": {}, "schemaVersion": "1", "idempotencyKey": "fixture-retry", "correlationId": "40000000-0000-4000-8000-000000000004", "occurredAt": "2026-07-19T00:00:00.000Z", "availableAt": "2026-07-19T00:01:00.000Z", "attempts": 2, "maxAttempts": 5, "status": "retry", "lastErrorClass": "transient", "failureReason": "Network unavailable" } },
-    { "id": "outbox-dead-letter", "contract": "outboxRecord", "value": { "id": "60000000-0000-4000-8000-000000000005", "topic": "plan.create_task", "aggregate": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001" }, "payload": {}, "schemaVersion": "1", "idempotencyKey": "fixture-dead-letter", "correlationId": "40000000-0000-4000-8000-000000000005", "occurredAt": "2026-07-19T00:00:00.000Z", "availableAt": "2026-07-19T00:01:00.000Z", "attempts": 5, "maxAttempts": 5, "status": "dead_letter", "lastErrorClass": "permanent", "failureReason": "Permission denied" } },
     {
-      "id": "capture-envelope", "contract": "captureEnvelope",
-      "value": { "schemaVersion": "1", "id": "a0000000-0000-4000-8000-000000000001", "kind": "url", "payload": { "title": "Read later" }, "source": { "client": "kenos-web", "deviceId": "30000000-0000-4000-8000-000000000001", "externalUrl": "https://example.com/read" }, "actorId": "20000000-0000-4000-8000-000000000001", "securityDomain": "personal", "dataClassification": "personal", "suggestedDomains": ["library"], "capturedAt": "2026-07-19T00:00:00.000Z", "idempotencyKey": "fixture-capture-001" }
+      "id": "outbox-pending",
+      "contract": "outboxRecord",
+      "value": {
+        "id": "60000000-0000-4000-8000-000000000001",
+        "topic": "plan.create_task",
+        "aggregate": {
+          "id": "50000000-0000-4000-8000-000000000001",
+          "type": "plan.task",
+          "ownerDomain": "plan",
+          "ownerId": "50000000-0000-4000-8000-000000000001",
+          "version": 1
+        },
+        "payload": {
+          "taskId": "50000000-0000-4000-8000-000000000001"
+        },
+        "schemaVersion": "1",
+        "actionRequestId": "10000000-0000-4000-8000-000000000001",
+        "idempotencyKey": "fixture-create-task-001",
+        "correlationId": "40000000-0000-4000-8000-000000000001",
+        "occurredAt": "2026-07-19T00:00:00.000Z",
+        "availableAt": "2026-07-19T00:00:00.000Z",
+        "attempts": 0,
+        "maxAttempts": 5,
+        "status": "pending"
+      }
+    },
+    {
+      "id": "outbox-processing",
+      "contract": "outboxRecord",
+      "value": {
+        "id": "60000000-0000-4000-8000-000000000002",
+        "topic": "plan.create_task",
+        "aggregate": {
+          "id": "50000000-0000-4000-8000-000000000001",
+          "type": "plan.task",
+          "ownerDomain": "plan",
+          "ownerId": "50000000-0000-4000-8000-000000000001"
+        },
+        "payload": {},
+        "schemaVersion": "1",
+        "idempotencyKey": "fixture-processing",
+        "correlationId": "40000000-0000-4000-8000-000000000002",
+        "occurredAt": "2026-07-19T00:00:00.000Z",
+        "availableAt": "2026-07-19T00:00:00.000Z",
+        "attempts": 1,
+        "status": "processing"
+      }
+    },
+    {
+      "id": "outbox-published",
+      "contract": "outboxRecord",
+      "value": {
+        "id": "60000000-0000-4000-8000-000000000003",
+        "topic": "plan.create_task",
+        "aggregate": {
+          "id": "50000000-0000-4000-8000-000000000001",
+          "type": "plan.task",
+          "ownerDomain": "plan",
+          "ownerId": "50000000-0000-4000-8000-000000000001"
+        },
+        "payload": {},
+        "schemaVersion": "1",
+        "idempotencyKey": "fixture-published",
+        "correlationId": "40000000-0000-4000-8000-000000000003",
+        "occurredAt": "2026-07-19T00:00:00.000Z",
+        "availableAt": "2026-07-19T00:00:00.000Z",
+        "attempts": 1,
+        "status": "published"
+      }
+    },
+    {
+      "id": "outbox-retry",
+      "contract": "outboxRecord",
+      "value": {
+        "id": "60000000-0000-4000-8000-000000000004",
+        "topic": "plan.create_task",
+        "aggregate": {
+          "id": "50000000-0000-4000-8000-000000000001",
+          "type": "plan.task",
+          "ownerDomain": "plan",
+          "ownerId": "50000000-0000-4000-8000-000000000001"
+        },
+        "payload": {},
+        "schemaVersion": "1",
+        "idempotencyKey": "fixture-retry",
+        "correlationId": "40000000-0000-4000-8000-000000000004",
+        "occurredAt": "2026-07-19T00:00:00.000Z",
+        "availableAt": "2026-07-19T00:01:00.000Z",
+        "attempts": 2,
+        "maxAttempts": 5,
+        "status": "retry",
+        "lastErrorClass": "transient",
+        "failureReason": "Network unavailable"
+      }
+    },
+    {
+      "id": "outbox-dead-letter",
+      "contract": "outboxRecord",
+      "value": {
+        "id": "60000000-0000-4000-8000-000000000005",
+        "topic": "plan.create_task",
+        "aggregate": {
+          "id": "50000000-0000-4000-8000-000000000001",
+          "type": "plan.task",
+          "ownerDomain": "plan",
+          "ownerId": "50000000-0000-4000-8000-000000000001"
+        },
+        "payload": {},
+        "schemaVersion": "1",
+        "idempotencyKey": "fixture-dead-letter",
+        "correlationId": "40000000-0000-4000-8000-000000000005",
+        "occurredAt": "2026-07-19T00:00:00.000Z",
+        "availableAt": "2026-07-19T00:01:00.000Z",
+        "attempts": 5,
+        "maxAttempts": 5,
+        "status": "dead_letter",
+        "lastErrorClass": "permanent",
+        "failureReason": "Permission denied"
+      }
+    },
+    {
+      "id": "capture-envelope",
+      "contract": "captureEnvelope",
+      "value": {
+        "schemaVersion": "1",
+        "id": "a0000000-0000-4000-8000-000000000001",
+        "kind": "url",
+        "payload": {
+          "title": "Read later"
+        },
+        "source": {
+          "client": "kenos-web",
+          "deviceId": "30000000-0000-4000-8000-000000000001",
+          "externalUrl": "https://example.com/read"
+        },
+        "actorId": "20000000-0000-4000-8000-000000000001",
+        "securityDomain": "personal",
+        "dataClassification": "personal",
+        "suggestedDomains": [
+          "library"
+        ],
+        "capturedAt": "2026-07-19T00:00:00.000Z",
+        "idempotencyKey": "fixture-capture-001"
+      }
+    },
+    {
+      "id": "work-project-active",
+      "contract": "workProject",
+      "value": {
+        "id": "a1000000-0000-4000-8000-000000000001",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "title": "Kenos Phase 3",
+        "safeSummary": "Establish Work loop foundation without production cutover",
+        "status": "active",
+        "priority": "high",
+        "startAt": "2026-07-19T00:00:00.000Z",
+        "targetAt": "2026-08-01T00:00:00.000Z",
+        "completedAt": null,
+        "dataClassification": "work_confidential",
+        "sourceRefs": [
+          {
+            "sourceType": "jira",
+            "connectorId": "jira-read-only",
+            "externalId": "PROJ-12",
+            "deepLink": "https://example.atlassian.net/browse/PROJ-12",
+            "safeLabel": "Jira PROJ-12",
+            "dataClassification": "work_confidential",
+            "freshness": "2026-07-19T00:00:00.000Z",
+            "available": true
+          }
+        ],
+        "libraryRefs": [
+          {
+            "libraryRef": {
+              "id": "b1000000-0000-4000-8000-000000000001",
+              "type": "library.document",
+              "ownerDomain": "library",
+              "ownerId": "20000000-0000-4000-8000-000000000001"
+            },
+            "safeTitle": "Phase 3 brief",
+            "dataClassification": "work_confidential",
+            "freshness": "2026-07-19T00:00:00.000Z",
+            "deepLink": "https://knowledge.kenos.space/library/b1000000-0000-4000-8000-000000000001",
+            "sourceAvailable": true
+          }
+        ],
+        "planTaskRefs": [
+          {
+            "taskRef": {
+              "id": "50000000-0000-4000-8000-000000000001",
+              "type": "plan.task",
+              "ownerDomain": "plan",
+              "ownerId": "20000000-0000-4000-8000-000000000001"
+            },
+            "correlationId": "40000000-0000-4000-8000-000000000001",
+            "safeTitle": "Ship Work foundation docs",
+            "completionProjection": "open",
+            "freshness": "2026-07-19T01:00:00.000Z",
+            "deepLink": "https://planner.kenos.space/tasks/50000000-0000-4000-8000-000000000001"
+          }
+        ],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T01:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-project-completed",
+      "contract": "workProject",
+      "value": {
+        "id": "a1000000-0000-4000-8000-000000000002",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "title": "Phase 2 Approval read model",
+        "safeSummary": "Canonical Approval read projection shipped locally",
+        "status": "completed",
+        "priority": "normal",
+        "startAt": "2026-07-19T00:00:00.000Z",
+        "targetAt": "2026-07-19T01:00:00.000Z",
+        "completedAt": "2026-07-19T02:00:00.000Z",
+        "dataClassification": "work_confidential",
+        "sourceRefs": [],
+        "libraryRefs": [],
+        "planTaskRefs": [],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T02:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-project-with-deliverables",
+      "contract": "workProject",
+      "value": {
+        "id": "a1000000-0000-4000-8000-000000000003",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "title": "Work UI foundation",
+        "safeSummary": "Projects and deliverables surface in Assistant",
+        "status": "active",
+        "priority": "normal",
+        "dataClassification": "work_confidential",
+        "sourceRefs": [],
+        "libraryRefs": [],
+        "planTaskRefs": [],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-deliverable-in-progress",
+      "contract": "workDeliverable",
+      "value": {
+        "id": "a2000000-0000-4000-8000-000000000001",
+        "version": "1",
+        "projectRef": {
+          "id": "a1000000-0000-4000-8000-000000000001",
+          "type": "work.project",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "title": "Work contracts + fixtures",
+        "safeSummary": "Additive Work v1 contracts with parity",
+        "status": "in_progress",
+        "targetAt": "2026-07-20T00:00:00.000Z",
+        "acceptedAt": null,
+        "dataClassification": "work_confidential",
+        "sourceRefs": [
+          {
+            "sourceType": "jira",
+            "connectorId": "jira-read-only",
+            "externalId": "PROJ-12",
+            "deepLink": "https://example.atlassian.net/browse/PROJ-12",
+            "safeLabel": "Jira PROJ-12",
+            "dataClassification": "work_confidential",
+            "freshness": "2026-07-19T00:00:00.000Z",
+            "available": true
+          }
+        ],
+        "planTaskRefs": [
+          {
+            "taskRef": {
+              "id": "50000000-0000-4000-8000-000000000001",
+              "type": "plan.task",
+              "ownerDomain": "plan",
+              "ownerId": "20000000-0000-4000-8000-000000000001"
+            },
+            "correlationId": "40000000-0000-4000-8000-000000000001",
+            "safeTitle": "Ship Work foundation docs",
+            "completionProjection": "open",
+            "freshness": "2026-07-19T01:00:00.000Z",
+            "deepLink": "https://planner.kenos.space/tasks/50000000-0000-4000-8000-000000000001"
+          }
+        ],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T01:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-meeting-with-decisions",
+      "contract": "workMeeting",
+      "value": {
+        "id": "a3000000-0000-4000-8000-000000000001",
+        "version": "1",
+        "projectRef": {
+          "id": "a1000000-0000-4000-8000-000000000001",
+          "type": "work.project",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "title": "Phase 3 kickoff",
+        "occurredAt": "2026-07-19T01:00:00.000Z",
+        "scheduledAt": "2026-07-19T00:00:00.000Z",
+        "attendees": [
+          {
+            "safeLabel": "Ken"
+          },
+          {
+            "safeLabel": "Assistant",
+            "entityRef": {
+              "id": "21000000-0000-4000-8000-000000000001",
+              "type": "assistant.session",
+              "ownerDomain": "assistant",
+              "ownerId": "20000000-0000-4000-8000-000000000001"
+            }
+          }
+        ],
+        "safeSummary": "Agreed temporary Work ownership for foundation",
+        "dataClassification": "work_confidential",
+        "decisionRefs": [
+          {
+            "id": "a4000000-0000-4000-8000-000000000001",
+            "type": "work.decision",
+            "ownerDomain": "work",
+            "ownerId": "20000000-0000-4000-8000-000000000001"
+          }
+        ],
+        "actionProposalRefs": [
+          {
+            "id": "a5000000-0000-4000-8000-000000000002",
+            "type": "work.action_proposal",
+            "ownerDomain": "work",
+            "ownerId": "20000000-0000-4000-8000-000000000001"
+          }
+        ],
+        "libraryRefs": [
+          {
+            "libraryRef": {
+              "id": "b1000000-0000-4000-8000-000000000001",
+              "type": "library.document",
+              "ownerDomain": "library",
+              "ownerId": "20000000-0000-4000-8000-000000000001"
+            },
+            "safeTitle": "Phase 3 brief",
+            "dataClassification": "work_confidential",
+            "freshness": "2026-07-19T00:00:00.000Z",
+            "deepLink": "https://knowledge.kenos.space/library/b1000000-0000-4000-8000-000000000001",
+            "sourceAvailable": true
+          }
+        ],
+        "sourceRefs": [
+          {
+            "sourceType": "gmail",
+            "connectorId": "gmail-digest",
+            "safeLabel": "Redacted mail thread",
+            "dataClassification": "work_confidential",
+            "available": false
+          }
+        ],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T01:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-decision-supersession",
+      "contract": "workDecision",
+      "value": {
+        "id": "a4000000-0000-4000-8000-000000000001",
+        "version": "1",
+        "projectRef": {
+          "id": "a1000000-0000-4000-8000-000000000001",
+          "type": "work.project",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "meetingRef": {
+          "id": "a3000000-0000-4000-8000-000000000001",
+          "type": "work.meeting",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "title": "Use AIOS as Work host",
+        "safeSummary": "Host Work UI in AIOS strangler; do not create a new OS app",
+        "status": "decided",
+        "decidedAt": "2026-07-19T01:00:00.000Z",
+        "decidedBy": {
+          "safeLabel": "Ken"
+        },
+        "supersedesDecisionRef": {
+          "id": "a4000000-0000-4000-8000-000000000002",
+          "type": "work.decision",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "dataClassification": "work_confidential",
+        "entityRefs": [
+          {
+            "id": "a1000000-0000-4000-8000-000000000001",
+            "type": "work.project",
+            "ownerDomain": "work",
+            "ownerId": "20000000-0000-4000-8000-000000000001"
+          }
+        ],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T01:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-action-proposal-draft",
+      "contract": "workActionProposal",
+      "value": {
+        "id": "a5000000-0000-4000-8000-000000000001",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "workEntityRef": {
+          "id": "a1000000-0000-4000-8000-000000000001",
+          "type": "work.project",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "proposedTaskTitle": "Draft follow-up for deliverable review",
+        "safeContext": "User-visible draft; not a Plan Task yet",
+        "suggestedDueAt": "2026-07-21T00:00:00.000Z",
+        "suggestedPriority": "normal",
+        "risk": "R2",
+        "status": "draft",
+        "planActionId": null,
+        "planTaskRef": null,
+        "dataClassification": "work_confidential",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "resolvedAt": null,
+        "correlationId": "40000000-0000-4000-8000-000000000001",
+        "idempotencyKey": "work-proposal-draft-001",
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-action-proposal-proposed",
+      "contract": "workActionProposal",
+      "value": {
+        "id": "a5000000-0000-4000-8000-000000000002",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "workEntityRef": {
+          "id": "a1000000-0000-4000-8000-000000000001",
+          "type": "work.project",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "proposedTaskTitle": "Convert Phase 3 proposal after review",
+        "safeContext": "Awaiting explicit user Create task confirmation",
+        "suggestedDueAt": null,
+        "suggestedPriority": "high",
+        "risk": "R2",
+        "status": "proposed",
+        "planActionId": null,
+        "planTaskRef": null,
+        "dataClassification": "work_confidential",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "resolvedAt": null,
+        "correlationId": "40000000-0000-4000-8000-000000000010",
+        "idempotencyKey": "work-proposal-proposed-001",
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-action-proposal-converted",
+      "contract": "workActionProposal",
+      "value": {
+        "id": "a5000000-0000-4000-8000-000000000003",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "workEntityRef": {
+          "id": "a1000000-0000-4000-8000-000000000001",
+          "type": "work.project",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "proposedTaskTitle": "Ship Work foundation docs",
+        "safeContext": "Converted after explicit user review via Plan create_task",
+        "suggestedDueAt": null,
+        "suggestedPriority": "high",
+        "risk": "R1",
+        "status": "converted",
+        "planActionId": "10000000-0000-4000-8000-000000000001",
+        "planTaskRef": {
+          "taskRef": {
+            "id": "50000000-0000-4000-8000-000000000001",
+            "type": "plan.task",
+            "ownerDomain": "plan",
+            "ownerId": "20000000-0000-4000-8000-000000000001"
+          },
+          "correlationId": "40000000-0000-4000-8000-000000000001",
+          "safeTitle": "Ship Work foundation docs",
+          "completionProjection": "open",
+          "freshness": "2026-07-19T01:00:00.000Z",
+          "deepLink": "https://planner.kenos.space/tasks/50000000-0000-4000-8000-000000000001"
+        },
+        "dataClassification": "work_confidential",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "resolvedAt": "2026-07-19T01:00:00.000Z",
+        "correlationId": "40000000-0000-4000-8000-000000000001",
+        "idempotencyKey": "work-proposal-converted-001",
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T01:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-action-proposal-rejected",
+      "contract": "workActionProposal",
+      "value": {
+        "id": "a5000000-0000-4000-8000-000000000004",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "workEntityRef": {
+          "id": "a1000000-0000-4000-8000-000000000001",
+          "type": "work.project",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "proposedTaskTitle": "Auto-create tasks from Gmail",
+        "safeContext": "Rejected; automatic Connector writes are out of Phase 3 foundation",
+        "risk": "R3",
+        "status": "rejected",
+        "planActionId": null,
+        "planTaskRef": null,
+        "dataClassification": "work_confidential",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "resolvedAt": "2026-07-19T01:00:00.000Z",
+        "correlationId": "40000000-0000-4000-8000-000000000011",
+        "idempotencyKey": "work-proposal-rejected-001",
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T01:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-action-proposal-expired",
+      "contract": "workActionProposal",
+      "value": {
+        "id": "a5000000-0000-4000-8000-000000000005",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "workEntityRef": {
+          "id": "a1000000-0000-4000-8000-000000000001",
+          "type": "work.project",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "proposedTaskTitle": "Expired proposal window",
+        "safeContext": "Proposal expired without conversion",
+        "risk": "R2",
+        "status": "expired",
+        "planActionId": null,
+        "planTaskRef": null,
+        "dataClassification": "work_confidential",
+        "requestedAt": "2026-07-19T00:00:00.000Z",
+        "resolvedAt": "2026-07-19T02:00:00.000Z",
+        "correlationId": "40000000-0000-4000-8000-000000000012",
+        "idempotencyKey": "work-proposal-expired-001",
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T02:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-project-redacted-source-refs",
+      "contract": "workProject",
+      "value": {
+        "id": "a1000000-0000-4000-8000-000000000004",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "title": "External digests only",
+        "safeSummary": "Stores redacted source refs without full external bodies",
+        "status": "active",
+        "priority": "low",
+        "dataClassification": "work_confidential",
+        "sourceRefs": [
+          {
+            "sourceType": "gmail",
+            "connectorId": "gmail-digest",
+            "safeLabel": "Redacted mail thread",
+            "dataClassification": "work_confidential",
+            "available": false
+          }
+        ],
+        "libraryRefs": [],
+        "planTaskRefs": [],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-project-library-refs",
+      "contract": "workProject",
+      "value": {
+        "id": "a1000000-0000-4000-8000-000000000005",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "title": "Library-linked project",
+        "safeSummary": "References Library entities without copying content",
+        "status": "active",
+        "priority": "normal",
+        "dataClassification": "work_confidential",
+        "sourceRefs": [],
+        "libraryRefs": [
+          {
+            "libraryRef": {
+              "id": "b1000000-0000-4000-8000-000000000001",
+              "type": "library.document",
+              "ownerDomain": "library",
+              "ownerId": "20000000-0000-4000-8000-000000000001"
+            },
+            "safeTitle": "Phase 3 brief",
+            "dataClassification": "work_confidential",
+            "freshness": "2026-07-19T00:00:00.000Z",
+            "deepLink": "https://knowledge.kenos.space/library/b1000000-0000-4000-8000-000000000001",
+            "sourceAvailable": true
+          }
+        ],
+        "planTaskRefs": [],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-cross-domain-entity-refs",
+      "contract": "workDecision",
+      "value": {
+        "id": "a4000000-0000-4000-8000-000000000003",
+        "version": "1",
+        "projectRef": {
+          "id": "a1000000-0000-4000-8000-000000000001",
+          "type": "work.project",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "meetingRef": null,
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "title": "Cross-domain refs only",
+        "safeSummary": "Decision may reference Plan and Library EntityRefs",
+        "status": "proposed",
+        "decidedAt": null,
+        "decidedBy": null,
+        "supersedesDecisionRef": null,
+        "dataClassification": "work_confidential",
+        "entityRefs": [
+          {
+            "id": "50000000-0000-4000-8000-000000000001",
+            "type": "plan.task",
+            "ownerDomain": "plan",
+            "ownerId": "20000000-0000-4000-8000-000000000001"
+          },
+          {
+            "id": "b1000000-0000-4000-8000-000000000001",
+            "type": "library.document",
+            "ownerDomain": "library",
+            "ownerId": "20000000-0000-4000-8000-000000000001"
+          }
+        ],
+        "createdAt": "2026-07-19T00:00:00.000Z",
+        "updatedAt": "2026-07-19T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "work-connector-registry-read-only",
+      "contract": "connectorRegistryEntry",
+      "value": {
+        "connectorId": "jira-read-only",
+        "sourceType": "jira",
+        "permissions": [
+          "read_issue_metadata"
+        ],
+        "readWriteCapability": "read_only",
+        "freshness": "2026-07-19T00:00:00.000Z",
+        "authenticationStatus": "authenticated",
+        "dataClassification": "work_confidential",
+        "supportedCaptureTypes": [
+          "issue_ref"
+        ],
+        "deepLink": "https://example.atlassian.net",
+        "owner": "integration",
+        "failureState": "none"
+      }
     }
   ],
   "invalid": [
-    { "id": "malformed-uuid", "contract": "actionRequest", "expectedError": "invalid_action_contract", "valueFrom": "action-create-task-r1", "patch": { "id": "not-a-uuid" } },
-    { "id": "invalid-timestamp", "contract": "actionRequest", "expectedError": "invalid_action_contract", "valueFrom": "action-create-task-r1", "patch": { "requestedAt": "yesterday" } },
-    { "id": "missing-owner-id", "contract": "entityRef", "expectedError": "invalid_contract", "value": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan" } },
-    { "id": "wrong-contract-version", "contract": "actionRequest", "expectedError": "schema_version_not_supported", "valueFrom": "action-create-task-r1", "patch": { "schemaVersion": 1 } },
-    { "id": "unknown-action-type", "contract": "serverAction", "expectedError": "unsupported_action", "valueFrom": "action-create-task-r1", "patch": { "actionType": "plan.unknown_action" } },
-    { "id": "invalid-risk", "contract": "actionRequest", "expectedError": "invalid_action_contract", "valueFrom": "action-create-task-r1", "patch": { "requestedRisk": "R9" } },
-    { "id": "work-sourced-create-task", "contract": "serverAction", "expectedError": "work_source_excluded", "valueFrom": "action-create-task-r1", "patch": { "producer": "work", "payload": { "title": "Work task", "workSource": { "externalId": "WORK-1" } } } },
-    { "id": "proactive-assistant-create-task", "contract": "serverAction", "expectedError": "risk_not_allowed", "valueFrom": "action-create-task-r1", "patch": { "requestedRisk": "R2", "reason": "Proactive inferred task creation" } },
-    { "id": "invalid-outbox-transition", "contract": "outboxTransition", "expectedError": "invalid_outbox_transition", "value": { "from": "published", "to": "retry" } },
-    { "id": "activity-secret-token", "contract": "activityRecord", "expectedError": "unredacted_sensitive_payload", "valueFrom": "activity-redacted-sensitive", "patch": { "redactedPayload": { "token": "live-secret-token" } } },
     {
-      "id": "conflicting-idempotency-replay", "contract": "serverScenario", "expectedError": "action_id_reused",
-      "value": {
-        "firstFrom": "action-create-task-r1",
-        "replayPatch": { "idempotencyKey": "fixture-conflicting-replay", "correlationId": "40000000-0000-4000-8000-000000000099" }
+      "id": "malformed-uuid",
+      "contract": "actionRequest",
+      "expectedError": "invalid_action_contract",
+      "valueFrom": "action-create-task-r1",
+      "patch": {
+        "id": "not-a-uuid"
       }
     },
-    { "id": "approval-malformed-uuid", "contract": "approvalRecord", "expectedError": "invalid_approval_contract", "valueFrom": "approval-record-pending-r2", "patch": { "id": "not-a-uuid" } },
-    { "id": "approval-owner-mismatch", "contract": "serverApproval", "expectedError": "approval_owner_mismatch", "valueFrom": "approval-record-pending-r2", "patch": {}, "validationContext": { "authOwnerId": "20000000-0000-4000-8000-000000000099", "expectedActionId": "11000000-0000-4000-8000-000000000001" } },
-    { "id": "approval-unknown-status", "contract": "approvalRecord", "expectedError": "invalid_approval_contract", "valueFrom": "approval-record-pending-r2", "patch": { "status": "waiting" } },
-    { "id": "approval-invalid-risk", "contract": "approvalRecord", "expectedError": "invalid_approval_contract", "valueFrom": "approval-record-pending-r2", "patch": { "risk": "R9" } },
-    { "id": "approval-approved-without-decision", "contract": "approvalRecord", "expectedError": "approval_decision_metadata_required", "valueFrom": "approval-record-pending-r2", "patch": { "status": "approved" } },
-    { "id": "approval-pending-with-decision", "contract": "approvalRecord", "expectedError": "pending_approval_has_decision", "valueFrom": "approval-record-pending-r2", "patch": { "decidedAt": "2026-07-19T00:05:00.000Z", "decidedBy": "20000000-0000-4000-8000-000000000001", "decisionReason": "Must fail" } },
-    { "id": "approval-invalid-expiry", "contract": "approvalRecord", "expectedError": "invalid_approval_expiry", "valueFrom": "approval-record-pending-r2", "patch": { "expiresAt": "2026-07-18T23:59:00.000Z" } },
-    { "id": "approval-secret-summary", "contract": "approvalRecord", "expectedError": "unredacted_approval_summary", "valueFrom": "approval-record-pending-r2", "patch": { "safeSummary": "Send bearer token secret-value" } },
-    { "id": "approval-action-id-mismatch", "contract": "serverApproval", "expectedError": "approval_action_mismatch", "valueFrom": "approval-record-pending-r2", "patch": {}, "validationContext": { "authOwnerId": "20000000-0000-4000-8000-000000000001", "expectedActionId": "11000000-0000-4000-8000-000000000099" } },
-    { "id": "approval-unsupported-version", "contract": "approvalRecord", "expectedError": "schema_version_not_supported", "valueFrom": "approval-record-pending-r2", "patch": { "version": "2" } },
-    { "id": "approval-illegal-transition", "contract": "approvalTransition", "expectedError": "invalid_approval_transition", "value": { "from": "approved", "to": "pending" } }
+    {
+      "id": "invalid-timestamp",
+      "contract": "actionRequest",
+      "expectedError": "invalid_action_contract",
+      "valueFrom": "action-create-task-r1",
+      "patch": {
+        "requestedAt": "yesterday"
+      }
+    },
+    {
+      "id": "missing-owner-id",
+      "contract": "entityRef",
+      "expectedError": "invalid_contract",
+      "value": {
+        "id": "50000000-0000-4000-8000-000000000001",
+        "type": "plan.task",
+        "ownerDomain": "plan"
+      }
+    },
+    {
+      "id": "wrong-contract-version",
+      "contract": "actionRequest",
+      "expectedError": "schema_version_not_supported",
+      "valueFrom": "action-create-task-r1",
+      "patch": {
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "unknown-action-type",
+      "contract": "serverAction",
+      "expectedError": "unsupported_action",
+      "valueFrom": "action-create-task-r1",
+      "patch": {
+        "actionType": "plan.unknown_action"
+      }
+    },
+    {
+      "id": "invalid-risk",
+      "contract": "actionRequest",
+      "expectedError": "invalid_action_contract",
+      "valueFrom": "action-create-task-r1",
+      "patch": {
+        "requestedRisk": "R9"
+      }
+    },
+    {
+      "id": "work-sourced-create-task",
+      "contract": "serverAction",
+      "expectedError": "work_source_excluded",
+      "valueFrom": "action-create-task-r1",
+      "patch": {
+        "producer": "work",
+        "payload": {
+          "title": "Work task",
+          "workSource": {
+            "externalId": "WORK-1"
+          }
+        }
+      }
+    },
+    {
+      "id": "proactive-assistant-create-task",
+      "contract": "serverAction",
+      "expectedError": "risk_not_allowed",
+      "valueFrom": "action-create-task-r1",
+      "patch": {
+        "requestedRisk": "R2",
+        "reason": "Proactive inferred task creation"
+      }
+    },
+    {
+      "id": "invalid-outbox-transition",
+      "contract": "outboxTransition",
+      "expectedError": "invalid_outbox_transition",
+      "value": {
+        "from": "published",
+        "to": "retry"
+      }
+    },
+    {
+      "id": "activity-secret-token",
+      "contract": "activityRecord",
+      "expectedError": "unredacted_sensitive_payload",
+      "valueFrom": "activity-redacted-sensitive",
+      "patch": {
+        "redactedPayload": {
+          "token": "live-secret-token"
+        }
+      }
+    },
+    {
+      "id": "conflicting-idempotency-replay",
+      "contract": "serverScenario",
+      "expectedError": "action_id_reused",
+      "value": {
+        "firstFrom": "action-create-task-r1",
+        "replayPatch": {
+          "idempotencyKey": "fixture-conflicting-replay",
+          "correlationId": "40000000-0000-4000-8000-000000000099"
+        }
+      }
+    },
+    {
+      "id": "approval-malformed-uuid",
+      "contract": "approvalRecord",
+      "expectedError": "invalid_approval_contract",
+      "valueFrom": "approval-record-pending-r2",
+      "patch": {
+        "id": "not-a-uuid"
+      }
+    },
+    {
+      "id": "approval-owner-mismatch",
+      "contract": "serverApproval",
+      "expectedError": "approval_owner_mismatch",
+      "valueFrom": "approval-record-pending-r2",
+      "patch": {},
+      "validationContext": {
+        "authOwnerId": "20000000-0000-4000-8000-000000000099",
+        "expectedActionId": "11000000-0000-4000-8000-000000000001"
+      }
+    },
+    {
+      "id": "approval-unknown-status",
+      "contract": "approvalRecord",
+      "expectedError": "invalid_approval_contract",
+      "valueFrom": "approval-record-pending-r2",
+      "patch": {
+        "status": "waiting"
+      }
+    },
+    {
+      "id": "approval-invalid-risk",
+      "contract": "approvalRecord",
+      "expectedError": "invalid_approval_contract",
+      "valueFrom": "approval-record-pending-r2",
+      "patch": {
+        "risk": "R9"
+      }
+    },
+    {
+      "id": "approval-approved-without-decision",
+      "contract": "approvalRecord",
+      "expectedError": "approval_decision_metadata_required",
+      "valueFrom": "approval-record-pending-r2",
+      "patch": {
+        "status": "approved"
+      }
+    },
+    {
+      "id": "approval-pending-with-decision",
+      "contract": "approvalRecord",
+      "expectedError": "pending_approval_has_decision",
+      "valueFrom": "approval-record-pending-r2",
+      "patch": {
+        "decidedAt": "2026-07-19T00:05:00.000Z",
+        "decidedBy": "20000000-0000-4000-8000-000000000001",
+        "decisionReason": "Must fail"
+      }
+    },
+    {
+      "id": "approval-invalid-expiry",
+      "contract": "approvalRecord",
+      "expectedError": "invalid_approval_expiry",
+      "valueFrom": "approval-record-pending-r2",
+      "patch": {
+        "expiresAt": "2026-07-18T23:59:00.000Z"
+      }
+    },
+    {
+      "id": "approval-secret-summary",
+      "contract": "approvalRecord",
+      "expectedError": "unredacted_approval_summary",
+      "valueFrom": "approval-record-pending-r2",
+      "patch": {
+        "safeSummary": "Send bearer token secret-value"
+      }
+    },
+    {
+      "id": "approval-action-id-mismatch",
+      "contract": "serverApproval",
+      "expectedError": "approval_action_mismatch",
+      "valueFrom": "approval-record-pending-r2",
+      "patch": {},
+      "validationContext": {
+        "authOwnerId": "20000000-0000-4000-8000-000000000001",
+        "expectedActionId": "11000000-0000-4000-8000-000000000099"
+      }
+    },
+    {
+      "id": "approval-unsupported-version",
+      "contract": "approvalRecord",
+      "expectedError": "schema_version_not_supported",
+      "valueFrom": "approval-record-pending-r2",
+      "patch": {
+        "version": "2"
+      }
+    },
+    {
+      "id": "approval-illegal-transition",
+      "contract": "approvalTransition",
+      "expectedError": "invalid_approval_transition",
+      "value": {
+        "from": "approved",
+        "to": "pending"
+      }
+    },
+    {
+      "id": "work-malformed-uuid",
+      "contract": "workProject",
+      "valueFrom": "work-project-active",
+      "patch": {
+        "id": "not-a-uuid"
+      },
+      "expectedError": "malformed_uuid"
+    },
+    {
+      "id": "work-owner-mismatch",
+      "contract": "workDeliverable",
+      "valueFrom": "work-deliverable-in-progress",
+      "patch": {
+        "ownerId": "20000000-0000-4000-8000-000000000099"
+      },
+      "expectedError": "owner_mismatch"
+    },
+    {
+      "id": "work-invalid-timestamp",
+      "contract": "workProject",
+      "valueFrom": "work-project-active",
+      "patch": {
+        "updatedAt": "yesterday"
+      },
+      "expectedError": "invalid_timestamp"
+    },
+    {
+      "id": "work-unsupported-version",
+      "contract": "workProject",
+      "valueFrom": "work-project-active",
+      "patch": {
+        "version": "2"
+      },
+      "expectedError": "unsupported_version"
+    },
+    {
+      "id": "work-invalid-status",
+      "contract": "workProject",
+      "valueFrom": "work-project-active",
+      "patch": {
+        "status": "shipping"
+      },
+      "expectedError": "invalid_status"
+    },
+    {
+      "id": "work-converted-without-task-ref",
+      "contract": "workActionProposal",
+      "valueFrom": "work-action-proposal-converted",
+      "patch": {
+        "planTaskRef": null
+      },
+      "expectedError": "converted_requires_task_ref"
+    },
+    {
+      "id": "work-plan-task-embedded-duplicate",
+      "contract": "workActionProposal",
+      "valueFrom": "work-action-proposal-proposed",
+      "patch": {
+        "planTaskRef": {
+          "taskRef": {
+            "id": "50000000-0000-4000-8000-000000000001",
+            "type": "plan.task",
+            "ownerDomain": "plan",
+            "ownerId": "20000000-0000-4000-8000-000000000001"
+          },
+          "safeTitle": "Illegal premature task embedding"
+        }
+      },
+      "expectedError": "task_embedded_before_conversion"
+    },
+    {
+      "id": "work-sensitive-meeting-transcript",
+      "contract": "workMeeting",
+      "valueFrom": "work-meeting-with-decisions",
+      "patch": {
+        "safeSummary": "Full transcript token=abc password=leak"
+      },
+      "expectedError": "sensitive_summary"
+    },
+    {
+      "id": "work-external-secret",
+      "contract": "workProject",
+      "valueFrom": "work-project-active",
+      "patch": {
+        "safeSummary": "Contains bearer secret for connector"
+      },
+      "expectedError": "sensitive_summary"
+    },
+    {
+      "id": "work-writing-canonical-task",
+      "contract": "workActionProposal",
+      "valueFrom": "work-action-proposal-draft",
+      "patch": {
+        "workEntityRef": {
+          "id": "50000000-0000-4000-8000-000000000001",
+          "type": "plan.task",
+          "ownerDomain": "plan",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        }
+      },
+      "expectedError": "work_must_not_own_task"
+    },
+    {
+      "id": "work-library-document-copied",
+      "contract": "workProject",
+      "valueFrom": "work-project-library-refs",
+      "patch": {
+        "libraryRefs": [
+          {
+            "libraryRef": {
+              "id": "b1000000-0000-4000-8000-000000000001",
+              "type": "library.document",
+              "ownerDomain": "work",
+              "ownerId": "20000000-0000-4000-8000-000000000001"
+            },
+            "safeTitle": "Illegal Work-owned copy of a Library document",
+            "dataClassification": "work_confidential",
+            "documentBody": "# Full markdown copied illegally"
+          }
+        ]
+      },
+      "expectedError": "library_body_not_allowed"
+    },
+    {
+      "id": "work-conflicting-idempotency-replay",
+      "contract": "serverWorkScenario",
+      "value": {
+        "scenario": "conflicting_idempotency_replay",
+        "first": {
+          "idempotencyKey": "work-proposal-replay-001",
+          "proposedTaskTitle": "First title"
+        },
+        "second": {
+          "idempotencyKey": "work-proposal-replay-001",
+          "proposedTaskTitle": "Different title"
+        }
+      },
+      "expectedError": "idempotency_conflict"
+    },
+    {
+      "id": "work-illegal-proposal-transition",
+      "contract": "workActionProposalTransition",
+      "value": {
+        "from": "converted",
+        "to": "draft"
+      },
+      "expectedError": "illegal_transition"
+    }
   ]
 }

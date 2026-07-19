@@ -401,3 +401,354 @@ export const KenosCaptureEnvelopeSchema = z.object({
   }
 })
 export type KenosCaptureEnvelope = z.infer<typeof KenosCaptureEnvelopeSchema>
+
+/** Additive Phase 3 Work domain contracts. Major schemaVersion remains `"1"`. */
+
+export const KenosWorkProjectStatusValues = ['active', 'blocked', 'completed', 'archived'] as const
+export const KenosWorkProjectStatusSchema = z.enum(KenosWorkProjectStatusValues)
+export type KenosWorkProjectStatus = z.infer<typeof KenosWorkProjectStatusSchema>
+
+export const KenosWorkDeliverableStatusValues = ['planned', 'in_progress', 'blocked', 'accepted', 'cancelled'] as const
+export const KenosWorkDeliverableStatusSchema = z.enum(KenosWorkDeliverableStatusValues)
+export type KenosWorkDeliverableStatus = z.infer<typeof KenosWorkDeliverableStatusSchema>
+
+export const KenosWorkDecisionStatusValues = ['proposed', 'decided', 'superseded', 'cancelled'] as const
+export const KenosWorkDecisionStatusSchema = z.enum(KenosWorkDecisionStatusValues)
+export type KenosWorkDecisionStatus = z.infer<typeof KenosWorkDecisionStatusSchema>
+
+export const KenosWorkActionProposalStatusValues = [
+  'draft',
+  'proposed',
+  'accepted',
+  'rejected',
+  'expired',
+  'converted',
+  'cancelled',
+] as const
+export const KenosWorkActionProposalStatusSchema = z.enum(KenosWorkActionProposalStatusValues)
+export type KenosWorkActionProposalStatus = z.infer<typeof KenosWorkActionProposalStatusSchema>
+
+export const KenosWorkPriorityValues = ['low', 'normal', 'high', 'urgent'] as const
+export const KenosWorkPrioritySchema = z.enum(KenosWorkPriorityValues)
+export type KenosWorkPriority = z.infer<typeof KenosWorkPrioritySchema>
+
+export const KenosWorkSourceRefSchema = z.object({
+  sourceType: z.string().min(1).max(64),
+  connectorId: z.string().min(1).max(64).optional(),
+  externalId: z.string().min(1).max(200).optional(),
+  deepLink: z.string().url().optional(),
+  safeLabel: z.string().min(1).max(200),
+  dataClassification: KenosClassificationSchema,
+  freshness: KenosIsoDateTimeSchema.optional(),
+  available: z.boolean().optional(),
+}).superRefine((ref, ctx) => {
+  if (KENOS_SENSITIVE_SUMMARY_PATTERN.test(ref.safeLabel)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['safeLabel'], message: 'safeLabel contains a sensitive credential marker' })
+  }
+})
+export type KenosWorkSourceRef = z.infer<typeof KenosWorkSourceRefSchema>
+
+export const KenosWorkPlanTaskProjectionSchema = z.object({
+  taskRef: KenosEntityRefSchema,
+  correlationId: KenosUuidSchema.optional(),
+  safeTitle: z.string().min(1).max(200).optional(),
+  completionProjection: z.enum(['open', 'done', 'unknown']).optional(),
+  freshness: KenosIsoDateTimeSchema.optional(),
+  deepLink: z.string().url().optional(),
+}).strict().superRefine((projection, ctx) => {
+  if (projection.taskRef.type !== 'plan.task' || projection.taskRef.ownerDomain !== 'plan') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['taskRef'], message: 'planTaskRefs must reference plan.task owned by plan' })
+  }
+  if (projection.safeTitle && KENOS_SENSITIVE_SUMMARY_PATTERN.test(projection.safeTitle)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['safeTitle'], message: 'safeTitle contains a sensitive credential marker' })
+  }
+})
+export type KenosWorkPlanTaskProjection = z.infer<typeof KenosWorkPlanTaskProjectionSchema>
+
+export const KenosWorkLibraryProjectionSchema = z.object({
+  libraryRef: KenosEntityRefSchema,
+  safeTitle: z.string().min(1).max(200).optional(),
+  dataClassification: KenosClassificationSchema.optional(),
+  freshness: KenosIsoDateTimeSchema.optional(),
+  deepLink: z.string().url().optional(),
+  sourceAvailable: z.boolean().optional(),
+}).strict().superRefine((projection, ctx) => {
+  if (projection.libraryRef.ownerDomain !== 'library') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['libraryRef'], message: 'libraryRefs must be owned by library' })
+  }
+  if (!projection.libraryRef.type.startsWith('library.')) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['libraryRef'], message: 'libraryRefs type must start with library.' })
+  }
+  if (projection.safeTitle && KENOS_SENSITIVE_SUMMARY_PATTERN.test(projection.safeTitle)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['safeTitle'], message: 'safeTitle contains a sensitive credential marker' })
+  }
+})
+export type KenosWorkLibraryProjection = z.infer<typeof KenosWorkLibraryProjectionSchema>
+
+function refineWorkTimestamps(record: { createdAt: string, updatedAt: string }, ctx: z.RefinementCtx) {
+  if (Date.parse(record.updatedAt) < Date.parse(record.createdAt)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['updatedAt'], message: 'updatedAt must not be earlier than createdAt' })
+  }
+}
+
+function rejectSensitiveSummary(safeSummary: string, ctx: z.RefinementCtx) {
+  if (KENOS_SENSITIVE_SUMMARY_PATTERN.test(safeSummary)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['safeSummary'], message: 'safeSummary contains a sensitive credential marker' })
+  }
+}
+
+export const KenosWorkProjectSchema = z.object({
+  id: KenosUuidSchema,
+  version: KenosSchemaVersionSchema,
+  ownerId: KenosUuidSchema,
+  title: z.string().min(1).max(200),
+  safeSummary: z.string().min(1).max(500),
+  status: KenosWorkProjectStatusSchema,
+  priority: KenosWorkPrioritySchema,
+  startAt: KenosIsoDateTimeSchema.nullable().optional(),
+  targetAt: KenosIsoDateTimeSchema.nullable().optional(),
+  completedAt: KenosIsoDateTimeSchema.nullable().optional(),
+  dataClassification: KenosClassificationSchema,
+  sourceRefs: z.array(KenosWorkSourceRefSchema).default([]),
+  libraryRefs: z.array(KenosWorkLibraryProjectionSchema).default([]),
+  planTaskRefs: z.array(KenosWorkPlanTaskProjectionSchema).default([]),
+  createdAt: KenosIsoDateTimeSchema,
+  updatedAt: KenosIsoDateTimeSchema,
+}).superRefine((record, ctx) => {
+  refineWorkTimestamps(record, ctx)
+  rejectSensitiveSummary(record.safeSummary, ctx)
+  if (record.status === 'completed' && !record.completedAt) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['completedAt'], message: 'completed projects require completedAt' })
+  }
+  if (record.status !== 'completed' && record.completedAt) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['completedAt'], message: 'completedAt is only valid for completed projects' })
+  }
+})
+export type KenosWorkProject = z.infer<typeof KenosWorkProjectSchema>
+
+export const KenosWorkDeliverableSchema = z.object({
+  id: KenosUuidSchema,
+  version: KenosSchemaVersionSchema,
+  projectRef: KenosEntityRefSchema,
+  ownerId: KenosUuidSchema,
+  title: z.string().min(1).max(200),
+  safeSummary: z.string().min(1).max(500),
+  status: KenosWorkDeliverableStatusSchema,
+  targetAt: KenosIsoDateTimeSchema.nullable().optional(),
+  acceptedAt: KenosIsoDateTimeSchema.nullable().optional(),
+  dataClassification: KenosClassificationSchema,
+  sourceRefs: z.array(KenosWorkSourceRefSchema).default([]),
+  planTaskRefs: z.array(KenosWorkPlanTaskProjectionSchema).default([]),
+  createdAt: KenosIsoDateTimeSchema,
+  updatedAt: KenosIsoDateTimeSchema,
+}).superRefine((record, ctx) => {
+  refineWorkTimestamps(record, ctx)
+  rejectSensitiveSummary(record.safeSummary, ctx)
+  if (record.projectRef.type !== 'work.project' || record.projectRef.ownerDomain !== 'work') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['projectRef'], message: 'deliverable projectRef must be work.project owned by work' })
+  }
+  if (record.projectRef.ownerId !== record.ownerId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['ownerId'], message: 'deliverable ownerId must match projectRef.ownerId' })
+  }
+  if (record.status === 'accepted' && !record.acceptedAt) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['acceptedAt'], message: 'accepted deliverables require acceptedAt' })
+  }
+  if (record.status !== 'accepted' && record.acceptedAt) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['acceptedAt'], message: 'acceptedAt is only valid for accepted deliverables' })
+  }
+})
+export type KenosWorkDeliverable = z.infer<typeof KenosWorkDeliverableSchema>
+
+export const KenosWorkMeetingSchema = z.object({
+  id: KenosUuidSchema,
+  version: KenosSchemaVersionSchema,
+  projectRef: KenosEntityRefSchema,
+  ownerId: KenosUuidSchema,
+  title: z.string().min(1).max(200),
+  occurredAt: KenosIsoDateTimeSchema.nullable().optional(),
+  scheduledAt: KenosIsoDateTimeSchema.nullable().optional(),
+  attendees: z.array(z.object({
+    safeLabel: z.string().min(1).max(120),
+    entityRef: KenosEntityRefSchema.optional(),
+  })).default([]),
+  safeSummary: z.string().min(1).max(500),
+  dataClassification: KenosClassificationSchema,
+  decisionRefs: z.array(KenosEntityRefSchema).default([]),
+  actionProposalRefs: z.array(KenosEntityRefSchema).default([]),
+  libraryRefs: z.array(KenosWorkLibraryProjectionSchema).default([]),
+  sourceRefs: z.array(KenosWorkSourceRefSchema).default([]),
+  createdAt: KenosIsoDateTimeSchema,
+  updatedAt: KenosIsoDateTimeSchema,
+}).superRefine((record, ctx) => {
+  refineWorkTimestamps(record, ctx)
+  rejectSensitiveSummary(record.safeSummary, ctx)
+  if (record.projectRef.type !== 'work.project' || record.projectRef.ownerDomain !== 'work') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['projectRef'], message: 'meeting projectRef must be work.project owned by work' })
+  }
+  if (record.projectRef.ownerId !== record.ownerId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['ownerId'], message: 'meeting ownerId must match projectRef.ownerId' })
+  }
+  if (!record.occurredAt && !record.scheduledAt) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['scheduledAt'], message: 'meeting requires occurredAt or scheduledAt' })
+  }
+  for (const [index, ref] of record.decisionRefs.entries()) {
+    if (ref.type !== 'work.decision' || ref.ownerDomain !== 'work') {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['decisionRefs', index], message: 'decisionRefs must be work.decision' })
+    }
+  }
+  for (const [index, ref] of record.actionProposalRefs.entries()) {
+    if (ref.type !== 'work.action_proposal' || ref.ownerDomain !== 'work') {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['actionProposalRefs', index], message: 'actionProposalRefs must be work.action_proposal' })
+    }
+  }
+})
+export type KenosWorkMeeting = z.infer<typeof KenosWorkMeetingSchema>
+
+export const KenosWorkDecisionSchema = z.object({
+  id: KenosUuidSchema,
+  version: KenosSchemaVersionSchema,
+  projectRef: KenosEntityRefSchema,
+  meetingRef: KenosEntityRefSchema.nullable().optional(),
+  ownerId: KenosUuidSchema,
+  title: z.string().min(1).max(200),
+  safeSummary: z.string().min(1).max(500),
+  status: KenosWorkDecisionStatusSchema,
+  decidedAt: KenosIsoDateTimeSchema.nullable().optional(),
+  decidedBy: z.object({
+    safeLabel: z.string().min(1).max(120),
+    entityRef: KenosEntityRefSchema.optional(),
+  }).nullable().optional(),
+  supersedesDecisionRef: KenosEntityRefSchema.nullable().optional(),
+  dataClassification: KenosClassificationSchema,
+  entityRefs: z.array(KenosEntityRefSchema).default([]),
+  createdAt: KenosIsoDateTimeSchema,
+  updatedAt: KenosIsoDateTimeSchema,
+}).superRefine((record, ctx) => {
+  refineWorkTimestamps(record, ctx)
+  rejectSensitiveSummary(record.safeSummary, ctx)
+  if (record.projectRef.type !== 'work.project' || record.projectRef.ownerDomain !== 'work') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['projectRef'], message: 'decision projectRef must be work.project owned by work' })
+  }
+  if (record.projectRef.ownerId !== record.ownerId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['ownerId'], message: 'decision ownerId must match projectRef.ownerId' })
+  }
+  if (record.meetingRef && (record.meetingRef.type !== 'work.meeting' || record.meetingRef.ownerDomain !== 'work')) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['meetingRef'], message: 'meetingRef must be work.meeting owned by work' })
+  }
+  if (record.supersedesDecisionRef) {
+    if (record.supersedesDecisionRef.type !== 'work.decision' || record.supersedesDecisionRef.ownerDomain !== 'work') {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['supersedesDecisionRef'], message: 'supersedesDecisionRef must be work.decision' })
+    }
+    if (record.supersedesDecisionRef.id === record.id) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['supersedesDecisionRef'], message: 'decision cannot supersede itself' })
+    }
+  }
+  if (record.status === 'decided' && (!record.decidedAt || !record.decidedBy)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['decidedAt'], message: 'decided decisions require decidedAt and decidedBy' })
+  }
+  if (record.status === 'proposed' && (record.decidedAt || record.decidedBy)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['status'], message: 'proposed decisions cannot contain decision metadata' })
+  }
+})
+export type KenosWorkDecision = z.infer<typeof KenosWorkDecisionSchema>
+
+export const KenosWorkActionProposalSchema = z.object({
+  id: KenosUuidSchema,
+  version: KenosSchemaVersionSchema,
+  ownerId: KenosUuidSchema,
+  workEntityRef: KenosEntityRefSchema,
+  proposedTaskTitle: z.string().min(1).max(200),
+  safeContext: z.string().min(1).max(500),
+  suggestedDueAt: KenosIsoDateTimeSchema.nullable().optional(),
+  suggestedPriority: KenosWorkPrioritySchema.optional(),
+  risk: KenosRiskLevelSchema,
+  status: KenosWorkActionProposalStatusSchema,
+  planActionId: KenosUuidSchema.nullable().optional(),
+  planTaskRef: KenosWorkPlanTaskProjectionSchema.nullable().optional(),
+  dataClassification: KenosClassificationSchema,
+  requestedAt: KenosIsoDateTimeSchema,
+  resolvedAt: KenosIsoDateTimeSchema.nullable().optional(),
+  correlationId: KenosUuidSchema,
+  idempotencyKey: z.string().min(1).max(200),
+  createdAt: KenosIsoDateTimeSchema,
+  updatedAt: KenosIsoDateTimeSchema,
+}).superRefine((record, ctx) => {
+  refineWorkTimestamps(record, ctx)
+  rejectSensitiveSummary(record.safeContext, ctx)
+  if (KENOS_SENSITIVE_SUMMARY_PATTERN.test(record.proposedTaskTitle)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['proposedTaskTitle'], message: 'proposedTaskTitle contains a sensitive credential marker' })
+  }
+  if (record.workEntityRef.ownerDomain !== 'work') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['workEntityRef'], message: 'workEntityRef must be owned by work' })
+  }
+  if (!record.workEntityRef.type.startsWith('work.')) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['workEntityRef'], message: 'workEntityRef type must start with work.' })
+  }
+  if (record.workEntityRef.ownerId !== record.ownerId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['ownerId'], message: 'proposal ownerId must match workEntityRef.ownerId' })
+  }
+  if (record.status === 'converted') {
+    if (!record.planTaskRef) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['planTaskRef'], message: 'converted proposals require planTaskRef' })
+    }
+    if (!record.planActionId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['planActionId'], message: 'converted proposals require planActionId' })
+    }
+    if (!record.resolvedAt) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['resolvedAt'], message: 'converted proposals require resolvedAt' })
+    }
+  }
+  if (['rejected', 'expired', 'cancelled'].includes(record.status) && !record.resolvedAt) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['resolvedAt'], message: `${record.status} proposals require resolvedAt` })
+  }
+  if (['draft', 'proposed', 'accepted'].includes(record.status) && record.planTaskRef) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['planTaskRef'], message: 'non-converted proposals cannot embed a Plan Task ref as if converted' })
+  }
+})
+export type KenosWorkActionProposal = z.infer<typeof KenosWorkActionProposalSchema>
+
+export const KenosWorkActionProposalTransitions: Readonly<
+  Record<KenosWorkActionProposalStatus, readonly KenosWorkActionProposalStatus[]>
+> = {
+  draft: ['proposed', 'cancelled'],
+  proposed: ['accepted', 'rejected', 'expired', 'cancelled', 'converted'],
+  accepted: ['converted', 'cancelled', 'expired'],
+  rejected: [],
+  expired: [],
+  converted: [],
+  cancelled: [],
+}
+
+export const KenosWorkActionProposalTransitionSchema = z.object({
+  from: KenosWorkActionProposalStatusSchema,
+  to: KenosWorkActionProposalStatusSchema,
+}).superRefine((transition, ctx) => {
+  if (!KenosWorkActionProposalTransitions[transition.from].includes(transition.to)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['to'],
+      message: `Invalid WorkActionProposal transition: ${transition.from} -> ${transition.to}`,
+    })
+  }
+})
+export type KenosWorkActionProposalTransition = z.infer<typeof KenosWorkActionProposalTransitionSchema>
+
+export const KenosConnectorRegistryEntrySchema = z.object({
+  connectorId: z.string().min(1).max(64),
+  sourceType: z.string().min(1).max(64),
+  permissions: z.array(z.string().min(1)).min(1),
+  readWriteCapability: z.enum(['read_only', 'write_with_approval', 'disabled']),
+  freshness: KenosIsoDateTimeSchema.nullable().optional(),
+  authenticationStatus: z.enum(['unknown', 'authenticated', 'reauth_required', 'disabled']),
+  dataClassification: KenosClassificationSchema,
+  supportedCaptureTypes: z.array(z.string().min(1)).default([]),
+  deepLink: z.string().url().optional(),
+  owner: KenosDomainSchema,
+  failureState: z.enum(['none', 'rate_limited', 'schema_changed', 'auth_failed', 'unavailable']).default('none'),
+}).superRefine((entry, ctx) => {
+  if (entry.readWriteCapability !== 'read_only' && entry.failureState === 'none') {
+    // Phase 3 foundation inventory allows non-read_only capability labels only when explicitly disabled or gated.
+    if (entry.readWriteCapability === 'write_with_approval' && entry.authenticationStatus === 'disabled') return
+  }
+})
+export type KenosConnectorRegistryEntry = z.infer<typeof KenosConnectorRegistryEntrySchema>

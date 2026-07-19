@@ -91,6 +91,28 @@ private func decodeAndValidate(_ contract: String, value: JSONValue, createTaskB
         try decoded.validate()
         return try encoder.encode(decoded)
     case "captureEnvelope": return try encoder.encode(decoder.decode(CaptureEnvelope.self, from: input))
+    case "workProject":
+        let decoded = try decoder.decode(WorkProject.self, from: input)
+        try decoded.validate()
+        return try encoder.encode(decoded)
+    case "workDeliverable":
+        let decoded = try decoder.decode(WorkDeliverable.self, from: input)
+        try decoded.validate()
+        return try encoder.encode(decoded)
+    case "workMeeting":
+        let decoded = try decoder.decode(WorkMeeting.self, from: input)
+        try decoded.validate()
+        return try encoder.encode(decoded)
+    case "workDecision":
+        let decoded = try decoder.decode(WorkDecision.self, from: input)
+        try decoded.validate()
+        return try encoder.encode(decoded)
+    case "workActionProposal":
+        let decoded = try decoder.decode(WorkActionProposal.self, from: input)
+        try decoded.validate()
+        return try encoder.encode(decoded)
+    case "connectorRegistryEntry":
+        return try encoder.encode(decoder.decode(ConnectorRegistryEntry.self, from: input))
     default: throw CocoaError(.coderInvalidValue)
     }
 }
@@ -117,7 +139,7 @@ func invalidCanonicalFixturesFailClosed() throws {
     let validById = Dictionary(uniqueKeysWithValues: corpus.valid.compactMap { fixture in fixture.value.map { (fixture.id, $0) } })
 
     for fixture in corpus.invalid {
-        if fixture.contract == "serverScenario" { continue }
+        if fixture.contract == "serverScenario" || fixture.contract == "serverWorkScenario" { continue }
         if fixture.contract == "outboxTransition" {
             guard case let .object(transition) = try materialize(fixture, validById: validById),
                   case let .string(from)? = transition["from"],
@@ -139,6 +161,18 @@ func invalidCanonicalFixturesFailClosed() throws {
             else { Issue.record("Malformed approval transition fixture \(fixture.id)"); continue }
             #expect(throws: KenosContractError.invalidApprovalTransition) {
                 try ApprovalRecord.validateTransition(from: fromStatus, to: toStatus)
+            }
+            continue
+        }
+        if fixture.contract == "workActionProposalTransition" {
+            guard case let .object(transition) = try materialize(fixture, validById: validById),
+                  case let .string(from)? = transition["from"],
+                  case let .string(to)? = transition["to"],
+                  let fromStatus = KenosWorkActionProposalStatus(rawValue: from),
+                  let toStatus = KenosWorkActionProposalStatus(rawValue: to)
+            else { Issue.record("Malformed work proposal transition fixture \(fixture.id)"); continue }
+            #expect(throws: KenosContractError.invalidApprovalTransition) {
+                try WorkActionProposal.validateTransition(from: fromStatus, to: toStatus)
             }
             continue
         }
@@ -172,4 +206,9 @@ func manifestParity() throws {
     #expect(manifest["approvalStatuses"] as? [String] == KenosApprovalStatus.allCases.map(\.rawValue))
     #expect(manifest["outboxStatuses"] as? [String] == KenosOutboxStatus.allCases.map(\.rawValue))
     #expect(manifest["errorClasses"] as? [String] == KenosErrorClass.allCases.map(\.rawValue))
+    #expect(manifest["workProjectStatuses"] as? [String] == KenosWorkProjectStatus.allCases.map(\.rawValue))
+    #expect(manifest["workDeliverableStatuses"] as? [String] == KenosWorkDeliverableStatus.allCases.map(\.rawValue))
+    #expect(manifest["workDecisionStatuses"] as? [String] == KenosWorkDecisionStatus.allCases.map(\.rawValue))
+    #expect(manifest["workActionProposalStatuses"] as? [String] == KenosWorkActionProposalStatus.allCases.map(\.rawValue))
+    #expect(manifest["workPriorities"] as? [String] == KenosWorkPriority.allCases.map(\.rawValue))
 }

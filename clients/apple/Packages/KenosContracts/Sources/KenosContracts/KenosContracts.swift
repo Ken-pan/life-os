@@ -402,3 +402,303 @@ public struct CaptureEnvelope: Codable, Equatable, Sendable {
     public let expiresAt: KenosTimestamp?
     public let idempotencyKey: String
 }
+
+// MARK: - Phase 3 Work domain (additive)
+
+public enum KenosWorkProjectStatus: String, Codable, CaseIterable, Sendable {
+    case active, blocked, completed, archived
+}
+public enum KenosWorkDeliverableStatus: String, Codable, CaseIterable, Sendable {
+    case planned, inProgress = "in_progress", blocked, accepted, cancelled
+}
+public enum KenosWorkDecisionStatus: String, Codable, CaseIterable, Sendable {
+    case proposed, decided, superseded, cancelled
+}
+public enum KenosWorkActionProposalStatus: String, Codable, CaseIterable, Sendable {
+    case draft, proposed, accepted, rejected, expired, converted, cancelled
+}
+public enum KenosWorkPriority: String, Codable, CaseIterable, Sendable {
+    case low, normal, high, urgent
+}
+public enum KenosWorkCompletionProjection: String, Codable, Sendable {
+    case open, done, unknown
+}
+
+public struct WorkSourceRef: Codable, Equatable, Sendable {
+    public let sourceType: String
+    public let connectorId: String?
+    public let externalId: String?
+    public let deepLink: URL?
+    public let safeLabel: String
+    public let dataClassification: KenosDataClassification
+    public let freshness: KenosTimestamp?
+    public let available: Bool?
+
+    public func validate() throws {
+        guard !safeLabel.isEmpty, safeLabel.count <= 200 else { throw KenosContractError.invalidApprovalState }
+        try Self.rejectSensitive(safeLabel)
+    }
+
+    static func rejectSensitive(_ value: String) throws {
+        let lowered = value.lowercased()
+        for marker in ["token", "secret", "password", "authorization", "cookie", "bearer"] {
+            if lowered.range(of: #"\b"# + marker + #"\b"#, options: .regularExpression) != nil {
+                throw KenosContractError.unredactedSensitivePayload
+            }
+        }
+    }
+}
+
+public struct WorkPlanTaskProjection: Codable, Equatable, Sendable {
+    public let taskRef: EntityRef
+    public let correlationId: UUID?
+    public let safeTitle: String?
+    public let completionProjection: KenosWorkCompletionProjection?
+    public let freshness: KenosTimestamp?
+    public let deepLink: URL?
+
+    public func validate() throws {
+        try taskRef.validate()
+        guard taskRef.type == "plan.task", taskRef.ownerDomain == .plan else {
+            throw KenosContractError.unsupportedCreateTaskBoundary
+        }
+        if let safeTitle { try WorkSourceRef.rejectSensitive(safeTitle) }
+    }
+}
+
+public struct WorkLibraryProjection: Codable, Equatable, Sendable {
+    public let libraryRef: EntityRef
+    public let safeTitle: String?
+    public let dataClassification: KenosDataClassification?
+    public let freshness: KenosTimestamp?
+    public let deepLink: URL?
+    public let sourceAvailable: Bool?
+
+    public func validate() throws {
+        try libraryRef.validate()
+        guard libraryRef.ownerDomain == .library, libraryRef.type.hasPrefix("library.") else {
+            throw KenosContractError.targetOwnerMismatch
+        }
+        if let safeTitle { try WorkSourceRef.rejectSensitive(safeTitle) }
+    }
+}
+
+public struct WorkProject: Codable, Equatable, Sendable {
+    public let id: UUID
+    public let version: KenosSchemaVersion
+    public let ownerId: UUID
+    public let title: String
+    public let safeSummary: String
+    public let status: KenosWorkProjectStatus
+    public let priority: KenosWorkPriority
+    public let startAt: KenosTimestamp?
+    public let targetAt: KenosTimestamp?
+    public let completedAt: KenosTimestamp?
+    public let dataClassification: KenosDataClassification
+    public let sourceRefs: [WorkSourceRef]
+    public let libraryRefs: [WorkLibraryProjection]
+    public let planTaskRefs: [WorkPlanTaskProjection]
+    public let createdAt: KenosTimestamp
+    public let updatedAt: KenosTimestamp
+
+    public func validate() throws {
+        guard !title.isEmpty, title.count <= 200, !safeSummary.isEmpty, safeSummary.count <= 500,
+              updatedAt.rawValue >= createdAt.rawValue else { throw KenosContractError.invalidApprovalState }
+        try WorkSourceRef.rejectSensitive(safeSummary)
+        if status == .completed, completedAt == nil { throw KenosContractError.invalidApprovalState }
+        if status != .completed, completedAt != nil { throw KenosContractError.invalidApprovalState }
+        for ref in sourceRefs { try ref.validate() }
+        for ref in libraryRefs { try ref.validate() }
+        for ref in planTaskRefs { try ref.validate() }
+    }
+}
+
+public struct WorkDeliverable: Codable, Equatable, Sendable {
+    public let id: UUID
+    public let version: KenosSchemaVersion
+    public let projectRef: EntityRef
+    public let ownerId: UUID
+    public let title: String
+    public let safeSummary: String
+    public let status: KenosWorkDeliverableStatus
+    public let targetAt: KenosTimestamp?
+    public let acceptedAt: KenosTimestamp?
+    public let dataClassification: KenosDataClassification
+    public let sourceRefs: [WorkSourceRef]
+    public let planTaskRefs: [WorkPlanTaskProjection]
+    public let createdAt: KenosTimestamp
+    public let updatedAt: KenosTimestamp
+
+    public func validate() throws {
+        try projectRef.validate()
+        guard projectRef.type == "work.project", projectRef.ownerDomain == .work, projectRef.ownerId == ownerId,
+              !title.isEmpty, !safeSummary.isEmpty, updatedAt.rawValue >= createdAt.rawValue
+        else { throw KenosContractError.invalidApprovalState }
+        try WorkSourceRef.rejectSensitive(safeSummary)
+        if status == .accepted, acceptedAt == nil { throw KenosContractError.invalidApprovalState }
+        if status != .accepted, acceptedAt != nil { throw KenosContractError.invalidApprovalState }
+        for ref in sourceRefs { try ref.validate() }
+        for ref in planTaskRefs { try ref.validate() }
+    }
+}
+
+public struct WorkMeeting: Codable, Equatable, Sendable {
+    public struct Attendee: Codable, Equatable, Sendable {
+        public let safeLabel: String
+        public let entityRef: EntityRef?
+    }
+    public let id: UUID
+    public let version: KenosSchemaVersion
+    public let projectRef: EntityRef
+    public let ownerId: UUID
+    public let title: String
+    public let occurredAt: KenosTimestamp?
+    public let scheduledAt: KenosTimestamp?
+    public let attendees: [Attendee]
+    public let safeSummary: String
+    public let dataClassification: KenosDataClassification
+    public let decisionRefs: [EntityRef]
+    public let actionProposalRefs: [EntityRef]
+    public let libraryRefs: [WorkLibraryProjection]
+    public let sourceRefs: [WorkSourceRef]
+    public let createdAt: KenosTimestamp
+    public let updatedAt: KenosTimestamp
+
+    public func validate() throws {
+        try projectRef.validate()
+        guard projectRef.type == "work.project", projectRef.ownerDomain == .work, projectRef.ownerId == ownerId,
+              occurredAt != nil || scheduledAt != nil, !safeSummary.isEmpty,
+              updatedAt.rawValue >= createdAt.rawValue
+        else { throw KenosContractError.invalidApprovalState }
+        try WorkSourceRef.rejectSensitive(safeSummary)
+        for ref in decisionRefs {
+            try ref.validate()
+            guard ref.type == "work.decision", ref.ownerDomain == .work else { throw KenosContractError.targetOwnerMismatch }
+        }
+        for ref in actionProposalRefs {
+            try ref.validate()
+            guard ref.type == "work.action_proposal", ref.ownerDomain == .work else { throw KenosContractError.targetOwnerMismatch }
+        }
+        for ref in libraryRefs { try ref.validate() }
+        for ref in sourceRefs { try ref.validate() }
+    }
+}
+
+public struct WorkDecision: Codable, Equatable, Sendable {
+    public struct DecidedBy: Codable, Equatable, Sendable {
+        public let safeLabel: String
+        public let entityRef: EntityRef?
+    }
+    public let id: UUID
+    public let version: KenosSchemaVersion
+    public let projectRef: EntityRef
+    public let meetingRef: EntityRef?
+    public let ownerId: UUID
+    public let title: String
+    public let safeSummary: String
+    public let status: KenosWorkDecisionStatus
+    public let decidedAt: KenosTimestamp?
+    public let decidedBy: DecidedBy?
+    public let supersedesDecisionRef: EntityRef?
+    public let dataClassification: KenosDataClassification
+    public let entityRefs: [EntityRef]
+    public let createdAt: KenosTimestamp
+    public let updatedAt: KenosTimestamp
+
+    public func validate() throws {
+        try projectRef.validate()
+        guard projectRef.type == "work.project", projectRef.ownerDomain == .work, projectRef.ownerId == ownerId,
+              !safeSummary.isEmpty, updatedAt.rawValue >= createdAt.rawValue
+        else { throw KenosContractError.invalidApprovalState }
+        try WorkSourceRef.rejectSensitive(safeSummary)
+        if let meetingRef {
+            try meetingRef.validate()
+            guard meetingRef.type == "work.meeting", meetingRef.ownerDomain == .work else { throw KenosContractError.targetOwnerMismatch }
+        }
+        if let supersedesDecisionRef {
+            try supersedesDecisionRef.validate()
+            guard supersedesDecisionRef.type == "work.decision", supersedesDecisionRef.ownerDomain == .work,
+                  supersedesDecisionRef.id != id else { throw KenosContractError.invalidApprovalState }
+        }
+        if status == .decided, decidedAt == nil || decidedBy == nil { throw KenosContractError.invalidApprovalState }
+        if status == .proposed, decidedAt != nil || decidedBy != nil { throw KenosContractError.invalidApprovalState }
+        for ref in entityRefs { try ref.validate() }
+    }
+}
+
+public struct WorkActionProposal: Codable, Equatable, Sendable {
+    public let id: UUID
+    public let version: KenosSchemaVersion
+    public let ownerId: UUID
+    public let workEntityRef: EntityRef
+    public let proposedTaskTitle: String
+    public let safeContext: String
+    public let suggestedDueAt: KenosTimestamp?
+    public let suggestedPriority: KenosWorkPriority?
+    public let risk: KenosRisk
+    public let status: KenosWorkActionProposalStatus
+    public let planActionId: UUID?
+    public let planTaskRef: WorkPlanTaskProjection?
+    public let dataClassification: KenosDataClassification
+    public let requestedAt: KenosTimestamp
+    public let resolvedAt: KenosTimestamp?
+    public let correlationId: UUID
+    public let idempotencyKey: String
+    public let createdAt: KenosTimestamp
+    public let updatedAt: KenosTimestamp
+
+    public func validate() throws {
+        try workEntityRef.validate()
+        guard workEntityRef.ownerDomain == .work, workEntityRef.type.hasPrefix("work."),
+              workEntityRef.ownerId == ownerId, !proposedTaskTitle.isEmpty, !safeContext.isEmpty,
+              !idempotencyKey.isEmpty, updatedAt.rawValue >= createdAt.rawValue
+        else { throw KenosContractError.invalidApprovalState }
+        try WorkSourceRef.rejectSensitive(safeContext)
+        try WorkSourceRef.rejectSensitive(proposedTaskTitle)
+        if status == .converted {
+            guard planTaskRef != nil, planActionId != nil, resolvedAt != nil else { throw KenosContractError.invalidApprovalState }
+        }
+        if [.rejected, .expired, .cancelled].contains(status), resolvedAt == nil {
+            throw KenosContractError.invalidApprovalState
+        }
+        if [.draft, .proposed, .accepted].contains(status), planTaskRef != nil {
+            throw KenosContractError.unsupportedCreateTaskBoundary
+        }
+        if let planTaskRef { try planTaskRef.validate() }
+    }
+
+    public static func validateTransition(from: KenosWorkActionProposalStatus, to: KenosWorkActionProposalStatus) throws {
+        let allowed: [KenosWorkActionProposalStatus: Set<KenosWorkActionProposalStatus>] = [
+            .draft: [.proposed, .cancelled],
+            .proposed: [.accepted, .rejected, .expired, .cancelled, .converted],
+            .accepted: [.converted, .cancelled, .expired],
+            .rejected: [], .expired: [], .converted: [], .cancelled: [],
+        ]
+        guard allowed[from]?.contains(to) == true else { throw KenosContractError.invalidApprovalTransition }
+    }
+}
+
+public struct ConnectorRegistryEntry: Codable, Equatable, Sendable {
+    public enum ReadWriteCapability: String, Codable, Sendable {
+        case readOnly = "read_only"
+        case writeWithApproval = "write_with_approval"
+        case disabled
+    }
+    public enum AuthenticationStatus: String, Codable, Sendable {
+        case unknown, authenticated, reauthRequired = "reauth_required", disabled
+    }
+    public enum FailureState: String, Codable, Sendable {
+        case none, rateLimited = "rate_limited", schemaChanged = "schema_changed", authFailed = "auth_failed", unavailable
+    }
+    public let connectorId: String
+    public let sourceType: String
+    public let permissions: [String]
+    public let readWriteCapability: ReadWriteCapability
+    public let freshness: KenosTimestamp?
+    public let authenticationStatus: AuthenticationStatus
+    public let dataClassification: KenosDataClassification
+    public let supportedCaptureTypes: [String]
+    public let deepLink: URL?
+    public let owner: KenosDomain
+    public let failureState: FailureState
+}

@@ -3,27 +3,119 @@
   "contractVersion": "1",
   "freezeStatus": "V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW",
   "unknownFields": "ignore",
-  "actionTypes": ["plan.create_task"],
-  "domains": ["core", "assistant", "work", "plan", "library", "memory", "training", "money", "health", "home", "music", "paper", "system", "automation", "notifications", "integration"],
-  "securityDomains": ["personal", "work", "household", "system"],
-  "dataClassifications": ["public", "personal", "sensitive", "work_confidential", "restricted_local_only", "ephemeral"],
-  "riskValues": ["R0", "R1", "R2", "R3", "R4"],
-  "actorTypes": ["user", "assistant", "automation", "connector", "system"],
-  "actionDecisionOutcomes": ["allow", "require_approval", "deny", "expired"],
-  "actionResultStatuses": ["succeeded", "failed", "queued", "conflict", "cancelled"],
-  "activityResults": ["succeeded", "failed", "queued", "undone", "cancelled"],
-  "approvalStatuses": ["pending", "approved", "rejected", "expired", "cancelled", "superseded"],
-  "outboxStatuses": ["pending", "processing", "published", "retry", "dead_letter"],
-  "errorClasses": ["transient", "permanent"],
+  "actionTypes": [
+    "plan.create_task"
+  ],
+  "domains": [
+    "core",
+    "assistant",
+    "work",
+    "plan",
+    "library",
+    "memory",
+    "training",
+    "money",
+    "health",
+    "home",
+    "music",
+    "paper",
+    "system",
+    "automation",
+    "notifications",
+    "integration"
+  ],
+  "securityDomains": [
+    "personal",
+    "work",
+    "household",
+    "system"
+  ],
+  "dataClassifications": [
+    "public",
+    "personal",
+    "sensitive",
+    "work_confidential",
+    "restricted_local_only",
+    "ephemeral"
+  ],
+  "riskValues": [
+    "R0",
+    "R1",
+    "R2",
+    "R3",
+    "R4"
+  ],
+  "actorTypes": [
+    "user",
+    "assistant",
+    "automation",
+    "connector",
+    "system"
+  ],
+  "actionDecisionOutcomes": [
+    "allow",
+    "require_approval",
+    "deny",
+    "expired"
+  ],
+  "actionResultStatuses": [
+    "succeeded",
+    "failed",
+    "queued",
+    "conflict",
+    "cancelled"
+  ],
+  "activityResults": [
+    "succeeded",
+    "failed",
+    "queued",
+    "undone",
+    "cancelled"
+  ],
+  "approvalStatuses": [
+    "pending",
+    "approved",
+    "rejected",
+    "expired",
+    "cancelled",
+    "superseded"
+  ],
+  "outboxStatuses": [
+    "pending",
+    "processing",
+    "published",
+    "retry",
+    "dead_letter"
+  ],
+  "errorClasses": [
+    "transient",
+    "permanent"
+  ],
   "outboxTransitions": {
-    "pending": ["processing", "dead_letter"],
-    "processing": ["published", "retry", "dead_letter"],
-    "retry": ["processing", "dead_letter"],
+    "pending": [
+      "processing",
+      "dead_letter"
+    ],
+    "processing": [
+      "published",
+      "retry",
+      "dead_letter"
+    ],
+    "retry": [
+      "processing",
+      "dead_letter"
+    ],
     "published": [],
     "dead_letter": []
   },
   "approvalTransitions": {
-    "pending": ["approved", "rejected", "expired", "cancelled", "superseded"],
+    "pending": [
+      "approved",
+      "rejected",
+      "expired",
+      "cancelled",
+      "superseded"
+    ],
     "approved": [],
     "rejected": [],
     "expired": [],
@@ -31,23 +123,353 @@
     "superseded": []
   },
   "requiredFields": {
-    "entityRef": ["id", "type", "ownerDomain", "ownerId"],
-    "actionRequest": ["schemaVersion", "id", "actionType", "producer", "targetDomain", "actor", "deviceId", "securityDomain", "dataClassification", "payload", "idempotencyKey", "requestedAt", "correlationId"],
-    "actionDecision": ["requestId", "outcome", "evaluatedRisk", "policyVersion", "reasons", "decidedAt"],
-    "actionResult": ["requestId", "status", "affectedEntities", "activityId"],
-    "approvalRequest": ["id", "actionRequestId", "risk", "summary", "impact", "sensitiveFieldsRedacted", "reversible", "expiresAt", "createdAt"],
-    "approvalDecision": ["approvalId", "decision", "decidedBy", "authStrength", "decidedAt"],
-    "approvalRecord": ["id", "version", "ownerId", "actionId", "correlationId", "requestingActor", "requestingDomain", "actionType", "risk", "status", "reasonCode", "safeSummary", "dataClassification", "requestedAt", "expiresAt", "entityRefs", "createdAt", "updatedAt"],
-    "activityRecord": ["schemaVersion", "id", "eventType", "actor", "targetRefs", "securityDomain", "summary", "result", "correlationId", "occurredAt"],
-    "mutationEnvelope": ["schemaVersion", "mutationId", "idempotencyKey", "entity", "actorId", "deviceId", "operation", "payload", "occurredAt"],
-    "outboxRecord": ["id", "topic", "aggregate", "payload", "schemaVersion", "idempotencyKey", "correlationId", "occurredAt", "availableAt", "attempts", "status"],
-    "captureEnvelope": ["schemaVersion", "id", "kind", "payload", "source", "actorId", "securityDomain", "dataClassification", "capturedAt", "idempotencyKey"],
-    "commandFailure": ["ok", "error"]
+    "entityRef": [
+      "id",
+      "type",
+      "ownerDomain",
+      "ownerId"
+    ],
+    "actionRequest": [
+      "schemaVersion",
+      "id",
+      "actionType",
+      "producer",
+      "targetDomain",
+      "actor",
+      "deviceId",
+      "securityDomain",
+      "dataClassification",
+      "payload",
+      "idempotencyKey",
+      "requestedAt",
+      "correlationId"
+    ],
+    "actionDecision": [
+      "requestId",
+      "outcome",
+      "evaluatedRisk",
+      "policyVersion",
+      "reasons",
+      "decidedAt"
+    ],
+    "actionResult": [
+      "requestId",
+      "status",
+      "affectedEntities",
+      "activityId"
+    ],
+    "approvalRequest": [
+      "id",
+      "actionRequestId",
+      "risk",
+      "summary",
+      "impact",
+      "sensitiveFieldsRedacted",
+      "reversible",
+      "expiresAt",
+      "createdAt"
+    ],
+    "approvalDecision": [
+      "approvalId",
+      "decision",
+      "decidedBy",
+      "authStrength",
+      "decidedAt"
+    ],
+    "approvalRecord": [
+      "id",
+      "version",
+      "ownerId",
+      "actionId",
+      "correlationId",
+      "requestingActor",
+      "requestingDomain",
+      "actionType",
+      "risk",
+      "status",
+      "reasonCode",
+      "safeSummary",
+      "dataClassification",
+      "requestedAt",
+      "expiresAt",
+      "entityRefs",
+      "createdAt",
+      "updatedAt"
+    ],
+    "activityRecord": [
+      "schemaVersion",
+      "id",
+      "eventType",
+      "actor",
+      "targetRefs",
+      "securityDomain",
+      "summary",
+      "result",
+      "correlationId",
+      "occurredAt"
+    ],
+    "mutationEnvelope": [
+      "schemaVersion",
+      "mutationId",
+      "idempotencyKey",
+      "entity",
+      "actorId",
+      "deviceId",
+      "operation",
+      "payload",
+      "occurredAt"
+    ],
+    "outboxRecord": [
+      "id",
+      "topic",
+      "aggregate",
+      "payload",
+      "schemaVersion",
+      "idempotencyKey",
+      "correlationId",
+      "occurredAt",
+      "availableAt",
+      "attempts",
+      "status"
+    ],
+    "captureEnvelope": [
+      "schemaVersion",
+      "id",
+      "kind",
+      "payload",
+      "source",
+      "actorId",
+      "securityDomain",
+      "dataClassification",
+      "capturedAt",
+      "idempotencyKey"
+    ],
+    "commandFailure": [
+      "ok",
+      "error"
+    ],
+    "workProject": [
+      "id",
+      "version",
+      "ownerId",
+      "title",
+      "safeSummary",
+      "status",
+      "priority",
+      "dataClassification",
+      "sourceRefs",
+      "libraryRefs",
+      "planTaskRefs",
+      "createdAt",
+      "updatedAt"
+    ],
+    "workDeliverable": [
+      "id",
+      "version",
+      "projectRef",
+      "ownerId",
+      "title",
+      "safeSummary",
+      "status",
+      "dataClassification",
+      "sourceRefs",
+      "planTaskRefs",
+      "createdAt",
+      "updatedAt"
+    ],
+    "workMeeting": [
+      "id",
+      "version",
+      "projectRef",
+      "ownerId",
+      "title",
+      "safeSummary",
+      "dataClassification",
+      "decisionRefs",
+      "actionProposalRefs",
+      "libraryRefs",
+      "sourceRefs",
+      "createdAt",
+      "updatedAt"
+    ],
+    "workDecision": [
+      "id",
+      "version",
+      "projectRef",
+      "ownerId",
+      "title",
+      "safeSummary",
+      "status",
+      "dataClassification",
+      "entityRefs",
+      "createdAt",
+      "updatedAt"
+    ],
+    "workActionProposal": [
+      "id",
+      "version",
+      "ownerId",
+      "workEntityRef",
+      "proposedTaskTitle",
+      "safeContext",
+      "risk",
+      "status",
+      "dataClassification",
+      "requestedAt",
+      "correlationId",
+      "idempotencyKey",
+      "createdAt",
+      "updatedAt"
+    ],
+    "connectorRegistryEntry": [
+      "connectorId",
+      "sourceType",
+      "permissions",
+      "readWriteCapability",
+      "authenticationStatus",
+      "dataClassification",
+      "supportedCaptureTypes",
+      "owner",
+      "failureState"
+    ]
   },
   "validFixtureIds": [
-    "entity-ref-minimal", "entity-ref-full", "action-create-task-r1", "action-create-task-unknown-optional", "action-decision-accepted", "action-result-success", "approval-request", "approval-decision", "approval-record-pending-r2", "approval-record-pending-r3", "approval-record-approved", "approval-record-rejected", "approval-record-expired", "approval-record-cancelled", "approval-record-superseded", "approval-record-redacted-sensitive", "approval-record-multiple-entity-refs", "mutation-envelope", "command-failure", "activity-success", "activity-rejection", "activity-redacted-sensitive", "outbox-pending", "outbox-processing", "outbox-published", "outbox-retry", "outbox-dead-letter", "capture-envelope"
+    "entity-ref-minimal",
+    "entity-ref-full",
+    "action-create-task-r1",
+    "action-create-task-unknown-optional",
+    "action-decision-accepted",
+    "action-result-success",
+    "approval-request",
+    "approval-decision",
+    "approval-record-pending-r2",
+    "approval-record-pending-r3",
+    "approval-record-approved",
+    "approval-record-rejected",
+    "approval-record-expired",
+    "approval-record-cancelled",
+    "approval-record-superseded",
+    "approval-record-redacted-sensitive",
+    "approval-record-multiple-entity-refs",
+    "mutation-envelope",
+    "command-failure",
+    "activity-success",
+    "activity-rejection",
+    "activity-redacted-sensitive",
+    "outbox-pending",
+    "outbox-processing",
+    "outbox-published",
+    "outbox-retry",
+    "outbox-dead-letter",
+    "capture-envelope",
+    "work-project-active",
+    "work-project-completed",
+    "work-project-with-deliverables",
+    "work-deliverable-in-progress",
+    "work-meeting-with-decisions",
+    "work-decision-supersession",
+    "work-action-proposal-draft",
+    "work-action-proposal-proposed",
+    "work-action-proposal-converted",
+    "work-action-proposal-rejected",
+    "work-action-proposal-expired",
+    "work-project-redacted-source-refs",
+    "work-project-library-refs",
+    "work-cross-domain-entity-refs",
+    "work-connector-registry-read-only"
   ],
   "invalidFixtureIds": [
-    "malformed-uuid", "invalid-timestamp", "missing-owner-id", "wrong-contract-version", "unknown-action-type", "invalid-risk", "work-sourced-create-task", "proactive-assistant-create-task", "invalid-outbox-transition", "activity-secret-token", "conflicting-idempotency-replay", "approval-malformed-uuid", "approval-owner-mismatch", "approval-unknown-status", "approval-invalid-risk", "approval-approved-without-decision", "approval-pending-with-decision", "approval-invalid-expiry", "approval-secret-summary", "approval-action-id-mismatch", "approval-unsupported-version", "approval-illegal-transition"
-  ]
+    "malformed-uuid",
+    "invalid-timestamp",
+    "missing-owner-id",
+    "wrong-contract-version",
+    "unknown-action-type",
+    "invalid-risk",
+    "work-sourced-create-task",
+    "proactive-assistant-create-task",
+    "invalid-outbox-transition",
+    "activity-secret-token",
+    "conflicting-idempotency-replay",
+    "approval-malformed-uuid",
+    "approval-owner-mismatch",
+    "approval-unknown-status",
+    "approval-invalid-risk",
+    "approval-approved-without-decision",
+    "approval-pending-with-decision",
+    "approval-invalid-expiry",
+    "approval-secret-summary",
+    "approval-action-id-mismatch",
+    "approval-unsupported-version",
+    "approval-illegal-transition",
+    "work-malformed-uuid",
+    "work-owner-mismatch",
+    "work-invalid-timestamp",
+    "work-unsupported-version",
+    "work-invalid-status",
+    "work-converted-without-task-ref",
+    "work-plan-task-embedded-duplicate",
+    "work-sensitive-meeting-transcript",
+    "work-external-secret",
+    "work-writing-canonical-task",
+    "work-library-document-copied",
+    "work-conflicting-idempotency-replay",
+    "work-illegal-proposal-transition"
+  ],
+  "workProjectStatuses": [
+    "active",
+    "blocked",
+    "completed",
+    "archived"
+  ],
+  "workDeliverableStatuses": [
+    "planned",
+    "in_progress",
+    "blocked",
+    "accepted",
+    "cancelled"
+  ],
+  "workDecisionStatuses": [
+    "proposed",
+    "decided",
+    "superseded",
+    "cancelled"
+  ],
+  "workActionProposalStatuses": [
+    "draft",
+    "proposed",
+    "accepted",
+    "rejected",
+    "expired",
+    "converted",
+    "cancelled"
+  ],
+  "workPriorities": [
+    "low",
+    "normal",
+    "high",
+    "urgent"
+  ],
+  "workActionProposalTransitions": {
+    "draft": [
+      "proposed",
+      "cancelled"
+    ],
+    "proposed": [
+      "accepted",
+      "rejected",
+      "expired",
+      "cancelled",
+      "converted"
+    ],
+    "accepted": [
+      "converted",
+      "cancelled",
+      "expired"
+    ],
+    "rejected": [],
+    "expired": [],
+    "converted": [],
+    "cancelled": []
+  },
+  "phase3OwnershipStatus": "TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION"
 }
