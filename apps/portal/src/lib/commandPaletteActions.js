@@ -144,6 +144,42 @@ export const PORTAL_DEEP_LINKS = [
     icon: 'search',
     keywords: ['music', 'search', '搜索'],
   },
+  {
+    id: 'assistant-today',
+    appId: 'aios',
+    title: 'Kenos · Today',
+    subtitle: '状态、下一步与待决定事项',
+    path: '/',
+    icon: 'layout-dashboard',
+    keywords: ['kenos', 'assistant', 'today', '今日', '默认入口'],
+  },
+  {
+    id: 'assistant-chat',
+    appId: 'aios',
+    title: 'Kenos · Assistant',
+    subtitle: '对话、来源与 Action preview',
+    path: '/assistant',
+    icon: 'message-circle',
+    keywords: ['kenos', 'assistant', 'chat', '对话'],
+  },
+  {
+    id: 'assistant-approvals',
+    appId: 'aios',
+    title: 'Kenos · Approvals',
+    subtitle: '查看动作风险、范围与影响',
+    path: '/approvals',
+    icon: 'shield-check',
+    keywords: ['kenos', 'approval', '审批', '确认'],
+  },
+  {
+    id: 'assistant-activity',
+    appId: 'aios',
+    title: 'Kenos · Activity',
+    subtitle: '动作结果、失败与恢复',
+    path: '/activity',
+    icon: 'activity',
+    keywords: ['kenos', 'activity', '动作', '恢复'],
+  },
 ]
 
 const deepLinkById = Object.fromEntries(PORTAL_DEEP_LINKS.map((link) => [link.id, link]))
@@ -296,7 +332,9 @@ export function buildPortalCommandActions({ signOut, query = '', allowedAppKeys 
               ? 'activity'
               : app.id === 'home'
                 ? 'home'
-                : 'music',
+                : app.id === 'aios'
+                  ? 'message-circle'
+                  : 'music',
       onSelect: () => {
         if (query) recordRecentSearch(query, `app-${app.id}`, label)
         window.location.href = app.url

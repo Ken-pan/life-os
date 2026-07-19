@@ -81,8 +81,24 @@ const phase1Allowed = ledger.includes('MIGRATION: KR-P1-001A Durable server Acti
       /^apps\/planner\/server\/kenos\/writerCutoverSimulation(\.test)?\.mjs$/,
     ]
   : []
+const phase2Allowed = ledger.includes('LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER')
+  ? [
+      /^apps\/aios\/app\.manifest\.json$/,
+      /^apps\/aios\/src\/app\.(css|html)$/,
+      /^apps\/aios\/static\/manifest\.webmanifest$/,
+      /^apps\/aios\/src\/lib\/kenos\//,
+      /^apps\/aios\/src\/lib\/controlCenter\.core\.test\.js$/,
+      /^apps\/aios\/src\/lib\/components\/(BottomNav|ChatSidebar)\.svelte$/,
+      /^apps\/aios\/src\/lib\/i18n\/messages\/(en|zh)\.js$/,
+      /^apps\/aios\/src\/routes\/(\+layout|\+page|history\/\+page|assistant\/\+page|inbox\/\+page|approvals\/\+page|activity\/\+page)\.svelte$/,
+      /^apps\/portal\/src\/lib\/(apps|commandPaletteActions|iconRegistry)\.js$/,
+      /^apps\/portal\/scripts\/command-palette-actions\.test\.mjs$/,
+      /^packages\/theme\/src\/index\.d\.ts$/,
+      /^packages\/theme\/src\/generated\/appRegistry\.js$/,
+    ]
+  : []
 for (const path of changed) {
-  if (![...allowed, ...krP1001RuntimeAllowed, ...phase1Allowed].some((pattern) => pattern.test(path))) fail(`allowlist violation in diff: ${path}`)
+  if (![...allowed, ...krP1001RuntimeAllowed, ...phase1Allowed, ...phase2Allowed].some((pattern) => pattern.test(path))) fail(`allowlist violation in diff: ${path}`)
 }
 
 for (const token of ['Starting revision:', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'Phase 0 preparation definition of done:']) {

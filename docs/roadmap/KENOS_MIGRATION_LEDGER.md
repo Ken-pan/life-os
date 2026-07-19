@@ -33,9 +33,9 @@ PROPOSED
 | Migration | 当前真源/入口 | 目标真源/入口 | 状态 | 前置 | 单一 writer 切换 | 回滚 | Retirement gate |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Life OS 品牌 | 多处 Life OS/Kenos 混用 | 用户可见 Kenos，稳定内部 ID | PROPOSED | 命名表冻结 | 不涉及数据 writer | 恢复文案/redirect | 旧文案/域名无必要引用 |
-| Portal 默认入口 | `apps/portal` | Assistant/Today | PROPOSED | Today/Inbox/Approval/Activity | Portal 写入先冻结，再切入口 | 默认入口回 Portal | 两稳定周期 + 无旧写入 |
+| Portal 默认入口 | `apps/portal` | Assistant/Today | LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER | Today/Inbox/Approval/Activity | Portal 写入先冻结，再切入口 | 默认入口回 Portal | 两稳定周期 + 无旧写入 |
 | Planner → Plan | Planner UI/表/本地缓存 | `plan` 领域语义 | PROPOSED | owner inventory | 先保持原表 writer，仅更改 API/名称 | 路由/文案回退 | 旧名称兼容到 deep links 稳定 |
-| AIOS → Assistant | AIOS Tauri/Web | Assistant Space + Kenos Mac | PROPOSED | Action/Policy/Activity | 领域数据仍归原 Owner | 旧 AIOS 继续运行 | 新 Assistant 真实使用通过 |
+| AIOS → Assistant | AIOS Tauri/Web | Assistant Space + Kenos Mac | LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER | Action/Policy/Activity | 领域数据仍归原 Owner | 旧 AIOS chat 保留于 `/assistant` | 新 Assistant 真实使用通过 |
 | Knowledge → Library | Vault + KnowledgeOS | Library Space/API | PROPOSED | Library/Memory 边界 | Vault 仍唯一正文 writer | 旧壳继续 | 新客户端能编辑/恢复/深链 |
 | Fitness → Training | Fitness app/schema | Training Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 行为与历史数据 parity |
 | Finance → Money | Finance app/schema | Money Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 报表/导入/购买历史 parity |
@@ -69,10 +69,10 @@ PROPOSED
 
 | Capability | Portal 当前实现 | 目标 Owner/UI | 状态 | 验收 |
 | --- | --- | --- | --- | --- |
-| Today summary | Portal RPC/cards | Assistant Today read model | PROPOSED | 计数口径 parity + 可直接行动 |
-| App launcher | Portal cards/switcher | Kenos Spaces/global nav | PROPOSED | 所有现役 Space 可达 |
+| Today summary | Portal RPC/cards | Assistant Today read model | LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER | beta 复用现有只读 RPC；计数口径 parity + 可直接行动 |
+| App launcher | Portal cards/switcher | Kenos Spaces/global nav | LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER | Assistant 可达所有现役 Space；Portal 仅增加实验入口 |
 | Default app | Portal setting | Kenos default intent/route | PROPOSED | 登录/深链/通知入口一致 |
-| Badges/events | Portal cards | Today/Inbox | PROPOSED | 无丢失/重复，支持处理 |
+| Badges/events | Portal cards | Today/Inbox | LOCAL_UI_BETA_ONLY | 当前仅本地 demo adapter；接生产前需证明无丢失/重复与可处理 |
 | Settings | Portal embedded settings | System/Appearance | PROPOSED | 用户偏好迁移、旧写入冻结 |
 | PWA install | Portal flow | Kenos native/Web install strategy | PROPOSED | 决定保留/取消 |
 | `portal.kenos.space` | live domain | Assistant Today redirect | PROPOSED | TLS、auth、deep link、analytics/traffic observation |

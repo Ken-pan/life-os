@@ -34,12 +34,12 @@
 
   function open(id) {
     selectConversation(id)
-    goto('/')
+    goto('/assistant')
   }
 
   function newChat() {
     startNewChat()
-    goto('/')
+    goto('/assistant')
   }
 </script>
 

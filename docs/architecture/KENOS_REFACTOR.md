@@ -3,7 +3,7 @@ title: Kenos 平台重构计划 - 导航与执行边界
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: refactor-program-hub
-status: phase-1-production-review-ready-no-cutover
+status: phase-2-local-beta-in-progress-no-production-cutover
 review_cadence: every-migration-slice
 ---
 
@@ -11,7 +11,7 @@ review_cadence: every-migration-slice
 
 > 这是本次 Life OS → Kenos 重构的专用导航页。它把最新平台审核中的产品、数据、AI、原生客户端和治理决策转成可执行文档。
 >
-> **Phase 1 本地 contract freeze 已完成，可进入生产人工评审。** `KR-P1-001` 本地 command、v1 canonical corpus、Swift Codable package、cross-language guard、disposable transaction/RLS/privilege proof 和 writer cutover simulation 已落地。状态为 `V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW`；尚未生产批准、apply migration、切 writer、deploy 或启动 Phase 2。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
+> **Phase 1 已由 owner 验收为 `PASS — READY_FOR_PRODUCTION_REVIEW`；Phase 2 本地 beta 已启动。** `apps/aios` 现在以 Today 为默认本地入口，保留现有对话于 `/assistant`，并提供 Inbox、Approvals、Activity 的只读/本地演练控制面；Portal 只增加实验入口和 deep links。生产 migration、writer cutover、Portal 默认域切换、redirect、deploy 与旧路径删除仍为锁定 Gate。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
 
 ## 一句话
 
@@ -46,6 +46,7 @@ Kenos 将从“多个互相打通的 OS App”渐进收敛为: **用户感受到
 | 11 | [`../roadmap/KENOS_REFACTOR_EXECUTION_STATE.md`](../roadmap/KENOS_REFACTOR_EXECUTION_STATE.md) | Cloud 任务当前推进到哪里、最后一次验证是什么？ |
 | 12 | [`../ops/kenos-phase1-privilege-model.md`](../ops/kenos-phase1-privilege-model.md) | 生产评审中 client/worker/function owner/RLS 权限如何收紧？ |
 | 13 | [`../ops/kenos-phase1-writer-cutover.md`](../ops/kenos-phase1-writer-cutover.md) | writer 盘点、shadow、阈值、abort 和回滚如何审批？ |
+| 14 | [`../ops/kenos-phase2-assistant-portal.md`](../ops/kenos-phase2-assistant-portal.md) | Assistant/Today 本地 beta、Portal strangler 和生产锁如何推进？ |
 
 ## 权威和状态优先级
 

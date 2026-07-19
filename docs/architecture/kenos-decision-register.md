@@ -3,7 +3,7 @@ title: Kenos 重构决策登记表
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: architecture-decision-register
-status: active-for-phase-0
+status: active-for-phase-2-local-beta
 ---
 
 # Kenos 重构决策登记表
@@ -19,14 +19,15 @@ status: active-for-phase-0
 - `RETIRED`: 不再适用且已删除兼容层。
 - `TEMPORARY_APPROVED_FOR_KR-P1-001`: 仅限 `KR-P1-001 Plan create task Action/Outbox vertical slice` 的临时批准；KR-P1-001 验收完成后、KR-P1-002 开始前必须复审，不是 Kenos 永久架构决定。
 - `V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW`: 跨 TypeScript/SQL/Swift 的 major v1 语义已冻结；只允许 additive optional 演进，不表示生产 apply/cutover 获批。
+- `LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER`: owner 已批准本地产品迁移开发；不得据此 apply 生产 migration、切 writer/default domain、deploy、redirect 或删除旧路径。
 
 ## P0 决策
 
 | ID | 决策 | 状态 | 实施前最后一步 | 证据/约束 |
 | --- | --- | --- | --- | --- |
 | KENOS-001 | 产品品牌为 Kenos，内部领域 ID 与用户文案分离 | TARGET_APPROVED | 冻结 ID 表和旧路由保留期 | 不做超级 rename |
-| KENOS-002 | Assistant / Today 成为唯一默认协调入口 | TARGET_APPROVED | 签署 Today 最小产品契约 | 当前 Portal 仍是生产入口 |
-| KENOS-003 | Portal 是待退役迁移源，不是长期 Space | TARGET_APPROVED | 确认 Today/Inbox/Approval/Activity 四个前置 gate | 未达 gate 不 redirect/删除 |
+| KENOS-002 | Assistant / Today 成为唯一默认协调入口 | LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER | 完成真实使用、读模型 parity 与生产入口评审 | `apps/aios` 本地根路由为 Today；Portal 仍是生产入口 |
+| KENOS-003 | Portal 是待退役迁移源，不是长期 Space | LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER | Today/Inbox/Approval/Activity 真实数据与观察 gate | Portal 仅增加 Assistant beta launcher/deep links；未 freeze、redirect 或删除 |
 | KENOS-004 | 模块化单体 + 清晰领域边界 + 一个 Supabase 项目 | TARGET_APPROVED | 冻结 schema/package 边界和依赖方向 | 不过早拆微服务/多 DB |
 | KENOS-005 | 每类数据一个写入 Owner，其他域只引用/投影 | TARGET_APPROVED | 对存量表和本地真源做 ownership inventory | 不允许长期双写 |
 | KENOS-006 | 安全域为 Personal / Work / Household / System | TARGET_APPROVED | 冻结跨域默认值、Work 保留和 cloud AI 政策 | 缺失分类按更严格处理 |

@@ -159,11 +159,11 @@ export const LIFE_OS_SITE_META = {
   },
   aios: {
     id: "aios",
-    name: "AI.OS",
-    shortName: "AI",
+    name: "Kenos Assistant",
+    shortName: "Assistant",
     description: {
-      zh: "本地 AI 对话 · LocalAI 网关驱动的私有 LLM 聊天",
-      en: "Local AI chat · private LLM powered by the LocalAI gateway",
+      zh: "Kenos 默认协调入口 · Today、Assistant、Inbox、审批与 Activity",
+      en: "The Kenos coordination entry · Today, Assistant, Inbox, approvals, and Activity",
     },
     themeColor: {
       light: "#ffffff",
@@ -375,14 +375,14 @@ export const LIFE_OS_PWA_APPS = {
   },
   aios: {
     id: "aios",
-    name: "AI.OS",
+    name: "Kenos Assistant",
     workspace: "aios-os",
     port: 5197,
     shellType: "main-wrap-main",
     waitSelector: ".app-shell",
     nestedWrapInMain: true,
-    routes: [{"path":"/","name":"chat"},{"path":"/history","name":"history"},{"path":"/settings","name":"settings"}],
-    clipPaths: ["/"],
+    routes: [{"path":"/","name":"today"},{"path":"/assistant","name":"assistant"},{"path":"/inbox","name":"inbox"},{"path":"/approvals","name":"approvals"},{"path":"/activity","name":"activity"},{"path":"/history","name":"history"},{"path":"/settings","name":"settings"}],
+    clipPaths: ["/assistant"],
     scrollQaPath: "/settings",
     production: false,
     pwaTestEnabled: true,

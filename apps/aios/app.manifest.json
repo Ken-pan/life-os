@@ -1,10 +1,10 @@
 {
   "id": "aios",
-  "name": "AI.OS",
-  "shortName": "AI",
+  "name": "Kenos Assistant",
+  "shortName": "Assistant",
   "description": {
-    "zh": "本地 AI 对话 · LocalAI 网关驱动的私有 LLM 聊天",
-    "en": "Local AI chat · private LLM powered by the LocalAI gateway"
+    "zh": "Kenos 默认协调入口 · Today、Assistant、Inbox、审批与 Activity",
+    "en": "The Kenos coordination entry · Today, Assistant, Inbox, approvals, and Activity"
   },
   "themeColor": {
     "light": "#ffffff",
@@ -36,7 +36,23 @@
   "routes": [
     {
       "path": "/",
-      "name": "chat"
+      "name": "today"
+    },
+    {
+      "path": "/assistant",
+      "name": "assistant"
+    },
+    {
+      "path": "/inbox",
+      "name": "inbox"
+    },
+    {
+      "path": "/approvals",
+      "name": "approvals"
+    },
+    {
+      "path": "/activity",
+      "name": "activity"
     },
     {
       "path": "/history",
@@ -48,7 +64,7 @@
     }
   ],
   "clipPaths": [
-    "/"
+    "/assistant"
   ],
   "scrollQaPath": "/settings"
 }

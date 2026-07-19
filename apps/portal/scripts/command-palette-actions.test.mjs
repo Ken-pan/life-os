@@ -28,13 +28,20 @@ assert.equal(
 const filtered = buildPortalCommandActions({
   signOut: async () => {},
   query: '曲库',
+  allowedAppKeys: ['music'],
 })
 assert.ok(filtered.some((a) => a.id === 'music-library'))
 assert.ok(!filtered.some((a) => a.id === 'planner-inbox'))
 
-const all = buildPortalCommandActions({ signOut: async () => {}, query: '' })
+const all = buildPortalCommandActions({
+  signOut: async () => {},
+  query: '',
+  allowedAppKeys: ['planner', 'finance', 'fitness', 'music', 'home', 'aios'],
+})
 assert.ok(all.some((a) => a.id === 'sign-out'))
 assert.ok(all.some((a) => a.id.startsWith('app-')))
+assert.ok(all.some((a) => a.id === 'assistant-today'))
+assert.ok(all.some((a) => a.id === 'assistant-approvals'))
 
 if (typeof localStorage !== 'undefined') {
   localStorage.removeItem('portal_cp_recent_v1')

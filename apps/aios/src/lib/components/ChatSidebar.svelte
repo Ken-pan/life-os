@@ -6,7 +6,15 @@
   import { C, startNewChat, selectConversation, deleteConversation } from '$lib/chat.svelte.js'
   import { AG, openAgent, closeAgent } from '$lib/agents.svelte.js'
 
-  const onChatRoute = $derived(page.url.pathname === '/')
+  const onChatRoute = $derived(page.url.pathname === '/assistant')
+
+  const primaryItems = $derived([
+    { href: '/', icon: 'dashboard', label: t('nav.today') },
+    { href: '/assistant', icon: 'chat', label: t('nav.assistant') },
+    { href: '/inbox', icon: 'list-todo', label: t('nav.inbox') },
+    { href: '/approvals', icon: 'check', label: t('nav.approvals') },
+    { href: '/activity', icon: 'history', label: t('nav.activity') },
+  ])
 
   let query = $state('')
   const filtered = $derived.by(() => {
@@ -22,18 +30,18 @@
   function openConversation(id) {
     closeAgent()
     selectConversation(id)
-    if (!onChatRoute) goto('/')
+    if (!onChatRoute) goto('/assistant')
   }
 
   function newChat() {
     closeAgent()
     startNewChat()
-    if (!onChatRoute) goto('/')
+    if (!onChatRoute) goto('/assistant')
   }
 
   function openAgentThread(key) {
     openAgent(key)
-    if (!onChatRoute) goto('/')
+    if (!onChatRoute) goto('/assistant')
   }
 </script>
 
@@ -44,7 +52,7 @@
         <img src="/brand-square-light-96.png" class="mark-light" width="24" height="24" alt="" />
         <img src="/brand-square-dark-96.png" class="mark-dark" width="24" height="24" alt="" />
       </span>
-      <span class="brand-word">AI<span class="brand-accent">OS</span></span>
+      <span class="brand-word">Kenos</span>
     </span>
     <button
       type="button"
@@ -57,7 +65,31 @@
     </button>
   </div>
 
-  {#if AG.available.length}
+  <nav class="workspace-nav" aria-label="Assistant 工作区">
+    {#each primaryItems as item (item.href)}
+      <a
+        class="workspace-nav-item"
+        class:active={
+          item.href === '/'
+            ? page.url.pathname === '/'
+            : page.url.pathname.startsWith(item.href)
+        }
+        href={item.href}
+        aria-current={
+          (item.href === '/'
+            ? page.url.pathname === '/'
+            : page.url.pathname.startsWith(item.href))
+            ? 'page'
+            : undefined
+        }
+      >
+        <Icon name={item.icon} size={17} strokeWidth={1.75} />
+        <span>{item.label}</span>
+      </a>
+    {/each}
+  </nav>
+
+  {#if onChatRoute && AG.available.length}
     <div class="agent-section" role="list" aria-label="外部代理">
       <p class="agent-label">外部代理</p>
       {#each AG.available as a (a.key)}
@@ -65,7 +97,6 @@
           type="button"
           class="agent-entry"
           class:active={onChatRoute && AG.active === a.key}
-          role="listitem"
           title={a.label}
           onclick={() => openAgentThread(a.key)}
         >
@@ -79,7 +110,7 @@
     </div>
   {/if}
 
-  {#if C.conversations.length > 3}
+  {#if onChatRoute && C.conversations.length > 3}
     <div class="sidebar-search">
       <input
         type="search"
@@ -90,37 +121,54 @@
     </div>
   {/if}
 
-  <div class="sidebar-body chat-list" role="list">
-    {#if filtered.length === 0}
-      <p class="chat-list-empty">{query ? t('chat.searchNoResults') : t('history.empty')}</p>
-    {:else}
-      {#each filtered as conversation (conversation.id)}
-        <div
-          class="chat-item"
-          class:active={onChatRoute && !AG.active && C.activeId === conversation.id}
-          role="listitem"
-        >
-          <button
-            type="button"
-            class="chat-item-main"
-            onclick={() => openConversation(conversation.id)}
-            title={conversation.title}
+  {#if onChatRoute}
+    <div class="sidebar-body chat-list" role="list">
+      {#if filtered.length === 0}
+        <p class="chat-list-empty">{query ? t('chat.searchNoResults') : t('history.empty')}</p>
+      {:else}
+        {#each filtered as conversation (conversation.id)}
+          <div
+            class="chat-item"
+            class:active={!AG.active && C.activeId === conversation.id}
+            role="listitem"
           >
-            <span class="chat-item-title">{conversation.title || t('chat.newChat')}</span>
-          </button>
-          <button
-            type="button"
-            class="chat-item-del"
-            title={t('history.delete')}
-            aria-label={t('history.delete')}
-            onclick={() => deleteConversation(conversation.id)}
-          >
-            <Icon name="trash" size={14} strokeWidth={1.75} />
-          </button>
-        </div>
-      {/each}
-    {/if}
-  </div>
+            <button
+              type="button"
+              class="chat-item-main"
+              onclick={() => openConversation(conversation.id)}
+              title={conversation.title}
+            >
+              <span class="chat-item-title">{conversation.title || t('chat.newChat')}</span>
+            </button>
+            <button
+              type="button"
+              class="chat-item-del"
+              title={t('history.delete')}
+              aria-label={t('history.delete')}
+              onclick={() => deleteConversation(conversation.id)}
+            >
+              <Icon name="trash" size={14} strokeWidth={1.75} />
+            </button>
+          </div>
+        {/each}
+      {/if}
+    </div>
+  {:else}
+    <div class="sidebar-body sidebar-context">
+      <p>Assistant 协调动作；数据仍由各 Space 拥有。</p>
+    </div>
+  {/if}
+
+  <a
+    class="nav-item sidebar-foot-item"
+    class:active={page.url.pathname.startsWith('/history')}
+    href="/history"
+    data-sveltekit-noscroll
+    aria-current={page.url.pathname.startsWith('/history') ? 'page' : undefined}
+  >
+    <Icon name="history" size={18} strokeWidth={1.75} />
+    <span class="nav-lbl">{t('nav.history')}</span>
+  </a>
 
   <a
     class="nav-item sidebar-foot-item"
@@ -183,10 +231,6 @@
     letter-spacing: 0.04em;
     color: var(--sidebar-foreground);
   }
-  .brand-accent {
-    color: var(--sidebar-muted);
-  }
-
   .icon-btn {
     display: grid;
     place-items: center;
@@ -200,6 +244,41 @@
   }
   .icon-btn:hover {
     background: var(--sidebar-accent);
+  }
+
+  .workspace-nav {
+    display: grid;
+    gap: 2px;
+    padding: 4px 8px 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--sidebar-foreground) 10%, transparent);
+  }
+  .workspace-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    padding: 0 10px;
+    border-radius: 8px;
+    color: var(--sidebar-muted);
+    font-size: var(--text-md);
+    text-decoration: none;
+  }
+  .workspace-nav-item:hover,
+  .workspace-nav-item.active {
+    background: var(--sidebar-accent);
+    color: var(--sidebar-foreground);
+  }
+  .workspace-nav-item.active {
+    font-weight: 580;
+  }
+  .sidebar-context {
+    padding: 16px 18px;
+  }
+  .sidebar-context p {
+    margin: 0;
+    color: var(--sidebar-muted);
+    font-size: var(--text-sm);
+    line-height: 1.55;
   }
 
   .agent-section {

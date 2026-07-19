@@ -11,6 +11,8 @@ run_gate() {
 }
 
 run_gate "phase0 freeze package" node scripts/check-kenos-phase0.mjs
+run_gate "phase1 contract freeze" node scripts/check-kenos-phase1.mjs
+run_gate "phase2 Assistant/Portal strangler" node scripts/check-kenos-phase2.mjs
 run_gate "ticket naming" npm run verify:ticket-naming
 run_gate "dependency boundaries" npm run check:lifeos-boundaries
 run_gate "style boundaries" npm run check:lifeos-styles

@@ -33,12 +33,19 @@
 
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
-  const isChat = $derived(page.url.pathname === '/')
+  const isAssistant = $derived(page.url.pathname === '/assistant')
+  const hasCustomHeader = $derived(
+    ['/', '/inbox', '/approvals', '/activity'].includes(page.url.pathname),
+  )
 
   const pageTitle = $derived.by(() => {
     const p = page.url.pathname
     if (p === '/settings') return t('settings.title')
     if (p === '/history') return t('history.title')
+    if (p === '/inbox') return t('nav.inbox')
+    if (p === '/approvals') return t('nav.approvals')
+    if (p === '/activity') return t('nav.activity')
+    if (p === '/') return t('nav.today')
     return t('chat.title')
   })
 
@@ -97,7 +104,7 @@
   <LifeOsAppShell
     navigationKey={page.url.pathname}
     focusOnNavigate="main"
-    scrollMode={isChat ? 'locked' : 'content'}
+    scrollMode={isAssistant ? 'locked' : 'content'}
     skipLinkLabel={t('common.skipToContent')}
     testIdPrefix="aios-shell"
   >
@@ -110,7 +117,7 @@
     {/snippet}
 
     {#snippet header()}
-      <LifeOsAppBar title={pageTitle} hidden={isChat}>
+      <LifeOsAppBar title={pageTitle} hidden={isAssistant || hasCustomHeader}>
         {#snippet leading()}
           <span class="page-title">{t('app.name')}</span>
         {/snippet}
@@ -122,4 +129,3 @@
     {/snippet}
   </LifeOsAppShell>
 {/if}
-

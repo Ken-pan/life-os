@@ -1,6 +1,6 @@
 export default {
   app: {
-    name: 'AI.OS',
+    name: 'Kenos Assistant',
   },
   common: {
     skipToContent: 'Skip to content',
@@ -13,6 +13,11 @@ export default {
   },
   nav: {
     mainAria: 'Main navigation',
+    today: 'Today',
+    assistant: 'Assistant',
+    inbox: 'Inbox',
+    approvals: 'Approvals',
+    activity: 'Activity',
     chat: 'Chat',
     history: 'History',
     settings: 'Settings',

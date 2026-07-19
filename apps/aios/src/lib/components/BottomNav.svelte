@@ -9,9 +9,11 @@
 
   const items = $derived(
     [
-      { href: '/', icon: 'chat', label: t('nav.chat') },
-      { href: '/history', icon: 'history', label: t('nav.history') },
-      { href: '/settings', icon: 'settings', label: t('nav.settings') },
+      { href: '/', icon: 'dashboard', label: t('nav.today') },
+      { href: '/assistant', icon: 'chat', label: t('nav.assistant') },
+      { href: '/inbox', icon: 'list-todo', label: t('nav.inbox') },
+      { href: '/approvals', icon: 'check', label: t('nav.approvals') },
+      { href: '/activity', icon: 'history', label: t('nav.activity') },
     ].map((item) => ({ ...item, active: isActive(item.href) })),
   )
 </script>

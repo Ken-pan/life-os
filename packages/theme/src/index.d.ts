@@ -84,6 +84,9 @@ export type LifeOsAppId =
   | 'music'
   | 'home'
   | 'portal'
+  | 'aios'
+  | 'health'
+  | 'knowledge'
 
 export type LifeOsSiteMetaEntry = {
   id: LifeOsAppId

@@ -1,6 +1,6 @@
 import { LIFE_OS_SITE_META } from '@life-os/theme'
 
-/** @typedef {'planner' | 'finance' | 'fitness' | 'music' | 'home'} LauncherAppId */
+/** @typedef {'planner' | 'finance' | 'fitness' | 'music' | 'home' | 'aios'} LauncherAppId */
 
 /**
  * Portal launcher 顺序与各端真实品牌色（与各 app app.css 对齐，非 Tailwind 渐变）
@@ -48,6 +48,14 @@ export const PORTAL_APPS = [
     iconLight: '/apps/home-light-96.png',
     iconDark: '/apps/home-dark-96.png',
     accent: '#5c758c',
+    experimental: true,
+  },
+  {
+    id: 'aios',
+    url: 'https://aios.kenos.space',
+    iconLight: 'https://aios.kenos.space/brand-square-light-96.png',
+    iconDark: 'https://aios.kenos.space/brand-square-dark-96.png',
+    accent: '#5d5d5d',
     experimental: true,
   },
 ]

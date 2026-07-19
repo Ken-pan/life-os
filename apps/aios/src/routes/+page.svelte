@@ -1,498 +1,512 @@
 <script>
-  import { tick, untrack, onMount } from 'svelte'
+  import { onMount } from 'svelte'
   import Icon from '@life-os/platform-web/svelte/icon'
-  import { t } from '$lib/i18n/index.js'
+  import { CONTROL, refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
   import {
-    C,
-    startNewChat,
-    sendMessage,
-    conversationToMarkdown,
-  } from '$lib/chat.svelte.js'
-  import Composer from '$lib/components/Composer.svelte'
-  import Message from '$lib/components/Message.svelte'
-  import AgentThread from '$lib/components/AgentThread.svelte'
-  import { AG } from '$lib/agents.svelte.js'
-  import ModelPicker from '$lib/components/ModelPicker.svelte'
-  import SidePanel from '$lib/components/SidePanel.svelte'
-  import { openArtifact } from '$lib/panel.svelte.js'
-  import { CLOUD_BUILD } from '$lib/env.js'
-  import { generateDailySuggestions } from '$lib/dailySuggestions.js'
+    buildTodayReadModel,
+    KENOS_SPACES,
+    sortActivityNewestFirst,
+    summarizeControlQueue,
+  } from '$lib/kenos/controlCenter.core.js'
 
-  const conversation = $derived(
-    C.conversations.find((c) => c.id === C.activeId) ?? null,
-  )
-  const isEmpty = $derived(!conversation || conversation.messages.length === 0)
+  const today = $derived(buildTodayReadModel(CONTROL.summary))
+  const queue = $derived(summarizeControlQueue(CONTROL))
+  const recentActivity = $derived(sortActivityNewestFirst(CONTROL.activities).slice(0, 3))
+  const dateLabel = new Intl.DateTimeFormat('zh-CN', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+  }).format(new Date())
 
-  // 首页建议:默认静态四个;「今日感知」素材可用时,后台用小模型生成随近况
-  // 变化的动态建议(会议/项目/所在地),算好后无缝替换,不出现加载态。
-  const STATIC_SUGGESTIONS = $derived([
-    { icon: 'image', text: t('chat.suggestImage') },
-    { icon: 'search', text: t('chat.suggestSearch') },
-    { icon: 'code', text: t('chat.suggestCode') },
-    { icon: 'lightbulb', text: t('chat.suggestBrainstorm') },
-  ])
-  const DYN_ICONS = ['notebook', 'code', 'search', 'lightbulb']
-  let dynamicSuggestions = $state(null)
   onMount(() => {
-    generateDailySuggestions()
-      .then((items) => {
-        if (items?.length) dynamicSuggestions = items
-      })
-      .catch(() => {})
-  })
-  const suggestions = $derived(
-    dynamicSuggestions
-      ? dynamicSuggestions.map((text, i) => ({ icon: DYN_ICONS[i % DYN_ICONS.length], text }))
-      : STATIC_SUGGESTIONS,
-  )
-
-  // 追问建议(小模型生成,挂在最后一条助手消息上,空闲时展示)
-  const followUps = $derived.by(() => {
-    if (C.streaming || !conversation) return []
-    const last = conversation.messages.at(-1)
-    if (last?.role !== 'assistant' || last.error) return []
-    return last.suggestions ?? []
-  })
-
-  let scroller = $state(null)
-  let nearBottom = $state(true)
-  let exported = $state(false)
-
-  // —— 长对话:新一轮提问顶部锚定(ChatGPT 式)——
-  // 发送后把用户这条消息顶到视口顶部,回答在下方流式展开;
-  // 靠一个尾部占位撑出空间,答案变长时占位自动收缩,超过一屏后归零。
-  let spacerH = $state(0)
-  let liveAnchor = false // 当前是否处于"新回合锚定"模式
-  let prevId = null
-  let prevLen = 0
-  const TOP_GAP = 16
-
-  function recomputeSpacer() {
-    if (!scroller || !liveAnchor) {
-      if (spacerH !== 0) spacerH = 0
-      return
-    }
-    const col = scroller.firstElementChild
-    if (!col) return
-    const rows = col.querySelectorAll('[data-role]')
-    let lastUser = null
-    for (let i = rows.length - 1; i >= 0; i--) {
-      if (rows[i].getAttribute('data-role') === 'user') {
-        lastUser = rows[i]
-        break
-      }
-    }
-    if (!lastUser) {
-      if (spacerH !== 0) spacerH = 0
-      return
-    }
-    // 落点:浮动控件下缘再留一点缝,用户这条消息刚好停在页眉之下
-    const header = scroller.parentElement?.querySelector('.chat-top')
-    const targetTop = (header?.offsetHeight ?? 56) + TOP_GAP
-    // 用户消息在内容中的位置(用 rect 差,免受 offsetParent 影响)
-    const userOffset =
-      lastUser.getBoundingClientRect().top - col.getBoundingClientRect().top
-    // 去掉当前占位后的真实内容高度
-    const contentH = scroller.scrollHeight - spacerH
-    // 使"滚到底"时 userOffset - scrollTop === targetTop
-    const desired = scroller.clientHeight - targetTop + userOffset
-    const next = Math.max(0, desired - contentH)
-    if (Math.abs(next - spacerH) > 1) spacerH = next
-  }
-
-  function onScroll() {
-    if (!scroller) return
-    nearBottom =
-      scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 140
-  }
-
-  function scrollToBottom() {
-    nearBottom = true
-    scroller?.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' })
-  }
-
-  function onResize() {
-    if (!liveAnchor) return
-    untrack(() => recomputeSpacer())
-    if (nearBottom) scroller?.scrollTo({ top: scroller.scrollHeight })
-  }
-
-  async function exportConversation() {
-    if (!conversation) return
-    try {
-      await navigator.clipboard.writeText(conversationToMarkdown(conversation))
-      exported = true
-      setTimeout(() => (exported = false), 1500)
-    } catch {
-      /* ignore */
-    }
-  }
-
-  // 切换会话 / 新一轮发送 / 流式跟随 —— 合并成一个 effect,保证顺序确定
-  $effect(() => {
-    const id = C.activeId
-    const conv = C.conversations.find((c) => c.id === id) ?? null
-    const len = conv?.messages.length ?? 0
-    const last = conv?.messages.at(-1)
-    void last?.content
-    void last?.reasoning
-    void last?.suggestions
-    if (!scroller) return
-
-    // 切换会话:重置锚定,直接落到底部
-    if (id !== prevId) {
-      prevId = id
-      prevLen = len
-      liveAnchor = false
-      spacerH = 0
-      nearBottom = true
-      tick().then(() => scroller?.scrollTo({ top: scroller.scrollHeight }))
-      return
-    }
-
-    // 同会话内消息增多 → 视为新一轮发送,开启顶部锚定
-    if (len > prevLen) {
-      liveAnchor = true
-      nearBottom = true
-    }
-    prevLen = len
-
-    // 只在跟随底部时调整占位,避免用户上翻阅读时布局突然位移
-    if (!nearBottom) return
-    untrack(() => recomputeSpacer())
-    tick().then(() => scroller?.scrollTo({ top: scroller.scrollHeight }))
-  })
-
-  // 回复完成:释放顶部锚定占位。锚定只是"流式期间"的临时affordance,
-  // 让回答从顶部从容展开;答完就收起占位,短回合自然贴合底部,不留突兀空白。
-  let wasStreaming = false
-  $effect(() => {
-    const streaming = C.streaming
-    if (wasStreaming && !streaming && liveAnchor && nearBottom) {
-      liveAnchor = false
-      spacerH = 0
-      tick().then(() =>
-        scroller?.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' }),
-      )
-    }
-    wasStreaming = streaming
-  })
-
-  // 回复完成后,若包含较完整的 HTML/SVG 代码块 → 自动打开预览(Artifacts 语义)
-  $effect(() => {
-    const fresh = C.freshAssistant
-    if (!fresh || fresh.id !== C.activeId) return
-    C.freshAssistant = null
-    const message = conversation?.messages[fresh.index]
-    if (!message) return
-    const match = message.content.match(/```(html|svg)\s*\n([\s\S]*?)```/)
-    if (match && match[2].length > 300) {
-      openArtifact({ lang: match[1], code: match[2], title: conversation.title })
-    }
+    void refreshControlCenter()
   })
 </script>
 
-<svelte:window onresize={onResize} />
-
-<div class="chat">
-  <div class="chat-main">
-  {#if AG.active}
-    <AgentThread />
-  {:else}
-  <div class="chat-top">
-    <ModelPicker />
-    <div class="chat-top-actions">
-      {#if !isEmpty}
-        <button
-          type="button"
-          class="top-btn"
-          title={exported ? t('chat.exported') : t('chat.export')}
-          aria-label={exported ? t('chat.exported') : t('chat.export')}
-          onclick={exportConversation}
-        >
-          <Icon name={exported ? 'check' : 'download'} size={18} strokeWidth={1.75} />
-        </button>
+<div class="today-page">
+  <header class="today-header">
+    <div>
+      <p class="today-date">{dateLabel}</p>
+      <h1>Today</h1>
+      <p class="today-intro">状态、下一步和需要你决定的事。</p>
+    </div>
+    <div class="today-actions">
+      {#if CONTROL.demo}
+        <span class="beta-label">本地演示 · 不执行动作</span>
       {/if}
       <button
         type="button"
-        class="top-btn"
-        title={t('chat.newChat')}
-        aria-label={t('chat.newChat')}
-        onclick={startNewChat}
+        class="quiet-button"
+        aria-label="刷新 Today"
+        disabled={CONTROL.loading}
+        onclick={() => refreshControlCenter({ force: true })}
       >
-        <Icon name="compose" size={19} strokeWidth={1.75} />
+        <Icon name="refresh" size={16} strokeWidth={1.75} />
+        刷新
       </button>
     </div>
-  </div>
+  </header>
 
-  {#if isEmpty}
-    <div class="hero">
-      <h1>{t('chat.greeting')}</h1>
-      <Composer autofocus />
-      <div class="suggestions">
-        {#each suggestions as item (item.text)}
-          <button type="button" class="chip" onclick={() => sendMessage(item.text)}>
-            <Icon name={item.icon} size={14} strokeWidth={1.75} />
-            {item.text}
-          </button>
-        {/each}
+  {#if CONTROL.error}
+    <p class="status-line status-line--error" role="status">
+      {CONTROL.error}。没有执行任何写入。
+    </p>
+  {:else if CONTROL.loading}
+    <p class="status-line" aria-live="polite">正在汇总各 Space 的只读状态…</p>
+  {:else if today.asOf}
+    <p class="status-line">读模型更新时间：{today.asOf}</p>
+  {/if}
+
+  <main class="today-workspace">
+    <section class="focus-section" aria-labelledby="today-focus-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">现在</p>
+          <h2 id="today-focus-title">真正重要的事</h2>
+        </div>
+        <a href="/assistant" class="text-action">
+          问 Assistant
+          <Icon name="chevron-right" size={15} strokeWidth={1.75} />
+        </a>
       </div>
-      <p class="hint">{CLOUD_BUILD ? t('chat.hintCloud') : t('chat.hintLocal')}</p>
-    </div>
-  {:else}
-    <div class="thread aios-scroll" bind:this={scroller} onscroll={onScroll}>
-      <div class="thread-col">
-        {#each conversation.messages as message, i (i)}
-          <Message {message} index={i} isLast={i === conversation.messages.length - 1} />
-        {/each}
-        {#if followUps.length}
-          <div class="follow-ups" aria-label={t('chat.followUps')}>
-            {#each followUps as text (text)}
-              <button type="button" class="follow-chip" onclick={() => sendMessage(text)}>
-                {text}
-              </button>
-            {/each}
+
+      {#if today.priorities.length}
+        <div class="priority-list">
+          {#each today.priorities as item (item.id)}
+            <a
+              class="priority-row priority-row--{item.tone}"
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span class="priority-marker" aria-hidden="true"></span>
+              <span class="priority-copy">
+                <span class="row-eyebrow">{item.eyebrow}</span>
+                <strong>{item.title}</strong>
+                <span>{item.detail}</span>
+              </span>
+              <span class="row-action">{item.actionLabel}</span>
+            </a>
+          {/each}
+        </div>
+      {:else}
+        <div class="empty-block">
+          <p>{today.emptyReason}</p>
+          <a href="/assistant">从 Assistant 开始</a>
+        </div>
+      {/if}
+    </section>
+
+    <section aria-labelledby="today-decisions-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">控制面</p>
+          <h2 id="today-decisions-title">等待处理</h2>
+        </div>
+      </div>
+      <div class="queue-list">
+        <a href="/inbox" class="queue-row">
+          <span>Inbox</span>
+          <strong>{queue.inboxOpen}</strong>
+          <small>Capture 与待分类输入</small>
+          <Icon name="chevron-right" size={16} strokeWidth={1.75} />
+        </a>
+        <a href="/approvals" class="queue-row">
+          <span>Approvals</span>
+          <strong>{queue.approvalsOpen}</strong>
+          <small>需要确认范围与影响</small>
+          <Icon name="chevron-right" size={16} strokeWidth={1.75} />
+        </a>
+        <a href="/activity" class="queue-row">
+          <span>Activity</span>
+          <strong class:count-alert={queue.activityFailures > 0}>{queue.activityFailures}</strong>
+          <small>失败或需要恢复的动作</small>
+          <Icon name="chevron-right" size={16} strokeWidth={1.75} />
+        </a>
+      </div>
+    </section>
+
+    {#if today.signals.length}
+      <section aria-labelledby="today-signals-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">状态</p>
+            <h2 id="today-signals-title">来自 Spaces</h2>
           </div>
-        {/if}
-        <div class="thread-spacer" aria-hidden="true" style:height="{spacerH}px"></div>
-      </div>
-    </div>
-    <div class="dock">
-      <div class="dock-col">
-        {#if !nearBottom}
-          <button
-            type="button"
-            class="to-bottom"
-            title={t('chat.scrollToBottom')}
-            aria-label={t('chat.scrollToBottom')}
-            onclick={scrollToBottom}
-          >
-            <Icon name="arrow-down" size={16} strokeWidth={2} />
-          </button>
-        {/if}
-        <Composer />
-        <p class="hint">{CLOUD_BUILD ? t('chat.hintCloud') : t('chat.hintLocal')}</p>
-      </div>
-    </div>
-  {/if}
-  {/if}
-  </div>
+        </div>
+        <div class="signal-list">
+          {#each today.signals as signal (signal.id)}
+            <a href={signal.href} target="_blank" rel="noopener noreferrer" class="signal-row">
+              <span class="signal-label">{signal.label}</span>
+              <strong>{signal.value}</strong>
+              <span>{signal.detail}</span>
+              <Icon name="external" size={14} strokeWidth={1.75} />
+            </a>
+          {/each}
+        </div>
+      </section>
+    {/if}
 
-  <SidePanel />
+    <section aria-labelledby="today-activity-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">可追溯</p>
+          <h2 id="today-activity-title">系统已处理</h2>
+        </div>
+        <a href="/activity" class="text-action">查看全部</a>
+      </div>
+      {#if recentActivity.length}
+        <div class="activity-list">
+          {#each recentActivity as item (item.id)}
+            <div class="activity-row">
+              <span class="activity-state activity-state--{item.status}"></span>
+              <div>
+                <strong>{item.summary}</strong>
+                <span>{item.result}</span>
+              </div>
+              <time>{item.occurredLabel}</time>
+            </div>
+          {/each}
+        </div>
+      {:else}
+        <p class="empty-copy">这个客户端还没有可显示的 Activity。</p>
+      {/if}
+    </section>
+
+    <section aria-labelledby="today-spaces-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">深入工作</p>
+          <h2 id="today-spaces-title">Spaces</h2>
+        </div>
+      </div>
+      <nav class="space-list" aria-label="Kenos Spaces">
+        {#each KENOS_SPACES as space (space.id)}
+          <a href={space.href} target="_blank" rel="noopener noreferrer">
+            <strong>{space.label}</strong>
+            <span>{space.detail}</span>
+          </a>
+        {/each}
+      </nav>
+    </section>
+  </main>
 </div>
 
 <style>
-  .chat {
-    height: 100%;
-    display: flex;
-    flex-direction: row;
-    min-height: 0;
+  .today-page {
+    width: min(100% - 32px, 1040px);
+    margin-inline: auto;
+    padding: clamp(28px, 5vw, 64px) 0 96px;
   }
-
-  .chat-main {
-    position: relative;
-    flex: 1;
-    min-width: 0;
+  .today-header {
     display: flex;
-    flex-direction: column;
-    min-height: 0;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: clamp(28px, 5vw, 48px);
+    border-bottom: 1px solid var(--border);
   }
-
-  /* —— 顶部控件:浮层化,不再占据独立页眉带 ——
-     模型选择器 + 操作按钮悬浮在消息流之上,内容满高滚动到其下方;
-     一层从 --bg 渐隐到透明的薄幕遮住上滑内容,读起来"没有页眉"。 */
-  .chat-top {
-    position: absolute;
-    inset: 0 0 auto 0;
-    z-index: 20;
+  .today-date,
+  .section-kicker {
+    margin: 0 0 6px;
+    color: var(--t3);
+    font-size: var(--text-sm);
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  h1 {
+    margin: 0;
+    color: var(--t1);
+    font-size: clamp(42px, 7vw, 72px);
+    font-weight: 620;
+    letter-spacing: -0.055em;
+    line-height: 0.98;
+  }
+  .today-intro {
+    margin: 14px 0 0;
+    color: var(--t2);
+    font-size: var(--text-xl);
+  }
+  .today-actions {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: calc(var(--safe-top-effective, 0px) + 8px) 12px 10px;
-    pointer-events: none;
-    background: linear-gradient(
-      to bottom,
-      var(--bg) 32%,
-      color-mix(in srgb, var(--bg) 55%, transparent) 68%,
-      transparent
-    );
-  }
-  .chat-top > :global(*) {
-    pointer-events: auto;
-  }
-  .chat-top-actions {
-    display: flex;
-    gap: 2px;
-  }
-  .top-btn {
-    display: grid;
-    place-items: center;
-    width: 36px;
-    height: 36px;
-    border: none;
-    border-radius: 10px;
-    background: transparent;
-    color: var(--t2);
-    cursor: pointer;
-  }
-  .top-btn:hover {
-    background: var(--card);
-    color: var(--t1);
-  }
-
-  /* —— 空态建议 —— */
-  .suggestions {
-    display: flex;
+    gap: 10px;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
+    justify-content: flex-end;
   }
-  .chip {
+  .beta-label,
+  .status-line {
+    color: var(--t3);
+    font-size: var(--text-sm);
+  }
+  .beta-label {
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+  .quiet-button,
+  .text-action {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    border: 1px solid var(--border-l);
-    border-radius: 999px;
-    background: var(--bg);
-    color: var(--t2);
-    padding: 8px 14px;
-    font-size: var(--text-sm, 13px);
-    cursor: pointer;
-    transition: all var(--dur-fast, 120ms) var(--ease, ease);
-  }
-  .chip:hover {
-    background: var(--card);
-    color: var(--t1);
-    border-color: var(--border-l);
-  }
-
-  /* —— 回到底部 —— */
-  .to-bottom {
-    position: absolute;
-    top: -46px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: grid;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    border: 1px solid var(--border-l);
-    border-radius: 50%;
-    background: var(--bg);
-    color: var(--t1);
-    cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 5;
-  }
-  .to-bottom:hover {
-    background: var(--card);
-  }
-
-  /* —— 空态:居中问候 + 输入框 —— */
-  .hero {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-5, 20px);
-    width: min(100% - 32px, 704px);
-    margin-inline: auto;
-    padding-bottom: 12vh;
-  }
-  .hero h1 {
-    margin: 0;
-    font-size: clamp(22px, 3.2vw, 30px);
-    font-weight: 600;
-    color: var(--t1);
-    text-align: center;
-    letter-spacing: -0.01em;
-  }
-  .hero :global(.composer) {
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  }
-
-  /* —— 消息流 —— */
-  .thread {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
-  }
-  .thread-col {
-    width: min(100% - 32px, 704px);
-    margin-inline: auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6, 24px);
-    /* 顶部留出浮动控件的高度,首条消息不被遮住 */
-    padding-block: calc(var(--safe-top-effective, 0px) + 56px) var(--space-4, 16px);
-  }
-
-  /* 新回合顶部锚定用的尾部占位(高度由 JS 计算);
-     负 margin 抵消 flex gap,占位为 0 时不产生多余留白 */
-  .thread-spacer {
-    flex: 0 0 auto;
-    margin-top: calc(-1 * var(--space-6, 24px));
-  }
-
-  /* —— 追问建议(回复下方,ChatGPT 式)—— */
-  .follow-ups {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: -8px;
-  }
-  .follow-chip {
-    border: 1px solid var(--border);
-    border-radius: 999px;
+    border: 0;
     background: transparent;
     color: var(--t2);
-    padding: 7px 14px;
-    font-size: var(--text-sm, 13px);
-    text-align: start;
+    font: inherit;
+    font-size: var(--text-md);
     cursor: pointer;
-    transition: all var(--dur-fast, 120ms) var(--ease, ease);
-    animation: follow-in 240ms var(--ease, ease) both;
+    text-decoration: none;
   }
-  .follow-chip:hover {
-    background: var(--card);
+  .quiet-button:hover,
+  .text-action:hover {
     color: var(--t1);
-    border-color: var(--border-l);
   }
-  @keyframes follow-in {
-    from {
-      opacity: 0;
-      transform: translateY(4px);
+  .quiet-button:disabled {
+    opacity: 0.5;
+  }
+  .status-line {
+    margin: 14px 0 0;
+  }
+  .status-line--error {
+    color: var(--critical);
+  }
+  .today-workspace {
+    display: grid;
+    gap: clamp(42px, 7vw, 72px);
+    padding-top: clamp(42px, 7vw, 72px);
+  }
+  .section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  h2 {
+    margin: 0;
+    color: var(--t1);
+    font-size: clamp(21px, 3vw, 28px);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+  .priority-list,
+  .queue-list,
+  .signal-list,
+  .activity-list {
+    border-top: 1px solid var(--border);
+  }
+  .priority-row {
+    display: grid;
+    grid-template-columns: 4px minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
+    color: inherit;
+    text-decoration: none;
+    transition:
+      opacity var(--dur-fast) var(--ease-standard),
+      transform var(--dur-fast) var(--ease-standard);
+  }
+  .priority-row:hover {
+    transform: translateX(3px);
+  }
+  .priority-marker {
+    align-self: stretch;
+    min-height: 58px;
+    border-radius: 999px;
+    background: var(--t3);
+  }
+  .priority-row--critical .priority-marker {
+    background: var(--critical);
+  }
+  .priority-row--attention .priority-marker {
+    background: var(--accent);
+  }
+  .priority-copy {
+    display: grid;
+    gap: 4px;
+  }
+  .priority-copy strong {
+    color: var(--t1);
+    font-size: clamp(19px, 3vw, 24px);
+    font-weight: 590;
+  }
+  .priority-copy > span:last-child,
+  .signal-row > span,
+  .activity-row span,
+  .empty-copy,
+  .empty-block {
+    color: var(--t3);
+    font-size: var(--text-md);
+  }
+  .row-eyebrow {
+    color: var(--t2);
+    font-size: var(--text-xs);
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .row-action {
+    color: var(--t2);
+    font-size: var(--text-md);
+  }
+  .queue-row {
+    display: grid;
+    grid-template-columns: minmax(100px, 0.65fr) 42px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    min-height: 58px;
+    border-bottom: 1px solid var(--border);
+    color: var(--t1);
+    text-decoration: none;
+  }
+  .queue-row strong {
+    font-variant-numeric: tabular-nums;
+    font-size: var(--text-2xl);
+  }
+  .queue-row small {
+    color: var(--t3);
+  }
+  .count-alert {
+    color: var(--critical);
+  }
+  .signal-row {
+    display: grid;
+    grid-template-columns: 96px minmax(180px, 0.8fr) minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: center;
+    min-height: 64px;
+    border-bottom: 1px solid var(--border);
+    color: inherit;
+    text-decoration: none;
+  }
+  .signal-label {
+    color: var(--t2) !important;
+    font-weight: 600;
+  }
+  .signal-row strong {
+    color: var(--t1);
+    font-weight: 560;
+  }
+  .activity-row {
+    display: grid;
+    grid-template-columns: 8px minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: start;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .activity-row > div {
+    display: grid;
+    gap: 4px;
+  }
+  .activity-row strong {
+    color: var(--t1);
+    font-weight: 560;
+  }
+  .activity-row time {
+    color: var(--t3);
+    font-size: var(--text-sm);
+  }
+  .activity-state {
+    width: 7px;
+    height: 7px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: var(--t3);
+  }
+  .activity-state--succeeded {
+    background: var(--positive);
+  }
+  .activity-state--failed {
+    background: var(--critical);
+  }
+  .space-list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    border-block: 1px solid var(--border);
+  }
+  .space-list a {
+    display: grid;
+    gap: 4px;
+    padding: 16px 14px;
+    border-right: 1px solid var(--border);
+    color: inherit;
+    text-decoration: none;
+  }
+  .space-list a:first-child {
+    padding-left: 0;
+  }
+  .space-list a:last-child {
+    border-right: 0;
+  }
+  .space-list strong {
+    color: var(--t1);
+    font-weight: 600;
+  }
+  .space-list span {
+    color: var(--t3);
+    font-size: var(--text-sm);
+  }
+  .empty-block {
+    padding: 20px 0;
+    border-block: 1px solid var(--border);
+  }
+  .empty-block p {
+    margin: 0 0 8px;
+  }
+  .empty-block a {
+    color: var(--t1);
+  }
+  @media (max-width: 720px) {
+    .today-page {
+      width: min(100% - 28px, 1040px);
+      padding-top: 28px;
     }
-    to {
-      opacity: 1;
-      transform: translateY(0);
+    .today-header {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .today-actions {
+      justify-content: flex-start;
+    }
+    .queue-row {
+      grid-template-columns: minmax(0, 1fr) 34px auto;
+      padding: 12px 0;
+    }
+    .queue-row small {
+      grid-column: 1 / 3;
+      grid-row: 2;
+    }
+    .signal-row {
+      grid-template-columns: 72px minmax(0, 1fr) auto;
+      padding: 14px 0;
+    }
+    .signal-row > span:not(.signal-label) {
+      grid-column: 2 / 4;
+    }
+    .space-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .space-list a,
+    .space-list a:first-child {
+      padding: 14px 0;
+      border-right: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .space-list a:nth-child(odd) {
+      padding-right: 12px;
+      border-right: 1px solid var(--border);
+    }
+    .space-list a:nth-child(even) {
+      padding-left: 12px;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .follow-chip {
-      animation: none;
+    .priority-row {
+      transition: none;
     }
-  }
-
-  /* —— 底部输入区 —— */
-  .dock {
-    flex: 0 0 auto;
-    background: linear-gradient(to top, var(--bg) 70%, transparent);
-  }
-  .dock-col {
-    position: relative;
-    width: min(100% - 32px, 704px);
-    margin-inline: auto;
-    padding-bottom: max(var(--space-2, 8px), var(--safe-bottom, 0px));
-  }
-
-  .hint {
-    margin: 8px 0 0;
-    text-align: center;
-    font-size: var(--text-xs, 11px);
-    color: var(--t3);
   }
 </style>

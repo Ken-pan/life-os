@@ -1,6 +1,6 @@
 {
-  "name": "AI.OS",
-  "short_name": "AI",
+  "name": "Kenos Assistant",
+  "short_name": "Assistant",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -27,7 +27,7 @@
     }
   ],
   "id": "/",
-  "description": "本地 AI 对话 · LocalAI 网关驱动的私有 LLM 聊天",
+  "description": "Kenos 的 Today、Assistant、Inbox、审批与 Activity 协调入口",
   "display_override": [
     "standalone",
     "minimal-ui"

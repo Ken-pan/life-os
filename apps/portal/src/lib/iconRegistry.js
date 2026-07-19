@@ -21,6 +21,9 @@ import CheckSquare from '@lucide/svelte/icons/check-square'
 import Activity from '@lucide/svelte/icons/activity'
 import Music from '@lucide/svelte/icons/music'
 import Home from '@lucide/svelte/icons/house'
+import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard'
+import MessageCircle from '@lucide/svelte/icons/message-circle'
+import ShieldCheck from '@lucide/svelte/icons/shield-check'
 import File from '@lucide/svelte/icons/file'
 import X from '@lucide/svelte/icons/x'
 
@@ -47,6 +50,9 @@ export const ICONS = {
   activity: Activity,
   music: Music,
   home: Home,
+  'layout-dashboard': LayoutDashboard,
+  'message-circle': MessageCircle,
+  'shield-check': ShieldCheck,
   file: File,
   x: X,
 }
