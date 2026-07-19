@@ -27,6 +27,43 @@ test('prod read flags default Off for Focus/Work/Today overlay', () => {
   assert.equal(flags.planCommandWrite, false)
   assert.equal(flags.executor, false)
   assert.equal(flags.approvals, true)
+  assert.equal(flags.readCanary, false)
+})
+
+test('read canary opts reads On while writes stay fail-closed', async () => {
+  const { assertDispatcherWriteAllowed, assertKenosWriteRpcAllowed, guardReadOnlyClient } =
+    await import('./prodWriteGuard.core.js')
+  const env = { VITE_KENOS_READ_CANARY: '1' }
+  const flags = prodReadFlagSnapshot(env)
+  assert.equal(flags.readCanary, true)
+  assert.equal(flags.focus, true)
+  assert.equal(flags.work, true)
+  assert.equal(flags.todayOverlay, true)
+  assert.equal(flags.shadow, true)
+  assert.equal(flags.planCommandWrite, false)
+  assert.equal(assertDispatcherWriteAllowed('plannerAddTask', env).ok, false)
+  assert.equal(assertKenosWriteRpcAllowed('kenos_create_plan_task_action', env).ok, false)
+
+  let rpcCalled = false
+  const client = guardReadOnlyClient(
+    {
+      rpc: async () => {
+        rpcCalled = true
+        return { data: null, error: null }
+      },
+      from() {
+        return {
+          insert: async () => ({ data: null, error: null }),
+        }
+      },
+    },
+    env,
+  )
+  const blocked = await client.rpc('kenos_create_plan_task_action', {})
+  assert.equal(blocked.error.code, 'KENOS_WRITE_BLOCKED')
+  assert.equal(rpcCalled, false)
+  const mut = await client.from('life_events').insert({})
+  assert.equal(mut.error.code, 'KENOS_WRITE_BLOCKED')
 })
 
 test('capability registry never treats unavailable as empty zero', () => {

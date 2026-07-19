@@ -2,7 +2,12 @@
  * Production Kenos read-path feature flags.
  * All default Off — preview/canary must opt in explicitly.
  * Never treat local demo/simulation as production-ready.
+ *
+ * `VITE_KENOS_READ_CANARY=1` opts Focus/Work/Today overlay/Shadow On for the
+ * isolated Read Client Canary while keeping all production writes fail-closed.
  */
+
+import { isProdReadCanaryMode } from './prodWriteGuard.core.js'
 
 /**
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
@@ -17,6 +22,7 @@ export function isProdApprovalReadEnabled(env = import.meta.env) {
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
  */
 export function isProdFocusReadEnabled(env = import.meta.env) {
+  if (isProdReadCanaryMode(env)) return env?.VITE_KENOS_PROD_READ_FOCUS !== '0'
   return env?.VITE_KENOS_PROD_READ_FOCUS === '1'
 }
 
@@ -24,6 +30,7 @@ export function isProdFocusReadEnabled(env = import.meta.env) {
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
  */
 export function isProdWorkReadEnabled(env = import.meta.env) {
+  if (isProdReadCanaryMode(env)) return env?.VITE_KENOS_PROD_READ_WORK !== '0'
   return env?.VITE_KENOS_PROD_READ_WORK === '1'
 }
 
@@ -33,6 +40,7 @@ export function isProdWorkReadEnabled(env = import.meta.env) {
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
  */
 export function isProdTodayKenosOverlayEnabled(env = import.meta.env) {
+  if (isProdReadCanaryMode(env)) return env?.VITE_KENOS_PROD_READ_TODAY_OVERLAY !== '0'
   return env?.VITE_KENOS_PROD_READ_TODAY_OVERLAY === '1'
 }
 
@@ -44,11 +52,13 @@ export function isProdTodayKenosOverlayEnabled(env = import.meta.env) {
 export function isProdShadowCompareEnabled(env = import.meta.env) {
   if (env?.VITE_KENOS_PROD_SHADOW === '0') return false
   if (env?.VITE_KENOS_PROD_SHADOW === '1') return true
+  if (isProdReadCanaryMode(env)) return true
   return env?.DEV === true || env?.MODE === 'development'
 }
 
 export function prodReadFlagSnapshot(env = import.meta.env) {
   return Object.freeze({
+    readCanary: isProdReadCanaryMode(env),
     approvals: isProdApprovalReadEnabled(env),
     focus: isProdFocusReadEnabled(env),
     work: isProdWorkReadEnabled(env),

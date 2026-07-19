@@ -181,6 +181,7 @@ export function listWorkProposals() {
 
 export function convertProposal(proposalId) {
   if (!WORK.enabled) return { ok: false, error: { code: 'work_disabled', message: 'Work foundation disabled' } }
+  // Read Client Canary / production writes: conversion never hits Kenos Plan command RPC.
   const result = convertWorkActionProposalToPlanTask(
     WORK.store,
     { id: proposalId, ownerId: DEMO_OWNER, userRequested: true },

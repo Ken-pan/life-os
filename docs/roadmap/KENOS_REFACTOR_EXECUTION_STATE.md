@@ -415,8 +415,12 @@ Approved temporary defaults now on file:
 - Netlify live revalidation (2026-07-19): **`PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED`** — see `docs/qa/kenos-live-build-pause-revalidation-report.md`. Auth: Netlify CLI user session. All 7 sites `stop_builds=true`; Gallery `disabled_manually`; published tip remains `be6f2612…`; zero build hooks; no running builds.
 - Docs commit `d2d2b6833` (inherited-pause clarification) pushed after live revalidation passed.
 - Read-path push: **complete** after that push.
-- Read client canary: **`PRODUCTION_READ_CLIENT_CANARY_READY_FOR_OWNER_APPROVAL`** — phrase `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY` (not started).
-- Report: `docs/qa/kenos-production-read-path-integration-report.md`.
+- Read client canary: **`KENOS PRODUCTION READ CLIENT CANARY — PASS`** (2026-07-19).
+  - Phrase: `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY`
+  - Freeze baseline: `b47c6dcbe…` + fail-closed hardening commit(s)
+  - URL: https://aios-kenos-read-canary.netlify.app (`8557bb44-6063-4720-ac03-b4e3ed12bbc2`)
+  - Report: `docs/qa/kenos-production-read-client-canary-report.md`
+- Report (read paths): `docs/qa/kenos-production-read-path-integration-report.md`.
 - Deploy plan: `docs/ops/kenos-production-read-client-deploy-plan.md`.
-- Defaults: Focus/Work/Today overlay read flags **Off**; Approvals RPC On; no production writes from UI.
+- Defaults on non-canary builds: Focus/Work/Today overlay Off; Approvals On; writes fail-closed.
 - Still blocked without separate phrases: full client deploy, writer canary, restore builds / Gallery.

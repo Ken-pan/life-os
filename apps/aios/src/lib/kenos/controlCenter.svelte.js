@@ -394,6 +394,7 @@ export async function refreshControlCenter({ force = false } = {}) {
 }
 
 export function resolveDemoApproval(id, decision) {
+  // Production Approval decision / Executor remain unavailable — demo path only.
   if (!CONTROL.demo || !['approved', 'rejected'].includes(decision)) return false
   const approval = CONTROL.approvals.find((item) => item.id === id)
   if (!approval || approval.status !== 'pending') return false

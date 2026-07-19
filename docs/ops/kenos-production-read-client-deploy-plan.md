@@ -2,14 +2,14 @@
 title: Kenos production read client deployment plan
 owner: kenpan
 last_verified: 2026-07-19
-status: live-revalidated-canary-awaiting-owner-phrase
+status: read-client-canary-pass-awaiting-full-client-deploy-phrase
 ---
 
 # Read client vs writer deployment (separated approvals)
 
 Do **not** use one broad phrase for read + write + cutover.
 
-**Current gate:** `PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED` (see `docs/qa/kenos-live-build-pause-revalidation-report.md`). Phase A awaits owner phrase only. Do **not** restore builds or act on `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY` without a separate approval.
+**Current gate:** Phase A **PASS** — isolated canary at https://aios-kenos-read-canary.netlify.app (`docs/qa/kenos-production-read-client-canary-report.md`). Seven production sites remain paused. Next separate phrase: `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`. Do **not** restore builds without that phrase.
 
 | Phase | Scope                                                                                | Phrase                                        | Writes production?                                                                  |
 | ----- | ------------------------------------------------------------------------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------- |

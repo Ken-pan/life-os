@@ -3,6 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 import { CLOUD, isCloudAuthorized } from '$lib/cloud.svelte.js'
 import { supabase as aiosSupabase } from '$lib/supabase.js'
 import {
+  assertDispatcherWriteAllowed,
+  guardReadOnlyClient,
+} from '$lib/kenos/prodWriteGuard.core.js'
+import {
   expenseAmt,
   formatLifeOsToday,
   buildTaskCapturePayload,
@@ -36,9 +40,10 @@ function schemaClient(schema) {
 /**
  * Kenos Phase 2 read adapters share the authenticated public-schema client.
  * Callers must remain read-only; production writes continue through domain Owners.
+ * Read Client Canary wraps the client so write RPCs / denylisted mutations fail closed.
  */
 export function lifeOsReadClient() {
-  return aiosSupabase.schema('public')
+  return guardReadOnlyClient(aiosSupabase.schema('public'), import.meta.env)
 }
 
 function todayYmd() {
@@ -236,6 +241,8 @@ export async function plannerTasks(args = {}) {
  * @param {{title?:string, notes?:string, dueDate?:string}} args
  */
 export async function plannerAddTask(args = {}) {
+  const blocked = assertDispatcherWriteAllowed('plannerAddTask', import.meta.env)
+  if (!blocked.ok) return blocked.error
   if (!isCloudAuthorized()) return NEED_LOGIN
   const built = buildTaskCapturePayload(args)
   if (built.error === 'empty_title') return '错误:待办标题不能为空。'
@@ -243,7 +250,7 @@ export async function plannerAddTask(args = {}) {
   if (!userId) return NEED_LOGIN
 
   const { payload } = built
-  const sb = schemaClient('public')
+  const sb = guardReadOnlyClient(schemaClient('public'), import.meta.env)
   const { error } = await sb.from('life_events').insert({
     user_id: userId,
     type: 'core.task_captured',

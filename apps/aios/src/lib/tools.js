@@ -3,6 +3,7 @@ import { addMemory, searchMemories } from '$lib/memory.svelte.js'
 import { startImageProgress, stopImageProgress } from '$lib/imageProgress.svelte.js'
 import { isNative, NATIVE_DEFS, isNativeTool, executeNativeTool } from '$lib/native.js'
 import { lifeOsToday, financeSummary, plannerTasks, plannerAddTask } from '$lib/lifeos.js'
+import { assertDispatcherWriteAllowed } from '$lib/kenos/prodWriteGuard.core.js'
 import { mcpToolDefinitions, isMcpTool, executeMcpTool } from '$lib/mcp.js'
 import {
   filterBuiltinToolEntries,
@@ -1446,8 +1447,11 @@ export async function executeTool(name, argsJson) {
         return await financeSummary(args)
       case 'planner_tasks':
         return await plannerTasks(args)
-      case 'planner_add_task':
+      case 'planner_add_task': {
+        const writeGate = assertDispatcherWriteAllowed('planner_add_task', import.meta.env)
+        if (!writeGate.ok) return writeGate.error
         return await plannerAddTask(args)
+      }
       case 'browser_status':
         return await browserStatus()
       case 'read_browser_page':
