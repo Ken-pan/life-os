@@ -38,7 +38,7 @@ Also recorded: **`READ_ONLY_MODE_CONVERSATION_WRITE_DETECTED`** for a pre-existi
 | - | --- |
 | Failed prod deploy tip | `f07944c9210f08d40c8483e3a598b29f3c714bb8` |
 | Rollback published tip | `be6f2612d3f374ac322c58813528b4bf8f98eeac` |
-| Remediation commits tip (this work) | see §4 / `git rev-parse HEAD` after push |
+| Remediation commits tip (this work) | `eb53577048b59f48ad0427b3c2d1ee566929eb75` |
 
 ## 4. Commits
 
@@ -46,7 +46,8 @@ Also recorded: **`READ_ONLY_MODE_CONVERSATION_WRITE_DETECTED`** for a pre-existi
 2. `a94ebffab` — `fix(aios): add offline navigation fallback and reconnect`
 3. `691882e38` — `feat(aios): expose Assistant scope in read-only mode`
 4. `da03329e5` — `fix(aios): prevent conversation persistence in read-only mode`
-5. This report doc commit (docs only)
+5. `eb53577048` — `docs(qa): record AIOS read-only rollback and blocker remediation`
+6. Follow-up docs stamp for canary deploy ID (if any)
 
 ## 5. `each_key_duplicate` root cause
 
@@ -167,7 +168,9 @@ where id = '133c3694-0243-469b-b01b-5e495646841b';
 | Site id | `8557bb44-6063-4720-ac03-b4e3ed12bbc2` |
 | Domain | `*.netlify.app` only (no `kenos.space`) |
 | Flags | `VITE_AIOS_CLOUD=1` `VITE_KENOS_READ_CANARY=1` Focus/Work/Today/Shadow On |
-| Deploy SHA | tip of remediation commits (recorded at canary deploy time) |
+| Deploy SHA | `eb53577048b59f48ad0427b3c2d1ee566929eb75` (source tip at canary build; Netlify canary has no git link) |
+| Canary deploy ID | `6a5d4835b9334bfe8103ab23` |
+| Unique deploy URL | https://6a5d4835b9334bfe8103ab23--aios-kenos-read-canary.netlify.app |
 
 ## 20. Owner smoke results
 
