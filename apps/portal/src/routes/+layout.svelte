@@ -1,6 +1,8 @@
 <script>
   import '../app.css'
   import { onMount, setContext } from 'svelte'
+  import { browser } from '$app/environment'
+  import { page } from '$app/state'
   import CommandPalette from '@life-os/platform-web/CommandPalette.svelte'
   import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
   import { ICONS } from '$lib/iconRegistry.js'
@@ -22,6 +24,10 @@
   import { initPortalTheme } from '$lib/theme.svelte.js'
   import { registerServiceWorker } from '$lib/serviceWorker.js'
   import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
+  import {
+    filterKenosExperimentalAccess,
+    resolveKenosExperimentFlag,
+  } from '$lib/kenosStrangler.js'
 
   let { children } = $props()
 
@@ -32,12 +38,22 @@
   let coreHydrated = $state(false)
   let lastHydratedUserId = $state(/** @type {string | null} */ (null))
   let hydrateSeq = 0
+  const kenosExperimentEnabled = $derived(
+    resolveKenosExperimentFlag({
+      search: page.url.search,
+      hostname: browser ? location.hostname : '',
+      environmentFlag: import.meta.env.VITE_KENOS_PHASE2_ENTRY,
+    }),
+  )
+  const visibleAllowedAppKeys = $derived(
+    filterKenosExperimentalAccess(auth.allowedAppKeys ?? [], kenosExperimentEnabled),
+  )
 
   const cpActions = $derived(
     buildPortalCommandActions({
       signOut,
       query: cpQuery,
-      allowedAppKeys: auth.allowedAppKeys ?? [],
+      allowedAppKeys: visibleAllowedAppKeys,
     }),
   )
 

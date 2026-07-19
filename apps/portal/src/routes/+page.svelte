@@ -1,4 +1,6 @@
 <script>
+  import { browser } from '$app/environment'
+  import { page } from '$app/state'
   import { PORTAL_APPS, PORTAL_PRODUCTION_APPS } from '$lib/apps.js'
   import { auth } from '$lib/auth.svelte.js'
   import { getLastApp } from '$lib/recentApp.svelte.js'
@@ -13,10 +15,23 @@
   import PortalTodaySummary from '$lib/components/PortalTodaySummary.svelte'
   import PortalLoading from '$lib/components/PortalLoading.svelte'
   import { buildPlannerInboxUrl } from '$lib/commandPaletteActions.js'
+  import {
+    filterKenosExperimentalAccess,
+    resolveKenosExperimentFlag,
+  } from '$lib/kenosStrangler.js'
 
   const plannerInboxUrl = buildPlannerInboxUrl()
 
-  const allowedKeys = $derived(auth.allowedAppKeys ?? [])
+  const kenosExperimentEnabled = $derived(
+    resolveKenosExperimentFlag({
+      search: page.url.search,
+      hostname: browser ? location.hostname : '',
+      environmentFlag: import.meta.env.VITE_KENOS_PHASE2_ENTRY,
+    }),
+  )
+  const allowedKeys = $derived(
+    filterKenosExperimentalAccess(auth.allowedAppKeys ?? [], kenosExperimentEnabled),
+  )
   const canOpenPlanner = $derived(allowedKeys.includes('planner'))
 
   const recentApp = $derived(getLastApp())

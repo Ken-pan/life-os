@@ -381,7 +381,7 @@ export const LIFE_OS_PWA_APPS = {
     shellType: "main-wrap-main",
     waitSelector: ".app-shell",
     nestedWrapInMain: true,
-    routes: [{"path":"/","name":"today"},{"path":"/assistant","name":"assistant"},{"path":"/inbox","name":"inbox"},{"path":"/approvals","name":"approvals"},{"path":"/activity","name":"activity"},{"path":"/history","name":"history"},{"path":"/settings","name":"settings"}],
+    routes: [{"path":"/","name":"today"},{"path":"/assistant","name":"assistant"},{"path":"/chat","name":"assistant-legacy"},{"path":"/inbox","name":"inbox"},{"path":"/approvals","name":"approvals"},{"path":"/activity","name":"activity"},{"path":"/history","name":"history"},{"path":"/settings","name":"settings"}],
     clipPaths: ["/assistant"],
     scrollQaPath: "/settings",
     production: false,

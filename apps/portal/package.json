@@ -13,6 +13,7 @@
     "test:cp": "node scripts/command-palette-actions.test.mjs",
     "test:today-summary": "node scripts/todaySummary.test.mjs",
     "test:action-badge": "node scripts/portalActionBadge.test.mjs",
+    "test:kenos-routing": "node scripts/kenos-strangler-routing.test.mjs",
     "qa:screenshot": "node scripts/qa-screenshot.mjs",
     "qa:smoke": "node scripts/qa-smoke.mjs",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"

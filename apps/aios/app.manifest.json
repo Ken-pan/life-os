@@ -43,6 +43,10 @@
       "name": "assistant"
     },
     {
+      "path": "/chat",
+      "name": "assistant-legacy"
+    },
+    {
       "path": "/inbox",
       "name": "inbox"
     },
