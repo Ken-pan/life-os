@@ -307,9 +307,33 @@
       </div>
       <nav class="space-list" aria-label="Kenos Spaces">
         {#each TODAY_SPACE_SHORTCUTS as space (space.id)}
-          <a href={space.href} onclick={(e) => onTodaySpace(space, e)}>
-            <strong>{space.label}</strong>
-            <span>{space.detail}</span>
+          <a
+            class="space-shortcut"
+            href={space.href}
+            data-space-id={space.id}
+            style:--space-accent={space.accent || 'transparent'}
+            onclick={(e) => onTodaySpace(space, e)}
+          >
+            <span
+              class="space-shortcut-rail"
+              style:background={space.accent || 'var(--border)'}
+              aria-hidden="true"
+            ></span>
+            {#if space.icon}
+              <span
+                class="space-shortcut-icon"
+                style:color={space.accent
+                  ? `color-mix(in srgb, ${space.accent} 78%, var(--t2))`
+                  : 'var(--t2)'}
+                aria-hidden="true"
+              >
+                <Icon name={space.icon} size={14} strokeWidth={1.75} />
+              </span>
+            {/if}
+            <span class="space-shortcut-text">
+              <strong>{space.label}</strong>
+              <span>{space.detail}</span>
+            </span>
           </a>
         {/each}
       </nav>
@@ -601,25 +625,47 @@
     grid-template-columns: repeat(5, minmax(0, 1fr));
     border-block: 1px solid var(--border);
   }
-  .space-list a {
-    display: grid;
-    gap: 4px;
+  .space-shortcut {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
     padding: 16px 14px;
     border-right: 1px solid var(--border);
     color: inherit;
     text-decoration: none;
   }
-  .space-list a:first-child {
+  .space-shortcut:first-child {
     padding-left: 0;
   }
-  .space-list a:last-child {
+  .space-shortcut:last-child {
     border-right: 0;
   }
-  .space-list strong {
+  .space-shortcut:hover {
+    background: color-mix(in srgb, var(--space-accent, transparent) 7%, transparent);
+  }
+  .space-shortcut-rail {
+    width: 3px;
+    align-self: stretch;
+    min-height: 28px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .space-shortcut-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    margin-top: 2px;
+    opacity: 0.9;
+  }
+  .space-shortcut-text {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+  .space-shortcut-text strong {
     color: var(--t1);
     font-weight: 600;
   }
-  .space-list span {
+  .space-shortcut-text span {
     color: var(--t3);
     font-size: var(--text-sm);
   }
@@ -684,17 +730,17 @@
     .space-list {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .space-list a,
-    .space-list a:first-child {
+    .space-shortcut,
+    .space-shortcut:first-child {
       padding: 14px 0;
       border-right: 0;
       border-bottom: 1px solid var(--border);
     }
-    .space-list a:nth-child(odd) {
+    .space-shortcut:nth-child(odd) {
       padding-right: 12px;
       border-right: 1px solid var(--border);
     }
-    .space-list a:nth-child(even) {
+    .space-shortcut:nth-child(even) {
       padding-left: 12px;
     }
   }

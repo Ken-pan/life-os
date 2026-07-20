@@ -14,6 +14,15 @@
   Materials: nav/controls/overlays only — never content cards.
 */
 :root {
+  /* Knife 4 — domain identity (≠ --critical status) */
+  --kenos-domain-training: #c45c4a;
+  --kenos-domain-plan: #c9a227;
+  --kenos-domain-money: #3d9b6e;
+  --kenos-domain-music: #8b7ec8;
+  --kenos-domain-home: #6b7c8f;
+  --kenos-domain-knowledge: #5b6bbf;
+  --kenos-domain-work: #5b7c99;
+
   --kenos-type-display: var(--text-display-sm);
   --kenos-type-page: clamp(28px, 4.5vw, 36px);
   --kenos-type-section: var(--text-title);

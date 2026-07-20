@@ -1,10 +1,15 @@
 import ArrowDown from '@lucide/svelte/icons/arrow-down'
 import ArrowUp from '@lucide/svelte/icons/arrow-up'
+import Activity from '@lucide/svelte/icons/activity'
 import Brain from '@lucide/svelte/icons/brain'
+import Briefcase from '@lucide/svelte/icons/briefcase'
 import Download from '@lucide/svelte/icons/download'
 import ExternalLink from '@lucide/svelte/icons/external-link'
 import Eye from '@lucide/svelte/icons/eye'
 import FileText from '@lucide/svelte/icons/file-text'
+import Focus from '@lucide/svelte/icons/focus'
+import Home from '@lucide/svelte/icons/home'
+import Music from '@lucide/svelte/icons/music'
 import Pencil from '@lucide/svelte/icons/pencil'
 import Search from '@lucide/svelte/icons/search'
 import Volume2 from '@lucide/svelte/icons/volume-2'
@@ -50,11 +55,16 @@ import X from '@lucide/svelte/icons/x'
 export const ICONS = {
   'arrow-down': ArrowDown,
   'arrow-up': ArrowUp,
+  activity: Activity,
   brain: Brain,
+  briefcase: Briefcase,
   download: Download,
   external: ExternalLink,
   eye: Eye,
   file: FileText,
+  focus: Focus,
+  home: Home,
+  music: Music,
   pencil: Pencil,
   search: Search,
   speaker: Volume2,

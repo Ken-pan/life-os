@@ -6,7 +6,7 @@
 | Space Continuity (function) | **PASSED** · Planner / Fitness / Isolation **VALIDATED** |
 | Annotation / evidence binding | Closed in `…T20-12-22-998Z` |
 | Continuity Verification Sheet | Rebuilt from canonical run (not Owner Review) |
-| **P5 Visual Quality** | **IN_PROGRESS** — knives 1–3 DONE · knives 4–5 open |
+| **P5 Visual Quality** | **IN_PROGRESS** — knives 1–4 DONE · knife 5 open |
 | Owner Review | **NOT OPEN** |
 
 ```text
@@ -33,38 +33,34 @@ OWNER REVIEW — NOT OPEN
 - Focus: outline ring (not inset / right-border); star 44×44 + stopPropagation
 - Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife2-sheet-hierarchy/` (`manifest-r2.json` = canonical)
 - Continuity regression: **PASSED** (`…T21-30-25-542Z`, not new functional canonical)
-- Fix note: `app.css` invalid `:global()` in plain CSS corrected earlier
 
 **No READY_FOR_OWNER_REVIEW. No overall visual PASS.**
 
 ## P5 knife 3 — iPad adaptive material & interaction mode
 
 - Status: **DONE** — overall P5 Visual still **IN_PROGRESS**
-- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife3-ipad-material/`
-
-## P5 footnote fix (audit P1–P3) — 2026-07-20
-
-- Status: **PASS** (does not open Owner Review; Visual still IN_PROGRESS)
-- Code: desktop chrome clamp (`continueOverlayAnchor.core.js`), All Spaces = full catalog count, hairline-only list
-- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-footnote-fix-2026-07-20/` (`manifest.json` PASS)
-- Capture: `node scripts/qa/kenos-continue-footnote-fix-capture.mjs --port 5197`
-- Probes: `All Spaces · 8`; desktop left=248 / clearance=8px @1440 & 1024-fine
 - Mode core: `continueOverlayMode.core.js` — width + `(pointer: fine)` + `(hover: hover)` (no UA)
-- `≥900` touch-first → `tablet-lg` form sheet (not mechanical desktop)
-- `≥900` fine+hover → desktop anchored (Knife 2 Direction A preserved)
-- Tablet material: lighter scrim, 1px border, soft shadow, light frost; hairline list unchanged
-- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife3-ipad-material/` (`manifest.json`)
+- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife3-ipad-material/`
 - Continuity regression: **PASSED** (`…T21-52-46-113Z`)
 
 ## P5 footnote fix (audit P1–P3) — 2026-07-20
 
 - Status: **PASS** (Owner Review still **NOT OPEN**; Visual still **IN_PROGRESS**)
-- P1 desktop chrome clamp: `continueOverlayAnchor.core.js` (flip/shift + sidebar inset)
+- P1 desktop chrome clamp: `continueOverlayAnchor.core.js`
 - P2 All Spaces count = full catalog (`All Spaces · 8` in demo)
-- P3 list hairlines only (no outer list border box)
-- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-footnote-fix-2026-07-20/` (`manifest.json` PASS)
-- Capture: `node scripts/qa/kenos-continue-footnote-fix-capture.mjs --port 5197`
+- P3 list hairlines only
+- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-footnote-fix-2026-07-20/`
+
+## P5 knife 4 — Spaces domain identity
+
+- Status: **PASS** (Owner Review still **NOT OPEN**; Visual still **IN_PROGRESS**)
+- SSOT: `domainIdentity.core.js` — identity accents ≠ `--critical` status
+- Surfaces: Spaces directory · Today Spaces shortcuts · Continue rows (rail + glyph + faint tint)
+- Icons registered: activity / focus / briefcase / music / home (+ existing wallet / list-todo / notebook)
+- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife4-domain-identity/` (`manifest.json` PASS)
+- Capture: `node scripts/qa/kenos-knife4-domain-identity-capture.mjs --port 5197`
+- Continuity: descriptor / deep links / testids **unchanged**
 
 ## Still open (later knives)
-- Domain identity marks on Spaces directory (Knife 4)
+
 - Type ramp / Today density (Knife 5)

@@ -34,6 +34,8 @@
         <a
           class="space-row"
           href={space.href}
+          data-space-id={space.id}
+          style:--space-accent={space.accent || 'transparent'}
           onclick={(e) => onOpenSpace(space, e)}
         >
           <span
@@ -42,7 +44,13 @@
             aria-hidden="true"
           ></span>
           {#if space.icon}
-            <span class="space-icon" aria-hidden="true">
+            <span
+              class="space-icon"
+              style:color={space.accent
+                ? `color-mix(in srgb, ${space.accent} 78%, var(--t2))`
+                : 'var(--t2)'}
+              aria-hidden="true"
+            >
               <Icon name={space.icon} size={16} strokeWidth={1.75} />
             </span>
           {/if}
@@ -63,6 +71,8 @@
           class="space-row"
           class:preparing={space.availability === 'preparing'}
           href={space.href}
+          data-space-id={space.id}
+          style:--space-accent={space.accent || 'transparent'}
           onclick={(e) => onOpenSpace(space, e)}
         >
           <span
@@ -71,7 +81,13 @@
             aria-hidden="true"
           ></span>
           {#if space.icon}
-            <span class="space-icon" aria-hidden="true">
+            <span
+              class="space-icon"
+              style:color={space.accent
+                ? `color-mix(in srgb, ${space.accent} 78%, var(--t2))`
+                : 'var(--t2)'}
+              aria-hidden="true"
+            >
               <Icon name={space.icon} size={16} strokeWidth={1.75} />
             </span>
           {/if}
@@ -122,12 +138,12 @@
     letter-spacing: var(--kenos-tracking-meta, 0.06em);
     text-transform: uppercase;
   }
+  /* Row hairlines only — no outer box that reads as a soft card group */
   .space-list {
     display: grid;
     gap: 0;
-    border-top: 1px solid var(--border);
-    border-radius: var(--kenos-radius-group, 0);
-    background: var(--kenos-surface-group, transparent);
+    border: 0;
+    background: transparent;
   }
   .space-row {
     display: flex;
@@ -135,13 +151,16 @@
     gap: 12px;
     min-height: 56px;
     padding: 12px 4px;
-    border-bottom: 1px solid var(--border);
+    border: 0;
     color: inherit;
     text-decoration: none;
-    background: var(--kenos-surface-interactive, transparent);
+    background: transparent;
+  }
+  .space-row + .space-row {
+    border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   }
   .space-row:hover {
-    background: var(--kenos-surface-raised);
+    background: color-mix(in srgb, var(--space-accent, transparent) 7%, transparent);
   }
   .space-row.preparing {
     opacity: 0.88;
@@ -157,7 +176,7 @@
     display: inline-flex;
     color: var(--t2);
     flex-shrink: 0;
-    opacity: 0.85;
+    opacity: 0.9;
   }
   .space-text {
     flex: 1;
@@ -184,9 +203,5 @@
     padding: 4px 8px;
     border-radius: 6px;
     background: var(--kenos-surface-raised);
-  }
-  .space-row :global(svg) {
-    color: var(--t3);
-    flex-shrink: 0;
   }
 </style>

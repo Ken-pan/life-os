@@ -3,11 +3,13 @@
  * Hosted in-app routes remain only for Kenos-native surfaces (Work Deep Work, Work hub).
  */
 import { DOMAIN_ORIGINS, domainDeepLink } from './domainResume.core.js'
+import { domainAccent, domainIcon } from './domainIdentity.core.js'
 
 /** @typedef {{ id: string, label: string, detail: string, href: string, domainId?: string, accent?: string, icon?: string, availability?: 'ready' | 'preparing' }} SpaceDef */
 
 /**
  * Domain Spaces: href is production deep link. listKey stays hosted:* for resume continuity.
+ * Accents / icons come from domainIdentity (Knife 4) — identity ≠ status color.
  * @type {ReadonlyArray<SpaceDef>}
  */
 export const HOSTED_SPACES = Object.freeze([
@@ -17,8 +19,8 @@ export const HOSTED_SPACES = Object.freeze([
     detail: 'Fitness · 今日训练',
     href: domainDeepLink('training', '/'),
     domainId: 'training',
-    accent: '#5B8DEF',
-    icon: 'activity',
+    accent: domainAccent('training'),
+    icon: domainIcon('training'),
     availability: 'ready',
   },
   {
@@ -26,8 +28,8 @@ export const HOSTED_SPACES = Object.freeze([
     label: 'Work · Deep Work',
     detail: '进入当前项目专注',
     href: '/spaces/work',
-    accent: '#C4A574',
-    icon: 'focus',
+    accent: domainAccent('work-focus'),
+    icon: domainIcon('work-focus'),
     availability: 'ready',
   },
   {
@@ -35,8 +37,8 @@ export const HOSTED_SPACES = Object.freeze([
     label: 'Work',
     detail: '正在准备中 · 可先用 Plan 管理相关任务',
     href: '/work',
-    accent: '#C4A574',
-    icon: 'briefcase',
+    accent: domainAccent('work'),
+    icon: domainIcon('work'),
     availability: 'preparing',
   },
   {
@@ -45,8 +47,8 @@ export const HOSTED_SPACES = Object.freeze([
     detail: 'Upcoming · 任务与时间',
     href: domainDeepLink('plan', '/upcoming'),
     domainId: 'plan',
-    accent: '#6FCF97',
-    icon: 'calendar',
+    accent: domainAccent('plan'),
+    icon: domainIcon('plan'),
     availability: 'ready',
   },
   {
@@ -55,8 +57,8 @@ export const HOSTED_SPACES = Object.freeze([
     detail: 'Finance · Today',
     href: domainDeepLink('money', '/home/today'),
     domainId: 'money',
-    accent: '#E8B86D',
-    icon: 'wallet',
+    accent: domainAccent('money'),
+    icon: domainIcon('money'),
     availability: 'ready',
   },
   {
@@ -65,8 +67,8 @@ export const HOSTED_SPACES = Object.freeze([
     detail: '播放与收藏',
     href: domainDeepLink('music', '/'),
     domainId: 'music',
-    accent: '#B794F4',
-    icon: 'music',
+    accent: domainAccent('music'),
+    icon: domainIcon('music'),
     availability: 'ready',
   },
   {
@@ -75,8 +77,8 @@ export const HOSTED_SPACES = Object.freeze([
     detail: '空间与物品',
     href: domainDeepLink('home', '/storage'),
     domainId: 'home',
-    accent: '#63B3A8',
-    icon: 'home',
+    accent: domainAccent('home'),
+    icon: domainIcon('home'),
     availability: 'ready',
   },
   {
@@ -85,8 +87,8 @@ export const HOSTED_SPACES = Object.freeze([
     detail: '笔记与资料',
     href: domainDeepLink('knowledge', '/'),
     domainId: 'knowledge',
-    accent: '#A0AEC0',
-    icon: 'book',
+    accent: domainAccent('knowledge'),
+    icon: domainIcon('knowledge'),
     availability: 'ready',
   },
 ])

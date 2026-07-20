@@ -1,0 +1,226 @@
+{
+  "capturedAt": "2026-07-20T22:11:49.818Z",
+  "knife": "4-domain-identity",
+  "base": "http://127.0.0.1:5197",
+  "expect": {
+    "training": "#C45C4A",
+    "plan": "#C9A227",
+    "money": "#3D9B6E",
+    "music": "#8B7EC8",
+    "home": "#6B7C8F",
+    "knowledge": "#5B6BBF",
+    "work": "#5B7C99",
+    "work-focus": "#5B7C99"
+  },
+  "shots": [
+    {
+      "vp": "390x844",
+      "files": {
+        "spaces": "spaces-390x844.png",
+        "today": "today-spaces-390x844.png",
+        "continue": "continue-all-390x844.png"
+      },
+      "spacesProbe": [
+        {
+          "id": "training",
+          "railBg": "rgb(196, 92, 74)",
+          "hasIconSvg": true,
+          "expected": "#C45C4A"
+        },
+        {
+          "id": "work-focus",
+          "railBg": "rgb(91, 124, 153)",
+          "hasIconSvg": true,
+          "expected": "#5B7C99"
+        },
+        {
+          "id": "work",
+          "railBg": "rgb(91, 124, 153)",
+          "hasIconSvg": true,
+          "expected": "#5B7C99"
+        },
+        {
+          "id": "plan",
+          "railBg": "rgb(201, 162, 39)",
+          "hasIconSvg": true,
+          "expected": "#C9A227"
+        },
+        {
+          "id": "money",
+          "railBg": "rgb(61, 155, 110)",
+          "hasIconSvg": true,
+          "expected": "#3D9B6E"
+        },
+        {
+          "id": "music",
+          "railBg": "rgb(139, 126, 200)",
+          "hasIconSvg": true,
+          "expected": "#8B7EC8"
+        },
+        {
+          "id": "home",
+          "railBg": "rgb(107, 124, 143)",
+          "hasIconSvg": true,
+          "expected": "#6B7C8F"
+        },
+        {
+          "id": "knowledge",
+          "railBg": "rgb(91, 107, 191)",
+          "hasIconSvg": true,
+          "expected": "#5B6BBF"
+        }
+      ],
+      "todayProbe": {
+        "count": 7,
+        "withRail": 0,
+        "withIcon": 7
+      },
+      "continueProbe": {
+        "itemCount": 12,
+        "withIcon": 12
+      },
+      "iconOk": true,
+      "distinctRails": 7
+    },
+    {
+      "vp": "768x1024",
+      "files": {
+        "spaces": "spaces-768x1024.png",
+        "today": "today-spaces-768x1024.png",
+        "continue": "continue-all-768x1024.png"
+      },
+      "spacesProbe": [
+        {
+          "id": "training",
+          "railBg": "rgb(196, 92, 74)",
+          "hasIconSvg": true,
+          "expected": "#C45C4A"
+        },
+        {
+          "id": "work-focus",
+          "railBg": "rgb(91, 124, 153)",
+          "hasIconSvg": true,
+          "expected": "#5B7C99"
+        },
+        {
+          "id": "work",
+          "railBg": "rgb(91, 124, 153)",
+          "hasIconSvg": true,
+          "expected": "#5B7C99"
+        },
+        {
+          "id": "plan",
+          "railBg": "rgb(201, 162, 39)",
+          "hasIconSvg": true,
+          "expected": "#C9A227"
+        },
+        {
+          "id": "money",
+          "railBg": "rgb(61, 155, 110)",
+          "hasIconSvg": true,
+          "expected": "#3D9B6E"
+        },
+        {
+          "id": "music",
+          "railBg": "rgb(139, 126, 200)",
+          "hasIconSvg": true,
+          "expected": "#8B7EC8"
+        },
+        {
+          "id": "home",
+          "railBg": "rgb(107, 124, 143)",
+          "hasIconSvg": true,
+          "expected": "#6B7C8F"
+        },
+        {
+          "id": "knowledge",
+          "railBg": "rgb(91, 107, 191)",
+          "hasIconSvg": true,
+          "expected": "#5B6BBF"
+        }
+      ],
+      "todayProbe": {
+        "count": 7,
+        "withRail": 0,
+        "withIcon": 7
+      },
+      "continueProbe": {
+        "itemCount": 12,
+        "withIcon": 12
+      },
+      "iconOk": true,
+      "distinctRails": 7
+    },
+    {
+      "vp": "1440x900",
+      "files": {
+        "spaces": "spaces-1440x900.png",
+        "today": "today-spaces-1440x900.png",
+        "continue": "continue-all-1440x900.png"
+      },
+      "spacesProbe": [
+        {
+          "id": "training",
+          "railBg": "rgb(196, 92, 74)",
+          "hasIconSvg": true,
+          "expected": "#C45C4A"
+        },
+        {
+          "id": "work-focus",
+          "railBg": "rgb(91, 124, 153)",
+          "hasIconSvg": true,
+          "expected": "#5B7C99"
+        },
+        {
+          "id": "work",
+          "railBg": "rgb(91, 124, 153)",
+          "hasIconSvg": true,
+          "expected": "#5B7C99"
+        },
+        {
+          "id": "plan",
+          "railBg": "rgb(201, 162, 39)",
+          "hasIconSvg": true,
+          "expected": "#C9A227"
+        },
+        {
+          "id": "money",
+          "railBg": "rgb(61, 155, 110)",
+          "hasIconSvg": true,
+          "expected": "#3D9B6E"
+        },
+        {
+          "id": "music",
+          "railBg": "rgb(139, 126, 200)",
+          "hasIconSvg": true,
+          "expected": "#8B7EC8"
+        },
+        {
+          "id": "home",
+          "railBg": "rgb(107, 124, 143)",
+          "hasIconSvg": true,
+          "expected": "#6B7C8F"
+        },
+        {
+          "id": "knowledge",
+          "railBg": "rgb(91, 107, 191)",
+          "hasIconSvg": true,
+          "expected": "#5B6BBF"
+        }
+      ],
+      "todayProbe": {
+        "count": 7,
+        "withRail": 0,
+        "withIcon": 7
+      },
+      "continueProbe": {
+        "itemCount": 12,
+        "withIcon": 12
+      },
+      "iconOk": true,
+      "distinctRails": 7
+    }
+  ],
+  "failures": [],
+  "pass": true
+}

@@ -196,7 +196,12 @@
         <h2 id="switcher-recent" class="section-title">Recent</h2>
         <ul class="list" role="list">
           {#each recentSection.items as space (space.listKey)}
-            <li class="item" class:current={current === space.listKey} class:expired={space.expired}>
+            <li
+              class="item"
+              class:current={current === space.listKey}
+              class:expired={space.expired}
+              style:--space-accent={space.accent || 'var(--border)'}
+            >
               <a
                 class="row"
                 href={space.href}
@@ -208,6 +213,15 @@
                   style:background={space.accent || 'var(--border)'}
                   aria-hidden="true"
                 ></span>
+                {#if space.icon}
+                  <span
+                    class="row-icon"
+                    style:color={`color-mix(in srgb, ${space.accent || 'var(--t2)'} 78%, var(--t2))`}
+                    aria-hidden="true"
+                  >
+                    <Icon name={space.icon} size={15} strokeWidth={1.75} />
+                  </span>
+                {/if}
                 <span class="row-text">
                   <strong>{space.label}</strong>
                   {#if space.detail || progressText(space) || space.resumeAt}
@@ -249,13 +263,26 @@
         <h2 id="switcher-pinned" class="section-title">Pinned</h2>
         <ul class="list" role="list">
           {#each pinnedSection.items as space (space.listKey)}
-            <li class="item" class:current={current === space.listKey}>
+            <li
+              class="item"
+              class:current={current === space.listKey}
+              style:--space-accent={space.accent || 'var(--border)'}
+            >
               <a class="row" href={space.href} onclick={(e) => onSelect(space, e)}>
                 <span
                   class="accent"
                   style:background={space.accent || 'var(--border)'}
                   aria-hidden="true"
                 ></span>
+                {#if space.icon}
+                  <span
+                    class="row-icon"
+                    style:color={`color-mix(in srgb, ${space.accent || 'var(--t2)'} 78%, var(--t2))`}
+                    aria-hidden="true"
+                  >
+                    <Icon name={space.icon} size={15} strokeWidth={1.75} />
+                  </span>
+                {/if}
                 <span class="row-text">
                   <strong>{space.label}</strong>
                   {#if space.detail}<span class="meta"><span class="detail">{space.detail}</span></span>{/if}
@@ -311,13 +338,26 @@
           </label>
           <ul class="list" role="list">
             {#each filteredAll as space (space.listKey)}
-              <li class="item" class:current={current === space.listKey}>
+              <li
+                class="item"
+                class:current={current === space.listKey}
+                style:--space-accent={space.accent || 'var(--border)'}
+              >
                 <a class="row" href={space.href} onclick={(e) => onSelect(space, e)}>
                   <span
                     class="accent"
                     style:background={space.accent || 'var(--border)'}
                     aria-hidden="true"
                   ></span>
+                  {#if space.icon}
+                    <span
+                      class="row-icon"
+                      style:color={`color-mix(in srgb, ${space.accent || 'var(--t2)'} 78%, var(--t2))`}
+                      aria-hidden="true"
+                    >
+                      <Icon name={space.icon} size={15} strokeWidth={1.75} />
+                    </span>
+                  {/if}
                   <span class="row-text">
                     <strong>{space.label}</strong>
                     {#if space.detail}<span class="meta"><span class="detail">{space.detail}</span></span>{/if}
@@ -674,7 +714,11 @@
   }
 
   .item.current {
-    background: var(--kenos-surface-selected, color-mix(in srgb, var(--accent) 10%, transparent));
+    background: color-mix(
+      in srgb,
+      var(--space-accent, var(--accent)) 9%,
+      transparent
+    );
   }
 
   .row {
@@ -751,8 +795,14 @@
     width: 3px;
     align-self: stretch;
     min-height: 22px;
-    border-radius: 1px;
+    border-radius: 2px;
     flex-shrink: 0;
+  }
+
+  .row-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    opacity: 0.92;
   }
 
   .pin {
