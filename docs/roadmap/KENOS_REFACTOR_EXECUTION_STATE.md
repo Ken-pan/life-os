@@ -612,3 +612,10 @@ Approved temporary defaults now on file:
 - Assistant propose: RPC PASS (`autoExecute=false`)
 - Portal inventory complete; redirect not started
 - Remaining blockers to PRODUCTION_COMPLETE: ProductionExecutor, domain Spaces client cutovers, Apple device evidence (Owner signing/MFA), Portal soft-redirect parity, Legacy revoke, final UX acceptance
+
+## AIOS Approval decide writer canary (2026-07-20)
+
+- Canary site deploy `6a5db3ae89887b0ddf119531` @ https://aios-kenos-read-canary.netlify.app
+- Production AIOS unchanged (read-only)
+- Report: `docs/qa/kenos-aios-approval-decide-writer-canary-deploy.md`
+

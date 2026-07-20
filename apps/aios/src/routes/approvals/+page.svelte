@@ -1,15 +1,54 @@
 <script>
   import { onMount } from 'svelte'
+  import { CLOUD } from '$lib/cloud.svelte.js'
   import {
     CONTROL,
     refreshControlCenter,
     resolveDemoApproval,
   } from '$lib/kenos/controlCenter.svelte.js'
+  import {
+    isApprovalDecideWriterEnabled,
+    isApprovalWriterCohortMember,
+  } from '$lib/kenos/approvalWriters.core.js'
+  import { decideApprovalViaHostedKenosWriter } from '$lib/kenos/approvalWriters.host.js'
   import ReadSourceState from '$lib/components/ReadSourceState.svelte'
 
   const pending = $derived(CONTROL.approvals.filter((item) => item.status === 'pending'))
   const resolved = $derived(CONTROL.approvals.filter((item) => item.status !== 'pending'))
   const countAvailable = $derived(['ready', 'empty', 'partial', 'stale'].includes(CONTROL.sources.approvals.status))
+  const decideWriterEnabled = $derived(isApprovalDecideWriterEnabled())
+
+  let busyId = $state(/** @type {string | null} */ (null))
+  let decideError = $state('')
+
+  /**
+   * @param {{ id: string }} item
+   * @param {'approved' | 'rejected'} nextStatus
+   */
+  async function decidePending(item, nextStatus) {
+    if (busyId) return
+    decideError = ''
+    const email = CLOUD.user?.email
+    if (email && !isApprovalWriterCohortMember(email)) {
+      decideError = '当前账号不在 Approval decide writer cohort 内'
+      return
+    }
+
+    busyId = item.id
+    try {
+      await decideApprovalViaHostedKenosWriter({
+        approvalId: item.id,
+        nextStatus,
+        decisionReason:
+          nextStatus === 'approved' ? 'Owner Inbox decide' : 'Owner Inbox reject',
+      })
+      await refreshControlCenter({ force: true })
+    } catch (error) {
+      decideError = error?.message || '审批决定失败'
+    } finally {
+      busyId = null
+    }
+  }
 
   onMount(() => {
     void refreshControlCenter()
@@ -39,8 +78,18 @@
   />
 
   <p class="control-notice" role="status">
-    生产审批决定与 Executor 尚未批准。此处只读；确认/拒绝按钮仅在本地演练模式可用，不会写入生产。
+    {#if CONTROL.demo}
+      生产审批决定与 Executor 尚未批准。此处只读；确认/拒绝按钮仅在本地演练模式可用，不会写入生产。
+    {:else if decideWriterEnabled}
+      Owner-limited decide 已启用；Executor 仍未开启。确认/拒绝只写入审批决定，不会自动执行。
+    {:else}
+      生产审批决定与 Executor 尚未批准。此处只读；确认/拒绝按钮仅在本地演练模式可用，不会写入生产。
+    {/if}
   </p>
+
+  {#if decideError}
+    <p class="control-notice" role="alert">{decideError}</p>
+  {/if}
 
   <section class="control-page-section" aria-labelledby="approvals-pending-title">
     <h2 id="approvals-pending-title">等待你的决定 · {countAvailable ? pending.length : '—'}</h2>
@@ -58,7 +107,7 @@
               <h3 id="approval-title-{item.id}">{item.safeImpactSummary ?? item.summary}</h3>
               {#if item.impact}
                 <ul class="impact-list">
-                  {#each item.impact as impact}
+                  {#each item.impact as impact (impact)}
                     <li>{impact}</li>
                   {/each}
                 </ul>
@@ -80,6 +129,21 @@
                   type="button"
                   onclick={() => resolveDemoApproval(item.id, 'approved')}
                 >确认演练</button>
+              </div>
+            {:else if decideWriterEnabled}
+              <div class="control-row-actions">
+                <button
+                  class="control-button"
+                  type="button"
+                  disabled={busyId != null}
+                  onclick={() => decidePending(item, 'rejected')}
+                >{busyId === item.id ? '处理中…' : '拒绝'}</button>
+                <button
+                  class="control-button control-button--primary"
+                  type="button"
+                  disabled={busyId != null}
+                  onclick={() => decidePending(item, 'approved')}
+                >{busyId === item.id ? '处理中…' : '确认'}</button>
               </div>
             {:else if item.ownerDeepLink}
               <div class="control-row-actions">
