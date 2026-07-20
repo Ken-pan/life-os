@@ -1,9 +1,10 @@
 <script>
   import { S, uid } from '$lib/state.svelte.js';
-  import { createTaskAsync, updateTask, updateTaskTitleAsync, updateTaskDueDateAsync, updateTaskScheduleAsync, deleteTask, restoreTask, addSubtask } from '$lib/domain/tasks.js';
+  import { createTaskAsync, updateTask, updateTaskTitleAsync, updateTaskDueDateAsync, updateTaskScheduleAsync, updateTaskProjectAsync, deleteTask, restoreTask, addSubtask } from '$lib/domain/tasks.js';
   import { isPlanUpdateTaskTitleWriterEnabled } from '$lib/kenos/planUpdateTaskTitleWriter.core.js';
   import { isPlanUpdateTaskDueDateWriterEnabled } from '$lib/kenos/planUpdateTaskDueDateWriter.core.js';
   import { isPlanUpdateTaskScheduleWriterEnabled } from '$lib/kenos/planUpdateTaskScheduleWriter.core.js';
+  import { isPlanUpdateTaskProjectWriterEnabled } from '$lib/kenos/planUpdateTaskProjectWriter.core.js';
   import { taskEditor, closeTaskEditor, toast } from '$lib/ui.svelte.js';
   import { fetchTaskBreakdown, isAiDisabled } from '$lib/services/aiClient.js';
   import { t, listLabel } from '$lib/i18n/index.js';
@@ -209,6 +210,14 @@
           delete rest.scheduledDate;
           delete rest.scheduledStart;
           delete rest.durationMinutes;
+        }
+        if (isPlanUpdateTaskProjectWriterEnabled()) {
+          const nextProjectId = payload.projectId || null;
+          const prevProjectId = original?.projectId || null;
+          if (nextProjectId !== prevProjectId) {
+            await updateTaskProjectAsync(taskEditor.taskId, payload.projectId || null);
+          }
+          delete rest.projectId;
         }
         updateTask(taskEditor.taskId, rest);
         toast(t('toast.saved'));

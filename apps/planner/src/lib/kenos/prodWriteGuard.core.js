@@ -9,6 +9,7 @@ export const KENOS_WRITE_RPC_DENYLIST = Object.freeze([
   'kenos_update_plan_task_title_action',
   'kenos_update_plan_task_due_date_action',
   'kenos_update_plan_task_schedule_action',
+  'kenos_update_plan_task_project_action',
   'kenos_store_action_approval',
   'kenos_transition_action_approval',
   'kenos_store_work_project',
@@ -49,7 +50,8 @@ export function areKenosWritersBlocked(env = import.meta.env) {
       env?.VITE_KENOS_PLAN_CREATE_TASK_WRITER === '1' ||
       env?.VITE_KENOS_PLAN_UPDATE_TASK_TITLE_WRITER === '1' ||
       env?.VITE_KENOS_PLAN_UPDATE_TASK_DUE_DATE_WRITER === '1' ||
-      env?.VITE_KENOS_PLAN_UPDATE_TASK_SCHEDULE_WRITER === '1'
+      env?.VITE_KENOS_PLAN_UPDATE_TASK_SCHEDULE_WRITER === '1' ||
+      env?.VITE_KENOS_PLAN_UPDATE_TASK_PROJECT_WRITER === '1'
     ) {
       return false
     }

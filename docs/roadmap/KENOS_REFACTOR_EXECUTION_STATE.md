@@ -499,3 +499,10 @@ Approved temporary defaults now on file:
 - Prod Planner: `6a5da75720758f2b349bea6c` @ `8c13c6931…`
 - Writer canary: `6a5da76428d4a43aa124b1d6`
 - Migration tip: `20260720120000`
+
+## Plan Project Writer (2026-07-20)
+
+- Migration tip: `20260720130000` (`kenos_update_plan_task_project_action`)
+- RPC canary PASS (seed `a29faab6…` tombstoned)
+- Schedule Owner UI canary PASS on `6a5da757…`
+- Next: production bake with project flag; then complete/reopen/archive writers

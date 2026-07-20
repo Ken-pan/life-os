@@ -15,6 +15,8 @@ import { isPlanUpdateTaskDueDateWriterCohortMember, isPlanUpdateTaskDueDateWrite
 import { updateTaskDueDateViaHostedKenosWriter } from '../kenos/planUpdateTaskDueDateWriter.host.js';
 import { isPlanUpdateTaskScheduleWriterCohortMember, isPlanUpdateTaskScheduleWriterEnabled } from '../kenos/planUpdateTaskScheduleWriter.core.js';
 import { updateTaskScheduleViaHostedKenosWriter } from '../kenos/planUpdateTaskScheduleWriter.host.js';
+import { isPlanUpdateTaskProjectWriterCohortMember, isPlanUpdateTaskProjectWriterEnabled } from '../kenos/planUpdateTaskProjectWriter.core.js';
+import { updateTaskProjectViaHostedKenosWriter } from '../kenos/planUpdateTaskProjectWriter.host.js';
 import { supabase } from '../supabase.js';
 
 let reminderTimer = null;
@@ -150,6 +152,22 @@ export async function updateTaskScheduleAsync(id, schedule = {}) {
     scheduledStart: schedule.scheduledStart ?? null,
     durationMinutes: schedule.durationMinutes ?? null,
   });
+}
+
+/**
+ * Project relation update entry: Kenos writer when enabled+cohort, else Legacy updateTask.
+ * @param {string} id
+ * @param {string | null | undefined} projectId
+ */
+export async function updateTaskProjectAsync(id, projectId) {
+  if (isPlanUpdateTaskProjectWriterEnabled()) {
+    if (!supabase) throw new Error('Supabase is not configured for Plan project writer');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (isPlanUpdateTaskProjectWriterCohortMember(session?.user?.email)) {
+      return updateTaskProjectViaHostedKenosWriter(id, projectId);
+    }
+  }
+  return updateTask(id, { projectId: projectId ?? null });
 }
 
 
