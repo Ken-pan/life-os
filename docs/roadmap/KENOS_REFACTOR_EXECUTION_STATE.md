@@ -544,3 +544,9 @@ Approved temporary defaults now on file:
 - Seven sites stop_builds=true; Gallery not restored
 - ProductionExecutor still disabled; Outbox remains pending by design
 - Next: Track C Plan Offline (durable queue, exactly-once reconnect); then Track D Approval/Activity/Outbox worker; AIOS maintenance deploy
+
+## Track C offline queue foundation (2026-07-20)
+
+- Added `planOfflineIntentQueue.core.js` (user-bound, idempotent enqueue, auth-gated flush)
+- Flag `VITE_KENOS_PLAN_OFFLINE_WRITER_QUEUE` default OFF — not baked into production
+- Next: wire host flush for create/update writers behind flag; dual-user + reconnect tests
