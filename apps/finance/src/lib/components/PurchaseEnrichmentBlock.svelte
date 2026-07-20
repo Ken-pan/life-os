@@ -16,7 +16,7 @@
   import { loadNote, saveNote } from '$lib/purchaseNoteClient.js'
   import { ReviewActions } from '@life-os/platform-web/svelte/review-card'
   import { LIFE_OS_APP_ORIGINS } from '@life-os/theme'
-  import { parseWikilinks, knowledgeNoteUrl, knowledgeNativeNoteUrl } from '@life-os/platform-web/wikilinks'
+  import KnowledgeNoteLinks from '@life-os/platform-web/svelte/knowledge-note-links'
 
   let {
     enrichment,
@@ -185,7 +185,6 @@
   let noteStatus = $state('idle') // idle | saving | saved | error
   let noteDirty = $state(false)
   let noteSaveTimer = null
-  const noteLinks = $derived(parseWikilinks(noteText))
   const knowledgeOrigin = LIFE_OS_APP_ORIGINS.knowledge.production
 
   function clearNoteTimer() {
@@ -481,30 +480,15 @@
             onblur={onNoteBlur}
             placeholder={t('history.purchaseNotePlaceholder')}
           ></textarea>
-          {#if noteLinks.length}
-            <div class="purchase-note-links" aria-label={t('history.purchaseNoteLinks')}>
-              {#each noteLinks as link (link.target)}
-                <span class="purchase-note-link-group">
-                  <a
-                    class="purchase-note-link"
-                    href={knowledgeNativeNoteUrl(link.target)}
-                    title={t('history.purchaseOpenKnowledgeNative', { title: link.target })}
-                  >
-                    [[{link.label}]]
-                  </a>
-                  <a
-                    class="purchase-note-link purchase-note-link--web"
-                    href={knowledgeNoteUrl(link.target, knowledgeOrigin)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={t('history.purchaseOpenKnowledgeWeb', { title: link.target })}
-                  >
-                    {t('history.purchaseKnowledgeWeb')}
-                  </a>
-                </span>
-              {/each}
-            </div>
-          {/if}
+          <KnowledgeNoteLinks
+            text={noteText}
+            webOrigin={knowledgeOrigin}
+            ariaLabel={t('history.purchaseNoteLinks')}
+            webLinkLabel={t('history.purchaseKnowledgeWeb')}
+            nativeTitle={(title) => t('history.purchaseOpenKnowledgeNative', { title })}
+            webTitle={(title) => t('history.purchaseOpenKnowledgeWeb', { title })}
+            variant="wikilink"
+          />
           <div class="purchase-note-foot text-sm text-muted">
             {#if noteStatus === 'saving'}
               <span>{t('history.reviewSaving')}</span>

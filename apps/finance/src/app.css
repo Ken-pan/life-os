@@ -4105,51 +4105,6 @@ div.input {
   border-color: var(--accent);
 }
 
-.purchase-note-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.purchase-note-link-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  max-width: 100%;
-}
-
-.purchase-note-link {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill, 999px);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: color-mix(in srgb, var(--accent) 82%, var(--text));
-  font-size: var(--text-xs);
-  font-weight: 500;
-  text-decoration: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.purchase-note-link:hover {
-  background: color-mix(in srgb, var(--accent) 20%, transparent);
-}
-
-.purchase-note-link--web {
-  background: transparent;
-  color: var(--text-secondary);
-  padding: 2px 6px;
-}
-
-.purchase-note-link--web:hover {
-  background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
-  color: var(--text);
-}
-
 .purchase-note-foot {
   display: flex;
   align-items: center;
