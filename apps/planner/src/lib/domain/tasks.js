@@ -9,6 +9,8 @@ import {
 } from '../services/attachmentService.js';
 import { isPlanCreateTaskWriterCohortMember, isPlanCreateTaskWriterEnabled, markKenosCreatedTaskLegacyDirty } from '../kenos/planCreateTaskWriter.core.js';
 import { createTaskViaHostedKenosWriter } from '../kenos/planCreateTaskWriter.host.js';
+import { isPlanUpdateTaskTitleWriterCohortMember, isPlanUpdateTaskTitleWriterEnabled } from '../kenos/planUpdateTaskTitleWriter.core.js';
+import { updateTaskTitleViaHostedKenosWriter } from '../kenos/planUpdateTaskTitleWriter.host.js';
 import { supabase } from '../supabase.js';
 
 let reminderTimer = null;
@@ -93,6 +95,23 @@ export function updateTask(id, patch) {
   afterMutation();
   return next;
 }
+
+/**
+ * Title update entry: Kenos writer when enabled+cohort, else Legacy updateTask.
+ * @param {string} id
+ * @param {string} title
+ */
+export async function updateTaskTitleAsync(id, title) {
+  if (isPlanUpdateTaskTitleWriterEnabled()) {
+    if (!supabase) throw new Error('Supabase is not configured for Plan title writer');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (isPlanUpdateTaskTitleWriterCohortMember(session?.user?.email)) {
+      return updateTaskTitleViaHostedKenosWriter(id, title);
+    }
+  }
+  return updateTask(id, { title });
+}
+
 
 /** @param {import('../types.js').Task} task */
 function spawnNextRecurrence(task) {

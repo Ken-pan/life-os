@@ -6,6 +6,7 @@
 
 export const KENOS_WRITE_RPC_DENYLIST = Object.freeze([
   'kenos_create_plan_task_action',
+  'kenos_update_plan_task_title_action',
   'kenos_store_action_approval',
   'kenos_transition_action_approval',
   'kenos_store_work_project',
@@ -34,14 +35,20 @@ export function isPlannerCompatCanaryMode(env = import.meta.env) {
 }
 
 /**
- * Kenos writers stay closed unless BOTH prod-writes and plan-create-task writer
- * flags are set. Compat / read canary never enables Kenos writes.
+ * Kenos writers stay closed unless BOTH prod-writes and a plan writer flag are set.
+ * Compat / read canary never enables Kenos writes.
+ * Create and title-edit share the dual-flag unlock for Owner-limited cohort builds.
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
  */
 export function areKenosWritersBlocked(env = import.meta.env) {
   if (isPlannerCompatCanaryMode(env)) return true
-  if (env?.VITE_KENOS_PROD_WRITES === '1' && env?.VITE_KENOS_PLAN_CREATE_TASK_WRITER === '1') {
-    return false
+  if (env?.VITE_KENOS_PROD_WRITES === '1') {
+    if (
+      env?.VITE_KENOS_PLAN_CREATE_TASK_WRITER === '1' ||
+      env?.VITE_KENOS_PLAN_UPDATE_TASK_TITLE_WRITER === '1'
+    ) {
+      return false
+    }
   }
   // Default: block Kenos writers even outside canary (legacy path unaffected).
   return true

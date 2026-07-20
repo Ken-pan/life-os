@@ -1,6 +1,7 @@
 <script>
   import { S, uid } from '$lib/state.svelte.js';
-  import { createTaskAsync, updateTask, deleteTask, restoreTask, addSubtask } from '$lib/domain/tasks.js';
+  import { createTaskAsync, updateTask, updateTaskTitleAsync, deleteTask, restoreTask, addSubtask } from '$lib/domain/tasks.js';
+  import { isPlanUpdateTaskTitleWriterEnabled } from '$lib/kenos/planUpdateTaskTitleWriter.core.js';
   import { taskEditor, closeTaskEditor, toast } from '$lib/ui.svelte.js';
   import { fetchTaskBreakdown, isAiDisabled } from '$lib/services/aiClient.js';
   import { t, listLabel } from '$lib/i18n/index.js';
@@ -167,7 +168,13 @@
           dedupeMs: 0,
         });
       } else {
-        updateTask(taskEditor.taskId, payload);
+        if (isPlanUpdateTaskTitleWriterEnabled()) {
+          await updateTaskTitleAsync(taskEditor.taskId, payload.title);
+          const { title: _title, ...rest } = payload;
+          updateTask(taskEditor.taskId, rest);
+        } else {
+          updateTask(taskEditor.taskId, payload);
+        }
         toast(t('toast.saved'));
       }
       closeTaskEditor();
