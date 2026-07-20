@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import assert from 'node:assert/strict'
+import { describe, it } from 'node:test'
 import {
   buildApprovalDecideAction,
   buildApprovalRequestAction,
@@ -17,30 +18,32 @@ describe('approvalWriters.core', () => {
       VITE_KENOS_APPROVAL_REQUEST_WRITER: '1',
       VITE_KENOS_APPROVAL_DECIDE_WRITER: '1',
     }
-    expect(isApprovalRequestWriterEnabled(env)).toBe(false)
-    expect(isApprovalDecideWriterEnabled(env)).toBe(false)
+    assert.equal(isApprovalRequestWriterEnabled(env), false)
+    assert.equal(isApprovalDecideWriterEnabled(env), false)
   })
 
   it('requires dual flags for request/decide', () => {
-    expect(isApprovalRequestWriterEnabled({ VITE_KENOS_PROD_WRITES: '1' })).toBe(false)
-    expect(
+    assert.equal(isApprovalRequestWriterEnabled({ VITE_KENOS_PROD_WRITES: '1' }), false)
+    assert.equal(
       isApprovalRequestWriterEnabled({
         VITE_KENOS_PROD_WRITES: '1',
         VITE_KENOS_APPROVAL_REQUEST_WRITER: '1',
       }),
-    ).toBe(true)
-    expect(
+      true,
+    )
+    assert.equal(
       isApprovalDecideWriterEnabled({
         VITE_KENOS_PROD_WRITES: '1',
         VITE_KENOS_APPROVAL_DECIDE_WRITER: '1',
       }),
-    ).toBe(true)
+      true,
+    )
   })
 
   it('honors owner email cohort', () => {
     const env = { VITE_KENOS_APPROVAL_WRITER_OWNER_EMAILS: '334452284ken@gmail.com' }
-    expect(isApprovalWriterCohortMember('334452284ken@gmail.com', env)).toBe(true)
-    expect(isApprovalWriterCohortMember('other@example.com', env)).toBe(false)
+    assert.equal(isApprovalWriterCohortMember('334452284ken@gmail.com', env), true)
+    assert.equal(isApprovalWriterCohortMember('other@example.com', env), false)
   })
 
   it('builds request and decide action envelopes', () => {
@@ -48,9 +51,9 @@ describe('approvalWriters.core', () => {
       { safeSummary: 'Need approval', risk: 'R2' },
       { authUserId: OWNER, now: Date.parse('2026-07-20T05:00:00.000Z') },
     )
-    expect(request.actionType).toBe('approval.request')
-    expect(request.payload.safeSummary).toBe('Need approval')
-    expect(request.actor.id).toBe(OWNER)
+    assert.equal(request.actionType, 'approval.request')
+    assert.equal(request.payload.safeSummary, 'Need approval')
+    assert.equal(request.actor.id, OWNER)
 
     const decide = buildApprovalDecideAction(
       {
@@ -60,8 +63,8 @@ describe('approvalWriters.core', () => {
       },
       { authUserId: OWNER },
     )
-    expect(decide.actionType).toBe('approval.decide')
-    expect(decide.payload.nextStatus).toBe('approved')
-    expect(decide.actor.type).toBe('user')
+    assert.equal(decide.actionType, 'approval.decide')
+    assert.equal(decide.payload.nextStatus, 'approved')
+    assert.equal(decide.actor.type, 'user')
   })
 })

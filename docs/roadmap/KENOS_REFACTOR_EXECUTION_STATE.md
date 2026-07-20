@@ -573,3 +573,11 @@ Approved temporary defaults now on file:
 - AIOS approval writer cores present; production flags OFF (AIOS stays read-only)
 - Report: `docs/qa/kenos-track-d-approval-activity-outbox-report.md`
 - Next: Track E FocusContext write canary
+
+## Track E Focus start/end (2026-07-20)
+
+- Migration tip: `20260720190000`
+- Start/end FocusContext RPC canaries PASS; cross-user end denied
+- Deferred / suggestions / pause writers not opened
+- Report: `docs/qa/kenos-track-e-focus-start-end-report.md`
+- Next: Track F Work entity create
