@@ -11,6 +11,7 @@
   import { auth } from '$lib/auth.svelte.js'
   import { createTaskAsync } from '$lib/domain/tasks.js'
   import { uploadAttachment, createLinkAttachment } from '$lib/services/attachmentService.js'
+  import { openPlannerContinue } from '$lib/kenos/plannerSpaceAdapter.js'
 
   /** @type {{ title?: string, subtitle?: string, backHref?: string, backLabel?: string, historyBack?: boolean }} */
   let { title, subtitle, backHref, backLabel, historyBack = false } = $props()
@@ -25,6 +26,10 @@
   )
 
   const hasTools = $derived(showMobileSettings)
+
+  function onContinue() {
+    openPlannerContinue({ handoffToKenos: true })
+  }
 
   async function handleBugSubmit({ title: bugTitle, notes, severity, screenshot, diagnostics }) {
     let projectId = null
@@ -90,6 +95,17 @@
   {/snippet}
 
   {#snippet trailing()}
+    <button
+      type="button"
+      class="appbar-continue"
+      data-testid="planner-kenos-continue"
+      aria-label="Continue"
+      title="Continue"
+      onclick={onContinue}
+    >
+      <Icon name="history" size={18} strokeWidth={1.75} />
+      <span>Continue</span>
+    </button>
     <ReportBugButton app="planner" {supabase} user={auth.user} {toast} onSubmit={handleBugSubmit} />
     {#if showMobileSettings}
       <a
@@ -102,3 +118,25 @@
     {/if}
   {/snippet}
 </LifeOsAppBar>
+
+<style>
+  .appbar-continue {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 10px;
+    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--t1);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .appbar-continue:hover {
+    border-color: color-mix(in srgb, var(--t1) 22%, var(--border));
+  }
+</style>

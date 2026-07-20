@@ -93,3 +93,58 @@ func focusStoreTrainingSeed() throws {
     #expect(store.focus == nil)
     try? FileManager.default.removeItem(at: dir)
 }
+
+@Test("Space switcher store persists recent, pinned, and ResumeDescriptor")
+@MainActor
+func spaceSwitcherPersistence() throws {
+    let ownerA = UUID(uuidString: "20000000-0000-4000-8000-000000000001")!
+    let ownerB = UUID(uuidString: "30000000-0000-4000-8000-000000000002")!
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("kenos-space-switcher-\(UUID().uuidString)")
+
+    let store = KenosSpaceSwitcherStore(ownerId: ownerA, directory: dir)
+    store.touchRecentSpace(id: "hosted:work")
+    store.touchRecentSpace(id: "hosted:plan")
+    store.touchRecentSpace(id: "hosted:work")
+    store.togglePinnedSpace(id: "hosted:training")
+    store.togglePinnedSpace(id: "hosted:money")
+    store.rememberResume(
+        .init(
+            userId: ownerA.uuidString.lowercased(),
+            spaceId: "plan",
+            route: "https://planner.kenos.space/upcoming?kenosTask=t1&kenosFilter=overdue",
+            entityId: "t1",
+            substate: ["filter": "overdue"],
+            displayTitle: "Plan",
+            displaySubtitle: "Upcoming · Overdue"
+        ),
+        listKey: "hosted:plan"
+    )
+    #expect(store.recentSpaceIds.first == "hosted:plan")
+    #expect(store.pinnedSpaceIds == ["hosted:training", "hosted:money"])
+    #expect(store.resumeByListKey["hosted:plan"]?.entityId == "t1")
+
+    let restored = KenosSpaceSwitcherStore(ownerId: ownerA, directory: dir)
+    #expect(restored.recentSpaceIds.contains("hosted:plan"))
+    #expect(restored.resumeByListKey["hosted:plan"]?.displaySubtitle == "Upcoming · Overdue")
+
+    for index in 0..<8 {
+        restored.touchRecentSpace(id: "space-\(index)")
+    }
+    #expect(restored.recentSpaceIds.count == KenosSpaceSwitcherStore.maxRecent)
+
+    restored.togglePinnedSpace(id: "hosted:training")
+    #expect(restored.pinnedSpaceIds == ["hosted:money"])
+
+    restored.bindOwner(ownerB)
+    #expect(restored.ownerId == ownerB)
+    #expect(restored.recentSpaceIds.isEmpty)
+    #expect(restored.pinnedSpaceIds.isEmpty)
+    #expect(restored.resumeByListKey.isEmpty)
+
+    restored.logoutClear()
+    #expect(restored.recentSpaceIds.isEmpty)
+    #expect(restored.pinnedSpaceIds.isEmpty)
+    #expect(restored.ownerId == KenosSpaceSwitcherStore.defaultOwnerId)
+
+    try? FileManager.default.removeItem(at: dir)
+}

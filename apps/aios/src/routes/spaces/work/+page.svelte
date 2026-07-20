@@ -13,24 +13,21 @@
 </script>
 
 <div class="space-page">
-  <p class="kicker">Space · Work</p>
-  <h1>Deep Work</h1>
-  <p class="intro">进入当前项目的专注模式。只保留 Work / Plan / Library；Home 与 Money 会延期。</p>
+  <h1 class="kenos-page-title">Deep Work</h1>
+  <p class="intro">进入当前项目的专注模式。只保留与这次工作相关的上下文。</p>
 
   <section class="project">
     <h2>Kenos IA</h2>
     <p>导航信息架构与 Focus 上下文</p>
     <ul>
-      <li>Deliverable：Focus contracts</li>
-      <li>Plan task：本地投影（只读）</li>
-      <li>Library：Phase brief（引用）</li>
+      <li>下一步：Focus contracts</li>
+      <li>相关任务在 Plan 中查看</li>
     </ul>
-    <button type="button" onclick={begin}>开始 Deep Work Focus</button>
+    <button type="button" onclick={begin}>开始 Deep Work</button>
   </section>
 
-  <p class="note">本地模拟：不会修改真实 Work/Plan 数据，也不会自动执行已批准动作。</p>
   <div class="links">
-    <a href="/work">打开完整 Work hub</a>
+    <a href="/work">打开 Work</a>
     <a href="/spaces">‹ All Spaces</a>
   </div>
 </div>
@@ -39,49 +36,55 @@
   .space-page {
     width: min(100% - 32px, 720px);
     margin: 0 auto;
-    padding: 32px 0 96px;
+    padding: var(--kenos-space-page-top, 24px) 0 var(--kenos-mobile-bottom-pad, 96px);
   }
-  .kicker {
-    margin: 0 0 6px;
-    color: var(--t3);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    font-size: var(--text-xs);
-  }
-  h1 {
-    margin: 0;
-    font-size: clamp(34px, 5vw, 48px);
-    letter-spacing: -0.04em;
-  }
-  .intro,
-  .note {
+  .intro {
+    margin: 10px 0 0;
     color: var(--t2);
+    font-size: var(--kenos-type-body);
+    line-height: var(--kenos-leading-body);
   }
   .project {
-    margin-top: 32px;
-    padding-top: 20px;
+    margin-top: 28px;
+    padding: 16px 0;
     border-top: 1px solid var(--border);
   }
-  ul {
+  .project h2 {
+    margin: 0 0 6px;
+    font-size: var(--kenos-type-section);
+  }
+  .project p {
+    margin: 0 0 12px;
     color: var(--t2);
   }
-  button {
-    margin-top: 16px;
-    min-height: 40px;
-    padding: 0 14px;
-    border-radius: 10px;
-    border: none;
+  .project ul {
+    margin: 0 0 16px;
+    padding-left: 1.2em;
+    color: var(--t3);
+  }
+  .project button {
+    appearance: none;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: var(--kenos-radius-control, 8px);
     background: var(--t1);
     color: var(--bg);
     font: inherit;
+    font-weight: 600;
     cursor: pointer;
   }
   .links {
     display: flex;
+    flex-wrap: wrap;
     gap: 16px;
-    margin-top: 20px;
+    margin-top: 28px;
   }
-  a {
+  .links a {
     color: var(--t2);
+    text-decoration: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
   }
 </style>

@@ -4312,6 +4312,28 @@ body:has(.focus-view) #main-content {
   pointer-events: auto;
 }
 
+/* Kenos Continuity — minimal, does not cover set CTA / timer */
+.focus-kenos-continue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--overlay-strong, #fff);
+  background: rgba(13, 13, 14, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  opacity: 0.85;
+}
+.focus-kenos-continue:hover {
+  opacity: 1;
+}
+
 /* 顶部控件 — 左 icon / 右 ghost meta */
 .focus-icon-btn {
   display: inline-flex;

@@ -49,6 +49,7 @@
   } from '$lib/localCache.js'
   import { openTaskEditor } from '$lib/ui.svelte.js'
   import { resolveMobileChromeInset, isFabVisible } from '$lib/nav.js'
+  import { applyPlannerResumeFromLocation } from '$lib/kenos/plannerSpaceAdapter.js'
 
   let { children } = $props()
 
@@ -99,12 +100,17 @@
     void requestPersistentStorage()
 
     const params = new URLSearchParams(window.location.search)
-    const taskId = params.get('task')
+    const taskId = params.get('task') || params.get('kenosTask')
     if (taskId) {
       const task = S.tasks.find((t) => t.id === taskId && !t.deletedAt)
       if (task) openTaskEditor(task)
-      history.replaceState({}, '', window.location.pathname)
+      // Keep kenos* params until applyPlannerResumeFromLocation cleans intent;
+      // strip only legacy `task` alone for back-compat.
+      if (params.get('task') && !params.get('kenosTask')) {
+        history.replaceState({}, '', window.location.pathname)
+      }
     }
+    void applyPlannerResumeFromLocation()
 
     const onHide = () => flushSave()
     window.addEventListener('pagehide', onHide)

@@ -46,10 +46,13 @@ final class KenosAppModel: ObservableObject {
     @Published var showCaptureSheet = false
     /// Temporary Space Switcher layer (not a 5th tab).
     @Published var showSpaceSwitcher = false
-    /// Recent Space ids (user-scoped; cleared with session cache directory).
-    @Published var recentSpaceIds: [String] = []
-    @Published var pinnedSpaceIds: [String] = []
     let focusStore: KenosFocusStore
+    let spaceSwitcherStore: KenosSpaceSwitcherStore
+
+    /// Recent Space ids (user-scoped; persisted under cacheDirectory/spaceSwitcher).
+    var recentSpaceIds: [String] { spaceSwitcherStore.recentSpaceIds }
+    /// Pinned Space ids (user-scoped; cleared on logout / owner switch).
+    var pinnedSpaceIds: [String] { spaceSwitcherStore.pinnedSpaceIds }
 
     enum InboxDestination: String, Hashable {
         case approvals, activity, capture, system, settings, library
@@ -138,10 +141,22 @@ final class KenosAppModel: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
+        let spaceSwitcherStore = KenosSpaceSwitcherStore(
+            ownerId: ownerId,
+            directory: cacheDirectory.appendingPathComponent("spaceSwitcher")
+        )
+        self.spaceSwitcherStore = spaceSwitcherStore
+        spaceSwitcherStore.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     func bootstrap() async {
         await repository.bootstrap()
+        if let sessionOwner = try? await session.ownerId() {
+            spaceSwitcherStore.bindOwner(sessionOwner)
+        }
         try? await notifications.schedule(KenosNotificationFixtures.planReminder())
         try? await notifications.schedule(KenosNotificationFixtures.approvalRequested())
         notificationInbox = await notifications.pending()
@@ -237,18 +252,11 @@ final class KenosAppModel: ObservableObject {
     }
 
     func touchRecentSpace(id: String) {
-        recentSpaceIds = [id] + recentSpaceIds.filter { $0 != id }
-        if recentSpaceIds.count > 6 {
-            recentSpaceIds = Array(recentSpaceIds.prefix(6))
-        }
+        spaceSwitcherStore.touchRecentSpace(id: id)
     }
 
     func togglePinnedSpace(id: String) {
-        if pinnedSpaceIds.contains(id) {
-            pinnedSpaceIds.removeAll { $0 == id }
-        } else {
-            pinnedSpaceIds.append(id)
-        }
+        spaceSwitcherStore.togglePinnedSpace(id: id)
     }
 
     func openSpace(_ entry: SpaceCatalogEntry) {
@@ -315,6 +323,8 @@ final class KenosAppModel: ObservableObject {
         try? queue.logoutClear()
         try? handoff.logoutClear()
         focusStore.logoutClear()
+        spaceSwitcherStore.logoutClear()
+        showSpaceSwitcher = false
         watchCaptures = []
         notificationInbox = []
         lastCapture = nil

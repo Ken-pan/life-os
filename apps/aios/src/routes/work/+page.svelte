@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte'
+  import { goto } from '$app/navigation'
   import Icon from '@life-os/platform-web/svelte/icon'
   import ReadSourceState from '$lib/components/ReadSourceState.svelte'
   import { CONTROL, refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
@@ -16,6 +17,8 @@
   } from '$lib/kenos/workStore.svelte.js'
   import { resolveAssistantScopeLabel } from '$lib/kenos/assistantScopeLabel.core.js'
   import { enterWorkAssistantContext } from '$lib/kenos/assistantContext.svelte.js'
+  import { launchSpace } from '$lib/kenos/spaceSwitcher.svelte.js'
+  import { domainDeepLink } from '$lib/kenos/domainResume.core.js'
 
   const projects = $derived(listWorkProjects())
   const deliverables = $derived(listWorkDeliverables())
@@ -84,10 +87,30 @@
 
   {#if workCapabilityCopy.kind === 'unavailable' || workCapabilityCopy.kind === 'unauthorized'}
     <section class="state-panel" aria-live="polite">
-      <h2>{workCapabilityCopy.title}</h2>
-      <p>{workCapabilityCopy.body}</p>
-      <p class="muted">OPEN-002：Work 正文不会镜像进 Plan。写入生产尚未开启。</p>
-      <a href="/spaces">返回 Spaces</a>
+      <h2>Work 正在准备中</h2>
+      <p>你目前仍可以通过 Plan 管理相关任务。</p>
+      <div class="state-actions">
+        <a class="primary" href="/spaces">返回 Spaces</a>
+        <button
+          type="button"
+          class="quiet"
+          onclick={() =>
+            launchSpace(
+              {
+                id: 'plan',
+                label: 'Plan',
+                detail: 'Upcoming',
+                href: domainDeepLink('plan', '/upcoming'),
+                listKey: 'hosted:plan',
+                external: false,
+                namespace: 'hosted',
+              },
+              { goto },
+            )}
+        >
+          打开 Plan
+        </button>
+      </div>
     </section>
   {:else if prodReady && CONTROL.sources.work.status === 'empty' && WORK.status !== 'ready'}
     <section class="state-panel">
@@ -316,6 +339,22 @@
   .hero-grid > div, .meta-grid > div, .state-panel {
     border-top: 1px solid var(--border);
     padding-top: 0.75rem;
+  }
+  .state-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+    align-items: center;
+  }
+  .state-actions .primary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: var(--kenos-radius-control, 8px);
+    text-decoration: none;
+    font-weight: 600;
   }
   .plain-list, .proposal-list {
     list-style: none;

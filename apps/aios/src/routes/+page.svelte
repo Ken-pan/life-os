@@ -3,9 +3,12 @@
   import Icon from '@life-os/platform-web/svelte/icon'
   import ReadSourceState from '$lib/components/ReadSourceState.svelte'
   import { CONTROL, refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
+  import { rememberExternalResume, launchSpace } from '$lib/kenos/spaceSwitcher.svelte.js'
+  import { listKeyForDomainHref } from '$lib/kenos/domainResume.core.js'
+  import { TODAY_SPACE_SHORTCUTS, spaceListKey } from '$lib/kenos/spacesList.core.js'
+  import { goto } from '$app/navigation'
   import {
     buildTodayReadModel,
-    KENOS_SPACES,
     sortActivityNewestFirst,
     summarizeControlQueue,
     formatQueueCount,
@@ -49,17 +52,33 @@
     void refreshControlCenter()
     refreshWorkSurface()
   })
+
+  /**
+   * @param {(typeof TODAY_SPACE_SHORTCUTS)[number]} space
+   * @param {MouseEvent} event
+   */
+  function onTodaySpace(space, event) {
+    event.preventDefault()
+    launchSpace(
+      {
+        ...space,
+        listKey: spaceListKey('hosted', space.id),
+        external: false,
+        namespace: 'hosted',
+      },
+      { goto },
+    )
+  }
 </script>
 
 <div class="today-page">
   <header class="today-header">
     <div>
       <p class="today-date">{dateLabel}</p>
-      <h1>Today</h1>
-      <p class="today-intro">状态、下一步和需要你决定的事。</p>
+      <h1 class="kenos-page-title">Today</h1>
+      <p class="today-intro">真正重要的事先处理。其余退到 Inbox 与各 Space。</p>
     </div>
     <div class="today-actions">
-      <a href="/inbox#capture" class="quiet-button">Capture</a>
       <button
         type="button"
         class="quiet-button"
@@ -80,8 +99,8 @@
   {:else if CONTROL.loading}
     <p class="status-line" aria-live="polite">正在汇总各 Space 状态…</p>
   {:else if today.asOf}
-    <p class="status-line">
-      上次更新于 {new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(today.asOf))}
+    <p class="status-line status-line--quiet status-line--asof" aria-hidden="true">
+      {new Intl.DateTimeFormat('zh-CN', { timeStyle: 'short' }).format(new Date(today.asOf))}
     </p>
   {/if}
 
@@ -111,6 +130,15 @@
               href={item.href}
               target="_blank"
               rel="noopener noreferrer"
+              onclick={() => {
+                const listKey = listKeyForDomainHref(item.href)
+                if (listKey) {
+                  rememberExternalResume(listKey, {
+                    lastRoute: item.href,
+                    filter: item.title,
+                  })
+                }
+              }}
             >
               <span class="priority-marker" aria-hidden="true"></span>
               <span class="priority-copy">
@@ -200,7 +228,7 @@
           {/each}
         </div>
       {:else if WORK.status === 'unsupported' && !prodWorkReadOn}
-        <p class="empty-copy" role="status">Work 尚未接入。可从 Spaces 进入了解，不会显示为零条。</p>
+        <p class="empty-copy" role="status">Work 正在准备中。相关任务可先在 Plan 里管理。</p>
       {:else}
         <p class="empty-copy">暂无 Work 卡片。</p>
       {/if}
@@ -216,7 +244,21 @@
         </div>
         <div class="signal-list">
           {#each today.signals as signal (signal.id)}
-            <a href={signal.href} target="_blank" rel="noopener noreferrer" class="signal-row">
+            <a
+              href={signal.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="signal-row"
+              onclick={() => {
+                const listKey = listKeyForDomainHref(signal.href)
+                if (listKey) {
+                  rememberExternalResume(listKey, {
+                    lastRoute: signal.href,
+                    filter: signal.value,
+                  })
+                }
+              }}
+            >
               <span class="signal-label">{signal.label}</span>
               <strong>{signal.value}</strong>
               <span>{signal.detail}{signal.stale ? ' · 数据陈旧' : ''}</span>
@@ -264,12 +306,8 @@
         <a href="/spaces" class="text-action">全部</a>
       </div>
       <nav class="space-list" aria-label="Kenos Spaces">
-        <a href="/work">
-          <strong>Work</strong>
-          <span>项目与交付</span>
-        </a>
-        {#each KENOS_SPACES as space (space.id)}
-          <a href={space.href} target="_blank" rel="noopener noreferrer">
+        {#each TODAY_SPACE_SHORTCUTS as space (space.id)}
+          <a href={space.href} onclick={(e) => onTodaySpace(space, e)}>
             <strong>{space.label}</strong>
             <span>{space.detail}</span>
           </a>
@@ -281,39 +319,58 @@
 
 <style>
   .today-page {
-    width: min(100% - 32px, 1040px);
+    width: min(100% - 32px, var(--kenos-content-max, 820px));
     margin-inline: auto;
-    padding: clamp(28px, 5vw, 64px) 0 96px;
+    padding: var(--kenos-space-page-top, 24px) 0 var(--kenos-mobile-bottom-pad, 96px);
   }
   .today-header {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 24px;
-    padding-bottom: clamp(28px, 5vw, 48px);
+    gap: var(--kenos-space-md, 16px);
+    padding-bottom: var(--kenos-space-lg, 24px);
     border-bottom: 1px solid var(--border);
+  }
+  @media (max-width: 899px) {
+    /* System bar already carries the page title — avoid double "Today" / "Spaces". */
+    .today-header .kenos-page-title,
+    .today-header :global(.kenos-page-title) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+    .today-header {
+      align-items: flex-start;
+      padding-top: 4px;
+    }
   }
   .today-date,
   .section-kicker {
     margin: 0 0 6px;
     color: var(--t3);
-    font-size: var(--text-sm);
+    font-size: var(--kenos-type-meta, var(--text-sm));
     font-weight: 650;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--kenos-tracking-meta, 0.08em);
     text-transform: uppercase;
   }
-  h1 {
+  h1,
+  :global(.kenos-page-title) {
     margin: 0;
     color: var(--t1);
-    font-size: clamp(42px, 7vw, 72px);
-    font-weight: 620;
-    letter-spacing: -0.055em;
-    line-height: 0.98;
+    font-size: var(--kenos-type-page);
+    font-weight: var(--kenos-weight-page);
+    letter-spacing: var(--kenos-tracking-page);
+    line-height: var(--kenos-leading-page);
   }
   .today-intro {
-    margin: 14px 0 0;
+    margin: var(--kenos-title-to-body, 10px) 0 0;
     color: var(--t2);
-    font-size: var(--text-xl);
+    font-size: var(--kenos-type-body);
+    font-weight: var(--kenos-weight-body);
+    line-height: var(--kenos-leading-body);
+    max-width: 36rem;
   }
   .today-actions {
     display: flex;
@@ -353,29 +410,52 @@
     opacity: 0.5;
   }
   .status-line {
-    margin: 14px 0 0;
+    margin: 10px 0 0;
+  }
+  .status-line--quiet {
+    font-size: 12px;
+    opacity: 0.55;
+  }
+  .status-line--asof {
+    margin-top: -4px;
+    margin-bottom: 2px;
+    font-size: 11px;
   }
   .status-line--error {
     color: var(--critical);
   }
   .today-workspace {
     display: grid;
-    gap: clamp(42px, 7vw, 72px);
-    padding-top: clamp(42px, 7vw, 72px);
+    gap: var(--kenos-section-gap, 36px);
+    padding-top: var(--kenos-section-gap, 36px);
+  }
+  @media (min-width: 1024px) {
+    .today-workspace {
+      grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+      column-gap: clamp(28px, 4vw, 48px);
+      align-items: start;
+    }
+    .today-workspace > .focus-section {
+      grid-column: 1;
+    }
+    .today-page {
+      width: min(100% - 48px, var(--kenos-content-max-wide, 1100px));
+    }
   }
   .section-heading {
     display: flex;
     align-items: end;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 18px;
+    margin-bottom: 12px;
   }
   h2 {
     margin: 0;
     color: var(--t1);
-    font-size: clamp(21px, 3vw, 28px);
-    font-weight: 600;
-    letter-spacing: -0.025em;
+    font-size: var(--kenos-type-section);
+    font-weight: var(--kenos-weight-section);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
   }
   .priority-list,
   .queue-list,
@@ -576,8 +656,8 @@
   }
   @media (max-width: 720px) {
     .today-page {
-      width: min(100% - 28px, 1040px);
-      padding-top: 28px;
+      width: min(100% - 28px, var(--kenos-content-max, 820px));
+      padding-top: var(--kenos-space-page-top, 24px);
     }
     .today-header {
       align-items: flex-start;

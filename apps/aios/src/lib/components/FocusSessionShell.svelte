@@ -15,6 +15,8 @@
     returnSession,
   } from '$lib/kenos/focusStore.svelte.js'
   import { resolveAssistantScopeLabel } from '$lib/kenos/assistantScopeLabel.core.js'
+  import { rememberExternalResume } from '$lib/kenos/spaceSwitcher.svelte.js'
+  import { domainDeepLink } from '$lib/kenos/domainResume.core.js'
 
   let now = $state(Date.now())
   $effect(() => {
@@ -39,7 +41,11 @@
 
   function leaveTemporarily() {
     leaveSessionTemporarily()
-    void goto('/')
+    rememberExternalResume('hosted:plan', {
+      lastRoute: domainDeepLink('plan', '/upcoming'),
+      filter: 'Upcoming · left Focus temporarily',
+    })
+    void goto('/spaces/plan')
   }
 
   function endAndSummarize() {

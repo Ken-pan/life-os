@@ -1,5 +1,6 @@
 <script>
-  import { goto } from '$app/navigation';
+  import { goto, afterNavigate } from '$app/navigation';
+  import { page } from '$app/state';
   import { onMount, onDestroy } from 'svelte';
   import {
     S,
@@ -30,7 +31,8 @@
     parseTimedTarget,
     getSessionTimes,
     parseRepsTarget,
-    getSessionExercises
+    getSessionExercises,
+    ensureResumeCurrentSet,
   } from '$lib/session.js';
   import { recommendNextWeight, detectPR, isActionableHoldAdvice } from '$lib/progression.js';
   import { startTimer, timer, cancelTimer } from '$lib/timer.svelte.js';
@@ -49,6 +51,10 @@
     plateConfigFor
   } from '$lib/tools/calculators.js';
   import { t } from '$lib/i18n/index.js';
+  import {
+    openFitnessContinue,
+    resumeFitnessFocus,
+  } from '$lib/kenos/fitnessSpaceAdapter.js';
 
   let { dayId, day } = $props();
 
@@ -60,6 +66,8 @@
   let exitConfirmOpen = $state(false);
   let heroBroken = $state(false);
   let adoptedAdvice = $state(new Set());
+  /** @type {string} */
+  let continuityAppliedKey = $state('');
 
   function adoptAdvice(exId, weight) {
     adoptedAdvice.add(exId);
@@ -81,8 +89,31 @@
     elapsedLabel = times ? formatElapsed(times.startMs, Date.now()) : null;
   }
 
+  function onKenosContinue(event) {
+    event?.stopPropagation?.();
+    openFitnessContinue({ handoffToKenos: true, dayId, exIndex });
+  }
+
+  function applyContinuityFromUrl() {
+    const q = page.url.searchParams;
+    const hasContinuity =
+      q.has('kenosEx') || q.has('kenosSet') || q.has('kenosTimerRemain');
+    if (!hasContinuity) return false;
+    const key = `${page.url.pathname}?${q.get('kenosEx') || ''}|${q.get('kenosSet') || ''}|${q.get('kenosTimerRemain') || ''}`;
+    if (key === continuityAppliedKey) return true;
+    continuityAppliedKey = key;
+    const restored = resumeFitnessFocus(dayId, {
+      setExIndex: (n) => {
+        exIndex = n;
+      },
+    });
+    return Boolean(restored?.ok);
+  }
+
   onMount(() => {
-    exIndex = loadFocusCursor(dayId) ?? getSessionProgress(dayId).exIndex;
+    if (!applyContinuityFromUrl()) {
+      exIndex = loadFocusCursor(dayId) ?? getSessionProgress(dayId).exIndex;
+    }
     beginFocusSession(dayId);
     refreshElapsed();
 
@@ -92,11 +123,42 @@
       if (document.visibilityState === 'visible') refreshElapsed();
     };
     document.addEventListener('visibilitychange', onVisible);
+    // Re-apply Continuity once after sync may have merged stale cloud logs.
+    // Query is stripped after first apply — keep a one-shot pending pin.
+    const syncRetry = setTimeout(() => {
+      try {
+        const raw = sessionStorage.getItem('kenos.continuity.pendingSet');
+        if (!raw) return;
+        const pending = JSON.parse(raw);
+        sessionStorage.removeItem('kenos.continuity.pendingSet');
+        if (
+          pending?.dayId === dayId &&
+          pending?.exerciseId &&
+          pending?.set != null
+        ) {
+          ensureResumeCurrentSet(dayId, pending.exerciseId, pending.set, undefined, {
+            pin: true,
+          });
+          const queue = getSessionExercises(dayId);
+          const idx = queue.findIndex((ex) => ex.id === pending.exerciseId);
+          if (idx >= 0) exIndex = idx;
+        }
+      } catch {
+        /* ignore */
+      }
+    }, 1200);
     return () => {
       releaseWakeLock();
       clearInterval(id);
+      clearTimeout(syncRetry);
       document.removeEventListener('visibilitychange', onVisible);
     };
+  });
+
+  // Query-only Continuity navigations while FocusSession stays mounted.
+  afterNavigate(({ to }) => {
+    if (!to?.url?.pathname?.includes('/focus')) return;
+    applyContinuityFromUrl();
   });
 
   onDestroy(() => {
@@ -432,6 +494,16 @@
               <span class="focus-elapsed" aria-label={t('focus.elapsedAria')}>{elapsedLabel}</span>
             {/if}
           </div>
+          <button
+            type="button"
+            class="focus-kenos-continue"
+            data-testid="fitness-focus-kenos-continue"
+            aria-label="Continue"
+            title="Continue"
+            onclick={onKenosContinue}
+          >
+            <Icon name="history" size={14} strokeWidth={1.75} />
+          </button>
         </header>
       </div>
 
@@ -572,7 +644,13 @@
                     ></span>
                   {/each}
                 </div>
-                <span class="focus-set-count">
+                <span
+                  class="focus-set-count"
+                  data-testid="fitness-focus-set-progress"
+                  data-next-set={nextSet ?? ''}
+                  data-done={exLog?.done ?? 0}
+                  data-total={currentEx.sets}
+                >
                   {#if nextSet}
                     {t('focus.setProgress', { done: exLog?.done ?? 0, total: currentEx.sets, remaining: currentEx.sets - (exLog?.done ?? 0) })}
                   {:else}
@@ -587,6 +665,8 @@
                 type="button"
                 class="focus-cta focus-cta-set"
                 class:pulse={ctaPulse}
+                data-testid="fitness-focus-complete-set"
+                data-set={nextSet}
                 onclick={onCompleteSet}
                 aria-label={t('focus.completeSetAria', { set: nextSet, total: currentEx.sets, done: exLog.done })}
               >

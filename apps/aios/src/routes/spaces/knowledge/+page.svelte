@@ -3,9 +3,9 @@
 </script>
 
 <DomainLaunch
-  domainId="training"
-  listKey="hosted:training"
-  title="Training"
+  domainId="knowledge"
+  listKey="hosted:knowledge"
+  title="Knowledge"
   path="/"
-  filter="今日计划 · Push Day"
+  filter="Notes"
 />

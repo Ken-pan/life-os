@@ -1,20 +1,32 @@
+import { DOMAIN_ORIGINS } from './domainResume.core.js'
+import { HOSTED_SPACES } from './spacesList.core.js'
 import { freshnessState } from './readProjections.core.js'
 
 const SPACE_URLS = Object.freeze({
-  plan: 'https://planner.kenos.space',
-  money: 'https://finance.kenos.space',
-  training: 'https://fitness.kenos.space',
-  music: 'https://music.kenos.space',
-  home: 'https://home.kenos.space',
+  plan: DOMAIN_ORIGINS.plan,
+  money: DOMAIN_ORIGINS.money,
+  training: DOMAIN_ORIGINS.training,
+  music: DOMAIN_ORIGINS.music,
+  home: DOMAIN_ORIGINS.home,
+  knowledge: DOMAIN_ORIGINS.knowledge,
 })
 
-export const KENOS_SPACES = Object.freeze([
-  { id: 'plan', label: 'Plan', detail: '任务与时间', href: SPACE_URLS.plan },
-  { id: 'money', label: 'Money', detail: '收支与决策', href: SPACE_URLS.money },
-  { id: 'training', label: 'Training', detail: '训练与恢复', href: SPACE_URLS.training },
-  { id: 'music', label: 'Music', detail: '播放与收藏', href: SPACE_URLS.music },
-  { id: 'home', label: 'Home', detail: '空间与物品', href: SPACE_URLS.home },
-])
+/**
+ * @deprecated Prefer TODAY_SPACE_SHORTCUTS / HOSTED_SPACES (in-app bridges).
+ * Kept as hosted-bridge shortcuts so any leftover consumer does not bypass the shell.
+ */
+export const KENOS_SPACES = Object.freeze(
+  HOSTED_SPACES.filter((space) =>
+    ['plan', 'money', 'training', 'music', 'home', 'knowledge'].includes(
+      space.id,
+    ),
+  ).map((space) => ({
+    id: space.id,
+    label: space.label,
+    detail: space.detail,
+    href: space.href,
+  })),
+)
 
 function finiteNumber(value) {
   const number = Number(value)
@@ -67,7 +79,8 @@ export function buildTodayReadModel(summary, { now = Date.now() } = {}) {
       tone: 'critical',
       eyebrow: '需要处理',
       title: `${overdue} 项任务已逾期`,
-      detail: todayOpen > 0 ? `另有 ${todayOpen} 项今天到期` : '先确认仍然有效的任务',
+      detail:
+        todayOpen > 0 ? `另有 ${todayOpen} 项今天到期` : '先确认仍然有效的任务',
       href: `${SPACE_URLS.plan}/upcoming`,
       actionLabel: '打开 Plan',
       ...projectionMeta('plan', 'portal_today_summary.planner'),
@@ -162,7 +175,13 @@ export function buildTodayReadModel(summary, { now = Date.now() } = {}) {
   }
 }
 
-const UNAVAILABLE_SOURCE_STATUSES = new Set(['unavailable', 'offline', 'permission_denied', 'loading', 'unsupported'])
+const UNAVAILABLE_SOURCE_STATUSES = new Set([
+  'unavailable',
+  'offline',
+  'permission_denied',
+  'loading',
+  'unsupported',
+])
 
 function sourceCountAvailable(source) {
   return source && !UNAVAILABLE_SOURCE_STATUSES.has(source.status)
@@ -172,7 +191,12 @@ function sourceCountAvailable(source) {
  * Queue counts for Today / badges.
  * Returns `null` when the source is unavailable so UI can render "—" instead of a fake 0.
  */
-export function summarizeControlQueue({ inbox = [], approvals = [], activities = [], sources = {} } = {}) {
+export function summarizeControlQueue({
+  inbox = [],
+  approvals = [],
+  activities = [],
+  sources = {},
+} = {}) {
   return {
     inboxOpen: sourceCountAvailable(sources.inbox)
       ? inbox.filter((item) => item.status === 'open').length
@@ -205,18 +229,22 @@ function domainClassification(ownerDomain) {
   return ownerDomain === 'money' ? 'sensitive' : 'personal'
 }
 
-export function buildLegacyTodayShadowProjection(summary, { now = Date.now() } = {}) {
+export function buildLegacyTodayShadowProjection(
+  summary,
+  { now = Date.now() } = {},
+) {
   if (!summary || summary.ok === false) return []
   const freshness = freshnessState(summary.asOf, { now }).freshness
   const rows = []
-  const add = (id, ownerDomain, deepLink) => rows.push({
-    id,
-    ownerDomain,
-    status: 'ready',
-    freshness,
-    deepLink,
-    classification: domainClassification(ownerDomain),
-  })
+  const add = (id, ownerDomain, deepLink) =>
+    rows.push({
+      id,
+      ownerDomain,
+      status: 'ready',
+      freshness,
+      deepLink,
+      classification: domainClassification(ownerDomain),
+    })
   if (summary.planner) {
     const overdue = finiteNumber(summary.planner.overdue)
     const todayOpen = finiteNumber(summary.planner.todayOpen)
@@ -233,14 +261,18 @@ export function buildLegacyTodayShadowProjection(summary, { now = Date.now() } =
   if (summary.fitness) add('training', 'training', SPACE_URLS.training)
   if (summary.finance) add('money', 'money', SPACE_URLS.money)
   if (summary.music) add('music', 'music', SPACE_URLS.music)
-  if (summary.home?.storageZoneCount != null) add('home', 'home', `${SPACE_URLS.home}/storage`)
+  if (summary.home?.storageZoneCount != null)
+    add('home', 'home', `${SPACE_URLS.home}/storage`)
   return rows
 }
 
 export function buildTodayShadowProjection(model) {
   const rows = []
   const seen = new Set()
-  for (const item of [...(model?.priorities ?? []), ...(model?.signals ?? [])]) {
+  for (const item of [
+    ...(model?.priorities ?? []),
+    ...(model?.signals ?? []),
+  ]) {
     const ownerDomain = item.ownerDomain
     if (!ownerDomain || seen.has(ownerDomain)) continue
     seen.add(ownerDomain)
