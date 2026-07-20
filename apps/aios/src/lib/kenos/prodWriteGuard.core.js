@@ -12,6 +12,8 @@ export const KENOS_WRITE_RPC_DENYLIST = Object.freeze([
   'kenos_dead_letter_plan_outbox_action',
   'kenos_start_focus_context_action',
   'kenos_end_focus_context_action',
+  'kenos_create_work_project_action',
+  'kenos_archive_work_project_action',
 ])
 
 /** Tables that must not receive client mutations during read canary. */

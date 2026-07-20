@@ -581,3 +581,10 @@ Approved temporary defaults now on file:
 - Deferred / suggestions / pause writers not opened
 - Report: `docs/qa/kenos-track-e-focus-start-end-report.md`
 - Next: Track F Work entity create
+
+## Track F Work create/archive (2026-07-20)
+
+- Migration tip: `20260720200000`
+- Create/archive Work project RPC canaries PASS; embed-task reject PASS; cross-user deny PASS
+- Report: `docs/qa/kenos-track-f-work-create-archive-report.md`
+- Next: CaptureEnvelope + Assistant propose (no Executor); domain Spaces read inventory
