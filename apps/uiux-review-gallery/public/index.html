@@ -28,8 +28,22 @@
         --bg: #f4f5f7; --surface: #ffffff; --ink: #16181c; --sub: #697079;
         --faint: #9aa0a8; --border: #e2e5ea; --accent: #3d9ed6; --seg: #eceef1;
         --shadow: 0 1px 2px rgba(0,0,0,.05), 0 10px 30px rgba(0,0,0,.05);
+        /* datachart —— 与 @life-os/theme --chart-series-1..8 同源（CVD，固定槽位不循环） */
+        --chart-series-1:#2a78d6; --chart-series-2:#1baf7a; --chart-series-3:#eda100; --chart-series-4:#008300;
+        --chart-series-5:#4a3aa7; --chart-series-6:#e34948; --chart-series-7:#e87ba4; --chart-series-8:#eb6834;
+        --chart-grid: color-mix(in srgb, var(--faint) 28%, transparent);
+        --chart-axis: var(--faint);
+        --pos:#2ea36a; --warn:#cf9026; --crit:#e0584c;
       }
-      :root[data-theme='dark'] { --bg: #0a0b0d; --surface: #16171b; --ink: #eceef1; --sub: #8b9098; --faint: #6a6f77; --border: #2b2e34; --accent: #5cb8ea; --seg: #101114; --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.3); }
+      :root[data-theme='dark'] {
+        --bg: #0a0b0d; --surface: #16171b; --ink: #eceef1; --sub: #8b9098; --faint: #6a6f77;
+        --border: #2b2e34; --accent: #5cb8ea; --seg: #101114;
+        --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.3);
+        --chart-series-1:#3987e5; --chart-series-2:#199e70; --chart-series-3:#c98500; --chart-series-4:#008300;
+        --chart-series-5:#9085e9; --chart-series-6:#e66767; --chart-series-7:#d55181; --chart-series-8:#d95926;
+        --chart-grid: color-mix(in srgb, var(--faint) 35%, transparent);
+        --pos:#37b978; --warn:#d69a3a; --crit:#e86a5e;
+      }
 
       * { box-sizing: border-box; margin: 0; }
       html { color-scheme: light dark; }
@@ -38,7 +52,7 @@
         -webkit-font-smoothing: antialiased; }
       a { color: inherit; }
 
-      header { max-width: 1360px; margin: 0 auto; padding: 40px 24px 6px;
+      header { max-width: 1360px; margin: 0 auto; padding: 36px 24px 4px;
         display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
       .title { display: flex; align-items: center; gap: 12px; }
       .tick { width: 7px; height: 34px; border-radius: 4px; background: var(--accent); }
@@ -48,7 +62,7 @@
       .meta { text-align: right; color: var(--sub); font-size: 13px; line-height: 1.7; }
       .meta .sha { font-family: ui-monospace, SFMono-Regular, monospace; color: var(--ink); font-weight: 700; }
 
-      .controls { max-width: 1360px; margin: 12px auto 0; padding: 0 24px;
+      .controls { max-width: 1360px; margin: 14px auto 0; padding: 0 24px;
         display: flex; gap: 22px; flex-wrap: wrap; align-items: center; }
       .ctl { display: flex; align-items: center; gap: 8px; }
       .ctl-label { font-size: 12.5px; color: var(--faint); }
@@ -80,77 +94,112 @@
       .lg-machine { margin-top: 10px; color: var(--faint); }
       .lg-machine a { color: var(--accent); font-weight: 600; text-decoration: none; }
 
-      /* ── Governance 组合视图（cockpit） ── */
-      .overview { max-width: 1360px; margin: 14px auto 0; padding: 18px 24px; }
+      /* ── Cockpit ── */
+      .overview { max-width: 1360px; margin: 14px auto 0; padding: 14px 24px; }
       .ov-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-        box-shadow: var(--shadow); padding: 18px 20px; }
-      .ov-top { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-      .ov-grade { display: flex; align-items: center; gap: 12px; }
-      .ov-grade .letter { font-size: 40px; font-weight: 900; line-height: 1; letter-spacing: -1px; }
-      .ov-grade .meta { font-size: 12.5px; color: var(--sub); }
-      .ov-grade .meta b { color: var(--ink); font-size: 15px; }
-      .ov-stats { display: flex; gap: 22px; flex-wrap: wrap; margin-left: auto; }
-      .ov-stat { text-align: right; }
-      .ov-stat .n { font-size: 20px; font-weight: 800; }
-      .ov-stat .l { font-size: 11.5px; color: var(--faint); }
-      .ov-budgets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+        box-shadow: var(--shadow); padding: 20px 22px 18px; }
+      .ov-top { display: grid; grid-template-columns: minmax(200px, auto) 1fr; gap: 28px; align-items: center; }
+      @media (max-width: 760px) { .ov-top { grid-template-columns: 1fr; gap: 18px; } }
+      .ov-grade { display: flex; align-items: center; gap: 14px; }
+      .ov-grade .letter { font-size: 52px; font-weight: 900; line-height: .9; letter-spacing: -2px;
+        font-variant-numeric: tabular-nums; }
+      .ov-grade .gmeta { font-size: 12.5px; color: var(--sub); text-align: left; line-height: 1.45; }
+      .ov-grade .gmeta b { color: var(--ink); font-size: 20px; font-variant-numeric: tabular-nums; }
+      .ov-grade .mut2 { display: block; color: var(--faint); font-size: 11px; font-weight: 500; margin-top: 3px; }
+      .ov-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      @media (max-width: 760px) { .ov-stats { grid-template-columns: repeat(2, 1fr); gap: 12px 8px; } }
+      .ov-stat { padding: 2px 0 2px 18px; border-left: 1px solid var(--border); }
+      .ov-stat:first-child { border-left: 0; padding-left: 0; }
+      @media (max-width: 760px) {
+        .ov-stat { border-left: 0; padding-left: 0; }
+        .ov-stat:nth-child(2n) { padding-left: 12px; border-left: 1px solid var(--border); }
+      }
+      .ov-stat .n { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.02em; line-height: 1.1; }
+      .ov-stat .l { font-size: 11.5px; color: var(--faint); margin-top: 4px; }
+      .ov-budgets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
       .chip { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 11px; border: 1px solid var(--border); }
       .chip.pass { color: #2ea36a; border-color: #2ea36a55; background: #2ea36a12; }
       .chip.fail { color: #e0584c; border-color: #e0584c55; background: #e0584c12; }
       .chip.na { color: var(--faint); }
-      .ov-worst { margin-top: 12px; font-size: 12.5px; color: var(--sub); }
-      .ov-worst b { color: var(--ink); }
-      .findings { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 7px; }
-      .findings h3 { font-size: 12px; color: var(--faint); font-weight: 700; letter-spacing: .04em; }
-      .finding { display: flex; align-items: baseline; gap: 10px; font-size: 12.5px; line-height: 1.5; }
-      .finding .tag { font-size: 11px; font-weight: 700; border-radius: 6px; padding: 1px 7px; white-space: nowrap; }
-      .finding .tag.systemic { color: #fff; background: #cf9026; }
-      .finding .tag.local { color: var(--sub); border: 1px solid var(--border); }
-      .finding .rt { color: var(--ink); font-weight: 600; }
-      .finding .adv { color: var(--sub); }
-      .finding .alt { margin-left: auto; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; color: var(--accent); white-space: nowrap; }
 
-      /* 健康分徽章（卡片） */
-      .health { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px;
-        padding: 2px 4px 2px 4px; font-weight: 800; }
+      /* ── Charts ── */
+      .chart-cols { display: grid; grid-template-columns: 1.08fr 1fr; gap: 32px; margin-top: 20px;
+        padding-top: 20px; border-top: 1px solid var(--border); }
+      @media (max-width: 900px) { .chart-cols { grid-template-columns: 1fr; gap: 24px; } }
+      .chart-block { min-width: 0; }
+      .chart-h { font-size: 11px; color: var(--faint); font-weight: 700; letter-spacing: .06em;
+        text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+      .chart-h .hint { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--sub); font-size: 12px; }
+      .chart-block svg { display: block; width: 100%; height: auto; overflow: visible; }
+      .debt-legend { margin-top: 14px; display: flex; flex-direction: column; gap: 9px; }
+      .debt-item { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 4px 10px; align-items: start; }
+      .debt-item .fsw { width: 10px; height: 10px; border-radius: 3px; margin-top: 4px; }
+      .debt-item .rt { color: var(--ink); font-weight: 650; font-size: 13px; }
+      .debt-item .meta { color: var(--sub); font-size: 12px; grid-column: 2; }
+      .debt-item .tags { display: flex; gap: 6px; align-items: center; padding-top: 2px; }
+      .debt-item .tag { font-size: 10.5px; font-weight: 700; border-radius: 5px; padding: 1px 6px; white-space: nowrap; }
+      .debt-item .tag.systemic { color: #fff; background: #cf9026; }
+      .debt-item .tag.local { color: var(--sub); border: 1px solid var(--border); }
+      .debt-item .alt { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; color: var(--accent); }
+
+      /* 健康分徽章 */
+      .health { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; font-weight: 800; }
       .health .g { width: 22px; height: 22px; border-radius: 50%; color: #fff; display: inline-flex;
         align-items: center; justify-content: center; font-size: 12px; }
-      .health .s { font-size: 12px; color: var(--sub); font-weight: 700; padding-right: 6px; }
+      .health .s { font-size: 12px; color: var(--sub); font-weight: 700; padding-right: 6px;
+        font-variant-numeric: tabular-nums; }
       .g.A { background: #2ea36a; } .g.B { background: #4b9fd6; } .g.C { background: #cf9026; }
       .g.D { background: #e07b39; } .g.F { background: #e0584c; }
       .trend { font-size: 11px; font-weight: 700; margin-left: 6px; }
-      .trend.up { color: #e0584c; } .trend.down { color: #2ea36a; } .trend.flat { color: var(--faint); }
+      .trend.up { color: #e0584c; } .trend.down { color: #2ea36a; }
 
-      main { max-width: 1360px; margin: 0 auto; padding: 22px 24px 8px;
+      /* 卡片健康构成 */
+      .dims { margin: 2px 0 0; padding: 10px 0 2px; border-top: 1px solid var(--border); }
+      .dims .dh { font-size: 11px; color: var(--faint); font-weight: 700; margin-bottom: 8px;
+        display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+      .dims .bn { color: var(--crit); font-weight: 700; }
+      .dimrow { display: grid; grid-template-columns: 42px 1fr 28px; align-items: center; gap: 8px; margin: 5px 0; }
+      .dimrow .dl { font-size: 11px; color: var(--sub); }
+      .dimrow .track { height: 6px; border-radius: 3px; background: var(--seg); overflow: hidden; }
+      .dimrow .fill { display: block; height: 100%; border-radius: 3px; }
+      .dimrow.is-bn .dl { color: var(--ink); font-weight: 700; }
+      .dimrow.is-bn .dv { color: var(--crit); }
+      .dimrow:not(.is-bn) .fill { opacity: .7; }
+      .dimrow .dv { font-size: 11px; font-weight: 700; text-align: right; color: var(--sub);
+        font-variant-numeric: tabular-nums; }
+
+      .gallery-h { max-width: 1360px; margin: 8px auto 0; padding: 0 24px;
+        font-size: 11px; color: var(--faint); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+
+      main { max-width: 1360px; margin: 0 auto; padding: 12px 24px 8px;
         display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; }
       main.mobile { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
       .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
         overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; }
-      .thumb { display: block; position: relative; height: 300px; overflow: hidden; background: var(--bg);
+      .thumb { display: block; position: relative; height: 280px; overflow: hidden; background: var(--bg);
         border-bottom: 1px solid var(--border); }
-      .card.mobile .thumb { height: 340px; }
-      .thumb img { width: 100%; display: block; }
+      .card.mobile .thumb { height: 320px; }
+      .thumb img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: top center; }
       .thumb .zoom { position: absolute; right: 10px; top: 10px; background: rgba(0,0,0,.55); color: #fff;
         font-size: 11px; padding: 4px 9px; border-radius: 999px; opacity: 0; transition: opacity .15s; }
       .thumb:hover .zoom { opacity: 1; }
-      .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
-      .row { display: flex; align-items: center; gap: 10px; }
+      .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 7px; flex: 1; }
+      .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
       .name { font-size: 17px; font-weight: 800; letter-spacing: .01em; }
       .badge { font-size: 11px; font-weight: 700; color: #fff; background: var(--accent);
-        border-radius: 6px; padding: 2px 8px; }
+        border-radius: 6px; padding: 2px 8px; margin-left: auto; }
       .desc { color: var(--ink); font-size: 13px; }
-      .pages { color: var(--sub); font-size: 12px; line-height: 1.5; }
-      .sub { color: var(--faint); font-size: 12px; margin-top: 2px; }
+      .pages { color: var(--sub); font-size: 12px; line-height: 1.45;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .sub { color: var(--faint); font-size: 12px; margin-top: auto; padding-top: 4px; }
 
-      /* Design Governance 指标行 */
-      .metrics { display: flex; flex-direction: column; gap: 4px;
-        margin: 6px 0 2px; padding-top: 8px; border-top: 1px dashed var(--border); }
+      .metrics { display: flex; flex-direction: column; gap: 3px;
+        margin: 2px 0 0; padding-top: 8px; border-top: 1px solid var(--border); }
       .m { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; line-height: 1.45; align-items: baseline; }
       .m .k { color: var(--faint); white-space: nowrap; }
-      .m .v { text-align: right; font-weight: 700; }
+      .m .v { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
       .m .v .mut { color: var(--faint); font-weight: 500; }
       .m[title] { cursor: help; }
-      .ov-grade .mut2 { color: var(--faint); font-size: 11px; font-weight: 500; }
       .m.ok .v { color: #2ea36a; }
       .m.warn .v { color: #cf9026; }
       .m.bad .v { color: #e0584c; }
@@ -203,27 +252,25 @@
     <details class="legend">
       <summary>怎么读这个看板？</summary>
       <div class="legend-body">
-        <p>每个 app 一张<b>联系表</b>（6~8 个核心页面拼成一张，带序号·标题·路由标注）+ 该 app 的<b>设计治理指标</b>。切换上方主题/视图看不同变体。</p>
+        <p>顶部是组合健康信号；下方图表把「谁差 / 债在哪」摊开。每个 app 一张联系表 + 治理指标。切换主题/视图看不同变体。</p>
         <ul>
-          <li><b>健康分 A–F（0–100）</b>：单一质量信号 = 无障碍 35% · Token 卫生 30% · 共享组件采用 20% · 页面覆盖 15% 加权。<span class="lg A">A</span>≥90 <span class="lg B">B</span>≥80 <span class="lg C">C</span>≥70 <span class="lg D">D</span>≥60 <span class="lg F">F</span>&lt;60。</li>
-          <li><b>捕获覆盖</b>：配置的页面截到了几张（缺=没截到，需排查）。</li>
-          <li><b>无障碍</b>：页内自动查「图无 alt / 控件无可访问名 / 输入无标注」的通过率。</li>
-          <li><b>共享组件采用</b>：源码里 <code>@life-os/*</code> 共享 UI import 占「共享+本地组件 import」的比例（越高越少造轮子）。</li>
-          <li><b>样式债务</b>：硬编码色值/字号/动效等应改成 Design Token 的存量数（越低越好），附整改方向。</li>
-          <li><b>代码变更影响</b>：自上一次生成到现在，这个 app 改了哪些文件/页面。</li>
-          <li><b>整改路由</b>：同类问题跨<b>多个 app = 系统性</b>，该在 <code>Token/共享</code> 层修；只在<b>少数 app = 局部</b>，局部改即可。</li>
-          <li><b>▲/▼</b>：相对上一代生成的变化（回归=红）。数据全部由脚本从真实源码/截图计算，缺失即不显示。</li>
+          <li><b>健康分条形图</b>：差→好排序，虚线＝组合均值。一眼看到落差与谁在均值以下。</li>
+          <li><b>样式债务排名</b>：按规则绝对量横向对比（比 100% 堆叠更易比大小）；色块与下方整改建议同色。</li>
+          <li><b>健康分 A–F（0–100）</b>＝无障碍 35% · Token 卫生 30% · 共享采用 20% · 覆盖 15%。<span class="lg A">A</span>≥90 <span class="lg B">B</span>≥80 <span class="lg C">C</span>≥70 <span class="lg D">D</span>≥60 <span class="lg F">F</span>&lt;60。卡片「健康构成」最短条＝瓶颈。</li>
+          <li><b>整改路由</b>：跨多 app＝系统性（修 Token/共享）；少数 app＝局部。</li>
+          <li><b>▲/▼</b>：相对上一代变化（回归＝红）。数据全真实，缺失即不显示。</li>
         </ul>
-        <p class="lg-machine">机器可读：<a href="manifest.json">manifest.json</a> · <a href="llms.txt">llms.txt</a>（AI agent 可直接读，无需 OCR 截图）。</p>
+        <p class="lg-machine">机器可读：<a href="manifest.json">manifest.json</a> · <a href="llms.txt">llms.txt</a></p>
       </div>
     </details>
     <p class="note" id="note"></p>
+    <div class="gallery-h">App 联系表</div>
     <main id="grid"></main>
     <div class="state" id="state">加载中…</div>
     <footer>
       截图为本地演示 / 种子数据，非真实账户内容。图片为压缩 JPEG，点「下载」保存。<br />
       <strong>机器可读 / AI 入口：</strong>
-      <a href="manifest.json">manifest.json</a>（结构化数据：每 app 的描述 · 页面清单 · 4 变体 URL）·
+      <a href="manifest.json">manifest.json</a>（结构化数据）·
       <a href="llms.txt">llms.txt</a>（AI 使用指南）
     </footer>
 
@@ -239,6 +286,134 @@
         } catch { return iso }
       }
 
+      // ── datachart 纯函数（同源 chartUtils：barPath / series / nice 轴）──
+      const P = (n) => Math.round(n * 2) / 2
+      function barPath(x, y, w, h, r, dataEnd) {
+        if (w <= 0 || h <= 0) return ''
+        const horiz = dataEnd === 'left' || dataEnd === 'right'
+        const rr = Math.min(r, horiz ? h / 2 : w / 2, horiz ? w : h)
+        const R = P(rr), X = P(x), Y = P(y), W = P(w), H = P(h)
+        if (R <= 0) return 'M' + X + ',' + Y + 'h' + W + 'v' + H + 'h' + -W + 'Z'
+        if (dataEnd === 'right')
+          return 'M' + X + ',' + Y + 'h' + (W - R) + 'q' + R + ',0 ' + R + ',' + R + 'v' + (H - 2 * R) + 'q0,' + R + ' ' + -R + ',' + R + 'h' + -(W - R) + 'Z'
+        return 'M' + X + ',' + (Y + H) + 'V' + (Y + R) + 'q0,' + -R + ' ' + R + ',' + -R + 'h' + (W - 2 * R) + 'q' + R + ',0 ' + R + ',' + R + 'V' + (Y + H) + 'Z'
+      }
+      const seriesVar = (i) => 'var(--chart-series-' + (Math.min(i, 7) + 1) + ')'
+      const gradeHex = { A: '#2ea36a', B: '#4b9fd6', C: '#cf9026', D: '#e07b39', F: '#e0584c' }
+      const gradeColor = (g) => gradeHex[g] || 'var(--sub)'
+      const shortName = (n) => String(n || '').replace(/\.OS$/i, '')
+      /** nice 上界：1/2/5 × 10^n */
+      function niceMax(v) {
+        if (!(v > 0)) return 1
+        const exp = 10 ** Math.floor(Math.log10(v))
+        const f = v / exp
+        return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * exp
+      }
+
+      // 各 app 健康分 —— 横向排名（柱厚 16、数据端圆角、值直接标注、组合均值参照）
+      function healthBarChart(apps, overallScore) {
+        const rows = apps
+          .filter((a) => a.metrics?.health?.score != null)
+          .map((a) => ({ name: shortName(a.name), score: a.metrics.health.score, grade: a.metrics.health.grade }))
+          .sort((x, y) => x.score - y.score)
+        if (!rows.length) return ''
+        const W = 640, ROW = 28, BAR = 16, R = 4, padT = 16, padB = 22, labelW = 88, valW = 52
+        const H = padT + rows.length * ROW + padB
+        const x0 = labelW, bw = W - labelW - valW
+        const sx = (v) => x0 + (v / 100) * bw
+        const yBar = (i) => padT + i * ROW + (ROW - BAR) / 2
+        let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="各 app 设计健康分，差到好：' +
+          rows.map((r) => r.name + ' ' + r.score).join('，') + '">'
+        // 网格：0 / 50 / 100（稀疏，避免噪音）
+        for (const t of [0, 50, 100]) {
+          const gx = sx(t)
+          s += '<line x1="' + gx + '" y1="' + padT + '" x2="' + gx + '" y2="' + (padT + rows.length * ROW) +
+            '" style="stroke:var(--chart-grid)" stroke-width="1"/>'
+          s += '<text x="' + gx + '" y="' + (H - 6) + '" style="fill:var(--chart-axis)" font-size="10" text-anchor="middle">' + t + '</text>'
+        }
+        // 等级门槛（90=A）浅标，辅助读档
+        const aLine = sx(90)
+        s += '<line x1="' + aLine + '" y1="' + padT + '" x2="' + aLine + '" y2="' + (padT + rows.length * ROW) +
+          '" style="stroke:var(--pos)" stroke-width="1" stroke-dasharray="2 3" opacity=".45"/>'
+        if (overallScore != null) {
+          const ax = sx(overallScore)
+          s += '<line x1="' + ax + '" y1="' + (padT - 2) + '" x2="' + ax + '" y2="' + (padT + rows.length * ROW + 2) +
+            '" style="stroke:var(--accent)" stroke-width="1.5" stroke-dasharray="3 3"/>'
+          s += '<text x="' + ax + '" y="' + (padT - 5) + '" style="fill:var(--accent)" font-size="10.5" font-weight="700" text-anchor="middle">均值 ' + overallScore + '</text>'
+        }
+        rows.forEach((r, i) => {
+          const y = yBar(i), col = gradeColor(r.grade), w = Math.max(BAR, sx(r.score) - x0)
+          s += '<path d="' + barPath(x0, y, bw, BAR, R, 'right') + '" style="fill:var(--seg)"/>'
+          s += '<path d="' + barPath(x0, y, w, BAR, R, 'right') + '" fill="' + col + '"><title>' +
+            esc(r.name) + ' ' + r.score + ' · ' + r.grade + '</title></path>'
+          s += '<text x="' + (x0 - 8) + '" y="' + (y + BAR / 2) +
+            '" style="fill:var(--ink)" font-size="12.5" font-weight="600" text-anchor="end" dominant-baseline="middle">' +
+            esc(r.name) + '</text>'
+          s += '<text x="' + (W - 4) + '" y="' + (y + BAR / 2) +
+            '" fill="' + col + '" font-size="12.5" font-weight="800" text-anchor="end" dominant-baseline="middle" font-variant-numeric="tabular-nums">' +
+            r.score + ' ' + r.grade + '</text>'
+        })
+        return s + '</svg>'
+      }
+
+      // 样式债务 —— 横向排名（绝对量；比 100% 堆叠更易比大小）
+      function debtRankChart(findings) {
+        const items = (findings || []).filter((f) => f.total > 0).slice().sort((a, b) => b.total - a.total)
+        if (!items.length) return null
+        const total = items.reduce((s, f) => s + f.total, 0)
+        const xmax = niceMax(Math.max(...items.map((f) => f.total)))
+        const W = 640, ROW = 32, BAR = 16, R = 4, padT = 8, padB = 20, labelW = 118, valW = 44
+        const H = padT + items.length * ROW + padB
+        const x0 = labelW, bw = W - labelW - valW
+        const sx = (v) => x0 + (v / xmax) * bw
+        let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="组合样式债务按规则排名，共 ' + total + ' 项">'
+        const ticks = [0, xmax / 2, xmax].map((t) => Math.round(t))
+        for (const t of ticks) {
+          const gx = sx(t)
+          s += '<line x1="' + gx + '" y1="' + padT + '" x2="' + gx + '" y2="' + (padT + items.length * ROW) +
+            '" style="stroke:var(--chart-grid)" stroke-width="1"/>'
+          s += '<text x="' + gx + '" y="' + (H - 5) + '" style="fill:var(--chart-axis)" font-size="10" text-anchor="middle">' + t + '</text>'
+        }
+        items.forEach((f, i) => {
+          const y = padT + i * ROW + (ROW - BAR) / 2
+          const w = Math.max(f.total > 0 ? 4 : 0, sx(f.total) - x0)
+          const pct = Math.round((f.total / total) * 100)
+          s += '<path d="' + barPath(x0, y, w, BAR, R, 'right') + '" style="fill:' + seriesVar(i) + '"><title>' +
+            esc(f.label) + '：' + f.total + ' 项（' + pct + '%）</title></path>'
+          s += '<text x="' + (x0 - 8) + '" y="' + (y + BAR / 2) +
+            '" style="fill:var(--ink)" font-size="12.5" font-weight="600" text-anchor="end" dominant-baseline="middle">' +
+            esc(f.label) + '</text>'
+          s += '<text x="' + (W - 4) + '" y="' + (y + BAR / 2) +
+            '" style="fill:var(--ink)" font-size="12.5" font-weight="800" text-anchor="end" dominant-baseline="middle" font-variant-numeric="tabular-nums">' +
+            f.total + '</text>'
+        })
+        return { svg: s + '</svg>', total, items }
+      }
+
+      // 卡片健康构成 —— 固定槽位色 + 高亮瓶颈维
+      function dimsHtml(a) {
+        const h = a.metrics && a.metrics.health
+        if (!h || !h.dims) return ''
+        const order = [['a11y', '无障碍', 0], ['token', 'Token', 1], ['adoption', '共享', 2], ['coverage', '覆盖', 3]]
+        const present = order.filter(([k]) => h.dims[k] != null)
+        if (!present.length) return ''
+        let bnKey = present[0][0], bnVal = h.dims[bnKey], bnLabel = present[0][1]
+        for (const [k, l] of present) {
+          if (h.dims[k] < bnVal) { bnVal = h.dims[k]; bnKey = k; bnLabel = l }
+        }
+        const showBn = bnVal < 85
+        const rows = present.map(([k, l, si]) => {
+          const v = h.dims[k]
+          const bn = k === bnKey && showBn
+          return '<div class="dimrow' + (bn ? ' is-bn' : '') + '"><span class="dl">' + l + '</span>' +
+            '<span class="track"><span class="fill" style="width:' + v + '%;background:' + seriesVar(si) + '"></span></span>' +
+            '<span class="dv">' + v + '</span></div>'
+        }).join('')
+        return '<div class="dims"><div class="dh"><span>健康构成</span>' +
+          (showBn ? '<span class="bn">瓶颈 · ' + bnLabel + ' ' + bnVal + '</span>' : '') +
+          '</div>' + rows + '</div>'
+      }
+
       const root = document.documentElement
       const state = {
         theme: localStorage.getItem('gallery_theme') || 'light',
@@ -246,7 +421,6 @@
         sort: localStorage.getItem('gallery_sort') || 'default',
         data: null,
       }
-      // 主题联动页面 chrome
       const applyPageTheme = () => root.setAttribute('data-theme', state.theme)
 
       function wireSeg(id, keyName, onChange) {
@@ -263,16 +437,12 @@
         })
       }
 
-      // 治理指标行（真实数据；缺失则不显示，绝不臆造）
       function mrow(k, val, cls, title) {
         return '<div class="m ' + cls + '"' + (title ? ' title="' + title + '"' : '') + '><span class="k">' + k + '</span><span class="v">' + val + '</span></div>'
       }
-      function metricsHtml(a, v) {
+      function metricsHtml(a) {
         const m = a.metrics || {}
-        const vpZh = state.viewport === 'mobile' ? '移动' : '桌面'
-        const thZh = state.theme === 'dark' ? '深色' : '浅色'
         const rows = []
-        // 捕获覆盖（桌面 + 移动，主题无关，取任一主题的该视图变体）
         const dcap = (a.variants['light-desktop'] || a.variants['dark-desktop'] || {}).capture
         const mcap = (a.variants['light-mobile'] || a.variants['dark-mobile'] || {}).capture
         if (dcap || mcap) {
@@ -280,9 +450,8 @@
           if (dcap) cov.push('桌面 ' + dcap.ok + '/' + dcap.total)
           if (mcap) cov.push('移动 ' + mcap.ok + '/' + mcap.total)
           const allOk = (!dcap || dcap.ok === dcap.total) && (!mcap || mcap.ok === mcap.total)
-          rows.push(mrow('捕获覆盖', cov.join(' · '), allOk ? 'ok' : 'warn', '配置的核心页面截到了几张（缺=没截到，需排查）'))
+          rows.push(mrow('捕获覆盖', cov.join(' · '), allOk ? 'ok' : 'warn', '配置的核心页面截到了几张'))
         }
-        // 无障碍（浅色桌面审计：图无 alt / 控件无名 / 输入无标注）
         if (m.a11y) {
           const { checked, pass, issues } = m.a11y
           const cls = pass === checked ? 'ok' : checked - pass >= 3 ? 'bad' : 'warn'
@@ -290,19 +459,16 @@
           if (issues.noAlt) iss.push('无 alt ' + issues.noAlt)
           if (issues.noName) iss.push('无名 ' + issues.noName)
           if (issues.noLabel) iss.push('无标注 ' + issues.noLabel)
-          rows.push(mrow('无障碍', pass + '/' + checked + ' 通过' + (iss.length ? '（' + iss.join(' · ') + '）' : '') + trendTag((m.trend || {}).a11yFails, true), cls, '页内自动查：图无 alt / 控件无可访问名 / 输入无标注'))
+          rows.push(mrow('无障碍', pass + '/' + checked + ' 通过' + (iss.length ? '（' + iss.join(' · ') + '）' : '') + trendTag((m.trend || {}).a11yFails, true), cls, '图无 alt / 控件无名 / 输入无标注'))
         }
-        // 共享组件采用（import 占比代理，中性色不评判）
         if (m.sharedAdoption && m.sharedAdoption.pct != null) {
-          rows.push(mrow('共享组件采用', m.sharedAdoption.pct + '% <span class="mut">(' + m.sharedAdoption.shared + '/' + (m.sharedAdoption.shared + m.sharedAdoption.local) + ' import)</span>', 'muted', '@life-os/* 共享 UI import 占「共享+本地组件 import」比例；越高越少造轮子'))
+          rows.push(mrow('共享组件采用', m.sharedAdoption.pct + '% <span class="mut">(' + m.sharedAdoption.shared + '/' + (m.sharedAdoption.shared + m.sharedAdoption.local) + ')</span>', 'muted', '@life-os/* 共享 UI import 占比'))
         }
-        // 样式债务（棘轮基线 · 附整改方向）
         if (m.styleDebt) {
           const d = m.styleDebt
           const cls = d.total === 0 ? 'ok' : d.total >= 100 ? 'bad' : 'warn'
-          rows.push(mrow('样式债务', d.total + ' 项' + trendTag((m.trend || {}).debt, true) + (d.total ? ' <span class="mut">· ' + esc(d.triage) + '</span>' : ''), cls, '硬编码色值/字号/动效等应改成 Design Token 的存量数；越低越好'))
+          rows.push(mrow('样式债务', d.total + ' 项' + trendTag((m.trend || {}).debt, true) + (d.total ? ' <span class="mut">· ' + esc(d.triage) + '</span>' : ''), cls, '应改成 Design Token 的硬编码存量'))
         }
-        // 代码变更影响（git：自上一代生成 sha 到 HEAD，本 app 变更文件 → 影响区域）
         if (m.codeImpact) {
           const ci = m.codeImpact
           let detail, cls = 'muted'
@@ -312,7 +478,7 @@
             detail = ci.files + ' 文件' + (ci.areas.length ? '：' + ci.areas.map(esc).join(' / ') : '')
             cls = 'warn'
           }
-          rows.push(mrow('代码变更', detail, cls, '自上一次生成到现在，这个 app 改了哪些文件/页面（git diff）'))
+          rows.push(mrow('代码变更', detail, cls, '自上一次生成到现在本 app 的 git diff'))
         }
         return rows.length ? '<div class="metrics">' + rows.join('') + '</div>' : ''
       }
@@ -323,39 +489,61 @@
         const t = (a.metrics.trend || {}).score
         let tr = ''
         if (t != null && t !== 0) tr = '<span class="trend ' + (t > 0 ? 'down' : 'up') + '">' + (t > 0 ? '▲' : '▼') + Math.abs(t) + '</span>'
-        return '<span class="health" title="设计系统健康分（无障碍/Token卫生/共享采用/覆盖 加权）"><span class="g ' + h.grade + '">' + h.grade + '</span><span class="s">' + h.score + tr + '</span></span>'
+        return '<span class="health" title="设计系统健康分（无障碍/Token/共享/覆盖 加权）"><span class="g ' + h.grade + '">' + h.grade + '</span><span class="s">' + h.score + tr + '</span></span>'
       }
 
       function trendTag(delta, goodDown) {
         if (delta == null || delta === 0) return ''
         const worse = goodDown ? delta > 0 : delta < 0
-        const arrow = delta > 0 ? '▲' : '▼'
-        return ' <span class="trend ' + (worse ? 'up' : 'down') + '">' + arrow + Math.abs(delta) + '</span>'
+        return ' <span class="trend ' + (worse ? 'up' : 'down') + '">' + (delta > 0 ? '▲' : '▼') + Math.abs(delta) + '</span>'
       }
 
       function renderOverview() {
         const el = document.getElementById('overview')
         const p = state.data && state.data.portfolio
         if (!p) { el.innerHTML = ''; return }
-        const f = state.data.findings || []
+        const sortedFindings = (state.data.findings || [])
+          .filter((x) => x.total > 0)
+          .slice()
+          .sort((a, b) => b.total - a.total)
         const budgets = (p.budgets || [])
-          .map((b) => '<span class="chip ' + (b.status === 'pass' ? 'pass' : b.status === 'fail' ? 'fail' : 'na') + '">' + esc(b.name) + '：' + (b.status === 'pass' ? '达标' : b.status === 'fail' ? '未达标' : '—') + (b.detail ? ' ' + esc(b.detail) : '') + '</span>')
+          .map((b) => '<span class="chip ' + (b.status === 'pass' ? 'pass' : b.status === 'fail' ? 'fail' : 'na') + '">' +
+            esc(b.name) + '：' + (b.status === 'pass' ? '达标' : b.status === 'fail' ? '未达标' : '—') +
+            (b.detail ? ' ' + esc(b.detail) : '') + '</span>')
           .join('')
-        const worst = (p.worst || []).map((w) => '<b>' + esc(w.name) + '</b> ' + esc(w.grade) + '(' + w.score + ')').join(' · ')
-        const findings = f.length
-          ? '<div class="findings"><h3>整改路由 — 同类问题跨多 app＝系统性(修 Token/共享)，少数 app＝局部(局部改)</h3>' +
-            f.map((x) =>
-              '<div class="finding"><span class="tag ' + (x.scope === 'systemic' ? 'systemic' : 'local') + '">' + (x.scope === 'systemic' ? '系统性' : '局部') + '</span>' +
+        const debt = debtRankChart(sortedFindings)
+        const healthSvg = healthBarChart(state.data.apps || [], p.overall.score)
+        const debtLegend = debt
+          ? '<div class="debt-legend">' + debt.items.map((x, i) =>
+              '<div class="debt-item">' +
+              '<span class="fsw" style="background:' + seriesVar(i) + '"></span>' +
               '<span class="rt">' + esc(x.label) + '</span>' +
-              '<span class="adv">' + x.appCount + ' app · ' + x.total + ' 处 — ' + esc(x.advice) + '</span>' +
-              '<span class="alt">' + esc(x.altitude) + '</span></div>'
+              '<div class="tags"><span class="tag ' + (x.scope === 'systemic' ? 'systemic' : 'local') + '">' +
+              (x.scope === 'systemic' ? '系统性' : '局部') + '</span>' +
+              '<span class="alt">' + esc(x.altitude) + '</span></div>' +
+              '<span class="meta">' + x.appCount + ' app · ' + esc(x.advice) + '</span>' +
+              '</div>'
             ).join('') + '</div>'
           : ''
-        const gc = { A: '#2ea36a', B: '#4b9fd6', C: '#cf9026', D: '#e07b39', F: '#e0584c' }[p.overall.grade] || 'var(--ink)'
+        const charts = (healthSvg || debt)
+          ? '<div class="chart-cols">' +
+            (healthSvg
+              ? '<div class="chart-block"><div class="chart-h">各 app 健康分 <span class="hint">差→好 · 虚线均值 · 绿虚线＝A 档(90)</span></div>' +
+                healthSvg + '</div>'
+              : '') +
+            (debt
+              ? '<div class="chart-block"><div class="chart-h">样式债务排名 <span class="hint">按规则绝对量 · 共 ' + debt.total + ' 项</span></div>' +
+                debt.svg + debtLegend + '</div>'
+              : '') +
+            '</div>'
+          : ''
+        const gc = gradeHex[p.overall.grade] || 'var(--ink)'
         el.innerHTML =
           '<div class="ov-card"><div class="ov-top">' +
-          '<div class="ov-grade"><span class="letter" style="color:' + gc + '" title="A≥90 B≥80 C≥70 D≥60 F<60">' + esc(p.overall.grade || '—') + '</span>' +
-          '<span class="meta">组合健康分 <b>' + (p.overall.score ?? '—') + '</b> / 100 · ' + p.totals.appsAudited + ' app<br><span class="mut2">= 无障碍·Token卫生·共享采用·覆盖 加权</span></span></div>' +
+          '<div class="ov-grade"><span class="letter" style="color:' + gc + '" title="A≥90 B≥80 C≥70 D≥60 F&lt;60">' +
+          esc(p.overall.grade || '—') + '</span>' +
+          '<span class="gmeta">组合健康分 <b>' + (p.overall.score ?? '—') + '</b> / 100 · ' + p.totals.appsAudited +
+          ' app<span class="mut2">无障碍 · Token · 共享采用 · 覆盖</span></span></div>' +
           '<div class="ov-stats">' +
           stat(p.totals.styleDebt, '组合样式债务') +
           stat(p.totals.a11yFails + '/' + p.totals.a11yChecked, '无障碍失败/检查') +
@@ -363,64 +551,57 @@
           stat((p.averages.coverage ?? '—') + '%', '平均捕获覆盖') +
           '</div></div>' +
           '<div class="ov-budgets">' + budgets + '</div>' +
-          (worst ? '<div class="ov-worst">最需关注：' + worst + (state.data.trendSince ? ' · 趋势基线 ' + esc(state.data.trendSince) : '') + '</div>' : '') +
-          findings +
+          charts +
           '</div>'
       }
-      function stat(n, l) { return '<div class="ov-stat"><div class="n">' + n + '</div><div class="l">' + esc(l) + '</div></div>' }
+      function stat(n, l) {
+        return '<div class="ov-stat"><div class="n">' + n + '</div><div class="l">' + esc(l) + '</div></div>'
+      }
 
       function render() {
         applyPageTheme()
         if (!state.data) return
         renderOverview()
         let apps = (state.data.apps || []).slice()
-        // 排序（默认=注册顺序；其余按治理指标，最需关注在前）
         if (state.sort === 'health') apps.sort((a, b) => (a.metrics?.health?.score ?? 999) - (b.metrics?.health?.score ?? 999))
         else if (state.sort === 'debt') apps.sort((a, b) => (b.metrics?.styleDebt?.total ?? 0) - (a.metrics?.styleDebt?.total ?? 0))
-        else if (state.sort === 'a11y') apps.sort((a, b) => ((b.metrics?.a11y ? b.metrics.a11y.checked - b.metrics.a11y.pass : 0) - (a.metrics?.a11y ? a.metrics.a11y.checked - a.metrics.a11y.pass : 0)))
+        else if (state.sort === 'a11y') apps.sort((a, b) =>
+          ((b.metrics?.a11y ? b.metrics.a11y.checked - b.metrics.a11y.pass : 0) -
+            (a.metrics?.a11y ? a.metrics.a11y.checked - a.metrics.a11y.pass : 0)))
         const vkey = state.theme + '-' + state.viewport
         const vpZh = state.viewport === 'mobile' ? '移动' : '桌面'
         const thZh = state.theme === 'dark' ? '深色' : '浅色'
-
         const grid = document.getElementById('grid')
         grid.className = state.viewport === 'mobile' ? 'mobile' : ''
-        grid.innerHTML = apps
-          .map((a) => {
-            // 选当前变体；缺则回退同视图/任意变体
-            const variants = a.variants || {}
-            const v =
-              variants[vkey] ||
-              variants['light-' + state.viewport] ||
-              variants[Object.keys(variants)[0]]
-            if (!v) return ''
-            const pages = (a.pages || []).map((p) => esc(p.title)).join(' · ')
-            const dl = 'lifeos-uiux-' + esc(a.id) + '-' + esc(state.theme) + '-' + esc(state.viewport) + '.jpg'
-            const mob = state.viewport === 'mobile' ? ' mobile' : ''
-            // 富 alt：含 app 名 + 变体 + 页面清单，供无障碍读屏器与走无障碍树的 AI agent 理解
-            const alt =
-              esc(a.name) + ' UI/UX 审核联系表（' + vpZh + '·' + thZh + '）：' +
-              (a.pages || []).map((p) => esc(p.title)).join('、')
-            return (
-              '<figure class="card' + mob + '">' +
-              '<a class="thumb" href="' + esc(v.file) + '" target="_blank" rel="noopener" aria-label="查看 ' + esc(a.name) + ' 大图">' +
-              '<span class="zoom">查看大图 ↗</span>' +
-              '<img loading="lazy" src="' + esc(v.file) + '" width="' + (state.viewport === 'mobile' ? 1170 : 1402) + '" alt="' + alt + '" /></a>' +
-              '<figcaption class="body">' +
-              '<div class="row"><h2 class="name">' + esc(a.name) + '</h2>' +
-              healthBadge(a) +
-              '<span class="badge">' + (v.screens ?? a.screens ?? '?') + ' 屏</span></div>' +
-              (a.description ? '<p class="desc">' + esc(a.description) + '</p>' : '') +
-              (pages ? '<p class="pages">' + pages + '</p>' : '') +
-              metricsHtml(a, v) +
-              '<p class="sub">' + vpZh + ' · ' + thZh + ' · 生成于 ' + esc(fmt(v.generatedAt)) +
-              (a.git?.sha ? ' · <span class="mono">' + esc(a.git.sha) + '</span>' : '') + '</p>' +
-              '<div class="actions">' +
-              '<a class="btn" href="' + esc(v.file) + '" target="_blank" rel="noopener">查看大图</a>' +
-              '<a class="btn primary" href="' + esc(v.file) + '" download="' + dl + '">下载</a>' +
-              '</div></figcaption></figure>'
-            )
-          })
-          .join('')
+        grid.innerHTML = apps.map((a) => {
+          const variants = a.variants || {}
+          const v = variants[vkey] || variants['light-' + state.viewport] || variants[Object.keys(variants)[0]]
+          if (!v) return ''
+          const pages = (a.pages || []).map((p) => esc(p.title)).join(' · ')
+          const dl = 'lifeos-uiux-' + esc(a.id) + '-' + esc(state.theme) + '-' + esc(state.viewport) + '.jpg'
+          const mob = state.viewport === 'mobile' ? ' mobile' : ''
+          const alt = esc(a.name) + ' UI/UX 审核联系表（' + vpZh + '·' + thZh + '）：' +
+            (a.pages || []).map((p) => esc(p.title)).join('、')
+          return (
+            '<figure class="card' + mob + '">' +
+            '<a class="thumb" href="' + esc(v.file) + '" target="_blank" rel="noopener" aria-label="查看 ' + esc(a.name) + ' 大图">' +
+            '<span class="zoom">查看大图 ↗</span>' +
+            '<img loading="lazy" src="' + esc(v.file) + '" width="' + (state.viewport === 'mobile' ? 1170 : 1402) + '" alt="' + alt + '" /></a>' +
+            '<figcaption class="body">' +
+            '<div class="row"><h2 class="name">' + esc(a.name) + '</h2>' + healthBadge(a) +
+            '<span class="badge">' + (v.screens ?? a.screens ?? '?') + ' 屏</span></div>' +
+            (a.description ? '<p class="desc">' + esc(a.description) + '</p>' : '') +
+            (pages ? '<p class="pages">' + pages + '</p>' : '') +
+            dimsHtml(a) +
+            metricsHtml(a) +
+            '<p class="sub">' + vpZh + ' · ' + thZh + ' · 生成于 ' + esc(fmt(v.generatedAt)) +
+            (a.git?.sha ? ' · <span class="mono">' + esc(a.git.sha) + '</span>' : '') + '</p>' +
+            '<div class="actions">' +
+            '<a class="btn" href="' + esc(v.file) + '" target="_blank" rel="noopener">查看大图</a>' +
+            '<a class="btn primary" href="' + esc(v.file) + '" download="' + dl + '">下载</a>' +
+            '</div></figcaption></figure>'
+          )
+        }).join('')
       }
 
       async function load() {
@@ -446,7 +627,7 @@
           (data.git?.sha ? ' · <span class="sha">' + esc(data.git.sha) + '</span>' : '') +
           '<br>' + ids.length + ' 个 app · 浅/深 × 桌面/移动'
         document.getElementById('note').textContent =
-          '本页由仓库内的审核脚本生成并发布到 Netlify，随 LifeOS 每次发布刷新。切换上方主题 / 视图查看不同变体。'
+          '本页由仓库内审核脚本生成，随 LifeOS 发布刷新。切换主题 / 视图查看不同变体。'
         render()
       }
       load()

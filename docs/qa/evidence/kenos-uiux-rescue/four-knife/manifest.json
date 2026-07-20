@@ -1,0 +1,103 @@
+{
+  "capturedAt": "2026-07-20T18:32:37.622Z",
+  "aiosBase": "http://127.0.0.1:5291",
+  "macosNative": "NOT_VALIDATED",
+  "status": "IN_PROGRESS",
+  "shots": [
+    {
+      "id": "ios-today",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/ios-today.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "id": "ios-spaces",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/ios-spaces.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "id": "ios-inbox",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/ios-inbox.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "id": "ios-continue",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/ios-continue.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "id": "desktop-today",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/desktop-today.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      }
+    },
+    {
+      "id": "desktop-spaces",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/desktop-spaces.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      }
+    },
+    {
+      "id": "desktop-continue",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/desktop-continue.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      }
+    },
+    {
+      "id": "bridge-gone-plan",
+      "bridgeNodes": 0,
+      "engineeringCopyHits": 0,
+      "note": "PASS no bridge product UI"
+    },
+    {
+      "id": "bridge-gone-plan",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/bridge-gone-plan.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "id": "fitness-home",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/fitness-home.png",
+      "note": "Domain app (not Kenos shell) — honest deep-link surface"
+    },
+    {
+      "id": "fitness-active",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/fitness-active.png",
+      "note": "Domain app (not Kenos shell) — honest deep-link surface"
+    },
+    {
+      "id": "planner-list",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/planner-list.png",
+      "note": "Domain app (not Kenos shell) — honest deep-link surface"
+    },
+    {
+      "id": "desktop-fitness",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/desktop-fitness.png",
+      "note": "Domain app (not Kenos shell) — honest deep-link surface"
+    },
+    {
+      "id": "desktop-planner",
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-uiux-rescue/four-knife/desktop-planner.png",
+      "note": "Domain app (not Kenos shell) — honest deep-link surface"
+    }
+  ]
+}
