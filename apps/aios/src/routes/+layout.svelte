@@ -14,11 +14,14 @@
   import CaptureQuick from '$lib/components/CaptureQuick.svelte'
   import FocusSessionShell from '$lib/components/FocusSessionShell.svelte'
   import SpaceSwitcher from '$lib/components/SpaceSwitcher.svelte'
+  import KenosSystemBar from '$lib/components/KenosSystemBar.svelte'
   import { FOCUS, focusFlags, hydrateFocusStore } from '$lib/kenos/focusStore.svelte.js'
   import {
+    SPACE_SWITCHER,
     hydrateSpaceSwitcher,
     noteSpaceVisit,
     syncSpaceSwitcherOwner,
+    openSpaceSwitcherSheet,
   } from '$lib/kenos/spaceSwitcher.svelte.js'
   import { ICONS } from '$lib/iconRegistry.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
@@ -62,6 +65,11 @@
     '/spaces',
     '/spaces/training',
     '/spaces/work',
+    '/spaces/plan',
+    '/spaces/money',
+    '/spaces/music',
+    '/spaces/home',
+    '/spaces/knowledge',
     '/focus',
     '/inbox',
     '/approvals',
@@ -69,17 +77,31 @@
     '/work',
     '/history',
     '/settings',
+    '/uiux-states',
   ])
   const hasCustomHeader = $derived(
-    ['/', '/spaces', '/spaces/training', '/spaces/work', '/focus', '/inbox', '/approvals', '/activity', '/work'].includes(
-      page.url.pathname,
-    ) || !knownRoutes.has(page.url.pathname),
+    [
+      '/',
+      '/spaces',
+      '/spaces/training',
+      '/spaces/work',
+      '/spaces/plan',
+      '/spaces/money',
+      '/spaces/music',
+      '/spaces/home',
+      '/spaces/knowledge',
+      '/focus',
+      '/inbox',
+      '/approvals',
+      '/activity',
+      '/work',
+      '/uiux-states',
+    ].includes(page.url.pathname) || !knownRoutes.has(page.url.pathname),
   )
   const hideGlobalNav = $derived(focusFlags().hideGlobalNav && page.url.pathname === '/focus')
   const showReturnBanner = $derived(focusFlags().showReturnBanner)
 
   let captureOpen = $state(false)
-  let spaceSwitcherOpen = $state(false)
   let online = $state(typeof navigator !== 'undefined' ? navigator.onLine : true)
   let wasOffline = $state(false)
   let reconnectAttempts = $state(0)
@@ -95,8 +117,14 @@
     if (p === '/spaces') return t('nav.spaces')
     if (p === '/spaces/training') return 'Training'
     if (p === '/spaces/work') return 'Deep Work'
+    if (p === '/spaces/plan') return 'Plan'
+    if (p === '/spaces/money') return 'Money'
+    if (p === '/spaces/music') return 'Music'
+    if (p === '/spaces/home') return 'Home'
+    if (p === '/spaces/knowledge') return 'Knowledge'
     if (p === '/focus') return FOCUS.focus?.title || 'Focus'
     if (p === '/work') return 'Work'
+    if (p === '/uiux-states') return 'UIUX States'
     if (p === '/') return t('nav.today')
     if (p === '/assistant' || p === '/chat') return t('chat.title')
     return '页面未找到'
@@ -116,6 +144,16 @@
       }
       event.preventDefault()
       captureOpen = true
+      return
+    }
+    // Continue / Space Switcher — Cmd/Ctrl + .
+    if ((event.metaKey || event.ctrlKey) && event.key === '.') {
+      const tag = /** @type {HTMLElement | null} */ (event.target)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || /** @type {HTMLElement} */ (event.target)?.isContentEditable) {
+        return
+      }
+      event.preventDefault()
+      openSpaceSwitcherSheet()
     }
   }
 
@@ -247,21 +285,11 @@
     </div>
   {/if}
   <CaptureQuick bind:open={captureOpen} />
-  <SpaceSwitcher bind:open={spaceSwitcherOpen} />
-  {#if !gated && !hideGlobalNav && page.url.pathname !== '/spaces'}
-    <button
-      type="button"
-      class="space-switcher-fab"
-      data-testid="kenos-space-switcher-fab"
-      aria-label="Open Space switcher"
-      onclick={() => (spaceSwitcherOpen = true)}
-    >
-      <span class="fab-kicker">Space</span>
-      <span class="fab-label">Switch</span>
-    </button>
-  {/if}
   {#if showReturnBanner && page.url.pathname !== '/focus'}
     <FocusSessionShell />
+  {/if}
+  {#if !hideGlobalNav && !isAssistant}
+    <KenosSystemBar title={pageTitle} onCapture={() => (captureOpen = true)} />
   {/if}
   <LifeOsAppShell
     navigationKey={page.url.pathname}
@@ -269,6 +297,9 @@
     scrollMode={isAssistant ? 'locked' : 'content'}
     skipLinkLabel={t('common.skipToContent')}
     testIdPrefix="aios-shell"
+    shellDataset={{
+      'continue-open': SPACE_SWITCHER.sheetOpen ? 'true' : undefined,
+    }}
   >
     {#snippet navigation(projection)}
       {#if hideGlobalNav}
@@ -276,7 +307,7 @@
       {:else if projection === 'desktop'}
         <ChatSidebar
           onCapture={() => (captureOpen = true)}
-          onSpaceSwitcher={() => (spaceSwitcherOpen = true)}
+          onSpaceSwitcher={openSpaceSwitcherSheet}
         />
       {:else}
         <BottomNav />
@@ -285,19 +316,17 @@
 
     {#snippet header()}
       <LifeOsAppBar title={pageTitle} hidden={isAssistant || hasCustomHeader || hideGlobalNav}>
-        {#snippet leading()}
-          <span class="page-title">{t('app.name')}</span>
-        {/snippet}
         {#snippet trailing()}
           {#if !hideGlobalNav}
+            <!-- Desktop AppBar only — mobile Continue lives in KenosSystemBar -->
             <button
               type="button"
-              class="space-switcher-trigger"
+              class="space-switcher-trigger desktop-only-continue"
               data-testid="kenos-space-switcher-trigger"
-              aria-label="Open Space switcher"
-              onclick={() => (spaceSwitcherOpen = true)}
+              aria-label="Continue to a recent Space"
+              onclick={openSpaceSwitcherSheet}
             >
-              Spaces
+              Continue
             </button>
           {/if}
         {/snippet}
@@ -306,6 +335,11 @@
 
     {#snippet main()}
       {@render children()}
+    {/snippet}
+
+    {#snippet transientOverlay()}
+      <!-- Continue sheet hosts here so AppShell can set data-transient-overlay-open + scroll lock -->
+      <SpaceSwitcher />
     {/snippet}
   </LifeOsAppShell>
 {/if}
@@ -324,51 +358,24 @@
   }
   :global(.space-switcher-trigger) {
     appearance: none;
-    border: 1px solid var(--border);
-    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    background: var(--kenos-chrome-bg, color-mix(in srgb, var(--bg) 80%, transparent));
+    backdrop-filter: blur(12px);
     color: var(--t1);
     font: inherit;
     font-size: var(--text-sm);
     font-weight: 600;
-    padding: 6px 10px;
+    padding: 6px 12px;
     min-height: 36px;
-    border-radius: var(--radius-control, 10px);
+    border-radius: var(--radius-pill, 999px);
     cursor: pointer;
   }
-  .space-switcher-fab {
-    position: fixed;
-    z-index: 40;
-    right: max(12px, env(safe-area-inset-right, 0px));
-    bottom: calc(var(--mobile-content-inset-tabbar, 64px) + 12px);
-    display: none;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
-    min-width: 72px;
-    min-height: 44px;
-    padding: 8px 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control, 10px);
-    background: color-mix(in srgb, var(--bg) 88%, transparent);
-    color: var(--t1);
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--t1) 8%, transparent);
-    backdrop-filter: blur(12px);
-    cursor: pointer;
-  }
-  .fab-kicker {
-    font-size: 10px;
-    font-weight: 650;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--t3);
-  }
-  .fab-label {
-    font-size: var(--text-sm);
-    font-weight: 650;
+  :global(.space-switcher-trigger:hover) {
+    border-color: color-mix(in srgb, var(--t1) 22%, var(--border));
   }
   @media (max-width: 899px) {
-    .space-switcher-fab {
-      display: flex;
+    :global(.desktop-only-continue) {
+      display: none !important;
     }
   }
 </style>

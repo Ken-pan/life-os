@@ -188,6 +188,52 @@ export function getCurrentSet(dayId, exId, totalSets, dateK = todayKey()) {
   return log.done + 1;
 }
 
+/**
+ * Continuity resume: ensure log.done is far enough that getCurrentSet === targetSet.
+ * Default never reduces progress. With `pin: true` (Continuity deep-link), also trims
+ * ahead-of-target logs so a stale cloud merge cannot skip the handoff set.
+ * @param {string} dayId
+ * @param {string} exId
+ * @param {number} targetSet 1-based next set to perform
+ * @param {string} [dateK]
+ * @param {{ pin?: boolean }} [opts]
+ * @returns {number | null} getCurrentSet after ensure
+ */
+export function ensureResumeCurrentSet(
+  dayId,
+  exId,
+  targetSet,
+  dateK = todayKey(),
+  opts = {},
+) {
+  const pin = Boolean(opts?.pin);
+  const target = Number(targetSet);
+  if (!Number.isFinite(target) || target < 1) {
+    const ex = getSessionExercise(dayId, exId, dateK);
+    return ex ? getCurrentSet(dayId, exId, ex.sets, dateK) : null;
+  }
+  const ex = getSessionExercise(dayId, exId, dateK);
+  if (!ex) return null;
+  const needDone = Math.min(Math.floor(target) - 1, ex.sets);
+  let log = getExLog(dayId, exId, ex.sets, dateK);
+
+  if (pin && log.done > needDone) {
+    while (log.sets.length < ex.sets) log.sets.push(null);
+    for (let i = needDone; i < log.sets.length; i++) log.sets[i] = null;
+    log.done = needDone;
+    if (needDone <= 0) log.startedAt = null;
+    writeExLog(dayId, exId, log, dateK);
+    log = getExLog(dayId, exId, ex.sets, dateK);
+  }
+
+  for (let s = log.done + 1; s <= needDone; s++) {
+    const result = completeSet(dayId, exId, s, { reps: null }, dateK);
+    if (!result.ok) break;
+    log = getExLog(dayId, exId, ex.sets, dateK);
+  }
+  return getCurrentSet(dayId, exId, ex.sets, dateK);
+}
+
 /** 训练进度：总组数、已完成、当前动作索引 */
 export function getSessionProgress(dayId, dateK = todayKey()) {
   const day = getProgram().days[dayId];

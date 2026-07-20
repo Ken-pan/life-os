@@ -19,6 +19,9 @@
    *   showHandle?: boolean,
    *   ariaLabel?: string,
    *   sheetClass?: string,
+   *   bgClass?: string,
+   *   sheetStyle?: string,
+   *   placement?: 'bottom' | 'auto',
    *   header?: import('svelte').Snippet,
    *   children?: import('svelte').Snippet,
    *   actions?: import('svelte').Snippet
@@ -34,6 +37,11 @@
     showHandle = true,
     ariaLabel = '',
     sheetClass = '',
+    bgClass = '',
+    /** Optional inline style on `.sheet` (e.g. desktop anchored panel). */
+    sheetStyle = '',
+    /** @type {'bottom' | 'auto'} `bottom` = theme default; `auto` = host may restyle via data-placement */
+    placement = 'bottom',
     header,
     children,
     actions,
@@ -80,10 +88,15 @@
 
 {#if open}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="sheet-bg" onclick={onBackdrop}>
+  <div
+    class={['sheet-bg', bgClass].filter(Boolean).join(' ')}
+    data-placement={placement === 'auto' ? 'auto' : undefined}
+    onclick={onBackdrop}
+  >
     <div
       bind:this={sheetEl}
       class="sheet {sheetClass}"
+      style={sheetStyle || undefined}
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}

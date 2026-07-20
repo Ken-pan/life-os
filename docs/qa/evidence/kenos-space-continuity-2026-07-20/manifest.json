@@ -1,0 +1,97 @@
+{
+  "capturedAt": "2026-07-20T18:53:00.000Z",
+  "honestyRecheckAt": "2026-07-20T18:53:00.000Z",
+  "status": {
+    "contract": "IMPLEMENTED",
+    "planner": "PARTIAL",
+    "fitness": "PARTIAL",
+    "accountIsolation": "PARTIAL",
+    "domainExperienceLiveE2E": "NOT_YET_VALIDATED",
+    "visualQuality": "IN_PROGRESS",
+    "readyForOwnerReview": false
+  },
+  "statusNotes": {
+    "priorOverclaim": "Earlier VALIDATED stamps were based on unit tests + descriptor→URL string assertions only (scripts/qa/kenos-space-continuity-capture.mjs). Downgraded 2026-07-20.",
+    "whatThisPassProvedVisually": [
+      "Planner AppBar Continue entry (vite dev :5188 /upcoming)",
+      "Fitness Home Continue entry (vite dev :5174 /)",
+      "Fitness Active minimal Continue icon + kenosEx=c_fly opens 绳索夹胸 (vite dev)",
+      "AIOS Continue sheet with Training subtitle Cable fly · Set 2 of 4 (demo :5291)"
+    ],
+    "whatStillMissing": [
+      "Live Flow A: Fitness Active → Continue → Kenos → Planner → Continue → Fitness same ex/set walkthrough screenshots",
+      "Live Flow B: Planner filtered task → Assistant/Inbox → Continue → same filter/task walkthrough screenshots",
+      "Live account-switch / logout Continue empty UI",
+      "Expired descriptor honest UI surface (unit fallback proven; live sheet phrase not observed)",
+      "kenosSet=2 did not visibly land on set 2 (exercise restored; set progress still 0/3)"
+    ]
+  },
+  "serversUsed": {
+    "aios": "http://127.0.0.1:5291 (vite preview)",
+    "planner": "http://127.0.0.1:5188 (vite dev — preview build lacked Continue)",
+    "fitness": "http://127.0.0.1:5174 (vite dev — preview build lacked Continue)"
+  },
+  "stills": {
+    "planner-toolbar-continue.png": "CAPTURED_ENTRY",
+    "fitness-home-continue.png": "CAPTURED_ENTRY",
+    "fitness-active-minimal-continue.png": "CAPTURED_ENTRY_PLUS_DEEPLINK_EX",
+    "ios-continue-before.png": "CAPTURED_AIOS_DEMO",
+    "ios-continue-after.png": "CAPTURED_AIOS_DEMO_SHEET",
+    "desktop-continue.png": "CAPTURED_AIOS_DEMO_SHEET",
+    "desktop-continue-wide.png": "CAPTURED_AIOS_DESKTOP_RECENT",
+    "today-visual.png": "CAPTURED_AIOS_DEMO",
+    "spaces-directory.png": "CAPTURED_AIOS_DEMO",
+    "expired-descriptor.png": "WEAK_TODAY_ONLY_NO_EXPIRED_PHRASE",
+    "failure-fallback.png": "CAPTURED_FITNESS_HOME_BAD_QUERY",
+    "CONTINUITY_OWNER_REVIEW_SHEET.png": "COMPOSED_FROM_BEST_AVAILABLE"
+  },
+  "flows": {
+    "A_fitness_to_planner_to_fitness": {
+      "status": "NOT_YET_VALIDATED",
+      "suspend": {
+        "version": 1,
+        "userId": "continuity-user-a",
+        "spaceId": "training",
+        "route": "http://127.0.0.1:5174/day/chest/focus",
+        "entityId": "c_fly",
+        "substate": {
+          "dayId": "chest",
+          "exerciseId": "c_fly",
+          "set": 2,
+          "progress": "Set 2 of 4"
+        },
+        "displayTitle": "Training",
+        "displaySubtitle": "Cable fly · Set 2 of 4"
+      },
+      "openUrl": "http://127.0.0.1:5174/day/chest/focus?kenosEx=c_fly&kenosSet=2",
+      "liveNotes": "Direct deep-link opened 绳索夹胸 (c_fly). Continue icon present. Set index restore not visually confirmed (showed 0/3). Full Stage-Manager cross-app walkthrough not captured."
+    },
+    "B_planner_filter_task": {
+      "status": "NOT_YET_VALIDATED",
+      "openUrl": "http://127.0.0.1:5188/upcoming?kenosTask=demo-overdue-task&kenosFilter=overdue&kenosDetail=1",
+      "liveNotes": "Planner Continue entry captured on /upcoming. Filtered-task restore + return via Assistant/Inbox not live-walked."
+    },
+    "C_account_switch": {
+      "status": "PARTIAL",
+      "notes": "Unit: bindSpaceSwitcherOwner / logout clear / domainContinueStorageKey user-namespaced. No live logout UI still."
+    }
+  },
+  "assertions": {
+    "descriptorUrlOnly": {
+      "plannerHasTaskQuery": true,
+      "plannerHasOverdueFilter": true,
+      "fitnessHasEx": true,
+      "fitnessHasSet": true,
+      "expiredIsExpired": true,
+      "expiredFallsHome": true,
+      "note": "These remain true from encode/decode helpers; they are NOT live E2E proof."
+    }
+  },
+  "unitProofs": [
+    "packages/contracts/scripts/kenos-space-continuity.test.mjs",
+    "packages/platform-web/scripts/kenosSpaceContinuity.test.mjs",
+    "apps/aios/src/lib/kenos/spaceSwitcher.core.test.js",
+    "apps/aios/src/lib/kenos/continuityAdapter.fixtures.test.js",
+    "KenosClientTests.spaceSwitcherPersistence"
+  ]
+}

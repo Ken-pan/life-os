@@ -1,0 +1,24 @@
+[
+  {
+    "vp": "1440x900",
+    "used": "sidebar",
+    "left": 147,
+    "top": 28,
+    "width": 440,
+    "hasHandle": false,
+    "allToggle": "All Spaces · 2",
+    "paddingBottom": "16px",
+    "backdrop": "none"
+  },
+  {
+    "vp": "390x844",
+    "used": "fab",
+    "left": 0,
+    "top": 286,
+    "width": 379,
+    "hasHandle": true,
+    "allToggle": "All Spaces · 2",
+    "paddingBottom": "16px",
+    "backdrop": "blur(6px)"
+  }
+]

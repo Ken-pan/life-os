@@ -1,0 +1,249 @@
+{
+  "capturedAt": "2026-07-20T21:22:01.270Z",
+  "base": "http://127.0.0.1:5197",
+  "shots": [
+    {
+      "vp": "390x844",
+      "file": "01-before-closed-390x844.png",
+      "state": "closed"
+    },
+    {
+      "vp": "390x844",
+      "file": "02-open-390x844.png",
+      "state": "open",
+      "probes": {
+        "continueOpen": true,
+        "transient": true,
+        "sheetMaxHeight": "717.4px",
+        "sheetOverflow": "hidden",
+        "sheetWidth": 379,
+        "sheetTop": 235,
+        "sheetBottom": 844,
+        "bgAlign": "flex-end",
+        "bgZ": "140",
+        "navVisibility": "visible",
+        "navPointer": "none",
+        "navHostInert": true,
+        "bodyOverflow": "hidden",
+        "htmlOverflow": "clip visible",
+        "handleDisplay": "block"
+      }
+    },
+    {
+      "vp": "390x844",
+      "file": "03-scroll-390x844.png",
+      "state": "scrolled",
+      "scrollProbe": {
+        "switcherScrollTop": 72,
+        "mainScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "vp": "390x844",
+      "file": "04-closed-focus-390x844.png",
+      "state": "closed-focus",
+      "focusAfter": {
+        "testId": "kenos-space-switcher-fab",
+        "tag": "BUTTON",
+        "className": "continue svelte-wu99ni",
+        "sheetGone": true
+      }
+    },
+    {
+      "vp": "430x932",
+      "file": "01-before-closed-430x932.png",
+      "state": "closed"
+    },
+    {
+      "vp": "430x932",
+      "file": "02-open-430x932.png",
+      "state": "open",
+      "probes": {
+        "continueOpen": true,
+        "transient": true,
+        "sheetMaxHeight": "792.2px",
+        "sheetOverflow": "hidden",
+        "sheetWidth": 419,
+        "sheetTop": 323,
+        "sheetBottom": 932,
+        "bgAlign": "flex-end",
+        "bgZ": "140",
+        "navVisibility": "visible",
+        "navPointer": "none",
+        "navHostInert": true,
+        "bodyOverflow": "hidden",
+        "htmlOverflow": "clip visible",
+        "handleDisplay": "block"
+      }
+    },
+    {
+      "vp": "430x932",
+      "file": "03-scroll-430x932.png",
+      "state": "scrolled",
+      "scrollProbe": {
+        "switcherScrollTop": 0,
+        "mainScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "vp": "430x932",
+      "file": "04-closed-focus-430x932.png",
+      "state": "closed-focus",
+      "focusAfter": {
+        "testId": "kenos-space-switcher-fab",
+        "tag": "BUTTON",
+        "className": "continue svelte-wu99ni",
+        "sheetGone": true
+      }
+    },
+    {
+      "vp": "768x1024",
+      "file": "01-before-closed-768x1024.png",
+      "state": "closed"
+    },
+    {
+      "vp": "768x1024",
+      "file": "02-open-768x1024.png",
+      "state": "open",
+      "probes": {
+        "continueOpen": true,
+        "transient": true,
+        "sheetMaxHeight": "819.2px",
+        "sheetOverflow": "hidden",
+        "sheetWidth": 560,
+        "sheetTop": 216,
+        "sheetBottom": 808,
+        "bgAlign": "center",
+        "bgZ": "140",
+        "navVisibility": "visible",
+        "navPointer": "none",
+        "navHostInert": true,
+        "bodyOverflow": "hidden",
+        "htmlOverflow": "clip visible",
+        "handleDisplay": "none"
+      }
+    },
+    {
+      "vp": "768x1024",
+      "file": "03-scroll-768x1024.png",
+      "state": "scrolled",
+      "scrollProbe": {
+        "switcherScrollTop": 0,
+        "mainScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "vp": "768x1024",
+      "file": "04-closed-focus-768x1024.png",
+      "state": "closed-focus",
+      "focusAfter": {
+        "testId": "kenos-space-switcher-fab",
+        "tag": "BUTTON",
+        "className": "continue svelte-wu99ni",
+        "sheetGone": true
+      }
+    },
+    {
+      "vp": "1024x768",
+      "file": "01-before-closed-1024x768.png",
+      "state": "closed"
+    },
+    {
+      "vp": "1024x768",
+      "file": "02-open-1024x768.png",
+      "state": "open",
+      "probes": {
+        "continueOpen": true,
+        "transient": true,
+        "sheetMaxHeight": "568.32px",
+        "sheetOverflow": "hidden",
+        "sheetWidth": 460,
+        "sheetTop": 100,
+        "sheetBottom": 668,
+        "bgAlign": "center",
+        "bgZ": "140",
+        "navVisibility": "visible",
+        "navPointer": "auto",
+        "navHostInert": true,
+        "bodyOverflow": "hidden",
+        "htmlOverflow": "clip visible",
+        "handleDisplay": "none"
+      }
+    },
+    {
+      "vp": "1024x768",
+      "file": "03-scroll-1024x768.png",
+      "state": "scrolled",
+      "scrollProbe": {
+        "switcherScrollTop": 230,
+        "mainScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "vp": "1024x768",
+      "file": "04-closed-focus-1024x768.png",
+      "state": "closed-focus",
+      "focusAfter": {
+        "testId": "kenos-space-switcher-sidebar",
+        "tag": "BUTTON",
+        "className": "icon-btn svelte-ubh64m",
+        "sheetGone": true
+      }
+    },
+    {
+      "vp": "1440x900",
+      "file": "01-before-closed-1440x900.png",
+      "state": "closed"
+    },
+    {
+      "vp": "1440x900",
+      "file": "02-open-1440x900.png",
+      "state": "open",
+      "probes": {
+        "continueOpen": true,
+        "transient": true,
+        "sheetMaxHeight": "666px",
+        "sheetOverflow": "hidden",
+        "sheetWidth": 460,
+        "sheetTop": 144,
+        "sheetBottom": 756,
+        "bgAlign": "center",
+        "bgZ": "140",
+        "navVisibility": "visible",
+        "navPointer": "auto",
+        "navHostInert": true,
+        "bodyOverflow": "hidden",
+        "htmlOverflow": "clip visible",
+        "handleDisplay": "none"
+      }
+    },
+    {
+      "vp": "1440x900",
+      "file": "03-scroll-1440x900.png",
+      "state": "scrolled",
+      "scrollProbe": {
+        "switcherScrollTop": 133,
+        "mainScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "vp": "1440x900",
+      "file": "04-closed-focus-1440x900.png",
+      "state": "closed-focus",
+      "focusAfter": {
+        "testId": "kenos-space-switcher-sidebar",
+        "tag": "BUTTON",
+        "className": "icon-btn svelte-ubh64m",
+        "sheetGone": true
+      }
+    }
+  ],
+  "status": "SUPERSEDED",
+  "supersededBy": "manifest-r2.json (Direction A anchored panel)",
+  "note": "Desktop was centered command panel; not canonical Knife 2"
+}

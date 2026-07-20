@@ -5,7 +5,7 @@
   "description": "Life OS cross-surface product contracts (type-only)",
   "type": "module",
   "scripts": {
-    "test": "node scripts/events.test.mjs && node scripts/kenos.test.mjs && node scripts/kenos-focus.test.mjs"
+    "test": "node scripts/events.test.mjs && node scripts/kenos.test.mjs && node scripts/kenos-focus.test.mjs && node scripts/kenos-space-continuity.test.mjs"
   },
   "dependencies": {
     "zod": "^3.23.0"
@@ -48,6 +48,10 @@
     "./kenos-focus-runtime": {
       "types": "./src/kenos-focus-runtime.ts",
       "default": "./src/kenos-focus-runtime.ts"
+    },
+    "./kenos-space-continuity": {
+      "types": "./src/kenos-space-continuity.ts",
+      "default": "./src/kenos-space-continuity.ts"
     }
   }
 }

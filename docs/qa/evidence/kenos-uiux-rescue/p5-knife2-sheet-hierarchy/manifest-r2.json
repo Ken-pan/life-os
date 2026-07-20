@@ -1,0 +1,455 @@
+{
+  "capturedAt": "2026-07-20T21:28:13.668Z",
+  "base": "http://127.0.0.1:5197",
+  "knife": "2-direction-A",
+  "shots": [
+    {
+      "vp": "390x844",
+      "file": "r2-02-open-390x844.png",
+      "state": "open",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-mobile",
+        "hasHandle": true,
+        "hasClose": true,
+        "closeSize": {
+          "w": 44,
+          "h": 44
+        },
+        "allToggleText": "All Spaces \u00b7 2",
+        "todayInSpaceLists": [],
+        "systemTodayGone": true,
+        "sheetWidth": 379,
+        "sheetTop": 286,
+        "sheetLeft": 0,
+        "maxHeight": "658.32px",
+        "borderRadius": "22px 22px 0px 0px",
+        "paddingBottom": "16px",
+        "bgAlign": "flex-end",
+        "bgBackdrop": "blur(6px)",
+        "bgBg": "rgba(0, 0, 0, 0.45)",
+        "bgZ": "140",
+        "navVisibility": "hidden",
+        "navPointer": "none",
+        "navHostInert": true,
+        "bodyOverflow": "hidden",
+        "mainOverflowY": "hidden",
+        "continueOpen": true
+      }
+    },
+    {
+      "vp": "390x844",
+      "file": "r2-03-scroll-390x844.png",
+      "state": "scroll",
+      "scrollProbe": {
+        "switcherScrollTop": 87,
+        "mainScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "vp": "390x844",
+      "file": "r2-04-focus-390x844.png",
+      "state": "focus",
+      "focusEl": {
+        "tag": "INPUT",
+        "className": "svelte-17rd7at",
+        "testId": null
+      }
+    },
+    {
+      "vp": "430x932",
+      "file": "r2-02-open-430x932.png",
+      "state": "open",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-mobile",
+        "hasHandle": true,
+        "hasClose": true,
+        "closeSize": {
+          "w": 44,
+          "h": 44
+        },
+        "allToggleText": "All Spaces \u00b7 2",
+        "todayInSpaceLists": [],
+        "systemTodayGone": true,
+        "sheetWidth": 419,
+        "sheetTop": 374,
+        "sheetLeft": 0,
+        "maxHeight": "726.96px",
+        "borderRadius": "22px 22px 0px 0px",
+        "paddingBottom": "16px",
+        "bgAlign": "flex-end",
+        "bgBackdrop": "blur(6px)",
+        "bgBg": "rgba(0, 0, 0, 0.45)",
+        "bgZ": "140",
+        "navVisibility": "hidden",
+        "navPointer": "none",
+        "navHostInert": true,
+        "bodyOverflow": "hidden",
+        "mainOverflowY": "hidden",
+        "continueOpen": true
+      }
+    },
+    {
+      "vp": "430x932",
+      "file": "r2-03-scroll-430x932.png",
+      "state": "scroll",
+      "scrollProbe": {
+        "switcherScrollTop": 18,
+        "mainScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "vp": "430x932",
+      "file": "r2-04-focus-430x932.png",
+      "state": "focus",
+      "focusEl": {
+        "tag": "INPUT",
+        "className": "svelte-17rd7at",
+        "testId": null
+      }
+    },
+    {
+      "vp": "768x1024",
+      "file": "r2-02-open-768x1024.png",
+      "state": "open",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-tablet",
+        "hasHandle": false,
+        "hasClose": true,
+        "closeSize": {
+          "w": 44,
+          "h": 44
+        },
+        "allToggleText": "All Spaces \u00b7 2",
+        "todayInSpaceLists": [],
+        "systemTodayGone": true,
+        "sheetWidth": 560,
+        "sheetTop": 237,
+        "sheetLeft": 99,
+        "maxHeight": "757.76px",
+        "borderRadius": "20px",
+        "paddingBottom": "20px",
+        "bgAlign": "center",
+        "bgBackdrop": "blur(6px)",
+        "bgBg": "rgba(0, 0, 0, 0.45)",
+        "bgZ": "140",
+        "navVisibility": "hidden",
+        "navPointer": "none",
+        "navHostInert": true,
+        "bodyOverflow": "hidden",
+        "mainOverflowY": "hidden",
+        "continueOpen": true
+      }
+    },
+    {
+      "vp": "768x1024",
+      "file": "r2-03-scroll-768x1024.png",
+      "state": "scroll",
+      "scrollProbe": {
+        "switcherScrollTop": 0,
+        "mainScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "vp": "768x1024",
+      "file": "r2-04-focus-768x1024.png",
+      "state": "focus",
+      "focusEl": {
+        "tag": "INPUT",
+        "className": "svelte-17rd7at",
+        "testId": null
+      }
+    },
+    {
+      "vp": "1024x768",
+      "file": "r2-02-open-1024x768.png",
+      "state": "open",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-desktop",
+        "hasHandle": false,
+        "hasClose": true,
+        "closeSize": {
+          "w": 44,
+          "h": 44
+        },
+        "allToggleText": "All Spaces \u00b7 2",
+        "todayInSpaceLists": [],
+        "systemTodayGone": true,
+        "sheetWidth": 440,
+        "sheetTop": 72,
+        "sheetLeft": 12,
+        "maxHeight": "568px",
+        "borderRadius": "14px",
+        "paddingBottom": "16px",
+        "bgAlign": "flex-start",
+        "bgBackdrop": "none",
+        "bgBg": "rgba(0, 0, 0, 0.2)",
+        "bgZ": "140",
+        "navVisibility": "visible",
+        "navPointer": "auto",
+        "navHostInert": true,
+        "bodyOverflow": "hidden",
+        "mainOverflowY": "hidden",
+        "continueOpen": true
+      }
+    },
+    {
+      "vp": "1024x768",
+      "file": "r2-03-scroll-1024x768.png",
+      "state": "scroll",
+      "scrollProbe": {
+        "switcherScrollTop": 186,
+        "mainScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "vp": "1024x768",
+      "file": "r2-04-focus-1024x768.png",
+      "state": "focus",
+      "focusEl": {
+        "tag": "INPUT",
+        "className": "svelte-17rd7at",
+        "testId": null
+      }
+    },
+    {
+      "vp": "1280x800",
+      "file": "r2-02-open-1280x800.png",
+      "state": "open",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-desktop",
+        "hasHandle": false,
+        "hasClose": true,
+        "closeSize": {
+          "w": 44,
+          "h": 44
+        },
+        "allToggleText": "All Spaces \u00b7 2",
+        "todayInSpaceLists": [],
+        "systemTodayGone": true,
+        "sheetWidth": 440,
+        "sheetTop": 72,
+        "sheetLeft": 12,
+        "maxHeight": "592px",
+        "borderRadius": "14px",
+        "paddingBottom": "16px",
+        "bgAlign": "flex-start",
+        "bgBackdrop": "none",
+        "bgBg": "rgba(0, 0, 0, 0.2)",
+        "bgZ": "140",
+        "navVisibility": "visible",
+        "navPointer": "auto",
+        "navHostInert": true,
+        "bodyOverflow": "hidden",
+        "mainOverflowY": "hidden",
+        "continueOpen": true
+      }
+    },
+    {
+      "vp": "1280x800",
+      "file": "r2-03-scroll-1280x800.png",
+      "state": "scroll",
+      "scrollProbe": {
+        "switcherScrollTop": 162,
+        "mainScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "vp": "1280x800",
+      "file": "r2-04-focus-1280x800.png",
+      "state": "focus",
+      "focusEl": {
+        "tag": "INPUT",
+        "className": "svelte-17rd7at",
+        "testId": null
+      }
+    },
+    {
+      "vp": "1440x900",
+      "file": "r2-02-open-1440x900.png",
+      "state": "open",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-desktop",
+        "hasHandle": false,
+        "hasClose": true,
+        "closeSize": {
+          "w": 44,
+          "h": 44
+        },
+        "allToggleText": "All Spaces \u00b7 2",
+        "todayInSpaceLists": [],
+        "systemTodayGone": true,
+        "sheetWidth": 440,
+        "sheetTop": 72,
+        "sheetLeft": 12,
+        "maxHeight": "666px",
+        "borderRadius": "14px",
+        "paddingBottom": "16px",
+        "bgAlign": "flex-start",
+        "bgBackdrop": "none",
+        "bgBg": "rgba(0, 0, 0, 0.2)",
+        "bgZ": "140",
+        "navVisibility": "visible",
+        "navPointer": "auto",
+        "navHostInert": true,
+        "bodyOverflow": "hidden",
+        "mainOverflowY": "hidden",
+        "continueOpen": true
+      }
+    },
+    {
+      "vp": "1440x900",
+      "file": "r2-03-scroll-1440x900.png",
+      "state": "scroll",
+      "scrollProbe": {
+        "switcherScrollTop": 88,
+        "mainScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "vp": "1440x900",
+      "file": "r2-04-focus-1440x900.png",
+      "state": "focus",
+      "focusEl": {
+        "tag": "INPUT",
+        "className": "svelte-17rd7at",
+        "testId": null
+      }
+    }
+  ],
+  "interactions": [
+    {
+      "vp": "390x844",
+      "method": "close-button",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-fab"
+    },
+    {
+      "vp": "390x844",
+      "method": "escape",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-fab"
+    },
+    {
+      "vp": "390x844",
+      "method": "scrim",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-fab"
+    },
+    {
+      "vp": "430x932",
+      "method": "close-button",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-fab"
+    },
+    {
+      "vp": "430x932",
+      "method": "escape",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-fab"
+    },
+    {
+      "vp": "430x932",
+      "method": "scrim",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-fab"
+    },
+    {
+      "vp": "768x1024",
+      "method": "close-button",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-fab"
+    },
+    {
+      "vp": "768x1024",
+      "method": "escape",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-fab"
+    },
+    {
+      "vp": "768x1024",
+      "method": "scrim",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-fab"
+    },
+    {
+      "vp": "1024x768",
+      "method": "close-button",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-sidebar"
+    },
+    {
+      "vp": "1024x768",
+      "method": "escape",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-sidebar"
+    },
+    {
+      "vp": "1024x768",
+      "method": "scrim",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-sidebar"
+    },
+    {
+      "vp": "1280x800",
+      "method": "close-button",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-sidebar"
+    },
+    {
+      "vp": "1280x800",
+      "method": "escape",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-sidebar"
+    },
+    {
+      "vp": "1280x800",
+      "method": "scrim",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-sidebar"
+    },
+    {
+      "vp": "1440x900",
+      "method": "close-button",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-sidebar"
+    },
+    {
+      "vp": "1440x900",
+      "method": "escape",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-sidebar"
+    },
+    {
+      "vp": "1440x900",
+      "method": "scrim",
+      "sheetGone": true,
+      "focusTestId": "kenos-space-switcher-sidebar"
+    }
+  ],
+  "status": "CANONICAL",
+  "knife2": "Direction A \u2014 PASSED",
+  "supersedes": "manifest.json + 01-*/02-* early centered-desktop pass",
+  "viewportsRequired": [
+    "390x844",
+    "430x932",
+    "768x1024",
+    "1024x768",
+    "1280x800",
+    "1440x900"
+  ],
+  "viewportsPresent": [
+    "1024x768",
+    "1280x800",
+    "1440x900",
+    "390x844",
+    "430x932",
+    "768x1024"
+  ],
+  "viewportsComplete": true
+}

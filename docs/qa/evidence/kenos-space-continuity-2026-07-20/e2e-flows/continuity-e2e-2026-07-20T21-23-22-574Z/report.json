@@ -1,0 +1,694 @@
+{
+  "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+  "startedAt": "2026-07-20T21:23:22.576Z",
+  "accounts": {
+    "A": {
+      "id": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "email": "334452284ken@gmail.com"
+    },
+    "B": {
+      "id": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "email": "pettimes666666@gmail.com"
+    }
+  },
+  "entityIds": {
+    "taskId": "kenos-cont-mrtqekwf",
+    "exerciseId": "c_fly",
+    "dayId": "chest",
+    "date": "2026-07-20"
+  },
+  "stamps": {
+    "flowA": "VALIDATED",
+    "flowB": "VALIDATED",
+    "accountIsolation": "VALIDATED"
+  },
+  "blockers": [],
+  "steps": [
+    {
+      "ts": "2026-07-20T21:23:28.261Z",
+      "step": "auth.sessions",
+      "A": "334452284ken@gmail.com",
+      "B": "pettimes666666@gmail.com"
+    },
+    {
+      "ts": "2026-07-20T21:23:28.852Z",
+      "step": "db.seed.planner_task",
+      "taskId": "kenos-cont-mrtqekwf"
+    },
+    {
+      "ts": "2026-07-20T21:23:29.426Z",
+      "step": "db.before.isolation",
+      "A_rows": 1,
+      "B_rows": 0,
+      "A_error": null,
+      "B_error": null,
+      "A_title": "Continuity Planner Test 0T21-23-22-574Z"
+    },
+    {
+      "ts": "2026-07-20T21:23:29.538Z",
+      "step": "flowA.start"
+    },
+    {
+      "ts": "2026-07-20T21:23:34.719Z",
+      "step": "flowA.syncSeed",
+      "ok": true,
+      "hasTask": true,
+      "taskCount": 1001
+    },
+    {
+      "ts": "2026-07-20T21:23:35.713Z",
+      "step": "flowA.taskVisible",
+      "taskVisible": true,
+      "titleInInput": true,
+      "titleAttr": false,
+      "bodyHas": false
+    },
+    {
+      "ts": "2026-07-20T21:23:41.555Z",
+      "step": "flowA.uiPush",
+      "ok": true,
+      "at": "2026-07-20T21:23:41.555Z"
+    },
+    {
+      "ts": "2026-07-20T21:23:41.818Z",
+      "step": "flowA.db.after",
+      "mutationPath": "planner-ui-save+user-jwt-push",
+      "adminWriteUsed": false,
+      "title": "Continuity Planner MUT 1-23-22-574Z",
+      "notes": "Continuity E2E continuity-e2e-2026-07-20T21-23-22-574Z · UI-mutated by owner A",
+      "completed": false,
+      "mutationPersisted": true,
+      "expectedTitle": "Continuity Planner MUT 1-23-22-574Z"
+    },
+    {
+      "ts": "2026-07-20T21:23:42.869Z",
+      "step": "flowA.reopenSeesMutated",
+      "reopenSeesMutated": true,
+      "ok": true,
+      "fromInput": true,
+      "fromBody": false
+    },
+    {
+      "ts": "2026-07-20T21:23:46.226Z",
+      "step": "flowA.continueSheet",
+      "planInSheet": true,
+      "kenosSeesMutatedTitle": true,
+      "snippet": "回到刚才做到的地方。浏览全部领域用 Spaces。\n\nRECENT\nPlan\nUpcoming · Overdue · 任务详情 · Continuity Planner MUT 1-23-22-574Z\n任务详情已打开\n刚刚\nALL SPACES\n展开\nSYSTEM\nToday"
+    },
+    {
+      "ts": "2026-07-20T21:23:52.912Z",
+      "step": "flowA.reload",
+      "reloadSeesTask": true,
+      "reloadSeesMutated": true,
+      "reloadMut": {
+        "ok": true,
+        "fromInput": true,
+        "fromBody": false
+      },
+      "reloadSeed": {
+        "ok": false,
+        "fromInput": false,
+        "fromBody": false
+      },
+      "at": "2026-07-20T21:23:52.912Z"
+    },
+    {
+      "ts": "2026-07-20T21:23:58.612Z",
+      "step": "flowA.relogin",
+      "reloginSeesMutated": true,
+      "ok": true,
+      "fromInput": true,
+      "fromBody": false,
+      "at": "2026-07-20T21:23:58.612Z"
+    },
+    {
+      "ts": "2026-07-20T21:23:58.612Z",
+      "step": "flowB.start"
+    },
+    {
+      "ts": "2026-07-20T21:23:58.929Z",
+      "step": "flowB.db.clear_c_fly",
+      "sessions": 1,
+      "error": null
+    },
+    {
+      "ts": "2026-07-20T21:24:01.351Z",
+      "step": "flowB.set1Landed",
+      "nextSet": 1,
+      "done": 0,
+      "total": 3,
+      "text": "0/3 组 · 还剩 3 组"
+    },
+    {
+      "ts": "2026-07-20T21:24:03.145Z",
+      "step": "flowB.set2Visible",
+      "onSet2": true,
+      "b02Ok": true,
+      "ctaSet2Visible": true,
+      "ctaSet2Text": "完成第 2 组",
+      "nextSet": 2,
+      "done": 1,
+      "total": 3,
+      "text": "1/3 组 · 还剩 2 组"
+    },
+    {
+      "ts": "2026-07-20T21:24:05.018Z",
+      "step": "flowB.continueSheet.set2",
+      "descHasSet2": true,
+      "snippet": "回到刚才做到的地方。浏览全部领域用 Spaces。\n\nRECENT\nTraining\n绳索夹胸 · Set 2 of 3\nSet 2 of 3\n刚刚\nALL SPACES\n展开\nSYSTEM\nToday"
+    },
+    {
+      "ts": "2026-07-20T21:24:06.662Z",
+      "step": "flowB.resumedSet2",
+      "landedSet2": true,
+      "nextSet": 2,
+      "done": 1,
+      "total": 3,
+      "text": "1/3 组 · 还剩 2 组",
+      "url": "http://127.0.0.1:5190/day/chest/focus"
+    },
+    {
+      "ts": "2026-07-20T21:24:07.433Z",
+      "step": "flowB.afterCompleteSet2",
+      "nextSet": 3,
+      "done": 2,
+      "total": 3,
+      "text": "2/3 组 · 还剩 1 组",
+      "at": "2026-07-20T21:24:07.433Z"
+    },
+    {
+      "ts": "2026-07-20T21:24:08.001Z",
+      "step": "flowB.cloudPush",
+      "ok": true,
+      "at": "2026-07-20T21:24:07.433Z"
+    },
+    {
+      "ts": "2026-07-20T21:24:08.223Z",
+      "step": "flowB.db.afterCloudPush",
+      "done": 2,
+      "expectedDone": 2,
+      "expectedNextSet": 3,
+      "row": {
+        "session_id": "2569404f-5600-43dd-90bf-2536741cfe47",
+        "exercise_id": "c_fly",
+        "done": 2,
+        "sets": [
+          {
+            "ts": "2026-07-20T21:24:01.365Z",
+            "rir": null,
+            "reps": null,
+            "weight": 40
+          },
+          {
+            "ts": "2026-07-20T21:24:06.681Z",
+            "rir": null,
+            "reps": null,
+            "weight": 40
+          },
+          null
+        ],
+        "updated_at": "2026-07-20T21:24:07.942777+00:00"
+      },
+      "at": "2026-07-20T21:24:08.223Z"
+    },
+    {
+      "ts": "2026-07-20T21:24:09.768Z",
+      "step": "flowB.continueSheet.afterSet2",
+      "snippet": "回到刚才做到的地方。浏览全部领域用 Spaces。\n\nRECENT\nTraining\n绳索夹胸 · Set 3 of 3\nSet 3 of 3\n刚刚\nALL SPACES\n展开\nSYSTEM\nToday"
+    },
+    {
+      "ts": "2026-07-20T21:24:09.768Z",
+      "step": "flowB.continueStoreSnapshot",
+      "keys": [
+        "kenos.spaceSwitcher.v1"
+      ],
+      "hasPrimary": true
+    },
+    {
+      "ts": "2026-07-20T21:24:09.820Z",
+      "step": "flowB.freshContext",
+      "at": "2026-07-20T21:24:09.820Z",
+      "contextId": "ctx-A-cold-browser-context@d186055cc622c7812d80024252656577"
+    },
+    {
+      "ts": "2026-07-20T21:24:11.066Z",
+      "step": "flowB.coldContinueSheet",
+      "b08HasTrainingRecent": true,
+      "snippet": "回到刚才做到的地方。浏览全部领域用 Spaces。\n\nRECENT\nTraining\n绳索夹胸 · Set 3 of 3\nSet 3 of 3\n刚刚\nALL SPACES\n展开\nSYSTEM\nToday"
+    },
+    {
+      "ts": "2026-07-20T21:24:14.746Z",
+      "step": "flowB.coldRead",
+      "coldSet3": true,
+      "viaContinue": true,
+      "nextSet": 3,
+      "done": 2,
+      "total": 3,
+      "text": "2/3 组 · 还剩 1 组",
+      "url": "http://127.0.0.1:5190/day/chest/focus",
+      "at": "2026-07-20T21:24:14.746Z",
+      "order": {
+        "cloudPushAt": "2026-07-20T21:24:07.433Z",
+        "dbAssertAt": "2026-07-20T21:24:08.223Z",
+        "freshContextAt": "2026-07-20T21:24:09.820Z"
+      }
+    },
+    {
+      "ts": "2026-07-20T21:24:18.135Z",
+      "step": "flowB.coldReadNoPin",
+      "coldNoPinSet3": true,
+      "nextSet": 3,
+      "done": 2,
+      "total": 3,
+      "text": "2/3 组 · 还剩 1 组",
+      "at": "2026-07-20T21:24:18.135Z"
+    },
+    {
+      "ts": "2026-07-20T21:24:18.415Z",
+      "step": "flowB.db",
+      "sessionsA": 3,
+      "isolation": {
+        "B_sees_A_sessions": 0,
+        "B_error": null
+      },
+      "pushResult": {
+        "ok": true
+      },
+      "dbDone": 2
+    },
+    {
+      "ts": "2026-07-20T21:24:18.415Z",
+      "step": "isolation.dual_ui.start"
+    },
+    {
+      "ts": "2026-07-20T21:24:18.619Z",
+      "step": "isolation.dual_ui.A",
+      "aHasTrainingOrPlan": true,
+      "snippet": "回到刚才做到的地方。浏览全部领域用 Spaces。\n\nRECENT\nTraining\n绳索夹胸 · Set 3 of 3\nSet 3 of 3\n刚刚\nALL SPACES\n展开\nSYSTEM\nToday"
+    },
+    {
+      "ts": "2026-07-20T21:24:19.114Z",
+      "step": "isolation.dual_ui.B",
+      "bLeaksA": false,
+      "contextId": "ctx-B-browser-context@bcf346f43f4c98c99ec1c34efe8851f7",
+      "authUidShort": "…68fe",
+      "snippet": "回到刚才做到的地方。浏览全部领域用 Spaces。\n\n还没有最近 Space。从 Spaces 进入一次后会出现在这里。\n\nALL SPACES\n搜索 Space\nTraining\nFitness · 今日训练\nWork · Deep Work\n进入当前项目专注\nWork\n正在准备中 · 可先用 Plan 管理相关任务\nPlan\nUpcoming · 任务与时间\nMoney\nFinance · Today\nMusic\n播放与收藏\nHome\n空间与物品\nKnowledge\n笔记与资料\nSYSTEM\nToday"
+    },
+    {
+      "ts": "2026-07-20T21:24:19.397Z",
+      "step": "isolation.account_switch",
+      "switchLeaksA": false,
+      "snippet": "回到刚才做到的地方。浏览全部领域用 Spaces。\n\n还没有最近 Space。从 Spaces 进入一次后会出现在这里。\n\nALL SPACES\n搜索 Space\nTraining\nFitness · 今日训练\nWork · Deep Work\n进入当前项目专注\nWork\n正在准备中 · 可先用 Plan 管理相关任务\nPlan\nUpcoming · 任务与时间\nMoney\nFinance · Today\nMusic\n播放与收藏\nHome\n空间与物品\nKnowledge\n笔记与资料\nSYSTEM\nToday"
+    },
+    {
+      "ts": "2026-07-20T21:24:19.644Z",
+      "step": "isolation.final",
+      "ok": true,
+      "api": true,
+      "dualUi": true,
+      "binding": true
+    }
+  ],
+  "db": {
+    "before": {
+      "A_rows": 1,
+      "B_rows": 0,
+      "A_error": null,
+      "B_error": null,
+      "A_title": "Continuity Planner Test 0T21-23-22-574Z"
+    },
+    "afterFlowA": {
+      "mutationPath": "planner-ui-save+user-jwt-push",
+      "adminWriteUsed": false,
+      "title": "Continuity Planner MUT 1-23-22-574Z",
+      "notes": "Continuity E2E continuity-e2e-2026-07-20T21-23-22-574Z · UI-mutated by owner A",
+      "completed": false,
+      "mutationPersisted": true,
+      "expectedTitle": "Continuity Planner MUT 1-23-22-574Z"
+    },
+    "fitnessAfterSet2": {
+      "done": 2,
+      "expectedDone": 2,
+      "expectedNextSet": 3,
+      "row": {
+        "session_id": "2569404f-5600-43dd-90bf-2536741cfe47",
+        "exercise_id": "c_fly",
+        "done": 2,
+        "sets": [
+          {
+            "ts": "2026-07-20T21:24:01.365Z",
+            "rir": null,
+            "reps": null,
+            "weight": 40
+          },
+          {
+            "ts": "2026-07-20T21:24:06.681Z",
+            "rir": null,
+            "reps": null,
+            "weight": 40
+          },
+          null
+        ],
+        "updated_at": "2026-07-20T21:24:07.942777+00:00"
+      },
+      "at": "2026-07-20T21:24:08.223Z"
+    },
+    "fitnessSessionsA": [
+      {
+        "id": "2569404f-5600-43dd-90bf-2536741cfe47",
+        "session_date": "2026-07-20",
+        "day_id": "chest",
+        "user_id": "c2831538-94b0-4a57-b034-5e873a53c42e"
+      },
+      {
+        "id": "c20bae03-1d55-48f0-9f59-e696422fdd5e",
+        "session_date": "2026-07-19",
+        "day_id": "back",
+        "user_id": "c2831538-94b0-4a57-b034-5e873a53c42e"
+      },
+      {
+        "id": "755c8e13-c1f2-4782-9c4b-e82f04078205",
+        "session_date": "2026-07-18",
+        "day_id": "arms",
+        "user_id": "c2831538-94b0-4a57-b034-5e873a53c42e"
+      }
+    ],
+    "fitnessIsolation": {
+      "B_sees_A_sessions": 0,
+      "B_error": null
+    },
+    "finalIsolation": {
+      "A_rows": 1,
+      "B_rows": 0,
+      "fitnessBSeesA": 0,
+      "dualUi": {
+        "aHasTrainingOrPlan": true,
+        "bLeaksA": false,
+        "switchLeaksA": false
+      }
+    }
+  },
+  "network": [],
+  "finishedAt": "2026-07-20T21:24:19.678Z",
+  "screenshotBindings": [
+    {
+      "filename": "A01-planner-task-seed-open.png",
+      "step_id": "A01",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-browser-context@ebe15f6d2a7b7cd33125398d2c0d7531",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:23:35.650Z",
+      "page_url": "http://127.0.0.1:5188/upcoming?kenosTask=kenos-cont-mrtqekwf&kenosDetail=1",
+      "asserted_state": null,
+      "sha256": "5c42719826f11860853f4249f75920ed209f527f1ac9c6e2a29d2804dbf496e5"
+    },
+    {
+      "filename": "A02-planner-task-restored.png",
+      "step_id": "A02",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-browser-context@ebe15f6d2a7b7cd33125398d2c0d7531",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:23:35.686Z",
+      "page_url": "http://127.0.0.1:5188/upcoming?kenosTask=kenos-cont-mrtqekwf&kenosDetail=1",
+      "asserted_state": null,
+      "sha256": "1edb454bc95bd2b54540d5951e093e3904069369857075f21c09c9c965601770"
+    },
+    {
+      "filename": "A03-planner-before-save.png",
+      "step_id": "A03",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-browser-context@ebe15f6d2a7b7cd33125398d2c0d7531",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:23:35.719Z",
+      "page_url": "http://127.0.0.1:5188/upcoming?kenosTask=kenos-cont-mrtqekwf&kenosDetail=1",
+      "asserted_state": null,
+      "sha256": "1ff71b0f76b7d70125031cb52546045c7ab3c3118fb4ccd9af8f98405e25f79d"
+    },
+    {
+      "filename": "A03b-planner-after-ui-save.png",
+      "step_id": "A03b",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-browser-context@ebe15f6d2a7b7cd33125398d2c0d7531",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:23:36.582Z",
+      "page_url": "http://127.0.0.1:5188/upcoming?kenosTask=kenos-cont-mrtqekwf&kenosDetail=1",
+      "asserted_state": null,
+      "sha256": "1f64e1d9948e7cfc7ea7e1f160685ec4a3f132180bc76379ca4fba39abe0352f"
+    },
+    {
+      "filename": "A03c-planner-reopen-mutated.png",
+      "step_id": "A03c",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-browser-context@ebe15f6d2a7b7cd33125398d2c0d7531",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:23:42.835Z",
+      "page_url": "http://127.0.0.1:5188/upcoming?kenosTask=kenos-cont-mrtqekwf&kenosDetail=1",
+      "asserted_state": null,
+      "sha256": "c380a4202752e448b2e177a39f365f73d207667636b08fd1583a9d4aa8e21b67"
+    },
+    {
+      "filename": "A04-kenos-after-planner-continue.png",
+      "step_id": "A04",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-browser-context@ebe15f6d2a7b7cd33125398d2c0d7531",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:23:45.570Z",
+      "page_url": "http://127.0.0.1:5197/",
+      "asserted_state": null,
+      "sha256": "16f92ccf08af0a51113bcb6335589b62c98bbb7fd94d5409d156cf1e77c3db7c"
+    },
+    {
+      "filename": "A05-kenos-continue-sheet.png",
+      "step_id": "A05",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-browser-context@ebe15f6d2a7b7cd33125398d2c0d7531",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:23:46.198Z",
+      "page_url": "http://127.0.0.1:5197/",
+      "asserted_state": null,
+      "sha256": "5fe4c13daa0bb9aa70934e3aa44c9bf1f2bfc98947a3e8f0cdc9824669409c7c"
+    },
+    {
+      "filename": "A07-planner-fresh-context-reload.png",
+      "step_id": "A07",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-reload-browser-context@dc7868ffbc4797f17cfdbb61ab753f3c",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:23:52.888Z",
+      "page_url": "http://127.0.0.1:5188/upcoming?kenosTask=kenos-cont-mrtqekwf&kenosDetail=1",
+      "asserted_state": null,
+      "sha256": "4e56d4f37493b1c9a245d7e91237a676abc8293a6c4a28f0bba9749cbe8ef6a6"
+    },
+    {
+      "filename": "A08-planner-relogin.png",
+      "step_id": "A08",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-reload-browser-context@dc7868ffbc4797f17cfdbb61ab753f3c",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:23:58.549Z",
+      "page_url": "http://127.0.0.1:5188/upcoming?kenosTask=kenos-cont-mrtqekwf&kenosDetail=1",
+      "asserted_state": null,
+      "sha256": "84e8abb745ac5fb7834e809fa04880dd849258eae1c7624c24417fe8c843100c"
+    },
+    {
+      "filename": "B01-fitness-focus-set1.png",
+      "step_id": "B01",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-reload-browser-context@dc7868ffbc4797f17cfdbb61ab753f3c",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:24:01.323Z",
+      "page_url": "http://127.0.0.1:5190/day/chest/focus",
+      "asserted_state": null,
+      "sha256": "58f7628336b9277cfe8b52b8e79c853fa0f42d131a7bdcb154a0a659e5b79f43"
+    },
+    {
+      "filename": "B01b-fitness-after-set1.png",
+      "step_id": "B01b",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-reload-browser-context@dc7868ffbc4797f17cfdbb61ab753f3c",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:24:02.212Z",
+      "page_url": "http://127.0.0.1:5190/day/chest/focus",
+      "asserted_state": null,
+      "sha256": "809c435f65ae01aab475eb401eb6ff7e92d0802d3ae42f5adb4f726dcf81a246"
+    },
+    {
+      "filename": "B02-fitness-at-set2.png",
+      "step_id": "B02",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-reload-browser-context@dc7868ffbc4797f17cfdbb61ab753f3c",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:24:03.112Z",
+      "page_url": "http://127.0.0.1:5190/day/chest/focus",
+      "asserted_state": "nextSet=2 cta=完成第 2 组",
+      "sha256": "723d600a8bcb64816df5ae7515740093bd9ec1696eb4a6cbf1270186bd1cb95b"
+    },
+    {
+      "filename": "B03-kenos-after-fitness-continue-set2.png",
+      "step_id": "B03",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-reload-browser-context@dc7868ffbc4797f17cfdbb61ab753f3c",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:24:04.361Z",
+      "page_url": "http://127.0.0.1:5197/",
+      "asserted_state": null,
+      "sha256": "50756a85fdbb92397702512a65eb5b3f1794720ad3d82c7a604e1f92b140c364"
+    },
+    {
+      "filename": "B04-kenos-continue-sheet-set2.png",
+      "step_id": "B04",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-reload-browser-context@dc7868ffbc4797f17cfdbb61ab753f3c",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:24:04.991Z",
+      "page_url": "http://127.0.0.1:5197/",
+      "asserted_state": null,
+      "sha256": "92de9b0c27a4b08f80aac1268d8cc000c3ac824888ebd1522512202d83af21a2"
+    },
+    {
+      "filename": "B05-fitness-resumed-set2.png",
+      "step_id": "B05",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-reload-browser-context@dc7868ffbc4797f17cfdbb61ab753f3c",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:24:06.630Z",
+      "page_url": "http://127.0.0.1:5190/day/chest/focus",
+      "asserted_state": null,
+      "sha256": "dac1ece812d4737316a7119b41881bb0cc7edb3a4bc9aafd2c4dea633a77241a"
+    },
+    {
+      "filename": "B06-fitness-after-complete-set2.png",
+      "step_id": "B06",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-reload-browser-context@dc7868ffbc4797f17cfdbb61ab753f3c",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:24:07.393Z",
+      "page_url": "http://127.0.0.1:5190/day/chest/focus",
+      "asserted_state": null,
+      "sha256": "86631500e1e5b5e87168f69351dc9c290d8b3b0ec9afa6301777414857ca09c3"
+    },
+    {
+      "filename": "B07-kenos-continue-after-set2-push.png",
+      "step_id": "B07",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-reload-browser-context@dc7868ffbc4797f17cfdbb61ab753f3c",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:24:09.740Z",
+      "page_url": "http://127.0.0.1:5197/",
+      "asserted_state": null,
+      "sha256": "13f4d50893fd2a6c27de4a71d259361e5c75c97e707cc257e58078ce27cac39b"
+    },
+    {
+      "filename": "B08-kenos-continue-fresh-before-fitness.png",
+      "step_id": "B08",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-cold-browser-context@d186055cc622c7812d80024252656577",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:24:11.066Z",
+      "page_url": "http://127.0.0.1:5197/",
+      "asserted_state": "Recent Training Set3",
+      "sha256": "e4f5569d4ed7da2fd8b2d6812bc4f8eedd63ce848ae4623873245d4d1726d6d0"
+    },
+    {
+      "filename": "B09-fitness-cold-resume-set3.png",
+      "step_id": "B09",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-cold-browser-context@d186055cc622c7812d80024252656577",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:24:14.714Z",
+      "page_url": "http://127.0.0.1:5190/day/chest/focus",
+      "asserted_state": "nextSet=3 coldSet3=true",
+      "sha256": "205b1f402e879658f95f941fad642697b0b681f4ae43d041308eb32ea5e1dbd0"
+    },
+    {
+      "filename": "B10-fitness-cold-no-kenosSet.png",
+      "step_id": "B10",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-cold-browser-context@d186055cc622c7812d80024252656577",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:24:18.094Z",
+      "page_url": "http://127.0.0.1:5190/day/chest/focus",
+      "asserted_state": "nextSet=3 noPin=true",
+      "sha256": "2b12a85f929554c8896b69cd7afbde6b6f6d12db7397d2052846e192bca4ef88"
+    },
+    {
+      "filename": "C01-continue-account-A.png",
+      "step_id": "C01",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-A-cold-browser-context@d186055cc622c7812d80024252656577",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T21:24:18.594Z",
+      "page_url": "http://127.0.0.1:5197/",
+      "asserted_state": null,
+      "sha256": "a5c625a3becc8da7adb4d701c47b252226d3285212ae4e556e60bebb361c7596"
+    },
+    {
+      "filename": "C02-continue-account-B.png",
+      "step_id": "C02",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-B-browser-context@bcf346f43f4c98c99ec1c34efe8851f7",
+      "auth_uid": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "auth_uid_short": "…68fe",
+      "account_label": "B",
+      "timestamp": "2026-07-20T21:24:19.093Z",
+      "page_url": "http://127.0.0.1:5197/",
+      "asserted_state": null,
+      "sha256": "a0d895662c29b0493fa000dfb5e8e613c80d847286ad62f942cde8581a3f1c3b"
+    },
+    {
+      "filename": "C03-continue-after-switch-A-to-B.png",
+      "step_id": "C03",
+      "run_id": "continuity-e2e-2026-07-20T21-23-22-574Z",
+      "browser_context_id": "ctx-B-switch-browser-context@d186055cc622c7812d80024252656577",
+      "auth_uid": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "auth_uid_short": "…68fe",
+      "account_label": "B",
+      "timestamp": "2026-07-20T21:24:19.369Z",
+      "page_url": "http://127.0.0.1:5197/",
+      "asserted_state": "account-switch shared-physical-ctx",
+      "sha256": "4ea6d672d09c4ee768f49a39b695dfbb3c6c4c76367a714a5d2c8a689d70c187"
+    }
+  ]
+}

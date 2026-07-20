@@ -17,6 +17,12 @@ export interface LifeOsSheetProps {
   ariaLabel?: string
   /** App-owned classes forwarded to the `.sheet` element. */
   sheetClass?: string
+  /** App-owned classes forwarded to the `.sheet-bg` backdrop. */
+  bgClass?: string
+  /** Optional inline style on `.sheet` (e.g. anchored desktop panel). */
+  sheetStyle?: string
+  /** `bottom` = theme default; `auto` = host may restyle via data-placement. */
+  placement?: 'bottom' | 'auto'
   /** Replaces the default title block entirely. */
   header?: Snippet
   children?: Snippet

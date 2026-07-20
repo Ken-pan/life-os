@@ -1,0 +1,1171 @@
+{
+  "run_id": "continuity-e2e-2026-07-20T19-10-27-960Z",
+  "startedAt": "2026-07-20T19:10:27.961Z",
+  "accounts": {
+    "A": {
+      "id": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "email": "334452284ken@gmail.com"
+    },
+    "B": {
+      "id": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "email": "pettimes666666@gmail.com"
+    }
+  },
+  "entityIds": {
+    "taskId": "kenos-continuity-plan-001",
+    "exerciseId": "c_fly"
+  },
+  "stamps": {
+    "flowA": "PARTIAL",
+    "flowB": "PARTIAL",
+    "accountIsolation": "PARTIAL"
+  },
+  "blockers": [
+    "Continue sheet Plan row not found — reopened via deep link",
+    "Continue sheet Training row not clicked — used direct kenosSet=3 deep link fallback"
+  ],
+  "steps": [
+    {
+      "ts": "2026-07-20T19:10:32.367Z",
+      "step": "auth.sessions",
+      "A": "334452284ken@gmail.com",
+      "B": "pettimes666666@gmail.com"
+    },
+    {
+      "ts": "2026-07-20T19:10:32.492Z",
+      "step": "db.seed.planner_task",
+      "taskId": "kenos-continuity-plan-001"
+    },
+    {
+      "ts": "2026-07-20T19:10:32.792Z",
+      "step": "db.before.isolation",
+      "A_rows": 1,
+      "B_rows": 0,
+      "A_error": null,
+      "B_error": null,
+      "A_title": "Continuity Planner Test"
+    },
+    {
+      "ts": "2026-07-20T19:10:32.900Z",
+      "step": "flowA.start"
+    },
+    {
+      "ts": "2026-07-20T19:10:42.197Z",
+      "step": "flowA.taskVisible",
+      "taskVisible": true,
+      "titleInInput": true,
+      "titleAttr": false,
+      "bodyHas": false
+    },
+    {
+      "ts": "2026-07-20T19:10:47.840Z",
+      "step": "flowA.continueSheet",
+      "planInSheet": false,
+      "snippet": ""
+    },
+    {
+      "ts": "2026-07-20T19:11:00.518Z",
+      "step": "flowA.db.after",
+      "completed": true,
+      "title": "Continuity Planner Test",
+      "notes": "Continuity E2E continuity-e2e-2026-07-20T19-10-27-960Z · completed in Flow A"
+    },
+    {
+      "ts": "2026-07-20T19:11:00.518Z",
+      "step": "flowB.start"
+    },
+    {
+      "ts": "2026-07-20T19:11:08.399Z",
+      "step": "flowB.set2Visible",
+      "onSet2": true,
+      "snippet": "跳到主内容\n4/4\n·\n0:04\n绳索夹胸\n3 × 12–15\n1 RIR\n休息 1:15\n40\nLBS\n大臂主导，肘微屈固定\n顶峰挤压，离心充分拉伸\n1/3 组 · 还剩 2 组\n完成第 2 组\n上一个\n撤销\n跳过\n下一个"
+    },
+    {
+      "ts": "2026-07-20T19:11:11.203Z",
+      "step": "flowB.continueSheet",
+      "trainingResume": false,
+      "snippet": ""
+    },
+    {
+      "ts": "2026-07-20T19:11:12.615Z",
+      "step": "flowB.set3Visible",
+      "onSet3": true,
+      "notHome": true
+    },
+    {
+      "ts": "2026-07-20T19:11:14.761Z",
+      "step": "flowB.reload",
+      "stillSet3": true,
+      "url": "http://127.0.0.1:5190/day/chest/focus?kenosEx=c_fly&kenosSet=3"
+    },
+    {
+      "ts": "2026-07-20T19:11:15.358Z",
+      "step": "flowB.cloudPush",
+      "ok": true
+    },
+    {
+      "ts": "2026-07-20T19:11:15.613Z",
+      "step": "flowB.db",
+      "sessionsA": 3,
+      "isolation": {
+        "B_sees_A_sessions": 0,
+        "B_error": null
+      },
+      "pushResult": {
+        "ok": true
+      }
+    },
+    {
+      "ts": "2026-07-20T19:11:15.829Z",
+      "step": "isolation.api_rls",
+      "ok": true,
+      "note": "API/RLS proven; dual-UI Continue switch still PARTIAL"
+    }
+  ],
+  "db": {
+    "before": {
+      "A_rows": 1,
+      "B_rows": 0,
+      "A_error": null,
+      "B_error": null,
+      "A_title": "Continuity Planner Test"
+    },
+    "afterFlowA": {
+      "completed": true,
+      "title": "Continuity Planner Test",
+      "notes": "Continuity E2E continuity-e2e-2026-07-20T19-10-27-960Z · completed in Flow A"
+    },
+    "fitnessSessionsA": [
+      {
+        "id": "2569404f-5600-43dd-90bf-2536741cfe47",
+        "session_date": "2026-07-20",
+        "day_id": "chest",
+        "user_id": "c2831538-94b0-4a57-b034-5e873a53c42e"
+      },
+      {
+        "id": "c20bae03-1d55-48f0-9f59-e696422fdd5e",
+        "session_date": "2026-07-19",
+        "day_id": "back",
+        "user_id": "c2831538-94b0-4a57-b034-5e873a53c42e"
+      },
+      {
+        "id": "755c8e13-c1f2-4782-9c4b-e82f04078205",
+        "session_date": "2026-07-18",
+        "day_id": "arms",
+        "user_id": "c2831538-94b0-4a57-b034-5e873a53c42e"
+      }
+    ],
+    "fitnessIsolation": {
+      "B_sees_A_sessions": 0,
+      "B_error": null
+    },
+    "finalIsolation": {
+      "A_rows": 1,
+      "B_rows": 0,
+      "fitnessBSeesA": 0
+    }
+  },
+  "network": [
+    {
+      "ts": "2026-07-20T19:11:12.628Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/.svelte-kit/generated/client/nodes/1.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.628Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/.svelte-kit/generated/client/nodes/5.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.628Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/routes/+layout.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.628Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/routes/+layout.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.628Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/node_modules/@sveltejs/kit/src/runtime/components/svelte-5/error.svelte?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.628Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/node_modules/@sveltejs/kit/src/runtime/app/state/index.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.628Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/node_modules/@sveltejs/kit/src/runtime/app/state/client.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.628Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/node_modules/@sveltejs/kit/src/runtime/app/state/server.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.628Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/routes/day/[id]/focus/+page.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.629Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/app.css"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.629Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/styles/weight-controls.css"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.629Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/node_modules/@sveltejs/kit/src/runtime/app/navigation.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.629Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/AppBar.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/SideNav.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/BottomNav.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/TimerWidget.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/WeightModal.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/SetLogSheet.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/SkipModal.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/KnowledgeSheet.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/FitnessToolSheet.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/Toast.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/sync-error/SyncErrorBanner.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/portrait-gate/PortraitGate.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/head/DocumentHead.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/app-shell/index.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/iconRegistry.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/iconRegistry.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/syncNotify.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/state.svelte.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/auth.svelte.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/index.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/networkResume.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/pwaResume.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/sync.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/timer.svelte.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/serviceWorker.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/persistentStorage.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/audio.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/programRuntime.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/session.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/ui.svelte.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/i18n/index.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/FocusSession.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/BackButton.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/app-bar/index.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/brand/AppBrand.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.630Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/feedback/ReportBugButton.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/supabase.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/icon/Icon.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/kenos/fitnessSpaceAdapter.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/AppBar.svelte?svelte&type=style&lang.css"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/brand/AppBrandSwitcher.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/navigation/LifeOsSideNav.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/index.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/nav.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/navigation/LifeOsBottomNav.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/PlateBuilder.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/tools/calculators.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/progression.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/WeightModal.svelte?svelte&type=style&lang.css"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/SetLogSheet.svelte?svelte&type=style&lang.css"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/i18n/exerciseLabels.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/overlay/index.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/data/libraryHelpers.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/svelte_internal_flags_legacy.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/toast/Toast.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/syncErrorPresentation.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/PlateToolPanel.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/index.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.631Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/app-shell/LifeOsAppShell.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.632Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_check.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_x.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_chevron-right.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_chevron-left.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_chevron-down.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_chevron-up.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_move-right.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_trending-up.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_trending-down.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_play.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_timer.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_pencil.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_compass.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.633Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_bar-chart-3.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.634Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_flame.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.634Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_repeat.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.634Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_clipboard-list.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.634Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_moon.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.634Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_house.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.635Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_layout-grid.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.635Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_book-open.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.635Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_settings.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.635Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_circle-help.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.635Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_calculator.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.635Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@lucide_svelte_icons_image.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.635Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/Icon-B-ZgejxW.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.635Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/svelte/authStore.svelte.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/layout.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/shell.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/siteMeta.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/brand.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/launcher.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/brandSwitcher.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/documentMeta.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/scrollLock.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/focusTrap.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/createImeGuard.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/toastPolicy.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/viewportSync.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/pwaSettings.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/pwaResume.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/portraitGate.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/audioLease.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/node_modules/@sveltejs/kit/src/runtime/app/environment/index.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/data/program.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/data/exercises.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/logs.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/weightMemory.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/demoMode.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/demoData.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/supabaseTables.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/swLifecycle.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/sessionQueue.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/toast/store.svelte.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/i18n/messages/index.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/i18n/programLabels.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/app-bar/LifeOsAppBar.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/CoverMedia.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.636Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/data/setSchemes.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/screenWakeLock.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/navigation/BackButton.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/brand/BrandMark.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/brand/AppBrandWordmark.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/feedback/ReportBugButton.svelte?svelte&type=style&lang.css"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/node_modules/.vite/deps/@supabase_supabase-js.js?v=f829c5e5"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/kenosSpaceContinuity.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/constants.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/bidirectional.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/debounced.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/visibility.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/authSync.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/syncErrorMessage.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/syncNotify.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/authErrorMessage.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/manualSyncResult.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.637Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/supabaseEnv.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/supabaseClient.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/authController.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/coreIdentity.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/homePortalMetadata.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/sync/src/sso.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/phase.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/dumbbell-kit/Dumbbell.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/dumbbell-kit/weightMap.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/PlateBuilder.svelte?svelte&type=style&lang.css"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/i18n/messages/exercises-en.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/i18n/messages/exercises-cues-en.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/overlay/LifeOsSheet.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/overlay/LifeOsDialog.svelte"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/data/library.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/i18n/libraryLabels.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/toast/toast.css"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.638Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/components/PlateToolPanel.svelte?svelte&type=style&lang.css"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.639Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/i18n.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.639Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/wikilinks.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.639Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/app-shell/appShell.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.639Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/app-shell/app-shell.css"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.639Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/theme/src/generated/appRegistry.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.641Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/toast/toastCore.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.641Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/i18n/messages/zh.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.641Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/i18n/messages/en.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.641Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/i18n/messages/program-en.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.642Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/wakeLock.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.642Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/@fs/Users/kenpan/%E3%80%8CProjects%E3%80%8D/life-os/packages/platform-web/src/svelte/navigation/navigation.css"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.645Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/dumbbell-kit/dumbbell.ts"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.646Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/i18n/messages/library-en.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.646Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/i18n/messages/library-body-en.js"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.653Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/src/lib/dumbbell-kit/sprites.data.ts"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.671Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/assets/images/exercises/c_bench.jpg"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.671Z",
+      "method": "GET",
+      "url": "http://127.0.0.1:5190/assets/images/exercises/c_fly.jpg"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.671Z",
+      "method": "GET",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/auth/v1/user"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.671Z",
+      "method": "POST",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/core_profiles?on_conflict=id"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.671Z",
+      "method": "GET",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/app_memberships?select=app_key&user_id=eq.c2831538-94b0-4a57-b034-5e873a53c42e&status=eq.active"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.671Z",
+      "method": "GET",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/app_memberships?select=app_key&user_id=eq.c2831538-94b0-4a57-b034-5e873a53c42e&status=eq.active"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.776Z",
+      "method": "POST",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/core_user_app_settings?on_conflict=user_id%2Capp_id"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.792Z",
+      "method": "GET",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/fitness_user_state?select=*"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.792Z",
+      "method": "GET",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/fitness_exercise_weights?select=exercise_id%2Cweight"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.792Z",
+      "method": "GET",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/fitness_workout_sessions?select=id%2Csession_date%2Cday_id%2Cstarted_at%2Cended_at"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.793Z",
+      "method": "GET",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/fitness_exercise_logs?select=session_id%2Cexercise_id%2Cdone%2Csets%2Cskipped%2Cstarted_at"
+    },
+    {
+      "ts": "2026-07-20T19:11:12.910Z",
+      "method": "GET",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/auth/v1/user"
+    },
+    {
+      "ts": "2026-07-20T19:11:13.006Z",
+      "method": "POST",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/fitness_user_state?on_conflict=user_id"
+    },
+    {
+      "ts": "2026-07-20T19:11:13.120Z",
+      "method": "POST",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/fitness_exercise_weights?on_conflict=user_id%2Cexercise_id&columns=%22user_id%22%2C%22exercise_id%22%2C%22weight%22"
+    },
+    {
+      "ts": "2026-07-20T19:11:13.214Z",
+      "method": "POST",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/fitness_workout_sessions?on_conflict=user_id%2Csession_date%2Cday_id&columns=%22user_id%22%2C%22session_date%22%2C%22day_id%22%2C%2"
+    },
+    {
+      "ts": "2026-07-20T19:11:13.309Z",
+      "method": "POST",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/fitness_exercise_logs?on_conflict=session_id%2Cexercise_id&columns=%22session_id%22%2C%22user_id%22%2C%22exercise_id%22%2C%22done%2"
+    },
+    {
+      "ts": "2026-07-20T19:11:14.763Z",
+      "method": "GET",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/auth/v1/user"
+    },
+    {
+      "ts": "2026-07-20T19:11:14.851Z",
+      "method": "POST",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/fitness_user_state?on_conflict=user_id"
+    },
+    {
+      "ts": "2026-07-20T19:11:14.938Z",
+      "method": "POST",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/fitness_exercise_weights?on_conflict=user_id%2Cexercise_id&columns=%22user_id%22%2C%22exercise_id%22%2C%22weight%22"
+    },
+    {
+      "ts": "2026-07-20T19:11:15.092Z",
+      "method": "POST",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/fitness_workout_sessions?on_conflict=user_id%2Csession_date%2Cday_id&columns=%22user_id%22%2C%22session_date%22%2C%22day_id%22%2C%2"
+    },
+    {
+      "ts": "2026-07-20T19:11:15.212Z",
+      "method": "POST",
+      "url": "https://iueozzuctstwvzbcxcyh.supabase.co/rest/v1/fitness_exercise_logs?on_conflict=session_id%2Cexercise_id&columns=%22session_id%22%2C%22user_id%22%2C%22exercise_id%22%2C%22done%2"
+    }
+  ],
+  "finishedAt": "2026-07-20T19:11:15.861Z"
+}

@@ -1,0 +1,313 @@
+{
+  "auditAt": "2026-07-20T19:50:00Z",
+  "auditKind": "continuity-validation-evidence-audit",
+  "canonicalRunId": "continuity-e2e-2026-07-20T19-43-36-741Z",
+  "supersededRunIds": ["continuity-e2e-2026-07-20T19-36-27-382Z"],
+  "workspaceGitSha": "0bd3662578435e38188e3e81978137b1bd47433e",
+  "workspaceGitShaNote": "Audit-time tip; not proven identical to vite bundles during the run.",
+  "testCommand": "node scripts/qa/kenos-space-continuity-e2e-flows.mjs",
+  "testExitCodeObserved": 0,
+  "environment": {
+    "aios": "http://127.0.0.1:5197",
+    "planner": "http://127.0.0.1:5188",
+    "fitness": "http://127.0.0.1:5190",
+    "mode": "vite-dev"
+  },
+  "accounts": {
+    "A": {
+      "email": "334452284ken@gmail.com",
+      "authUid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "authUidShort": "c42e"
+    },
+    "B": {
+      "email": "pettimes666666@gmail.com",
+      "authUid": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "authUidShort": "68fe"
+    }
+  },
+  "entities": {
+    "taskId": "kenos-cont-mrtmua79",
+    "taskTitle": "Continuity Planner Test 0T19-43-36-741Z",
+    "exerciseId": "c_fly",
+    "dayId": "chest",
+    "date": "2026-07-20",
+    "fitnessSessionIdTodayChest": "2569404f-5600-43dd-90bf-2536741cfe47"
+  },
+  "stampsPriorClaim": {
+    "flowA": "VALIDATED",
+    "flowB": "VALIDATED",
+    "accountIsolation": "VALIDATED"
+  },
+  "stampsAudit": {
+    "contract": "IMPLEMENTED",
+    "fitnessContinuity": "CONDITIONAL",
+    "fitnessContinuityNote": "VALIDATED* — set ladder + Continue resume pass; reload Set3 before cloudPush (local restore proven, cold DB-only not isolated)",
+    "plannerContinuity": "PARTIAL",
+    "plannerEntityRestore": "VALIDATED",
+    "plannerMutationPersistence": "PARTIAL",
+    "plannerKenosSummarySync": "NOT_PROVEN",
+    "plannerReloadRelogin": "FAILED",
+    "accountIsolation": "CONDITIONAL",
+    "accountIsolationNote": "API/RLS + dual-UI assertions pass with two auth UIDs; PNG frames not watermarked — binding recorded here",
+    "visualQuality": "IN_PROGRESS",
+    "ownerReview": "NOT_OPEN"
+  },
+  "assertions": [
+    {
+      "id": "F1",
+      "gate": "fitness",
+      "name": "set2_after_set1",
+      "expected": "nextSet=2",
+      "actual": "nextSet=2 done=1",
+      "pass": true,
+      "step": "flowB.set2Visible",
+      "screenshot": "B02-fitness-at-set2.png"
+    },
+    {
+      "id": "F2",
+      "gate": "fitness",
+      "name": "continue_shows_set2",
+      "expected": "Set 2 of 3 in Continue",
+      "actual": "descHasSet2=true",
+      "pass": true,
+      "step": "flowB.continueSheet.set2",
+      "screenshot": "B03-kenos-after-fitness-continue-set2.png"
+    },
+    {
+      "id": "F3",
+      "gate": "fitness",
+      "name": "resume_set2",
+      "expected": "landedSet2",
+      "actual": "landedSet2=true nextSet=2",
+      "pass": true,
+      "step": "flowB.resumedSet2",
+      "screenshot": "B05-fitness-resumed-set2.png"
+    },
+    {
+      "id": "F4",
+      "gate": "fitness",
+      "name": "advance_to_set3",
+      "expected": "nextSet=3 after complete",
+      "actual": "nextSet=3 done=2",
+      "pass": true,
+      "step": "flowB.afterCompleteSet2",
+      "screenshot": "B06-fitness-after-complete-set2.png"
+    },
+    {
+      "id": "F5",
+      "gate": "fitness",
+      "name": "resume_set3",
+      "expected": "onSet3",
+      "actual": "onSet3=true",
+      "pass": true,
+      "step": "flowB.set3Visible",
+      "screenshot": "B08-fitness-resumed-set3.png"
+    },
+    {
+      "id": "F6",
+      "gate": "fitness",
+      "name": "reload_still_set3",
+      "expected": "stillSet3 from persistent layer",
+      "actual": "stillSet3=true BEFORE cloudPush.ok",
+      "pass": "conditional",
+      "step": "flowB.reload",
+      "screenshot": "B09-fitness-reload-set3.png",
+      "note": "Reload precedes cloudPush; proves in-tab/local log restore, not isolated cold DB restore"
+    },
+    {
+      "id": "F7",
+      "gate": "fitness",
+      "name": "cloud_push_after_reload",
+      "expected": "push ok",
+      "actual": "ok=true",
+      "pass": true,
+      "step": "flowB.cloudPush"
+    },
+    {
+      "id": "P1",
+      "gate": "planner",
+      "name": "entity_restore",
+      "expected": "open seeded task not home",
+      "actual": "taskVisible titleInInput",
+      "pass": true,
+      "step": "flowA.taskVisible",
+      "screenshot": "A02-planner-task-restored.png"
+    },
+    {
+      "id": "P2",
+      "gate": "planner",
+      "name": "continue_plan_row",
+      "expected": "planInSheet",
+      "actual": true,
+      "pass": true,
+      "step": "flowA.continueSheet",
+      "screenshot": "A05-kenos-continue-sheet.png"
+    },
+    {
+      "id": "P3",
+      "gate": "planner",
+      "name": "resume_same_task",
+      "expected": "same task editor",
+      "actual": "A06 captured",
+      "pass": true,
+      "step": "A06-planner-resume-from-kenos",
+      "screenshot": "A06-planner-resume-from-kenos.png"
+    },
+    {
+      "id": "P4",
+      "gate": "planner",
+      "name": "mutation_persistence",
+      "expected": "UI save → DB completed",
+      "actual": "admin upsert completed=true; client read completed=true",
+      "pass": "partial",
+      "step": "flowA.db.after",
+      "note": "Write path is service-role admin, not Planner UI persistence"
+    },
+    {
+      "id": "P5",
+      "gate": "planner",
+      "name": "kenos_summary_sync",
+      "expected": "Today/Recent/Inbox reflect mutation",
+      "actual": "Continue bare Plan; Today auth/read failure in snippet",
+      "pass": false,
+      "step": "flowA.handoff"
+    },
+    {
+      "id": "P6",
+      "gate": "planner",
+      "name": "reload_relogin",
+      "expected": "reloadSeesTask true",
+      "actual": false,
+      "pass": false,
+      "step": "flowA.reload",
+      "screenshot": "A07-planner-reload-relogin.png"
+    },
+    {
+      "id": "I1",
+      "gate": "isolation",
+      "name": "two_auth_uids",
+      "expected": "distinct UIDs",
+      "actual": "c42e vs 68fe",
+      "pass": true,
+      "step": "auth.sessions"
+    },
+    {
+      "id": "I2",
+      "gate": "isolation",
+      "name": "planner_rls",
+      "expected": "A_rows=1 B_rows=0",
+      "actual": "A_rows=1 B_rows=0",
+      "pass": true,
+      "step": "db.before.isolation"
+    },
+    {
+      "id": "I3",
+      "gate": "isolation",
+      "name": "fitness_rls",
+      "expected": "B_sees_A_sessions=0",
+      "actual": 0,
+      "pass": true,
+      "step": "flowB.db"
+    },
+    {
+      "id": "I4",
+      "gate": "isolation",
+      "name": "continue_ui_A",
+      "expected": "Recent has Training/Plan",
+      "actual": "aHasTrainingOrPlan=true",
+      "pass": true,
+      "step": "isolation.dual_ui.A",
+      "screenshot": "C01-continue-account-A.png",
+      "boundAuthUid": "c2831538-94b0-4a57-b034-5e873a53c42e"
+    },
+    {
+      "id": "I5",
+      "gate": "isolation",
+      "name": "continue_ui_B_no_leak",
+      "expected": "bLeaksA=false",
+      "actual": false,
+      "pass": true,
+      "step": "isolation.dual_ui.B",
+      "screenshot": "C02-continue-account-B.png",
+      "boundAuthUid": "8febdb83-ec49-467d-a9bf-d42620cc68fe"
+    },
+    {
+      "id": "I6",
+      "gate": "isolation",
+      "name": "account_switch_no_leak",
+      "expected": "switchLeaksA=false",
+      "actual": false,
+      "pass": true,
+      "step": "isolation.account_switch",
+      "screenshot": "C03-continue-after-switch-A-to-B.png",
+      "boundAuthUid": "8febdb83-ec49-467d-a9bf-d42620cc68fe"
+    }
+  ],
+  "frameIndex": [
+    {
+      "sheetCell": 1,
+      "label": "Planner task restore",
+      "file": "A02-planner-task-restored.png",
+      "runId": "continuity-e2e-2026-07-20T19-43-36-741Z",
+      "step": "flowA.taskVisible"
+    },
+    {
+      "sheetCell": 2,
+      "label": "Kenos Continue · Plan",
+      "file": "A05-kenos-continue-sheet.png",
+      "runId": "continuity-e2e-2026-07-20T19-43-36-741Z",
+      "step": "flowA.continueSheet"
+    },
+    {
+      "sheetCell": 3,
+      "label": "Planner resume from Kenos",
+      "file": "A06-planner-resume-from-kenos.png",
+      "runId": "continuity-e2e-2026-07-20T19-43-36-741Z",
+      "step": "A06"
+    },
+    {
+      "sheetCell": 4,
+      "label": "Fitness at Set 2",
+      "file": "B02-fitness-at-set2.png",
+      "runId": "continuity-e2e-2026-07-20T19-43-36-741Z",
+      "step": "flowB.set2Visible"
+    },
+    {
+      "sheetCell": 5,
+      "label": "Continue · Set 2 of 3",
+      "file": "B03-kenos-after-fitness-continue-set2.png",
+      "runId": "continuity-e2e-2026-07-20T19-43-36-741Z",
+      "step": "flowB.continueSheet.set2"
+    },
+    {
+      "sheetCell": 6,
+      "label": "Fitness resumed Set 2",
+      "file": "B05-fitness-resumed-set2.png",
+      "runId": "continuity-e2e-2026-07-20T19-43-36-741Z",
+      "step": "flowB.resumedSet2"
+    },
+    {
+      "sheetCell": 7,
+      "label": "Fitness resumed Set 3",
+      "file": "B08-fitness-resumed-set3.png",
+      "runId": "continuity-e2e-2026-07-20T19-43-36-741Z",
+      "step": "flowB.set3Visible"
+    },
+    {
+      "sheetCell": 8,
+      "label": "Continue Account A",
+      "file": "C01-continue-account-A.png",
+      "runId": "continuity-e2e-2026-07-20T19-43-36-741Z",
+      "step": "isolation.dual_ui.A",
+      "boundAuthUid": "c2831538-94b0-4a57-b034-5e873a53c42e"
+    },
+    {
+      "sheetCell": 9,
+      "label": "Continue Account B (no leak)",
+      "file": "C02-continue-account-B.png",
+      "runId": "continuity-e2e-2026-07-20T19-43-36-741Z",
+      "step": "isolation.dual_ui.B",
+      "boundAuthUid": "8febdb83-ec49-467d-a9bf-d42620cc68fe"
+    }
+  ]
+}

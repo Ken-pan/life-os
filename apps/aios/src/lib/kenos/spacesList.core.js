@@ -1,29 +1,110 @@
 /**
- * Spaces page list construction — hosted AIOS routes + external KENOS_SPACES.
- * listKey is namespaced so same space.id across namespaces never collide in {#each}.
+ * Spaces catalog — domain apps open via state-restored deep links (no empty bridge UI).
+ * Hosted in-app routes remain only for Kenos-native surfaces (Work Deep Work, Work hub).
  */
-import { KENOS_SPACES } from './controlCenter.core.js'
+import { DOMAIN_ORIGINS, domainDeepLink } from './domainResume.core.js'
 
+/** @typedef {{ id: string, label: string, detail: string, href: string, domainId?: string, accent?: string, icon?: string, availability?: 'ready' | 'preparing' }} SpaceDef */
+
+/**
+ * Domain Spaces: href is production deep link. listKey stays hosted:* for resume continuity.
+ * @type {ReadonlyArray<SpaceDef>}
+ */
 export const HOSTED_SPACES = Object.freeze([
   {
     id: 'training',
     label: 'Training',
-    detail: '训练 Focus：隐藏全局导航，延期跨域打扰',
-    href: '/spaces/training',
+    detail: 'Fitness · 今日训练',
+    href: domainDeepLink('training', '/'),
+    domainId: 'training',
+    accent: '#5B8DEF',
+    icon: 'activity',
+    availability: 'ready',
   },
   {
     id: 'work-focus',
     label: 'Work · Deep Work',
-    detail: '进入当前项目专注；也可打开完整 Work hub',
+    detail: '进入当前项目专注',
     href: '/spaces/work',
+    accent: '#C4A574',
+    icon: 'focus',
+    availability: 'ready',
   },
   {
     id: 'work',
-    label: 'Work hub',
-    detail: '项目、交付、会议与决定',
+    label: 'Work',
+    detail: '正在准备中 · 可先用 Plan 管理相关任务',
     href: '/work',
+    accent: '#C4A574',
+    icon: 'briefcase',
+    availability: 'preparing',
+  },
+  {
+    id: 'plan',
+    label: 'Plan',
+    detail: 'Upcoming · 任务与时间',
+    href: domainDeepLink('plan', '/upcoming'),
+    domainId: 'plan',
+    accent: '#6FCF97',
+    icon: 'calendar',
+    availability: 'ready',
+  },
+  {
+    id: 'money',
+    label: 'Money',
+    detail: 'Finance · Today',
+    href: domainDeepLink('money', '/home/today'),
+    domainId: 'money',
+    accent: '#E8B86D',
+    icon: 'wallet',
+    availability: 'ready',
+  },
+  {
+    id: 'music',
+    label: 'Music',
+    detail: '播放与收藏',
+    href: domainDeepLink('music', '/'),
+    domainId: 'music',
+    accent: '#B794F4',
+    icon: 'music',
+    availability: 'ready',
+  },
+  {
+    id: 'home',
+    label: 'Home',
+    detail: '空间与物品',
+    href: domainDeepLink('home', '/storage'),
+    domainId: 'home',
+    accent: '#63B3A8',
+    icon: 'home',
+    availability: 'ready',
+  },
+  {
+    id: 'knowledge',
+    label: 'Knowledge',
+    detail: '笔记与资料',
+    href: domainDeepLink('knowledge', '/'),
+    domainId: 'knowledge',
+    accent: '#A0AEC0',
+    icon: 'book',
+    availability: 'ready',
   },
 ])
+
+/** Today / Sidebar shortcuts — domain deep links (no empty bridge hop). */
+export const TODAY_SPACE_SHORTCUTS = Object.freeze(
+  HOSTED_SPACES.filter((space) =>
+    [
+      'work',
+      'plan',
+      'training',
+      'money',
+      'music',
+      'home',
+      'knowledge',
+    ].includes(space.id),
+  ),
+)
 
 /**
  * @param {'hosted' | 'external' | string} namespace
@@ -34,10 +115,6 @@ export function spaceListKey(namespace, id) {
 }
 
 /**
- * Ensure listKeys are unique for Svelte {#each} keys.
- * On collision: console.warn (key only, no secrets), then append `#n` disambiguator.
- * Full list is always returned — never silently deduped.
- *
  * @param {Array<{ listKey: string } & Record<string, unknown>>} items
  * @param {{ warn?: (...args: unknown[]) => void }} [options]
  */
@@ -56,20 +133,23 @@ export function assignUniqueListKeys(items, { warn = console.warn } = {}) {
 }
 
 /**
+ * Prefer domain deep links. Legacy external catalog kept empty by default.
+ *
  * @param {{
- *   hosted?: ReadonlyArray<{ id: string, label: string, detail: string, href: string }>
+ *   hosted?: ReadonlyArray<SpaceDef>
  *   external?: ReadonlyArray<{ id: string, label: string, detail: string, href: string }>
  *   warn?: (...args: unknown[]) => void
  * }} [options]
  */
 export function buildSpacesList({
   hosted = HOSTED_SPACES,
-  external = KENOS_SPACES,
+  external = [],
   warn = console.warn,
 } = {}) {
   const items = [
     ...hosted.map((space) => ({
       ...space,
+      // https domain URLs still use hosted:* listKeys for Continuity with resume store
       external: false,
       listKey: spaceListKey('hosted', space.id),
     })),
@@ -80,4 +160,46 @@ export function buildSpacesList({
     })),
   ]
   return assignUniqueListKeys(items, { warn })
+}
+
+/** Legacy production-root catalog (tests / optional external list). */
+export function buildLegacyExternalSpaces() {
+  return Object.freeze([
+    {
+      id: 'plan',
+      label: 'Plan',
+      detail: '任务与时间',
+      href: DOMAIN_ORIGINS.plan,
+    },
+    {
+      id: 'money',
+      label: 'Money',
+      detail: '收支与决策',
+      href: DOMAIN_ORIGINS.money,
+    },
+    {
+      id: 'training',
+      label: 'Training',
+      detail: '训练与恢复',
+      href: DOMAIN_ORIGINS.training,
+    },
+    {
+      id: 'music',
+      label: 'Music',
+      detail: '播放与收藏',
+      href: DOMAIN_ORIGINS.music,
+    },
+    {
+      id: 'home',
+      label: 'Home',
+      detail: '空间与物品',
+      href: DOMAIN_ORIGINS.home,
+    },
+    {
+      id: 'knowledge',
+      label: 'Knowledge',
+      detail: '笔记与资料',
+      href: DOMAIN_ORIGINS.knowledge,
+    },
+  ])
 }

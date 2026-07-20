@@ -1,0 +1,233 @@
+{
+  "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+  "finishedAt": "2026-07-20T19:59:39.214Z",
+  "testCommand": "node scripts/qa/kenos-space-continuity-e2e-flows.mjs",
+  "environment": {
+    "aios": "http://127.0.0.1:5197",
+    "planner": "http://127.0.0.1:5188",
+    "fitness": "http://127.0.0.1:5190",
+    "mode": "vite-dev"
+  },
+  "accounts": {
+    "A": {
+      "email": "334452284ken@gmail.com",
+      "authUid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "authUidShort": "c42e"
+    },
+    "B": {
+      "email": "pettimes666666@gmail.com",
+      "authUid": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "authUidShort": "68fe"
+    }
+  },
+  "entities": {
+    "taskId": "kenos-cont-mrtncxuj",
+    "taskTitleSeed": "Continuity Planner Test 0T19-58-07-194Z",
+    "taskTitleMutated": "Continuity Planner MUT 9-58-07-194Z",
+    "exerciseId": "c_fly",
+    "dayId": "chest",
+    "date": "2026-07-20"
+  },
+  "stamps": {
+    "contract": "IMPLEMENTED",
+    "plannerEntityRestore": "NOT_PROVEN",
+    "plannerContinuity": "PARTIAL",
+    "fitnessContinuity": "VALIDATED",
+    "accountIsolation": "VALIDATED",
+    "visualQuality": "IN_PROGRESS",
+    "ownerReview": "NOT_OPEN",
+    "overallContinuityGate": "NOT_PASSED"
+  },
+  "assertions": {
+    "reloadSeesTask": null,
+    "reloadSeesMutated": null,
+    "reloginSeesMutated": null,
+    "kenosSeesMutatedTitle": null,
+    "mutationPersisted": null,
+    "adminWriteUsed": null,
+    "fitnessDbDone": 2,
+    "fitnessColdSet3": false,
+    "fitnessColdNoPinSet3": true
+  },
+  "screenshotBindings": [
+    {
+      "filename": "A01-planner-task-seed-open.png",
+      "step_id": "A01",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-browser-context@9539d85c0fcbb0249bc3d0bf0a26f87f",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:58:34.377Z",
+      "sha256": "e46b93c96e90bc3d8e6bccc25a0589986048f041ccef9eec7ebd5f1262692870"
+    },
+    {
+      "filename": "A02-planner-task-restored.png",
+      "step_id": "A02",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-browser-context@9539d85c0fcbb0249bc3d0bf0a26f87f",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:58:34.400Z",
+      "sha256": "91dd4f4fb5d91943ae7a59ba3642cae6488a116c9514676f08b256d11551a16a"
+    },
+    {
+      "filename": "B01-fitness-focus-set1.png",
+      "step_id": "B01",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-browser-context@9539d85c0fcbb0249bc3d0bf0a26f87f",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:59:07.213Z",
+      "sha256": "255ab56df24219ec3566f0ce6dd69854c6eae8c6f476c872d6bdfbb9ea1dbbb0"
+    },
+    {
+      "filename": "B01b-fitness-after-set1.png",
+      "step_id": "B01b",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-browser-context@9539d85c0fcbb0249bc3d0bf0a26f87f",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:59:08.129Z",
+      "sha256": "605481fb12a31f34575a602a9fcd7e32920db4084436076c2109481d5af7e252"
+    },
+    {
+      "filename": "B02-fitness-at-set2.png",
+      "step_id": "B02",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-browser-context@9539d85c0fcbb0249bc3d0bf0a26f87f",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:59:08.172Z",
+      "sha256": "64a2fabf1626743d7ea340801ffbef882f5c0f407d29f7879908efc90f922de8"
+    },
+    {
+      "filename": "B03-kenos-after-fitness-continue-set2.png",
+      "step_id": "B03",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-browser-context@9539d85c0fcbb0249bc3d0bf0a26f87f",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:59:09.431Z",
+      "sha256": "69964748ce8a2383a0953d3d14c5b15884813d19cab3014a6e162d4c8ae69422"
+    },
+    {
+      "filename": "B04-kenos-continue-sheet-set2.png",
+      "step_id": "B04",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-browser-context@9539d85c0fcbb0249bc3d0bf0a26f87f",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:59:10.063Z",
+      "sha256": "c8a2c1fa3746b76a4f1c9eb60321624e36195279fe47687d421721168f88d709"
+    },
+    {
+      "filename": "B05-fitness-resumed-set2.png",
+      "step_id": "B05",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-browser-context@9539d85c0fcbb0249bc3d0bf0a26f87f",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:59:11.706Z",
+      "sha256": "ad23df656e6e69690bf82d4a1a828f04f9fd307bf2d1093fa8b0ac5f1d1372fc"
+    },
+    {
+      "filename": "B06-fitness-after-complete-set2.png",
+      "step_id": "B06",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-browser-context@9539d85c0fcbb0249bc3d0bf0a26f87f",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:59:12.479Z",
+      "sha256": "1f607842fadcea0e70d8f406aeb10d420ef1397d50335d23faa3fcd232380f04"
+    },
+    {
+      "filename": "B07-kenos-continue-after-set2-push.png",
+      "step_id": "B07",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-browser-context@9539d85c0fcbb0249bc3d0bf0a26f87f",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:59:14.857Z",
+      "sha256": "ed8c365bf07788652860183aa8192bef517fe488eb468cc0b2631488b3cb5d41"
+    },
+    {
+      "filename": "B08-kenos-continue-fresh-before-fitness.png",
+      "step_id": "B08",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-cold-browser-context@470568bff398dfbf67cfff6cfa4c48e1",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:59:15.413Z",
+      "sha256": "93e42155461a9dcdefddaa6065ca9bed63beff92d92c63c5b06609efe767743f"
+    },
+    {
+      "filename": "B09-fitness-cold-resume-set3.png",
+      "step_id": "B09",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-cold-browser-context@470568bff398dfbf67cfff6cfa4c48e1",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:59:34.028Z",
+      "sha256": "369f80e8cba9359fa9f8b1c88077ae140dbca09626cc7e77ff9d2dbd4f772c46"
+    },
+    {
+      "filename": "B10-fitness-cold-no-kenosSet.png",
+      "step_id": "B10",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-cold-browser-context@470568bff398dfbf67cfff6cfa4c48e1",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:59:37.554Z",
+      "sha256": "6763df11e6ccab51fa6f36f32da93cc4bc2d0b75e6d967100ea7925c4e036305"
+    },
+    {
+      "filename": "C01-continue-account-A.png",
+      "step_id": "C01",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-cold-browser-context@470568bff398dfbf67cfff6cfa4c48e1",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-20T19:59:38.037Z",
+      "sha256": "1e54c0115b1fe2bc01e277d4cdb8e412c04117537fb6321056d3ce7636cb0aeb"
+    },
+    {
+      "filename": "C02-continue-account-B.png",
+      "step_id": "C02",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-B-browser-context@2cbf0b9828ecab526ad26fd3a8e360b0",
+      "auth_uid": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "auth_uid_short": "…68fe",
+      "account_label": "B",
+      "timestamp": "2026-07-20T19:59:38.624Z",
+      "sha256": "d5bdd487a662083623873e6d198df768f671114ebd4a6cbb16b52490811b1cf2"
+    },
+    {
+      "filename": "C03-continue-after-switch-A-to-B.png",
+      "step_id": "C03",
+      "run_id": "continuity-e2e-2026-07-20T19-58-07-194Z",
+      "browser_context_id": "ctx-A-cold-browser-context@470568bff398dfbf67cfff6cfa4c48e1",
+      "auth_uid": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "auth_uid_short": "…68fe",
+      "account_label": "B",
+      "timestamp": "2026-07-20T19:59:38.893Z",
+      "sha256": "245c04783ed3fa953544a85263167b493f6aee5dfb25c9e96c1cf1f0b9be5a96"
+    }
+  ],
+  "blockers": [
+    "Flow A: #task-title missing — cannot UI-mutate"
+  ]
+}

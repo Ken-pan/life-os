@@ -30,71 +30,71 @@ PROPOSED
 
 ## 2. Program-level ledger
 
-| Migration | 当前真源/入口 | 目标真源/入口 | 状态 | 前置 | 单一 writer 切换 | 回滚 | Retirement gate |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Life OS 品牌 | 多处 Life OS/Kenos 混用 | 用户可见 Kenos，稳定内部 ID | PROPOSED | 命名表冻结 | 不涉及数据 writer | 恢复文案/redirect | 旧文案/域名无必要引用 |
-| Portal 默认入口 | `apps/portal` | Assistant/Today | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | Today/Inbox/Approval/Activity 本地证据齐备；生产审批未开 | Portal 写入先冻结，再切入口 | 默认入口回 Portal | 两稳定周期 + 无旧写入 |
-| Assistant chat | AIOS | Assistant Space | LOCAL_SIMULATION_AND_CONTRACT_READY | 本地只读 + Work 仿真；MCP create 经 command boundary | 领域数据仍归原 Owner | 旧 AIOS chat 保留于 `/assistant` | hosted Approval/RLS/shadow + 新 Assistant 真实使用通过 |
-| AIOS → Assistant | AIOS Tauri/Web | Assistant Space + Kenos Mac | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | Action/Policy/Activity/Approval 本地只读证据 | 领域数据仍归原 Owner | 旧 AIOS chat 保留于 `/assistant` | hosted Approval/RLS/shadow + 新 Assistant 真实使用通过 |
-| Work productivity loop | 分散 Plan/Library/Vault/digests；无 Work Space | Work-owned Project/Deliverable/Meeting/Decision + WorkActionProposal→Plan | LOCAL_SIMULATION_AND_CONTRACT_READY | temporary ownership + contracts + review-only SQL + AIOS `/work` + Today projections | Work 不拥有 Task；conversion simulation only；Connector read-only | 禁用 flag / 移除 `/work`；无需生产数据回滚 | hosted RLS/apply、Executor、auto Connector write、真实项目 Real-use 另审 |
-| Apple native daily loop | 无 Kenos iOS/macOS 产品；仅 KenosContracts + 领域 companion | 单一 Kenos iOS/iPadOS + macOS daily client（shared contracts/client/store/actions/design） | PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES | Phase 1–3 contracts；inventory；mock auth；offline queue；simulator QA | Apple 不拥有 Task/Approval/Work/Activity 真源；canonical writes 仍走 Action boundary | 移除 Apps/新 packages；Contracts 可保留 | production signing/OAuth/push/universal links；watchOS 产品；Executor；App Store |
-| Planner → Plan | Planner UI/表/本地缓存 | `plan` 领域语义 | PROPOSED | owner inventory | 先保持原表 writer，仅更改 API/名称 | 路由/文案回退 | 旧名称兼容到 deep links 稳定 |
-| Apple cross-device daily loop | Phase 4A iPhone/macOS foundation；无 Kenos Watch companion | watchOS companion + notification contracts + handoff/Capture transfer + widget foundation | CROSS_DEVICE_DAILY_LOOP_READY | Phase 4A ready；KenosNotifications/Handoff；simulator Watch build | Watch 不拥有 canonical truth；Approvals read-only；mock APNs only | 移除 Watch/Widget/新 packages | production Team/App Group/APNs；Executor；Phase 5；App Store |
-| Phase 5 Focus / contextual intelligence | 无 FocusContext；Nav IA 四入口已对齐 | System-owned FocusContext + Interruption/Deferred/Suggestions + Training/Deep Work local slices | PARTIAL_PASS_CONTEXTUAL_INTELLIGENCE_READY_WITH_PRODUCTION_GATES | TEMPORARY_APPROVED_FOR_PHASE_5_FOCUS_FOUNDATION；contracts + AIOS/Apple Focus UI；phase5 guard | Domain sessions EntityRef only；no production Executor/APNs；Watch Focus glance local | 移除 Focus stores/UI；contracts additive 可保留 | production notifications；Apple Focus entitlements；Executor；writer cutover |
-| Phase 6 production Wave 1 | Hosted 无 `kenos_*`；Task direct write 仍开 | Additive hosted schema/RLS/read RPC package + approval packet | STAGE_A_APPROVAL_PACKET_READY | env/writer matrices；schema diff；Wave 1 review SQL index；Focus review SQL；backup template；dual-user plan；phase6 guard | **No hosted apply**；revoke/cutover/Portal/Apple dist 另批批准 | 撤回 Stage A docs/SQL drafts；不触生产 | `APPROVE_KENOS_PRODUCTION_WAVE_1` |
-| Knowledge → Library | Vault + KnowledgeOS | Library Space/API | PROPOSED | Library/Memory 边界 | Vault 仍唯一正文 writer | 旧壳继续 | 新客户端能编辑/恢复/深链 |
-| Fitness → Training | Fitness app/schema | Training Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 行为与历史数据 parity |
-| Finance → Money | Finance app/schema | Money Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 报表/导入/购买历史 parity |
-| HealthOS → Health | local JSON/HealthKit/Tauri | Health domain + Kenos clients | PROPOSED | OPEN-001 | HealthKit/本地数据 writer 冻结后切 | 旧 companion/Tauri | 真机、离线、隐私与恢复通过 |
-| Apple unified client | 多壳 | Kenos 3 targets | PROPOSED | Phase 1 contracts | 按 capability 切 | 旧壳继续 | 每个旧壳单独退役 |
+| Migration                               | 当前真源/入口                                               | 目标真源/入口                                                                                   | 状态                                                             | 前置                                                                                                                       | 单一 writer 切换                                                                      | 回滚                                            | Retirement gate                                                                  |
+| --------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------- |
+| Life OS 品牌                            | 多处 Life OS/Kenos 混用                                     | 用户可见 Kenos，稳定内部 ID                                                                     | PROPOSED                                                         | 命名表冻结                                                                                                                 | 不涉及数据 writer                                                                     | 恢复文案/redirect                               | 旧文案/域名无必要引用                                                            |
+| Portal 默认入口                         | `apps/portal`                                               | Assistant/Today                                                                                 | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY                            | Today/Inbox/Approval/Activity 本地证据齐备；生产审批未开                                                                   | Portal 写入先冻结，再切入口                                                           | 默认入口回 Portal                               | 两稳定周期 + 无旧写入                                                            |
+| Assistant chat                          | AIOS                                                        | Assistant Space                                                                                 | LOCAL_SIMULATION_AND_CONTRACT_READY                              | 本地只读 + Work 仿真；MCP create 经 command boundary                                                                       | 领域数据仍归原 Owner                                                                  | 旧 AIOS chat 保留于 `/assistant`                | hosted Approval/RLS/shadow + 新 Assistant 真实使用通过                           |
+| AIOS → Assistant                        | AIOS Tauri/Web                                              | Assistant Space + Kenos Mac                                                                     | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY                            | Action/Policy/Activity/Approval 本地只读证据                                                                               | 领域数据仍归原 Owner                                                                  | 旧 AIOS chat 保留于 `/assistant`                | hosted Approval/RLS/shadow + 新 Assistant 真实使用通过                           |
+| Work productivity loop                  | 分散 Plan/Library/Vault/digests；无 Work Space              | Work-owned Project/Deliverable/Meeting/Decision + WorkActionProposal→Plan                       | LOCAL_SIMULATION_AND_CONTRACT_READY                              | temporary ownership + contracts + review-only SQL + AIOS `/work` + Today projections                                       | Work 不拥有 Task；conversion simulation only；Connector read-only                     | 禁用 flag / 移除 `/work`；无需生产数据回滚      | hosted RLS/apply、Executor、auto Connector write、真实项目 Real-use 另审         |
+| Apple native daily loop                 | 无 Kenos iOS/macOS 产品；仅 KenosContracts + 领域 companion | 单一 Kenos iOS/iPadOS + macOS daily client（shared contracts/client/store/actions/design）      | PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES     | Phase 1–3 contracts；inventory；mock auth；offline queue；simulator QA                                                     | Apple 不拥有 Task/Approval/Work/Activity 真源；canonical writes 仍走 Action boundary  | 移除 Apps/新 packages；Contracts 可保留         | production signing/OAuth/push/universal links；watchOS 产品；Executor；App Store |
+| Planner → Plan                          | Planner UI/表/本地缓存                                      | `plan` 领域语义                                                                                 | PROPOSED                                                         | owner inventory                                                                                                            | 先保持原表 writer，仅更改 API/名称                                                    | 路由/文案回退                                   | 旧名称兼容到 deep links 稳定                                                     |
+| Apple cross-device daily loop           | Phase 4A iPhone/macOS foundation；无 Kenos Watch companion  | watchOS companion + notification contracts + handoff/Capture transfer + widget foundation       | CROSS_DEVICE_DAILY_LOOP_READY                                    | Phase 4A ready；KenosNotifications/Handoff；simulator Watch build                                                          | Watch 不拥有 canonical truth；Approvals read-only；mock APNs only                     | 移除 Watch/Widget/新 packages                   | production Team/App Group/APNs；Executor；Phase 5；App Store                     |
+| Phase 5 Focus / contextual intelligence | 无 FocusContext；Nav IA 四入口已对齐                        | System-owned FocusContext + Interruption/Deferred/Suggestions + Training/Deep Work local slices | PARTIAL_PASS_CONTEXTUAL_INTELLIGENCE_READY_WITH_PRODUCTION_GATES | TEMPORARY_APPROVED_FOR_PHASE_5_FOCUS_FOUNDATION；contracts + AIOS/Apple Focus UI；phase5 guard                             | Domain sessions EntityRef only；no production Executor/APNs；Watch Focus glance local | 移除 Focus stores/UI；contracts additive 可保留 | production notifications；Apple Focus entitlements；Executor；writer cutover     |
+| Phase 6 production Wave 1               | Hosted 无 `kenos_*`；Task direct write 仍开                 | Additive hosted schema/RLS/read RPC package + approval packet                                   | STAGE_A_APPROVAL_PACKET_READY                                    | env/writer matrices；schema diff；Wave 1 review SQL index；Focus review SQL；backup template；dual-user plan；phase6 guard | **No hosted apply**；revoke/cutover/Portal/Apple dist 另批批准                        | 撤回 Stage A docs/SQL drafts；不触生产          | `APPROVE_KENOS_PRODUCTION_WAVE_1`                                                |
+| Knowledge → Library                     | Vault + KnowledgeOS                                         | Library Space/API                                                                               | PROPOSED                                                         | Library/Memory 边界                                                                                                        | Vault 仍唯一正文 writer                                                               | 旧壳继续                                        | 新客户端能编辑/恢复/深链                                                         |
+| Fitness → Training                      | Fitness app/schema                                          | Training Space/domain                                                                           | PROPOSED                                                         | domain ID freeze                                                                                                           | 不先改存储                                                                            | 文案回退                                        | 行为与历史数据 parity                                                            |
+| Finance → Money                         | Finance app/schema                                          | Money Space/domain                                                                              | PROPOSED                                                         | domain ID freeze                                                                                                           | 不先改存储                                                                            | 文案回退                                        | 报表/导入/购买历史 parity                                                        |
+| HealthOS → Health                       | local JSON/HealthKit/Tauri                                  | Health domain + Kenos clients                                                                   | PROPOSED                                                         | OPEN-001                                                                                                                   | HealthKit/本地数据 writer 冻结后切                                                    | 旧 companion/Tauri                              | 真机、离线、隐私与恢复通过                                                       |
+| Apple unified client                    | 多壳                                                        | Kenos 3 targets                                                                                 | PROPOSED                                                         | Phase 1 contracts                                                                                                          | 按 capability 切                                                                      | 旧壳继续                                        | 每个旧壳单独退役                                                                 |
 
 ## 3. Platform contract ledger
 
-| Slice | 旧机制 | 新机制 | 状态 | 首批 producer | 首批 consumer | 兼容删除条件 |
-| --- | --- | --- | --- | --- | --- | --- |
-| EntityRef v1 | wikilink/URL/私有 ID | stable ref + owner/security/classification | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan | Work/Assistant | 所有试点不再解析私有 URL |
-| ActionRequest v1 | MCP/前端直接调用各自写入 | Policy → domain executor | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Assistant | Plan | 旧直接写工具无调用 |
-| Activity v1 | 分散 toast/log | 用户可读 Activity + audit | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan executor | Assistant/System | 关键动作 100% 有 Activity |
-| Approval v1 | 各 UI 自有确认 | Platform/System-owned payload-bound Approval record | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | Assistant read adapter | 未接入的未来 Executor | review-only SQL 通过 production review、读流量观察、R3/R4 旧确认流无调用 |
-| Capture v1 | app/插件各自保存 | durable capture inbox + routing | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Web Lens/iPhone | Library/Plan | 旧 capture 无写入 |
-| Mutation/Outbox v1 | `life_events` 现有 envelope | version/idempotency/correlation/dead-letter | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan | Activity/Assistant | 老 envelope 消费者升级 |
-| Connector v1 | MCP 配置/错误分散 | lifecycle/scopes/domain/health | PROPOSED | MCP fleet | System | 旧 health 配置无读取 |
+| Slice              | 旧机制                      | 新机制                                              | 状态                                    | 首批 producer          | 首批 consumer         | 兼容删除条件                                                             |
+| ------------------ | --------------------------- | --------------------------------------------------- | --------------------------------------- | ---------------------- | --------------------- | ------------------------------------------------------------------------ |
+| EntityRef v1       | wikilink/URL/私有 ID        | stable ref + owner/security/classification          | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan                   | Work/Assistant        | 所有试点不再解析私有 URL                                                 |
+| ActionRequest v1   | MCP/前端直接调用各自写入    | Policy → domain executor                            | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Assistant              | Plan                  | 旧直接写工具无调用                                                       |
+| Activity v1        | 分散 toast/log              | 用户可读 Activity + audit                           | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan executor          | Assistant/System      | 关键动作 100% 有 Activity                                                |
+| Approval v1        | 各 UI 自有确认              | Platform/System-owned payload-bound Approval record | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY   | Assistant read adapter | 未接入的未来 Executor | review-only SQL 通过 production review、读流量观察、R3/R4 旧确认流无调用 |
+| Capture v1         | app/插件各自保存            | durable capture inbox + routing                     | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Web Lens/iPhone        | Library/Plan          | 旧 capture 无写入                                                        |
+| Mutation/Outbox v1 | `life_events` 现有 envelope | version/idempotency/correlation/dead-letter         | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan                   | Activity/Assistant    | 老 envelope 消费者升级                                                   |
+| Connector v1       | MCP 配置/错误分散           | lifecycle/scopes/domain/health                      | PROPOSED                                | MCP fleet              | System                | 旧 health 配置无读取                                                     |
 
 ## 4. Web platform convergence ledger
 
-| Slice | 当前 | 目标 | 状态 | Keep local | 删除条件 |
-| --- | --- | --- | --- | --- | --- |
-| Planner AppShell | 自有外层 shell | `LifeOsAppShell` | PROPOSED | Planner nav/content/domain overlays | shell spec + PWA + real-use 通过 |
-| Finance AppShell | 自有外层 shell | `LifeOsAppShell` 或有证据 keep | PROPOSED | Finance IA/业务布局 | 先做 concern map，再决定 |
-| Portal shell | 自有 Portal | 不迁；随 Portal 退役 | PROPOSED | 仅迁移期修复 | Portal 删除 |
-| Appearance settings | Planner/Fitness/Finance/Home 有重复组合 | shared behavior/pattern | PROPOSED | i18n/store adapter | 2+ 不同 app 采用且 API 稳定 |
-| Music settings | 部分共享 | 通用项共享、视觉 theme/variant | PROPOSED | 音乐领域设置和沉浸内容 | 无普通 toggle/segment fork |
-| System states | app-local error/offline | Action/Capture/System shared patterns | PROPOSED | 领域错误解释 | 三真实场景通过 |
+| Slice               | 当前                                    | 目标                                  | 状态     | Keep local                          | 删除条件                         |
+| ------------------- | --------------------------------------- | ------------------------------------- | -------- | ----------------------------------- | -------------------------------- |
+| Planner AppShell    | 自有外层 shell                          | `LifeOsAppShell`                      | PROPOSED | Planner nav/content/domain overlays | shell spec + PWA + real-use 通过 |
+| Finance AppShell    | 自有外层 shell                          | `LifeOsAppShell` 或有证据 keep        | PROPOSED | Finance IA/业务布局                 | 先做 concern map，再决定         |
+| Portal shell        | 自有 Portal                             | 不迁；随 Portal 退役                  | PROPOSED | 仅迁移期修复                        | Portal 删除                      |
+| Appearance settings | Planner/Fitness/Finance/Home 有重复组合 | shared behavior/pattern               | PROPOSED | i18n/store adapter                  | 2+ 不同 app 采用且 API 稳定      |
+| Music settings      | 部分共享                                | 通用项共享、视觉 theme/variant        | PROPOSED | 音乐领域设置和沉浸内容              | 无普通 toggle/segment fork       |
+| System states       | app-local error/offline                 | Action/Capture/System shared patterns | PROPOSED | 领域错误解释                        | 三真实场景通过                   |
 
 ## 5. Portal retirement ledger
 
-| Capability | Portal 当前实现 | 目标 Owner/UI | 状态 | 验收 |
-| --- | --- | --- | --- | --- |
-| Today summary | Portal RPC/cards | Assistant Today read model | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | 复用现有只读 `portal_today_summary`；保留 Owner/source/freshness/deep link |
-| App launcher | Portal cards/switcher | Kenos Spaces/global nav | LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER | Assistant 可达所有现役 Space；Portal 仅增加默认 Off 的实验入口 |
-| Default app | Portal setting | Kenos default intent/route | PROPOSED | 登录/深链/通知入口一致 |
-| Badges/events | Portal cards | Today/Inbox | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | Inbox 只读 `life_events` pending 与 `planner_tasks` EntityRef projection；无写入 |
-| Approval queue | review-only `kenos_action_approvals` + RPC artifact（未生产 apply） | Assistant Approvals | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | canonical v1/corpus/Swift + disposable dual-user RLS/privilege + real RPC read adapter；无 Executor/写入 |
-| Activity feed | `life_events` 兼容 event 来源 | Assistant Activity | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | 只读、去重、截断、敏感字段 redaction；不宣称是 Phase 1 canonical Activity table |
-| Settings | Portal embedded settings | System/Appearance | PROPOSED | 用户偏好迁移、旧写入冻结 |
-| PWA install | Portal flow | Kenos native/Web install strategy | PROPOSED | 决定保留/取消 |
-| `portal.kenos.space` | live domain | Assistant Today redirect | PROPOSED | TLS、auth、deep link、analytics/traffic observation |
+| Capability           | Portal 当前实现                                                     | 目标 Owner/UI                     | 状态                                         | 验收                                                                                                     |
+| -------------------- | ------------------------------------------------------------------- | --------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Today summary        | Portal RPC/cards                                                    | Assistant Today read model        | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY        | 复用现有只读 `portal_today_summary`；保留 Owner/source/freshness/deep link                               |
+| App launcher         | Portal cards/switcher                                               | Kenos Spaces/global nav           | LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER | Assistant 可达所有现役 Space；Portal 仅增加默认 Off 的实验入口                                           |
+| Default app          | Portal setting                                                      | Kenos default intent/route        | PROPOSED                                     | 登录/深链/通知入口一致                                                                                   |
+| Badges/events        | Portal cards                                                        | Today/Inbox                       | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY        | Inbox 只读 `life_events` pending 与 `planner_tasks` EntityRef projection；无写入                         |
+| Approval queue       | review-only `kenos_action_approvals` + RPC artifact（未生产 apply） | Assistant Approvals               | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY        | canonical v1/corpus/Swift + disposable dual-user RLS/privilege + real RPC read adapter；无 Executor/写入 |
+| Activity feed        | `life_events` 兼容 event 来源                                       | Assistant Activity                | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY        | 只读、去重、截断、敏感字段 redaction；不宣称是 Phase 1 canonical Activity table                          |
+| Settings             | Portal embedded settings                                            | System/Appearance                 | PROPOSED                                     | 用户偏好迁移、旧写入冻结                                                                                 |
+| PWA install          | Portal flow                                                         | Kenos native/Web install strategy | PROPOSED                                     | 决定保留/取消                                                                                            |
+| `portal.kenos.space` | live domain                                                         | Assistant Today redirect          | PROPOSED                                     | TLS、auth、deep link、analytics/traffic observation                                                      |
 
 ## 6. Native shell retirement ledger
 
-| Legacy surface | 能力 | New surface | 状态 | Writer cutover | Retirement evidence |
-| --- | --- | --- | --- | --- | --- |
-| AIOS Tauri | Chat/Assistant | Kenos Mac Assistant | PROPOSED | conversations/actions 单独切 | 日用、local AI、恢复通过 |
-| AIOS Tauri | Runtime controls | Kenos Mac System | PROPOSED | Runtime API 冻结 | jobs/status/pause/errors parity |
-| KnowledgeOS Tauri | Vault/Library | Kenos Mac Library | PROPOSED | Vault writer 只能一个 | edit/index/search/recovery parity |
-| HealthOS Tauri | Health/Focus | Kenos Mac Health/System | PROPOSED | local event writer 冻结 | 趋势、Focus、导出 parity |
-| Health companion | HealthKit/Watch | Kenos iOS/watchOS | PROPOSED | HealthKit source identifiers 映射 | 真机连续交付 + offline sync |
-| Music Capacitor | playback/now playing | Kenos iOS/Mac/Watch Music | PROPOSED | playback session 只一个 owner | background/remote controls parity |
+| Legacy surface    | 能力                 | New surface               | 状态     | Writer cutover                    | Retirement evidence               |
+| ----------------- | -------------------- | ------------------------- | -------- | --------------------------------- | --------------------------------- |
+| AIOS Tauri        | Chat/Assistant       | Kenos Mac Assistant       | PROPOSED | conversations/actions 单独切      | 日用、local AI、恢复通过          |
+| AIOS Tauri        | Runtime controls     | Kenos Mac System          | PROPOSED | Runtime API 冻结                  | jobs/status/pause/errors parity   |
+| KnowledgeOS Tauri | Vault/Library        | Kenos Mac Library         | PROPOSED | Vault writer 只能一个             | edit/index/search/recovery parity |
+| HealthOS Tauri    | Health/Focus         | Kenos Mac Health/System   | PROPOSED | local event writer 冻结           | 趋势、Focus、导出 parity          |
+| Health companion  | HealthKit/Watch      | Kenos iOS/watchOS         | PROPOSED | HealthKit source identifiers 映射 | 真机连续交付 + offline sync       |
+| Music Capacitor   | playback/now playing | Kenos iOS/Mac/Watch Music | PROPOSED | playback session 只一个 owner     | background/remote controls parity |
 
 ## 7. 每个 slice 必填记录
 
@@ -227,3 +227,24 @@ PROPOSED
 - Compatibility: Health companion watch remains separate. Widget may build without host embed while App Group/signing gates remain open.
 - Rollback: remove Watch/Widget targets and new packages; retain Phase 4A. No production data rollback.
 - Validation: Swift Notifications/Handoff tests; `xcodebuild` KenosWatch/KenosIOS/KenosMac tests; `node scripts/check-kenos-phase4b.mjs`; Phase 1–4 guards.
+
+## Space Continuity (Web) — FUNCTIONALLY CLOSED
+
+- Status: **FUNCTIONALLY CLOSED** (2026-07-20). Continuity **behavior is frozen**.
+- Canonical E2E run: `continuity-e2e-2026-07-20T20-12-22-998Z` under `docs/qa/evidence/kenos-space-continuity-2026-07-20/e2e-flows/`.
+- Preserve (do not rename / do not regress assertions without Owner):
+  - E2E testids: `kenos-space-switcher`, `kenos-space-switcher-fab`, `kenos-space-switcher-trigger`, `kenos-space-switcher-sidebar`
+  - Resume descriptor schema, owner binding, deep-link / `kenosResume` params
+  - Planner / Fitness data paths used by Continue launch
+- Non-scope for Continuity freeze: Owner Review sheet; P5 visual knives 3–5; production cutover.
+
+## P5 Knife 2 — Continue overlay hierarchy — PASSED
+
+- Status: **PASSED** (2026-07-20). Visual Quality overall remains **IN_PROGRESS**.
+- Canonical chrome result: **Direction A**
+  - Mobile `<600`: bottom sheet
+  - Tablet `600–899`: form sheet
+  - Desktop `≥900`: **anchored** panel to Continue trigger
+- Superseded: early Knife 2 pass that used a **centered** desktop command panel (~460px). Evidence marked under `docs/qa/evidence/kenos-uiux-rescue/p5-knife2-sheet-hierarchy/SUPERSEDED-EARLY-PASS.md`.
+- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife2-sheet-hierarchy/` (`manifest-r2.json`).
+- Owner Review: **NOT OPEN**. Next visual knife: iPad adaptive material (Knife 3).

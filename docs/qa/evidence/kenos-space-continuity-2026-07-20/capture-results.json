@@ -1,0 +1,44 @@
+{
+  "planner-toolbar-continue": {
+    "ok": true,
+    "continueVisible": false,
+    "continueCount": 1,
+    "url": "http://127.0.0.1:5188/upcoming",
+    "snippet": "PLANNER | OS | 阳光清单，轻松规划 |  | 智能清单 |  | 今天 | 收件箱 | 快速处理 | 即将 | 已完成 |  | 浏览 |  | 项目 | 洞察 | 日历 | 搜索 |  | 清单 |  | 工作 | 生活 | 添加任务 | 设置 | 即将 | 未来 7 天 4 | 季度发布彩排 |  | 7月22日 · 未排程 |  | Q3 发布计划 | 灰度发布 Finance |  | 7月25日 · 未排程 |  | Q3 发布计划 | 预约牙医 |  | 7月23日 · 未排程 |  | 系统设计 第 4 章 |  | 7月24日 · 未排程 |  | 学习：系统设计 | 更晚 2 | 季度复盘会 |  | 7月31日 · 未排程 |  | Q3 发布计划 | 整理旧家具清单 |  | 7月28日 · 未排程 |  | 搬家与整理"
+  },
+  "fitness-home-continue": {
+    "ok": true,
+    "continueVisible": true,
+    "continueCount": 1,
+    "url": "http://127.0.0.1:5174/",
+    "snippet": "跳到主内容 | FITNESS | OS | 今日 | Continue |  | 7月20日星期一 |  | 胸 |  | 胸 · 前束 · 三头协同 |  | 上次 胸 · 今天 · 本周 4 次 · 累计 13 次 · 详细统计 | 胸 | ≈ 38 min | 减载 |  已连续训练 12 次，建议安排一次减载（组数减半）。建议组数减半，每组留 3 以上 RIR。 我已减载完成 | 教练 | 基于你的训练记录 | 减载提醒 | 已连续训练 12 次，建议安排一次减载（组数减半）。建议组数减半，每组留 3 以上 RIR，优先保证动作质量。 | 训练尚未完成 | 今天 胸 已完成 7/13 组（54%），点击下方继续。 | 减载配重 | 杠铃卧"
+  },
+  "fitness-active-minimal-continue": {
+    "ok": true,
+    "continueVisible": true,
+    "continueCount": 1,
+    "url": "http://127.0.0.1:5174/day/chest/focus?kenosEx=c_fly&kenosSet=2",
+    "snippet": "跳到主内容 | 4/4 | · | 0:03 | 绳索夹胸 | 3 × 12–15 | 1 RIR | 休息 1:15 | 40 ↓降重 | LBS | 大臂主导，肘微屈固定 | 顶峰挤压，离心充分拉伸 |  处于减载期，建议重量降 10% 优先恢复动作质量 | 采纳 | 0/3 组 · 还剩 3 组 | 完成第 1 组 | 上一个 | 跳过 | 下一个 | 已自动补记 12 次未完成的训练 | ×"
+  },
+  "desktop-continue": {
+    "ok": true,
+    "continueVisible": true,
+    "continueCount": 1,
+    "url": "http://127.0.0.1:5291/?kenosDemo=1",
+    "snippet": "Continue |  | 续接最近工作，保留内部状态。浏览全部领域请用 Spaces。 |  | RECENT | Training | Cable fly · Set 2 of 4 | 12 分钟前 | Work | 项目与交付 | 4 天前 | Knowledge | Notes · 最近打开 | 3 天前 | Music | Library · 继续播放 | 5 小时前 | ALL SPACES | 展开 | SYSTEM | Today | 返回系统层 | Today | Capture | Continue | 跳到主要内容 |  | 7月20日星期一 |  | Today |  | 真正重要的事先处理。其余退到 Inbox 与各 Space。 |  | 刷新 |  | 已更新 "
+  },
+  "desktop-continue-wide": {
+    "ok": true,
+    "continueVisible": false,
+    "continueCount": 1,
+    "url": "http://127.0.0.1:5291/?kenosDemo=1",
+    "snippet": "跳到主要内容 | Kenos | Today | Assistant | Spaces | Inbox |  | RECENT |  | All | Training | Work | Knowledge | Music |  | Assistant 协调动作；数据仍由各 Space 拥有。 |  | 历史 | 设置 |  | 7月20日星期一 |  | Today |  | 真正重要的事先处理。其余退到 Inbox 与各 Space。 |  | 刷新 |  | 已更新 · 11:52 |  | 已更新 |  | 现在 |  | 真正重要的事 | 问 Assistant | 需要处理 | 1 项任务已逾期 | 另有 4 项今天到期 | 打开 Plan |  | 需要你 |  | 等待处理 | 打开 Inbox | Inbox | 2 | "
+  },
+  "kenos-continue-handoff-sheet": {
+    "ok": true,
+    "continueVisible": true,
+    "continueCount": 1,
+    "url": "http://127.0.0.1:5291/?kenosDemo=1&openContinue=1",
+    "snippet": "Today | Capture | Continue | 跳到主要内容 |  | 7月20日星期一 |  | Today |  | 真正重要的事先处理。其余退到 Inbox 与各 Space。 |  | 刷新 |  | 已更新 · 11:52 |  | 已更新 |  | 现在 |  | 真正重要的事 | 问 Assistant | 需要处理 | 1 项任务已逾期 | 另有 4 项今天到期 | 打开 Plan |  | 需要你 |  | 等待处理 | 打开 Inbox | Inbox | 2 | 待归位 2 · 待批准 1 · 需关注 1 |  | SPACES |  | Work | 全部 Spaces |  | Work 正在准备中 | 你目前仍可以通过 Plan 管理相关任务。 |  | 状态 |  | 来自 Spaces"
+  }
+}

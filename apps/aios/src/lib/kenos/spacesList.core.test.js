@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { KENOS_SPACES } from './controlCenter.core.js'
 import {
   HOSTED_SPACES,
   assignUniqueListKeys,
+  buildLegacyExternalSpaces,
   buildSpacesList,
   spaceListKey,
 } from './spacesList.core.js'
@@ -11,8 +11,22 @@ import {
 describe('spacesList.core', () => {
   it('namespaces listKeys so same id/displayName from different sources stay unique', () => {
     const list = buildSpacesList({
-      hosted: [{ id: 'training', label: 'Training', detail: 'hosted', href: '/spaces/training' }],
-      external: [{ id: 'training', label: 'Training', detail: 'external', href: 'https://fitness.kenos.space' }],
+      hosted: [
+        {
+          id: 'training',
+          label: 'Training',
+          detail: 'hosted',
+          href: '/spaces/training',
+        },
+      ],
+      external: [
+        {
+          id: 'training',
+          label: 'Training',
+          detail: 'external',
+          href: 'https://fitness.kenos.space',
+        },
+      ],
       warn() {},
     })
     const keys = list.map((s) => s.listKey)
@@ -22,21 +36,29 @@ describe('spacesList.core', () => {
     assert.equal(list[1].label, 'Training')
   })
 
-  it('keeps both hosted Training Focus and external Fitness Training', () => {
+  it('default list uses domain deep links (no empty bridge hop)', () => {
     const list = buildSpacesList({ warn() {} })
     const trainings = list.filter((s) => s.id === 'training')
-    assert.equal(trainings.length, 2)
+    assert.equal(trainings.length, 1)
     assert.equal(trainings[0].listKey, 'hosted:training')
     assert.equal(trainings[0].external, false)
-    assert.equal(trainings[0].href, '/spaces/training')
-    assert.equal(trainings[1].listKey, 'external:training')
-    assert.equal(trainings[1].external, true)
-    assert.match(trainings[1].href, /fitness\.kenos\.space/)
+    assert.match(trainings[0].href, /^https:\/\/fitness\.kenos\.space/)
+    const plan = list.find((s) => s.listKey === 'hosted:plan')
+    assert.ok(plan)
+    assert.match(plan.href, /\/upcoming$/)
+    assert.ok(list.some((s) => s.listKey === 'hosted:money'))
   })
 
-  it('list length equals hosted + KENOS_SPACES length', () => {
+  it('list length equals HOSTED_SPACES length by default', () => {
     const list = buildSpacesList({ warn() {} })
-    assert.equal(list.length, HOSTED_SPACES.length + KENOS_SPACES.length)
+    assert.equal(list.length, HOSTED_SPACES.length)
+  })
+
+  it('can still build legacy external rows when requested', () => {
+    const external = buildLegacyExternalSpaces()
+    const list = buildSpacesList({ external, warn() {} })
+    assert.equal(list.length, HOSTED_SPACES.length + external.length)
+    assert.ok(list.some((s) => s.listKey === 'external:plan'))
   })
 
   it('spaceListKey builds stable namespaced keys', () => {

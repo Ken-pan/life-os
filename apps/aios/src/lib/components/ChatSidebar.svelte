@@ -6,9 +6,9 @@
   import { C, startNewChat, selectConversation, deleteConversation } from '$lib/chat.svelte.js'
   import { AG, openAgent, closeAgent } from '$lib/agents.svelte.js'
   import { isSystemNavActive, systemNavItems, SYSTEM_NAV_HREFS } from '$lib/kenos/systemNav.js'
-  import { KENOS_SPACES } from '$lib/kenos/controlCenter.core.js'
+  import { TODAY_SPACE_SHORTCUTS, spaceListKey } from '$lib/kenos/spacesList.core.js'
   import { clearAssistantContext } from '$lib/kenos/assistantContext.svelte.js'
-  import { SPACE_SWITCHER } from '$lib/kenos/spaceSwitcher.svelte.js'
+  import { SPACE_SWITCHER, launchSpace } from '$lib/kenos/spaceSwitcher.svelte.js'
 
   let { onCapture = undefined, onSpaceSwitcher = undefined } = $props()
 
@@ -17,12 +17,22 @@
   const recentSpaces = $derived.by(() => {
     const fromStore = SPACE_SWITCHER.sections.find((s) => s.id === 'recent')?.items ?? []
     if (fromStore.length) return fromStore
-    return KENOS_SPACES.slice(0, 3).map((space) => ({
+    return TODAY_SPACE_SHORTCUTS.slice(0, 3).map((space) => ({
       ...space,
-      listKey: `external:${space.id}`,
-      external: true,
+      listKey: spaceListKey('hosted', space.id),
+      external: false,
+      namespace: 'hosted',
     }))
   })
+
+  /**
+   * @param {import('$lib/kenos/spaceSwitcher.core.js').SpaceEntry} space
+   * @param {MouseEvent} event
+   */
+  function onRecentSpace(space, event) {
+    event.preventDefault()
+    launchSpace(space, { goto })
+  }
 
   let query = $state('')
   const filtered = $derived.by(() => {
@@ -71,12 +81,12 @@
       <button
         type="button"
         class="icon-btn"
-        title="Space switcher"
-        aria-label="Open Space switcher"
+        title="Continue"
+        aria-label="Continue to a recent Space"
         data-testid="kenos-space-switcher-sidebar"
-        onclick={() => onSpaceSwitcher?.()}
+        onclick={(e) => onSpaceSwitcher?.(e)}
       >
-        <Icon name="globe" size={18} strokeWidth={1.75} />
+        <Icon name="history" size={18} strokeWidth={1.75} />
       </button>
       <button
         type="button"
@@ -118,18 +128,17 @@
     <div class="recent-spaces" aria-label="Recent spaces">
       <div class="recent-head">
         <p class="recent-label">Recent</p>
-        <button type="button" class="recent-all" onclick={() => onSpaceSwitcher?.()}>
+        <button type="button" class="recent-all" onclick={(e) => onSpaceSwitcher?.(e)}>
           All
         </button>
       </div>
       {#each recentSpaces as space (space.listKey || space.id)}
-        {#if space.external}
-          <a class="recent-link" href={space.href} target="_blank" rel="noopener noreferrer"
-            >{space.label}</a
-          >
-        {:else}
-          <a class="recent-link" href={space.href}>{space.label}</a>
-        {/if}
+        <a
+          class="recent-link"
+          href={space.href}
+          onclick={(e) => onRecentSpace(space, e)}
+          >{space.label}</a
+        >
       {/each}
     </div>
   {/if}
@@ -277,8 +286,8 @@
   .brand-word {
     font-family: var(--font-brand, var(--font));
     font-weight: 700;
-    font-size: 15px;
-    letter-spacing: 0.04em;
+    font-size: 16px;
+    letter-spacing: 0.02em;
     color: var(--sidebar-foreground);
   }
   .icon-btn {
@@ -306,11 +315,12 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    min-height: 36px;
-    padding: 0 10px;
+    min-height: 40px;
+    padding: 0 12px;
     border-radius: 8px;
     color: var(--sidebar-muted);
-    font-size: var(--text-md);
+    font-size: 14px;
+    font-weight: 550;
     text-decoration: none;
   }
   .workspace-nav-item:hover,
