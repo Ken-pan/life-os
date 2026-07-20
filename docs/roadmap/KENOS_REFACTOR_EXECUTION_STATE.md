@@ -639,3 +639,11 @@ Approved temporary defaults now on file:
 - Flag `VITE_KENOS_PROD_READ_TRAINING` default Off
 - Report: `docs/qa/kenos-fitness-training-space-read-canary.md`
 - sync `landingOrigin` optional; production Portal redirect unchanged
+
+## AIOS Training read bake + Money foundation (2026-07-20)
+
+- Prod AIOS `6a5dba53d91a56765935b987` @ `44d64b5ef…` (Training read On; Approval decide Owner-limited)
+- Rollback chain: `6a5db8d3…` → `6a5dabd7…`
+- Money read module ready; flag Off until next bake
+- Apple KenosContracts `swift test` PASS; device evidence Owner-gated
+

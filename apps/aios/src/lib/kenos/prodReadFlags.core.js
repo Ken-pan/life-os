@@ -63,6 +63,16 @@ export function isProdTrainingReadEnabled(env = import.meta.env) {
 }
 
 /**
+ * Money Space production read from portal_today_summary.finance.
+ * Default Off.
+ * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
+ */
+export function isProdMoneyReadEnabled(env = import.meta.env) {
+  if (isProdReadCanaryMode(env)) return env?.VITE_KENOS_PROD_READ_MONEY !== '0'
+  return env?.VITE_KENOS_PROD_READ_MONEY === '1'
+}
+
+/**
  * When On, Today may attach Kenos Work/Focus capability chips from production reads.
  * Default Off — Today remains legacy portal_today_summary + local Work foundation.
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
@@ -93,6 +103,7 @@ export function prodReadFlagSnapshot(env = import.meta.env) {
     focusSuggestions: isProdFocusSuggestionsReadEnabled(env),
     work: isProdWorkReadEnabled(env),
     training: isProdTrainingReadEnabled(env),
+    money: isProdMoneyReadEnabled(env),
     todayOverlay: isProdTodayKenosOverlayEnabled(env),
     shadow: isProdShadowCompareEnabled(env),
     planCommandWrite: false,
