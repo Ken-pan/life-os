@@ -6,7 +6,7 @@
 | Field | Value |
 |---|---|
 | Starting SHA | `435f12e0efefd1027cb7efeb94cfa36a9b6978a6` |
-| Final SHA | *(see git after UIUX commits)* |
+| Final SHA | `0d7c9bae9887960937292a90e2b9f91c5079a00b` |
 | Baseline score | 38 (auth wall) → 76 after local demo seed |
 | Final score | **91/100** |
 | Production deploy | **NOT performed** |
