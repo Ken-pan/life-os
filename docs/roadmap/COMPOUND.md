@@ -1,16 +1,16 @@
 ---
 title: Life OS 复利判据
 owner: kenpan
-last_verified: 2026-07-17
+last_verified: 2026-07-18-endstate
 doc_role: decision-framework
 review_cadence: monthly
 ---
 
 # 复利判据（使用 × 开发 × 决策）
 
-> **用途：** 回答「这件事做完之后，明天会不会更值、以后会不会更便宜？」  
-> **排期真源仍是** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)；本文只提供取舍透镜。  
-> **ROI 排序证据** → [`POTENTIAL.md`](./POTENTIAL.md)  
+> **用途：** 回答「这件事做完之后，明天会不会更值、以后会不会更便宜？」
+> **排期真源仍是** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)；本文只提供取舍透镜。
+> **ROI 排序证据** → [`POTENTIAL.md`](./POTENTIAL.md)
 > **用量 / 利用率** → [`USAGE_AUDIT.md`](./USAGE_AUDIT.md)
 
 ## 一句话
@@ -54,6 +54,7 @@ review_cadence: monthly
   → 每日真源（Knowledge watcher · Home 安静扫描记忆）
   → 跨 OS 消费（MCP / life_events / object_ref）
   → AIOS 当推理内核（先护栏，再扩工具）
+  （停手条件写在 apps/* §终局；排期仍过下方四问）
 
 开发侧（成本曲线往下弯）
   CI 绿 → contracts/events → AppManifest 生成器 → DS catalog → E2E 护栏
@@ -77,9 +78,9 @@ review_cadence: monthly
 
 ## 入 Now 前四问
 
-1. **使用：** 完成后，哪一个每日触点会明显变好？若答不上来，多半是线性功能。  
-2. **开发：** 完成后，下一次同类工作是否更短、更不易回归？若只会加表面积，后移。  
-3. **完整：** 远程 / 工作区 / CI 是否有漂移？有则先闭环真源，再叠功能。  
+1. **使用：** 完成后，哪一个每日触点会明显变好？若答不上来，多半是线性功能。
+2. **开发：** 完成后，下一次同类工作是否更短、更不易回归？若只会加表面积，后移。
+3. **完整：** 远程 / 工作区 / CI 是否有漂移？有则先闭环真源，再叠功能。
 4. **用量：** 相关功能最近是否真被用过？未知则先记入 [`USAGE_AUDIT.md`](./USAGE_AUDIT.md) 缺口，争议大时先跑盘点再开干。
 
 与 hub §Not doing、[`BACKLOG.md`](./BACKLOG.md) 提取矩阵互补；冲突时以 hub 为准。

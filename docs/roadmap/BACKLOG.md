@@ -90,53 +90,52 @@ Svelte + Finance React       → theme/brand 数据 + 各栈薄壳；或 ui-reac
 
 ---
 
-## Growth 候选（2026-07-08 调研入库）
+## Growth 候选（历史入库 · 多数已发）
 
-Hub §Next 已排期。细节与外部对标 → [`GROWTH.md`](./GROWTH.md)。
+> **真源：** hub §Now / §Shipped · [`POTENTIAL.md`](./POTENTIAL.md)。下表只留档，**勿当待办。**
 
-| ID      | 主题                              | ROI | 投入   | 依赖                       |
-| ------- | --------------------------------- | --- | ------ | -------------------------- |
-| PORT.GROWTH.1    | Portal 继续 → DB `last_opened_at` | 🔥  | 0.5–1d | INTG.EVENTS.1 DB                    |
-| PORT.GROWTH.3    | `default_app` 跳转                | 🔥  | 0.5d   | INTG.EVENTS.1 DB                    |
-| PORT.GROWTH.2    | 待办 / 事件角标                   | ◆   | 1–2d   | INTG.IDENTITY.0 SSO                   |
-| MUSC.CORE.1    | Music `play_events` + reasons     | ◆   | 1–1.5d | —                          |
-| FINC.GROWTH.1    | Finance 扩展同步反馈              | ◆   | 1–2d   | —                          |
-| PORT.GROWTH.5    | PWA 安装引导（六站含 Home）       | ○   | 1–2d   | —                          |
-| HOME.PORTAL.1    | Portal Home 实验卡                | ✅  | —      | `PORTAL_APPS` 实验区       |
-| HOME.SSO.2    | Home `coreIdentity` + SSO         | ✅  | —      | `createLifeOsAuth('home')` |
-| HOME.SSO.3    | Home redirect + DB `home`         | ✅  | HOME.SSO.2   | migration `20260708180000` |
-| PORT.GROWTH.4    | 今日摘要卡片                      | ✅  | —      | migration `20260708190000` |
-| INTG.EVENTS.1b | Fitness → Planner 事件            | ○   | 3–5d   | 产品规则                   |
+| ID      | 主题                              | 状态 |
+| ------- | --------------------------------- | --- |
+| ~~PORT.GROWTH.1~~    | Portal 继续 → DB `last_opened_at` | ✅ |
+| ~~PORT.GROWTH.3~~    | `default_app` 跳转                | ✅ |
+| ~~PORT.GROWTH.2~~    | 待办 / 事件角标                   | ✅ |
+| ~~MUSC.CORE.1~~    | Music `play_events` + reasons     | ✅ |
+| ~~FINC.GROWTH.1~~    | Finance 扩展同步反馈              | ✅ |
+| ~~PORT.GROWTH.5~~    | PWA 安装引导（六站含 Home）       | ✅ |
+| ~~HOME.PORTAL.1~~    | Portal Home 实验卡                | ✅ |
+| ~~HOME.SSO.2~~    | Home `coreIdentity` + SSO         | ✅ |
+| ~~HOME.SSO.3~~    | Home redirect + DB `home`         | ✅ |
+| ~~PORT.GROWTH.4~~    | 今日摘要卡片                      | ✅ |
+| ~~INTG.EVENTS.1b~~ | Fitness → Planner 事件            | ✅ |
 
-Tier B 历史项中，**HOME.SYNC.4** 与 **HOME.RECOG.0** 已闭环；仍未完成的是 **HOME.PROJ.4 完整可编辑 spatial 项目同步**（后移）。排序以 hub + [`COMPOUND.md`](./COMPOUND.md) 为准。
+Tier B：`HOME.SYNC.4` / `HOME.RECOG.0` 已闭环；**HOME.PROJ.4** 完整可编辑 spatial 项目同步仍后移。
 
 ---
 
-## 推荐执行顺序（与 hub · POTENTIAL 同步）
+## 推荐执行顺序（与 hub · POTENTIAL 同步 · 2026-07-18 Phase 8）
 
 | Phase    | 项                                     | 桶                | ROI |
 | -------- | -------------------------------------- | ----------------- | --- |
-| **0**    | **FINC.CORE.3**                               | Core              | 🔥  |
-| **1**    | PORT.GROWTH.4b-M · MUSC.UI.2 · PLNR.CORE.2                  | Growth/Infra/Core | ◆   |
-| **1b**   | CI 接线（FINC.CORE.0/PLNR.CORE.2 本地 ✅）          | Infra             | ◆   |
-| **3**    | INTG.EVENTS.1b/GYMS.EVENTS.1 · PORT.GROWTH.4b-H                | Growth            | ○   |
-| **按需** | DSGN.CATALOG.7 a11y；各 app §Parked              | Infra/Product     | ○   |
-| **暂缓** | Finance `ui-react` / nav mirror / i18n | Platform          | ✗   |
+| **✅ 1–8** | MCP 舰队 · 深链 · 角标 · DOCS.2 · KnowledgeNoteLinks · **终局 Done when** | Core/Growth/Infra | — |
+| **Ken** | AIOS/Portal 验收 · SCHED/CAPTURE · HLT-5 ·（可选）装 HA→DEVICE.12 | Gate | 🔥 |
+| **Agent** | KNOW.VAULT.0 rebuild 验收 · USAGE 本机探针 | Infra | ◆ |
+| **条件** | object_ref（痛点）· Status 契约（HLT-5 后） | Core | ○ |
+| **暂缓** | IMPORT.5 · 多项目云同步 · INTG.EVENTS.2 | Product | ✗ |
 
-**2026-07-09 已完成：** FINC.CORE.0 · PLNR.CORE.2 · INTG.IDENTITY.0 · PORT.GROWTH.4 · HOME.PORTAL.1/HOME.SSO.2/HOME.SSO.3 · FINC.GROWTH.1 · PORT.GROWTH.2 · MUSC.CORE.1 · AppBrandSwitcher — 见 [`SHIPPED.md`](./SHIPPED.md)。
+历史 Phase 0–3 见 [`SHIPPED.md`](./SHIPPED.md)。终局条款 → [`apps/`](./apps/README.md) §终局。
 
-## 产品候选（2026-07-17 ROI / 闭环复核）
+## 产品候选（2026-07-18 · Phase 8）
 
-Hub §Now/Next 已收录 P0/P1 与高 ROI 项。完整排序 → [`POTENTIAL.md`](./POTENTIAL.md) · [`apps/README.md`](./apps/README.md)。
+Hub：**工程主航道空 / 产品主线 = 验收+真源**。完整排序 → [`POTENTIAL.md`](./POTENTIAL.md) · [`apps/README.md`](./apps/README.md)。
 
 | App     | Top IDs          | 分卷                                   |
 | ------- | ---------------- | -------------------------------------- |
-| Planner | PLNR.UIUX.0；SCHED/CAPTURE 用户 gate（ATTACH.0 ✅） | [`apps/planner.md`](./apps/planner.md) |
-| Fitness | maintenance；GYMS.MEDIA.3 / GYMS.SYNC.4 按需 | [`apps/fitness.md`](./apps/fitness.md) |
-| Finance | FINC.PURCHASE.6.a closure QA | [`apps/finance.md`](./apps/finance.md) |
-| Music   | paused；MUSC.PIPE.4 问题触发 | [`apps/music.md`](./apps/music.md) |
-| Portal  | maintenance；无新增卡片目标 | [`apps/portal.md`](./apps/portal.md) |
-| Home    | HOME.RECOG.1r 窄残余 | [`apps/home.md`](./apps/home.md) |
-| AIOS    | MCP 消费面（where_is 已接） | [`apps/aios.md`](./apps/aios.md) |
-| KnowledgeOS | KNOW.VAULT.0 → XREF/object_ref | [`apps/knowledge.md`](./apps/knowledge.md) |
-| HealthOS | HLT-5 用户真机 gate | [`apps/health.md`](./apps/health.md) |
+| Planner | SCHED/CAPTURE gate | [`apps/planner.md`](./apps/planner.md) |
+| Fitness | maintenance；MCP ✅ | [`apps/fitness.md`](./apps/fitness.md) |
+| Finance | Ken 日用验收；IMPORT.5 ○ | [`apps/finance.md`](./apps/finance.md) |
+| Music   | paused；PIPE.4 问题触发 | [`apps/music.md`](./apps/music.md) |
+| Portal  | maintenance；不硬凑卡 | [`apps/portal.md`](./apps/portal.md) |
+| Home    | DEVICE.12（需 HA）；MCP.13 ✅ | [`apps/home.md`](./apps/home.md) |
+| AIOS    | 日用三问验收；舰队 ✅ | [`apps/aios.md`](./apps/aios.md) |
+| KnowledgeOS | VAULT.0 验收；object_ref 按需 | [`apps/knowledge.md`](./apps/knowledge.md) |
+| HealthOS | HLT-5 gate | [`apps/health.md`](./apps/health.md) |

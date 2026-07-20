@@ -72,11 +72,11 @@ jobs:
 
 ## Credentials model
 
-| Actor | Rights |
-| --- | --- |
-| Local agent / laptop | Read-only inventory via Management API only |
+| Actor                        | Rights                                            |
+| ---------------------------- | ------------------------------------------------- |
+| Local agent / laptop         | Read-only inventory via Management API only       |
 | CI `production-supabase` env | Short-lived token / OIDC; scoped to migration job |
-| Owner | Manual environment approval + phrase gate |
+| Owner                        | Manual environment approval + phrase gate         |
 
 ## Exact production apply commands (manual fallback — only after approval)
 

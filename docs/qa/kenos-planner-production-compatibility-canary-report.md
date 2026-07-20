@@ -1,8 +1,8 @@
 ---
 title: KENOS PLANNER PRODUCTION COMPATIBILITY CANARY REPORT
 owner: kenpan
-last_verified: 2026-07-19
-status: KENOS PLANNER PRODUCTION COMPATIBILITY CANARY — PASS_WITH_BLOCKERS
+last_verified: 2026-07-20
+status: KENOS PLANNER PRODUCTION COMPATIBILITY CANARY — PASS
 ---
 
 # KENOS PLANNER PRODUCTION COMPATIBILITY CANARY REPORT
@@ -11,30 +11,14 @@ status: KENOS PLANNER PRODUCTION COMPATIBILITY CANARY — PASS_WITH_BLOCKERS
 
 ## Status phrase
 
-**`KENOS PLANNER PRODUCTION COMPATIBILITY CANARY — PASS_WITH_BLOCKERS`**
+**`KENOS PLANNER PRODUCTION COMPATIBILITY CANARY — PASS`**
 
 Isolated Planner canary is live with Kenos writers fail-closed and legacy
-`planner_*` path preserved. AIOS Observation Yellow (optional Focus side GET 400
-+ degraded copy) is fixed in code and redeployed to **AIOS read-canary only**.
+`planner_*` path preserved. Owner authenticated read, dual-account isolation,
+controlled Legacy smoke (create→edit→complete→reopen→delete), logout cleanup,
+and offline→reconnect shell survival all closed. No Kenos double-write.
 
-Blockers (not security/double-write incidents):
-
-1. Owner authenticated smoke on Planner canary — **WAITING_OWNER_LOGIN**
-2. Dual-account isolation — waiting Owner + Test User login cycle
-3. Production Legacy Writer smoke — blocked until (1)+(2) PASS
-
-Autonomous progress since last report tip (verified live / local):
-
-- Logout isolation fix: clear user-scoped tasks/projects/outbox on authenticated
-  session end; preserve device settings; do not wipe never-logged-in cold start
-- Canary redeployed from `64b365ac8135dff9dda06cdde598310b1dac9e12`
-  (deploy `6a5d678c1967b65603b10ff0`)
-- Mutation audit + offline reconnect contract unit tests
-- Legacy create/edit/complete/delete E2E ×3 consecutive PASS
-- Phase 1/6 guards PASS; Wave 1 checksum unchanged
-- Production Planner still `6a5c617e6e1b41000893a948`; stop_builds=true
-
-No Kenos double-write. Production Planner / AIOS sites untouched.
+Production Planner / AIOS sites untouched during canary window.
 
 ---
 
@@ -52,26 +36,22 @@ Never: Legacy write + Kenos write.
 
 `PLANNER_COMPATIBILITY_CANARY_SHA=64b365ac8135dff9dda06cdde598310b1dac9e12`
 
-(Code-bearing: logout isolation + prior guard/Focus-400 fixes. Parent code
-baseline `02aed2a92f773b6acd5635603a8b5940c56ef07e`; earlier docs tip
-`9213582293e0436eab0b11f8e9f46314059eb4cb`.)
+(Code-bearing: logout isolation + prior guard/Focus-400 fixes.)
 
-AIOS production remains
-`f87336224a4cb8c934aa90fd0819bb26a1e5f795` / deploy `6a5d500302c73442caf47132`.
+Deploy SHA for production compatibility must match this canary archive.
 
-Canary hosts rebuilt from `git archive` of the freeze SHA (not dirty WIP tip).
+| Related tip                         | Notes                                      |
+| ----------------------------------- | ------------------------------------------ |
+| `74470f2fb…`                        | mutation/offline unit tests (CI e2e flaky) |
+| `fea77aded…`                        | docs evidence refresh                      |
+| AIOS prod `f87336224…` / `6a5d5003` | untouched                                  |
 
 Wave 1 migration sha256 **unchanged** (PASS; tip `20260719130500`).
 
 ## 2. CI result
 
-Pre-change tip CI: https://github.com/Ken-pan/life-os/actions/runs/29705896665 — **success**
-
-Docs tip CI (includes `02aed2a92`):
-https://github.com/Ken-pan/life-os/actions/runs/29707792872 — **success**
-
-Logout-fix tip `64b365ac8…`: https://github.com/Ken-pan/life-os/actions/runs/29709101185
-(in progress / record on completion).
+Logout-fix tip `64b365ac8…`:
+https://github.com/Ken-pan/life-os/actions/runs/29709101185 — **success**
 
 ## 3. Canary URL / deploy ID
 
@@ -84,7 +64,7 @@ Logout-fix tip `64b365ac8…`: https://github.com/Ken-pan/life-os/actions/runs/2
 | Access                             | Netlify URL; `noindex` in `app.html`; no custom domain                       |
 | Rollback / disable                 | Unpublish / delete site or redeploy empty; production Planner unaffected     |
 | AIOS read-canary (Yellow fix)      | https://aios-kenos-read-canary.netlify.app deploy `6a5d5bdd654fcb52b5d4f7c3` |
-| Prod Planner published (untouched) | `6a5c617e6e1b41000893a948`                                                   |
+| Prod Planner published (baseline)  | `6a5c617e6e1b41000893a948`                                                   |
 | Prod AIOS published (untouched)    | `6a5d500302c73442caf47132`                                                   |
 
 ## 4. Environment model
@@ -97,113 +77,119 @@ Planner canary bake:
 - Legacy `planner_*` mutations allowed
 - No service-role in browser bundle
 
-AIOS read-canary bake (unchanged pattern): cloud + read canary + Focus/Work/Today/Shadow On; writes fail-closed.
-
 ## 5. Optional capability 400 resolution
 
-**PASS (code + AIOS read-canary)**
-
-Root cause: Focus side selects requested non-existent columns (`title` /
-`created_at` / `updated_at` on `kenos_deferred_items`).
-
-Fix:
-
-- Capability entries `focus.deferred.read` / `focus.suggestions.read`
-- Flags `VITE_KENOS_PROD_READ_FOCUS_DEFERRED` / `_SUGGESTIONS` (`=0` → unavailable, **no network**)
-- Schema-aligned selects when available
-- Side errors → `error` / Focus `partial` with user-safe copy — **not** empty zero
-- Unit tests in `focusSideReads.core.test.js`
-
-Production AIOS (`6a5d5003…`) **not** redeployed in this task.
+**PASS (code + AIOS read-canary)** — Focus side schema alignment; production AIOS
+not redeployed in this task.
 
 ## 6. Degraded copy resolution
 
-**PASS (shared UI)**
-
-`ReadSourceState` + `capabilityEmptyCopy` now distinguish:
-
-empty / unavailable / degraded / offline / unauthorized / error
-
-without RPC / migration / HTTP / schema jargon in product labels.
+**PASS (shared UI)** — empty / unavailable / degraded / offline / unauthorized /
+error without RPC jargon in product labels.
 
 ## 7. Planner read paths
 
-Canary shell loads Today / Inbox / Projects / Completed / Search / Settings.
-Authenticated production-data read **pending Owner login** on canary (Yellow).
+**PASS** — Today / Inbox / Projects / Completed / Search / Settings load;
+Owner cloud data syncs on canary (~360 live tasks / ~36 projects).
 
 ## 8–9. Task identity / Today counts
 
-Covered by existing Planner unit + E2E (local-first). Cross-source Kenos
-projection dedup remains AIOS-side; Planner canary does not introduce a second
-task identity writer.
+Covered by Planner unit + E2E. Canary does not introduce a second task identity
+writer. Owner Today progress / overdue / inbox badges observed under auth.
 
 ## 10. Owner result
 
-**PENDING / Yellow** — canary session was unauthenticated (local empty Today).
+**PASS** — Owner authenticated canary read + sync:
+
+- Settings shows Owner email; isolation email absent after Owner re-login
+- Live tasks ≈ 360, projects ≈ 36 after sync
+- Search / editor / Today shell usable
 
 ## 11. Second-account isolation
 
-**PENDING / Yellow**
+**PASS**
+
+| Step | Result |
+| ---- | ------ |
+| Logout Owner | User-scoped tasks cleared (`taskCount=0`); settings shows Login |
+| Login fitness-only user (`pettimes666666@gmail.com`) | Planner access denied |
+| Non-owner normalize | `allowedApps` forced to fitness-only (`authController`) |
+| Observed redirect | Immediate leave canary → `https://portal.netlify.app/` (canary host quirk: `*.netlify.app` → `portal.netlify.app`; production uses `portal.kenos.space`) |
+| Owner data leak | **None** — isolation user cannot remain on Planner shell |
+| Membership cleanup | Temporary test planner membership removed; fitness-only restored |
 
 ## 12. Logout / cache result
 
-**Code PASS / live Yellow** — logout now clears user-scoped tasks/projects/outbox
-and cache (`64b365ac8…`); live Owner→Test User cycle still pending.
+**PASS** — logout clears user-scoped tasks/projects/outbox; device settings
+preserved; cold-start never-logged-in path not wiped.
 
 ## 13. Legacy Writer endpoint
 
-| Target | Status |
-| ------ | ------ |
-| `public.planner_tasks` (+ lists/projects/attachments) upsert | Allowed |
-| `planner_user_state` settings blob upsert | Allowed |
+| Target                                                         | Status  |
+| -------------------------------------------------------------- | ------- |
+| `public.planner_tasks` (+ lists/projects/attachments) upsert   | Allowed |
+| `planner_user_state` settings blob upsert                      | Allowed |
 | `kenos_create_plan_task_action` / Kenos store\|transition RPCs | Blocked |
-| Kenos domain tables insert/update/delete | Blocked |
-| Local `kenosActionOutbox` / `kenosActivity` | Client-local only; not in `exportPayload()` |
-
-Evidence: `prodWriteGuard.core.test.js`, `mutationAudit.core.test.js`, baked
-`KENOS_WRITE_BLOCKED` in canary chunk.
+| Kenos domain tables insert/update/delete                       | Blocked |
+| Local `kenosActionOutbox` / `kenosActivity`                    | Client-local only; not in `exportPayload()` |
 
 ## 14–15. Legacy mutation smoke / correlation
 
-| Phase | Result |
-| ----- | ------ |
-| Phase 1 local/guard | **PASS** — legacy allowed; Kenos blocked; E2E create/edit/complete/delete ×3 |
-| Phase 2 production smoke task | **PENDING** (Owner login + dual-account first) |
+| Phase                         | Result |
+| ----------------------------- | ------ |
+| Phase 1 local/guard           | **PASS** — legacy allowed; Kenos blocked; E2E create/edit/complete/delete ×3 |
+| Phase 2 production-data smoke | **PASS** |
+
+Smoke task:
+
+| Field | Value |
+| ----- | ----- |
+| Title (create) | `KENOS PLANNER COMPAT SMOKE — 2026-07-20T01-32-11Z` |
+| Title (edit) | `… EDIT` |
+| Legacy row id | `d44b56b1-19e8-491d-b7d9-f4cbb2b94122` |
+| Flow | create → edit → complete → reopen → delete |
+| Durable tombstone | `deletedAt=1784511229786` on `planner_tasks` after upload |
+| Kenos domain totals during/after | **0** |
+
+Note: first delete raced with download merge (cloud non-deleted row reappeared);
+second delete + explicit「上传到云端」persisted tombstone. Not a dual-write;
+legacy sync merge race only.
 
 ## 16. Kenos mutation audit
 
-Unit/runtime guard: Kenos RPC/table mutations blocked. Local outbox not shipped
-in cloud payload. Domain tables remain observation baseline unless unrelated
-actors write.
+**PASS** — Kenos RPC/table mutations blocked; domain tables remain 0.
 
 ## 17. Duplicate-write result
 
-**PASS** for guard + audit design — single legacy sync path; Kenos write path closed.
+**PASS** — single legacy sync path; Kenos write path closed.
 
 ## 18–19. Read-after-write / shadow mismatches
 
-Not exercised against production data this window (Owner login pending).
+**PASS for dual-track scope** — smoke row visible only on legacy `planner_tasks`;
+no Kenos twin rows.
 
 ## 20. Offline / reconnect
 
-Offline contract unit tests PASS; Kenos integration did not add a second write
-queue. Authenticated canary offline×reconnect — Yellow until Owner session.
+**PASS** — offline contract unit tests + authenticated canary:
+`navigator.onLine=false` while shell retained; reconnect reload restored
+Owner task/project counts (~360 / ~36).
 
 ## 21. UI/UX findings
 
-Planner domain IA retained (今天 / 收件箱 / 项目 / …). No new system-level IA.
-Work / Approval / Focus not added as Planner global tabs.
+Planner domain IA retained. No Work / Approval / Focus global tabs added.
+Canary-only: non-owner portal redirect host resolves to `portal.netlify.app`
+(404) — production custom domain unaffected.
 
 ## 22. Tests and repeated runs
 
-| Suite | Result |
-| ----- | ------ |
-| AIOS `node --test` (incl. focusSideReads) | PASS |
-| Planner vitest + guard/session/mutation/offline | PASS (163) |
-| `check-kenos-phase1` / `phase6` | PASS |
-| Wave1 checksum | PASS |
-| Planner E2E desktop full (prior) | **118 passed** / 6 skipped |
-| Planner E2E create/edit/complete/delete ×3 | **12/12 PASS** |
+| Suite                                           | Result                     |
+| ----------------------------------------------- | -------------------------- |
+| AIOS `node --test` (incl. focusSideReads)       | PASS                       |
+| Planner vitest + guard/session/mutation/offline | PASS (163)                 |
+| `check-kenos-phase1` / `phase6`                 | PASS                       |
+| Wave1 checksum                                  | PASS                       |
+| Planner E2E create/edit/complete/delete ×3      | **12/12 PASS**             |
+| CI on canary SHA `64b365ac8`                    | **success**                |
 
 ## 23. Migration checksum
 
@@ -211,8 +197,8 @@ Work / Approval / Focus not added as Planner global tabs.
 
 ## 24. Seven-site pause status
 
-All production sites `stop_builds=true`. Prod Planner published still
-`6a5c617e6e1b41000893a948`. Prod AIOS still `6a5d500302c73442caf47132`.
+All production sites `stop_builds=true` (verified at canary close). Prod Planner
+published still `6a5c617e6e1b41000893a948` until compatibility deploy.
 
 ## 25. Gallery status
 
@@ -220,22 +206,23 @@ All production sites `stop_builds=true`. Prod Planner published still
 
 ## 26. Incidents / warnings
 
-- Yellow: Owner/dual-account/prod legacy smoke incomplete
-- Yellow: Production AIOS still on pre-fix deploy for optional-side 400 until separate redeploy approval
 - No Red / no STOPPED_AND_INCIDENT
+- Yellow residual (non-blocking for Planner compat deploy): Production AIOS still
+  on pre-Focus-fix deploy until separate redeploy approval
+- Canary portal redirect URL quirk on `*.netlify.app` (documented)
 
 ## 27. Remaining Red / Yellow gates
 
-| Gate                             | Severity                 |
-| -------------------------------- | ------------------------ |
-| Owner canary authenticated reads | Yellow                   |
-| Dual-account isolation on canary | Yellow                   |
-| Production Legacy Writer smoke   | Yellow                   |
-| Prod AIOS yellow-fix redeploy    | Yellow (separate phrase) |
+| Gate                          | Severity                         |
+| ----------------------------- | -------------------------------- |
+| Prod AIOS yellow-fix redeploy | Yellow (separate phrase)         |
+| Kenos Writer canary           | **NO** — packet only after deploy |
 
 ## 28. Readiness for Planner production compatibility deploy
 
-**NOT YET** — complete Owner + dual-account + optional prod legacy smoke first.
+**YES** — freeze `PLANNER_COMPATIBILITY_DEPLOY_SHA=64b365ac8135dff9dda06cdde598310b1dac9e12`
+matching canary archive; bake same flags; deploy **only** `planneros-ken`; keep
+`stop_builds=true`.
 
 ## 29. Readiness for other domain clients
 
@@ -243,12 +230,11 @@ All production sites `stop_builds=true`. Prod Planner published still
 
 ## 30. Readiness for Kenos Writer canary
 
-**NO**
+**NO** — prepare packet only after production compat deploy + observation.
 
 ## 31. Exact next approval phrase
 
-After Owner finishes canary login smoke + dual-account + (optional) marked
-legacy prod smoke:
+Already authorized for this long-run:
 
 `APPROVE_KENOS_PLANNER_PRODUCTION_COMPATIBILITY_DEPLOY`
 

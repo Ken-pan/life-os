@@ -2,104 +2,235 @@
 title: KENOS PRODUCTION WAVE 1 APPLY REPORT
 owner: kenpan
 last_verified: 2026-07-19
-status: STOPPED_OR_ROLLED_BACK
+status: APPLIED_AND_VERIFIED
 ---
 
 # KENOS PRODUCTION WAVE 1 APPLY REPORT
 
-**Status: `KENOS PRODUCTION WAVE 1 — STOPPED_OR_ROLLED_BACK`**
+**Status: `KENOS PRODUCTION WAVE 1 — APPLIED_AND_VERIFIED`**
 
-Gate: **`PRODUCTION_WAVE1_PREFLIGHT_MISMATCH`**
+Phrase: `APPROVE_KENOS_PRODUCTION_WAVE_1`
+Project: `iueozzuctstwvzbcxcyh`
+Apply window (UTC): `2026-07-19T19:18:55Z` → `2026-07-19T19:19:11Z` (~16s wall)
 
-Phrase received: `APPROVE_KENOS_PRODUCTION_WAVE_1`  
-**No production migration was applied.** Production project `iueozzuctstwvzbcxcyh` remains at tip `20260717220000` with **0** `kenos_*` objects.
+## 1. Authoritative frozen SHA
 
-Netlify client auto-builds remain **paused**; UIUX Gallery remains **disabled_manually**.
+`bb9a0e283bfc0ae6179c277862de59f17cefc0ce`
+local master == origin/master == frozen SHA.
 
-## Preflight matrix
+## 2. CI run / result
 
-| Check | Result |
-| --- | --- |
-| `origin/master` HEAD | `ea55998217924511c45fa4eeedb5101be15bdab6` |
-| local == origin | **OK** |
-| Baseline `197d69a09…` ancestor of origin | **OK** |
-| `b49b209ee…` → `ea559982…` | **OK — docs-only** (3 commits: READY packet / HEAD refs / execution-state tip; files under `docs/qa`, `docs/roadmap`, `scripts/check-kenos-phase6.mjs` only) |
-| Migration SHA256 vs approval packet | **OK** (all five match) |
-| Push CI completed **and PASS** | **FAIL** |
-| Netlify 7 sites `stop_builds=true` | **OK** |
-| UIUX Gallery `disabled_manually` | **OK** |
-| Production tip `20260717220000` | **OK** |
-| Production `kenos_*` absent | **OK** (tables 0, funcs 0) |
-| Counts tasks/projects/events | **OK** 1664 / 50 / 21; sample md5 `4b7321390c659606717421b7efe5b817` |
-| Staging `prrytaemdsksblwmufei` evidence | **OK** (`kenos_focus_contexts` present; Wave 1 versions previously registered) |
+[GitHub Actions run 29699072443](https://github.com/Ken-pan/life-os/actions/runs/29699072443) — **success**
+Jobs: build, integration-smoke, planner-e2e-desktop, design-catalog, portal-qa-smoke, finance-ia-routes, music-qa-rec-behavior — all success.
+No publishing/deploy workflow for this SHA.
 
-## CI mismatch detail (blocking)
+## 3. Migration baseline / checksums
 
-Required: “push 对应 CI 已完成且 PASS”.
+Baseline ancestor: `197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19` — **OK**
+Files unchanged after CI green (no dirty/diff under Wave 1 paths).
 
-| SHA | CI run | Conclusion |
-| --- | --- | --- |
-| `ea5599821792` (current tip) | [29697949848](https://github.com/Ken-pan/life-os/actions/runs/29697949848) | **failure** |
-| `ed7a41c3a932` | 29697946235 | failure |
-| `b49b209ee1ff` | 29697926530 | failure |
-| `c4819e9d38a4` (first paused push) | 29697861403 | failure |
+| File                                                      | sha256                                                             |
+| --------------------------------------------------------- | ------------------------------------------------------------------ |
+| `20260719130100_kenos_wave1_plan_create_task_command.sql` | `b7cb2296e9bd426a089a0ff6ec9c1c627803151bba449ce74033bdf0beb37dac` |
+| `20260719130200_kenos_wave1_plan_privilege_model.sql`     | `6d3e59c0401c74183b707b0c6057658f873aed3936e7ca4867b086792d4ec0c6` |
+| `20260719130300_kenos_wave1_action_approvals.sql`         | `bc25f630238a5f5063a985c1001f4c07a89acfd9bae9aded52701ef3eafabbb9` |
+| `20260719130400_kenos_wave1_focus_context.sql`            | `d90d64aa4ad12315171816e169ff26781e8ed8c89fa6d01907d08899137c5134` |
+| `20260719130500_kenos_wave1_work_domain.sql`              | `ef334e64b96c10697aae7f13b76a971cfd4dca12c10cb3aaf4885eaa9f0b169d` |
 
-Observed failing jobs (not migration SQL; not modified to “fix CI” in this task):
+## 4. Pre-apply snapshot
 
-1. **integration-smoke** — `check:lifeos-styles` on `apps/aios/src` (raw-font-size / raw-hex / reserved-ds-class above baseline).  
-2. **planner-e2e-desktop** — calendar/schedule selectors and related e2e flakes/failures.
+| Field                                           | Value                                      |
+| ----------------------------------------------- | ------------------------------------------ |
+| UTC                                             | `2026-07-19T19:18:28Z`                     |
+| origin/master                                   | `bb9a0e283bfc0ae6179c277862de59f17cefc0ce` |
+| tip                                             | `20260717220000`                           |
+| planner_tasks                                   | 1664                                       |
+| planner_projects                                | 50                                         |
+| life_events                                     | 21                                         |
+| sample md5 (first 50 task id+updated_at)        | `5668cc813af7ebbef8b49e019c1e02fa`         |
+| kenos tables / functions                        | 0 / 0                                      |
+| Netlify stop_builds                             | true (7 sites)                             |
+| UIUX Gallery                                    | `disabled_manually`                        |
+| Staging Wave 1 history (`prrytaemdsksblwmufei`) | five `2026071913*` versions present        |
 
-`build` job on the paused-push run **succeeded**; overall workflow still **failure**.
+## 5. Backup / PITR confirmation
 
-Per Owner preflight rules: **do not apply** when CI is not PASS; do not edit migrations to resolve mismatch.
+| Field                             | Value                                                                     |
+| --------------------------------- | ------------------------------------------------------------------------- |
+| `pitr_enabled`                    | false                                                                     |
+| `walg_enabled`                    | true                                                                      |
+| Latest physical backup            | `2026-07-19T09:18:40.516Z` — **COMPLETED** (~10h before apply)            |
+| Completed physical backups listed | 8                                                                         |
+| Decision                          | **BACKUP_CONFIRM OK** (physical WALG backups available; PITR not enabled) |
 
-## Production snapshot at stop (read-only)
+## 6. Exact apply path / commands
 
-| Field | Value |
-| --- | --- |
-| UTC | `2026-07-19T18:06:17.815153Z` |
-| tip | `20260717220000` |
-| planner_tasks | 1664 |
-| planner_projects | 50 |
-| life_events | 21 |
-| sample md5 | `4b7321390c659606717421b7efe5b817` |
-| kenos objects | 0 |
+Canonical files under `apps/finance/supabase/migrations/` only.
+Executed via Management API helper (no Dashboard paste, no review-dir SQL):
 
-Backup/PITR confirmation was **not** completed because apply was aborted at preflight (CI). No DDL started → no rollback required.
+```bash
+./scripts/supabase-sql.sh -f apps/finance/supabase/migrations/20260719130100_kenos_wave1_plan_create_task_command.sql
+# register version in supabase_migrations.schema_migrations
+./scripts/supabase-sql.sh -f apps/finance/supabase/migrations/20260719130200_kenos_wave1_plan_privilege_model.sql
+# register
+./scripts/supabase-sql.sh -f apps/finance/supabase/migrations/20260719130300_kenos_wave1_action_approvals.sql
+# register
+./scripts/supabase-sql.sh -f apps/finance/supabase/migrations/20260719130400_kenos_wave1_focus_context.sql
+# register
+./scripts/supabase-sql.sh -f apps/finance/supabase/migrations/20260719130500_kenos_wave1_work_domain.sql
+# register
+```
 
-## Applied migration history
+Per-file SQL already sets `lock_timeout` / `statement_timeout` where present.
+Order: Plan command → Privilege → Approvals → Focus → Work.
+Log: `/tmp/kenos-wave1-apply/apply.log`
 
-**None.** Production `schema_migrations` tip unchanged.
+## 7. Applied migration history
 
-## Netlify / client status (unchanged)
+Only these five added after `20260717220000`:
 
-Still paused: planner, fitness, finance, music, portal, home, aios.  
-UIUX Gallery disabled. No client deploy. No writer cutover.
+| version          | name                                                  |
+| ---------------- | ----------------------------------------------------- |
+| `20260719130100` | `20260719130100_kenos_wave1_plan_create_task_command` |
+| `20260719130200` | `20260719130200_kenos_wave1_plan_privilege_model`     |
+| `20260719130300` | `20260719130300_kenos_wave1_action_approvals`         |
+| `20260719130400` | `20260719130400_kenos_wave1_focus_context`            |
+| `20260719130500` | `20260719130500_kenos_wave1_work_domain`              |
 
-Restore clients still requires: `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`
+Production tip now: **`20260719130500`**.
 
-## Remaining Red / Yellow
+## 8. Timestamps and duration
 
-### Red
+| Step               | UTC start | duration |
+| ------------------ | --------- | -------- |
+| 30100 Plan command | 19:18:55Z | ~2s      |
+| 30200 Privilege    | 19:18:58Z | ~0s      |
+| 30300 Approvals    | 19:19:01Z | ~1s      |
+| 30400 Focus        | 19:19:03Z | ~1s      |
+| 30500 Work         | 19:19:08Z | ~1s      |
+| **Overall**        |           | **~16s** |
 
-1. **`PRODUCTION_WAVE1_PREFLIGHT_MISMATCH`** — CI not PASS on authoritative tip(s).  
-2. Production Wave 1 **not applied**.
+No lock-wait failures; API bodies empty success arrays; no ERROR in apply log.
 
-### Yellow
+## 9. Affected objects
 
-- Storage object restore limitation (unchanged).  
-- Staging validation remains valid for when apply is re-attempted after CI green.
+**Tables (12):**
+`kenos_plan_action_idempotency`, `kenos_plan_activity`, `kenos_plan_outbox`,
+`kenos_action_approvals`,
+`kenos_focus_contexts`, `kenos_deferred_items`, `kenos_proactive_suggestions`,
+`kenos_work_projects`, `kenos_work_deliverables`, `kenos_work_meetings`, `kenos_work_decisions`, `kenos_work_action_proposals`
 
-## Exact next steps for Owner
+**Public RPCs:**
+`kenos_create_plan_task_action`, `kenos_list_action_approvals`, `kenos_list_focus_contexts`, `kenos_list_work_projects`, `kenos_list_work_action_proposals`
 
-1. Fix or explicitly waive CI failures on `origin/master` tip (aios style budget + planner e2e), **without** changing Wave 1 migration checksums.  
-2. Re-issue apply only after a tip where CI is **completed + PASS** (or Owner issues a new phrase that waives the CI PASS preflight).  
-3. Then re-run: `APPROVE_KENOS_PRODUCTION_WAVE_1` (or a clarified re-approve phrase).
+**Private helpers:** store/transition functions under `private.*`
+**Roles (nologin, noinherit, nobypassrls):** `kenos_outbox_worker`, `kenos_approval_writer`, `kenos_work_writer`
 
-## Report fields (apply not executed)
+## 10–11. Row counts / sample checksum
 
-1–3. HEAD / baseline / checksums — recorded above (OK).  
-4–22. Apply/verify sections — **N/A** (stopped before apply).  
-23. Next phrase: after CI green, re-approve with `APPROVE_KENOS_PRODUCTION_WAVE_1`.
+| Metric           | Before                             | After                              |
+| ---------------- | ---------------------------------- | ---------------------------------- |
+| planner_tasks    | 1664                               | 1664                               |
+| planner_projects | 50                                 | 50                                 |
+| life_events      | 21                                 | 21                                 |
+| sample md5       | `5668cc813af7ebbef8b49e019c1e02fa` | `5668cc813af7ebbef8b49e019c1e02fa` |
 
-**Stopped. No production schema change.**
+No production seed. No user-data rewrite/delete observed.
+
+## 12. RLS verification
+
+All 12 `kenos_*` tables: **RLS enabled**.
+Policies are owner-scoped `SELECT` only (`auth.uid() = owner_id` / `user_id`).
+No INSERT/UPDATE/DELETE policies for `authenticated`/`anon` on these tables.
+
+## 13. Grants / owners / search_path
+
+- Public list RPCs: `authenticated` EXECUTE only; `anon` denied.
+- `kenos_create_plan_task_action`: `authenticated` EXECUTE; `anon` denied; **SECURITY DEFINER**; `search_path=""`.
+- Private `kenos_*` functions: neither `anon` nor `authenticated` EXECUTE.
+- Function owners: `postgres`.
+- Public Kenos function `def_md5` **byte-identical to staging** `prrytaemdsksblwmufei`.
+- `authenticated` INSERT on outbox/activity/approvals/work/idempotency/focus: **false**.
+- `planner_tasks` policies unchanged (`planner_tasks_{select,insert,update,delete}_own` + `has_app_access('planner')`).
+
+**Yellow (staging-parity residual):** Focus tables still carry default `TRUNCATE`/`TRIGGER`/`REFERENCES` for `anon`/`authenticated` (INSERT/UPDATE/DELETE revoked). Identical on staging; not an Advisor Kenos Security Red; do **not** hand-patch in this wave.
+
+## 14. Anon / authenticated security smoke
+
+| Check                                                                            | Result                                                    |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Anon REST RPC list/create                                                        | HTTP 401 `permission denied for function …`               |
+| Anon REST `kenos_plan_outbox` / approvals / work                                 | HTTP 401 privilege denied                                 |
+| Anon REST `kenos_focus_contexts` SELECT                                          | HTTP 200 `[]` (SELECT grant + RLS empty) — staging-parity |
+| Authenticated list Approvals/Focus/Work/Proposals (JWT claim + `SET LOCAL ROLE`) | empty counts **0/0/0/0**, no error                        |
+| No command RPC write smoke                                                       | deferred to writer canary                                 |
+
+## 15. Advisor findings
+
+**Security:** one Kenos WARN — authenticated EXECUTE on SECURITY DEFINER `kenos_create_plan_task_action` — **accepted** (definition/grants/`search_path` match staging approval packet).
+No Kenos RLS-disabled / PUBLIC execute / mutable `search_path` / privilege-escalation Advisor Red.
+Other Advisor WARNs are pre-existing non-Kenos (`paper_*`, finance/fitness triggers, auth leaked-password, music bucket).
+
+**Performance:** Kenos items are INFO only (unused indexes on empty tables; some unindexed FKs). No Kenos Performance Red.
+
+## 16. Incidents / warnings
+
+None during apply. Sample md5 differs from older restore packet (`4b732139…`) because live `updated_at` drifted before apply; pre/post apply sample **stable**.
+
+## 17. Rollback / disable readiness
+
+Wave 1 additive path remains valid:
+
+1. Clients stay on legacy Task writers (policies not revoked).
+2. Stop calling `kenos_create_plan_task_action` / feature-flag off.
+3. `revoke execute on function public.kenos_create_plan_task_action(jsonb) from authenticated;`
+4. Leave tables in place (prefer no DROP).
+5. Workers remain nologin; no production worker process.
+
+## 18. Netlify / UIUX pause confirmation (post-apply)
+
+All seven sites still `stop_builds=true`: planner, fitness, finance, music, portal, home, aios.
+UIUX Gallery: `disabled_manually`.
+No client deploy performed.
+
+## 19. Current writer status
+
+Legacy `planner_tasks` authenticated write policies **intact**.
+Kenos writers/workers: **nologin**, not cut over.
+Command RPC exists but **not** canary-exercised for real Task writes.
+
+## 20. Current client status
+
+Production clients **not** switched to Kenos read-path. Auto-builds **paused**. Portal switch **not** done. Executor **not** enabled.
+
+## 21. Remaining Red / Yellow gates
+
+| Gate                                         | Level                       |
+| -------------------------------------------- | --------------------------- |
+| Client read-path integration                 | Yellow / next phase         |
+| Writer canary (real Task write)              | Yellow / gated              |
+| Writer cutover / planner_tasks revoke        | Red until separate approval |
+| Portal switch / Executor / Netlify restore   | Red until separate approval |
+| Focus table TRUNCATE default grants          | Yellow (staging parity)     |
+| Performance INFO unused indexes / FK indexes | Yellow INFO                 |
+
+## 22. Readiness for production read-path integration
+
+**Ready for Owner-gated read-path work** (list RPCs + empty projections verified).
+Still requires explicit client wiring approval — **not** `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY` unless Owner sends it.
+
+## 23. Readiness for writer canary
+
+**Schema/RPC ready.** Real Task creation via `kenos_create_plan_task_action` awaits:
+
+`APPROVE_KENOS_PRODUCTION_WRITER_CANARY`
+
+## 24. Exact next recommended phase
+
+1. Optional: production read-path integration against list RPCs (clients still paused).
+2. Then: **`APPROVE_KENOS_PRODUCTION_WRITER_CANARY`**.
+3. Later (separate phrases): writer cutover, Portal switch, `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`, Netlify/UIUX restore.
+
+---
+
+**Stopped.** No automatic client deploy, writer canary, cutover, Portal switch, or Netlify/UIUX restoration.

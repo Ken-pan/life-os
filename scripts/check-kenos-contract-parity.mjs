@@ -34,8 +34,12 @@ import {
 
 const root = process.cwd()
 const fixtureRoot = join(root, 'packages/contracts/fixtures/kenos/v1')
-const manifest = JSON.parse(readFileSync(join(fixtureRoot, 'manifest.json'), 'utf8'))
-const corpus = JSON.parse(readFileSync(join(fixtureRoot, 'corpus.json'), 'utf8'))
+const manifest = JSON.parse(
+  readFileSync(join(fixtureRoot, 'manifest.json'), 'utf8'),
+)
+const corpus = JSON.parse(
+  readFileSync(join(fixtureRoot, 'corpus.json'), 'utf8'),
+)
 const schemaByContract = {
   entityRef: KenosEntityRefSchema,
   actionRequest: KenosActionRequestSchema,
@@ -65,28 +69,56 @@ const schemaByContract = {
 assert.equal(manifest.contractVersion, '1')
 assert.equal(manifest.freezeStatus, 'V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW')
 assert.equal(manifest.unknownFields, 'ignore')
-assert.deepEqual(corpus.valid.map(({ id }) => id), manifest.validFixtureIds)
-assert.deepEqual(corpus.invalid.map(({ id }) => id), manifest.invalidFixtureIds)
+assert.deepEqual(
+  corpus.valid.map(({ id }) => id),
+  manifest.validFixtureIds,
+)
+assert.deepEqual(
+  corpus.invalid.map(({ id }) => id),
+  manifest.invalidFixtureIds,
+)
 
 for (const fixture of corpus.valid) {
   const required = manifest.requiredFields[fixture.contract] || []
-  for (const field of required) assert.ok(field in fixture.value, `${fixture.id} is missing required field ${field}`)
-  assert.equal(schemaByContract[fixture.contract].safeParse(fixture.value).success, true, `${fixture.id} failed TypeScript validation`)
+  for (const field of required)
+    assert.ok(
+      field in fixture.value,
+      `${fixture.id} is missing required field ${field}`,
+    )
+  assert.equal(
+    schemaByContract[fixture.contract].safeParse(fixture.value).success,
+    true,
+    `${fixture.id} failed TypeScript validation`,
+  )
 }
 
 const temporaryDirectory = mkdtempSync(join(tmpdir(), 'kenos-contract-parity-'))
 const swiftOutput = join(temporaryDirectory, 'swift-encoded.json')
 try {
-  execFileSync('swift', ['test', '--package-path', 'clients/apple/Packages/KenosContracts'], {
-    cwd: root,
-    env: { ...process.env, KENOS_SWIFT_PARITY_OUTPUT: swiftOutput },
-    stdio: 'inherit',
-  })
+  execFileSync(
+    'swift',
+    ['test', '--package-path', 'clients/apple/Packages/KenosContracts'],
+    {
+      cwd: root,
+      env: { ...process.env, KENOS_SWIFT_PARITY_OUTPUT: swiftOutput },
+      stdio: 'inherit',
+    },
+  )
   const encoded = JSON.parse(readFileSync(swiftOutput, 'utf8'))
-  assert.deepEqual(Object.keys(encoded).sort(), manifest.validFixtureIds.toSorted(), 'Swift fixture output coverage drift')
+  assert.deepEqual(
+    Object.keys(encoded).sort(),
+    manifest.validFixtureIds.toSorted(),
+    'Swift fixture output coverage drift',
+  )
   for (const fixture of corpus.valid) {
-    const parsed = schemaByContract[fixture.contract].safeParse(encoded[fixture.id])
-    assert.equal(parsed.success, true, `Swift-encoded ${fixture.id} failed TypeScript validation: ${parsed.error || ''}`)
+    const parsed = schemaByContract[fixture.contract].safeParse(
+      encoded[fixture.id],
+    )
+    assert.equal(
+      parsed.success,
+      true,
+      `Swift-encoded ${fixture.id} failed TypeScript validation: ${parsed.error || ''}`,
+    )
   }
 } finally {
   rmSync(temporaryDirectory, { recursive: true, force: true })

@@ -7,15 +7,15 @@ status: DEPLOYED — AWAITING_OWNER_UI_SMOKE
 
 # AIOS Capture Ingest Writer Canary
 
-| Item | Value |
-| --- | --- |
-| Site | `aios-kenos-read-canary` (`8557bb44-…`) |
-| Deploy | `6a5dbd6d78f6c3d467eabcd8` |
-| SHA | `854ed08e09e4f1c706452a87aa25d9f9e88a02e1` |
-| URL | https://aios-kenos-read-canary.netlify.app |
-| Production AIOS | unchanged (`6a5dbab9…` Money/Training bake) |
-| Bake | Capture ingest ON + Approval decide ON + Owner emails; Music/Home/Training/Money reads ON; READ_CANARY=0 |
-| Executor | disabled |
+| Item            | Value                                                                                                    |
+| --------------- | -------------------------------------------------------------------------------------------------------- |
+| Site            | `aios-kenos-read-canary` (`8557bb44-…`)                                                                  |
+| Deploy          | `6a5dbd6d78f6c3d467eabcd8`                                                                               |
+| SHA             | `854ed08e09e4f1c706452a87aa25d9f9e88a02e1`                                                               |
+| URL             | https://aios-kenos-read-canary.netlify.app                                                               |
+| Production AIOS | unchanged (`6a5dbab9…` Money/Training bake)                                                              |
+| Bake            | Capture ingest ON + Approval decide ON + Owner emails; Music/Home/Training/Money reads ON; READ_CANARY=0 |
+| Executor        | disabled                                                                                                 |
 
 ## Owner UI smoke
 

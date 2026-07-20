@@ -115,8 +115,17 @@ now-playing)的真机运行 QA 待导入曲库后人工验收一次。
 | --- | --- |
 | `npm run qa:usage-audit` / `--apply` | ✅ 可复跑写 `docs/qa/usage-audit-YYYY-MM.md` |
 | AIOS 云端探针（conversations/memories） | ✅ |
-| Knowledge / Health 本机探针 | ○ 可选（本地优先；脚本注明「本机另查」） |
+| Knowledge / Health 本机探针 | ✅ **PLAT.USAGE.0c**（Vault `.md` mtime · Focus `events.jsonl`/`sessions.jsonl`；始终跑） |
 | 节奏 | 每月或重大排期前；审计须产生删减/加码决策 |
+
+## PLAT.USAGE.0c — Knowledge / Health 本机探针 ✅（2026-07-18）
+
+| 项 | 状态 |
+| --- | --- |
+| Vault | `~/「Projects」/Vault` 递归 `.md` mtime → 7d/30d 计数 |
+| Health | `~/Library/Application Support/HealthOS/{events,sessions}.jsonl` + `agent.log` |
+| 报告 | 审计 md 增「本机探针」节；功能表不再把二者标成完全未知 |
+| 验收清单 | [`../qa/know-vault-0-acceptance.md`](../qa/know-vault-0-acceptance.md)（VAULT.0 rebuild） |
 
 ## C-P2 P2+ 候选
 

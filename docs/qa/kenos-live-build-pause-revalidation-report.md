@@ -27,15 +27,15 @@ status: PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED
 
 ## 3. Seven sites `stop_builds` (live)
 
-| Site | stop_builds | published commit | running builds | build hooks |
-| ---- | ----------- | ---------------- | -------------- | ----------- |
-| planneros-ken | **true** | `be6f2612d3f3…` ready | 0 | 0 |
-| fitnessos-ken | **true** | `be6f2612d3f3…` ready | 0 | 0 |
-| financeos-ken | **true** | `be6f2612d3f3…` ready | 0 | 0 |
-| musicos-ken | **true** | `be6f2612d3f3…` ready | 0 | 0 |
-| portal-ken | **true** | `be6f2612d3f3…` ready | 0 | 0 |
-| homeos-ken | **true** | `be6f2612d3f3…` ready | 0 | 0 |
-| aios-kenos | **true** | `be6f2612d3f3…` ready | 0 | 0 |
+| Site          | stop_builds | published commit      | running builds | build hooks |
+| ------------- | ----------- | --------------------- | -------------- | ----------- |
+| planneros-ken | **true**    | `be6f2612d3f3…` ready | 0              | 0           |
+| fitnessos-ken | **true**    | `be6f2612d3f3…` ready | 0              | 0           |
+| financeos-ken | **true**    | `be6f2612d3f3…` ready | 0              | 0           |
+| musicos-ken   | **true**    | `be6f2612d3f3…` ready | 0              | 0           |
+| portal-ken    | **true**    | `be6f2612d3f3…` ready | 0              | 0           |
+| homeos-ken    | **true**    | `be6f2612d3f3…` ready | 0              | 0           |
+| aios-kenos    | **true**    | `be6f2612d3f3…` ready | 0              | 0           |
 
 ## 4. Deploy history check
 
@@ -75,12 +75,12 @@ Unchanged: tip `20260719130500`; counts `1664 / 50 / 21`. Docs-only push; no mig
 
 ## 10–12. Readiness
 
-| Gate | Status |
-| ---- | ------ |
-| Read-path push | **`READ_PATH_PUSH_COMPLETE`** |
-| Read client canary | **`PRODUCTION_READ_CLIENT_CANARY_READY_FOR_OWNER_APPROVAL`** |
-| Full client deploy | Still separate / not approved |
-| Writer canary | Not approved |
-| Builds / Gallery restore | **Not** performed |
+| Gate                     | Status                                                       |
+| ------------------------ | ------------------------------------------------------------ |
+| Read-path push           | **`READ_PATH_PUSH_COMPLETE`**                                |
+| Read client canary       | **`PRODUCTION_READ_CLIENT_CANARY_READY_FOR_OWNER_APPROVAL`** |
+| Full client deploy       | Still separate / not approved                                |
+| Writer canary            | Not approved                                                 |
+| Builds / Gallery restore | **Not** performed                                            |
 
 **Next phrase (owner only):** `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY`

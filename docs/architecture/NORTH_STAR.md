@@ -1,7 +1,7 @@
 ---
 title: Life OS 北极星愿景
 owner: kenpan
-last_verified: 2026-07-17-compound-docs
+last_verified: 2026-07-18-endstate
 doc_role: vision / north-star
 review_cadence: quarterly
 ---
@@ -61,41 +61,43 @@ Life OS 最理想的样子，不是十几个各管各的 App，而是**一套围
 
 诚实地讲：**管子已经通了，只是各 app 还各过各的。**
 
-**好消息（已在生产跑）：** 五个生产站（Planner / Fitness / Finance / Music / Portal）已经共享同一个账号（跨子域 SSO）、一条事件总线（`life_events`）、一份只读的今日快照（`core_*`）。它们不是孤岛。AIOS 能读跨 app 快照、经事件往 Planner 写待办；Home 扫描/照片/事件与认亲（安静扫描 / matcher / 证据 UI / /plan 横幅 / Mac auto-refine）已生产且 git 闭环；Planner 项目能反向检索 KnowledgeOS 本地 Vault（编辑器已含表格与高亮）。
+**好消息（已在生产跑 / 2026-07-18）：** 五个生产站共享 SSO、`life_events`、`core_*`。**MCP 舰队** Planner / Finance / Fitness / Home 生产 4/4，AIOS 登录自动接入。**wikilink** Planner + Finance → KnowledgeOS（`KnowledgeNoteLinks` + `knowledgeos://`）。Portal Finance **角标**已部署。AIOS 读 `core_*`、经 events 写 Planner；Home 认亲与 `where_is` 已闭环；Knowledge 块编辑器 + Vault 本地真源。
 
-**真正的距离（更深一层）：** 今天的连接是**联邦制**——每个 app 守着自己的数据，靠事件互相「打个招呼」。愿景要的是**联合制**——同一件事只存一次，十个 OS 从不同角度看同一个对象。
+**真正的距离（更深一层）：** 今天的连接是**联邦制**——每个 app 守着自己的数据，靠事件 / MCP / wikilink 互相「打个招呼」。愿景要的是**联合制**——同一件事只存一次，十个 OS 从不同角度看同一个对象。
 
 | 底座能力 | 现状 | 差距 |
 |---|---|---|
 | 统一身份（SSO） | ✅ 生产 | 基本到位 |
 | 共享读模型（`core_*`） | ✅ 各站在读今日快照 | 是快照，不是同一份对象 |
 | 事件总线（`life_events`） | 🟡 通了 | 事件种类少、消费端少 |
+| AIOS 工具面（MCP） | ✅ 四站舰队 + 登录自动 | 日用验收仍待 Ken；工具面按 USAGE 扩 |
+| 跨 OS 引用（wikilink） | 🟡 Planner+Finance→Knowledge | 非稳定 `object_ref`；按痛点升级 |
 | 本地优先 | 🟡 AIOS / KnowledgeOS / HealthOS 已是 | 尚未成为全系统默认 |
 | 全局搜索 | 🔴 各搜各的 | 未跨库 |
-| **统一对象图谱 + 通用时间线** | 🔴 几乎白纸（仅有 Knowledge↔Planner 引用试点） | **愿景的关键前沿** |
+| **统一对象图谱 + 通用时间线** | 🔴 几乎白纸（wikilink 试点） | **愿景的关键前沿** |
 
-取舍透镜（什么算复利、什么是假复利）→ [`../roadmap/COMPOUND.md`](../roadmap/COMPOUND.md)。
+取舍透镜 → [`../roadmap/COMPOUND.md`](../roadmap/COMPOUND.md)。各 OS **Done when** → [`../roadmap/apps/`](../roadmap/apps/README.md) 分卷 §终局。
 
 **各 app 今天真实的成色：**
 
 - **生产在跑：** Portal、Planner、Fitness、Finance、Music。
-- **原生 Mac app、还没进 Portal：** AIOS（本地推理 + 云只读，AIOS.1–25）、KnowledgeOS（Vault 即数据库 + 语义问答，Vault 正文未上云）、HealthOS（HLT-0–4 + Focus agent + Watch/iPhone companion，原始健康数据仅本地）。
-- **实验、双层数据：** Home 的可编辑项目仍以本地为真源，但 RoomPlan 扫描、私有照片与追加事件已经上云。
-- **已迁出独立仓库：** Paper（设备端 Shell 在 `~/「Projects」/paperos`，本仓库只留 Planner 侧 `/api/paper/*` 数据接口）。
+- **原生 Mac app、还没进 Portal：** AIOS（推理内核 + MCP 舰队）、KnowledgeOS（Vault + RAG，正文未上云）、HealthOS（HLT-0–4；HLT-5 真机 gate）。
+- **实验、双层数据：** Home 可编辑项目仍本地真源；扫描/照片/事件已上云；`where_is` MCP ✅；DEVICE.12 待 HA。
+- **已迁出独立仓库：** Paper（`~/「Projects」/paperos`；本仓只留 `/api/paper/*`）。
 
 ## 下一步
 
-仓库内九个产品 app + 独立仓库 PaperOS 已经覆盖北极星列出的十个 OS。方向不是再做第 11 个 App，而是**把已经在跑的这些，并进同一张对象图谱和同一条时间线**。
+仓库内九个产品 app + 独立仓库 PaperOS 已经覆盖北极星列出的十个 OS。方向不是再做第 11 个 App，而是**把已经在跑的这些，并进同一张对象图谱和同一条时间线**——**按痛点推进，不按愿景开大坑。**
 
-需要正面回答的架构决定：今天的「严格边界」（app 间不互引、各守各的表）当初是刻意选的、也确实防住了很多耦合坑。要不要为「统一对象」松动它、以什么方式松动（例如引入一层对象/时间线服务，而非合并业务表），是这份愿景能否落地的关键岔路。
+关键岔路不变：严格边界（app 不互引、各守各表）要不要为「统一对象」松动、以何种方式（对象/时间线服务，而非合并业务表）。排期真源仍是 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 
-候选方向（进 hub 前先过 [`COMPOUND.md`](../roadmap/COMPOUND.md) + [`POTENTIAL.md`](../roadmap/POTENTIAL.md)）：
+**战略序（与 hub 同步）：**
 
-- 在 `contracts` / `core_*` 之上定义 **`object_ref`**（类型 + id + 来源 OS）——hub §Next 已挂 `KNOW.XREF.5` 加深试点。
-- 扩 `life_events` **有场景的**消费端，把「打招呼」升级成可回溯时间线（无消费者则不做 INTG.EVENTS.2）。
-- 把 AIOS 推向**推理内核**：先 `AIOS.STABLE.26` 护栏，再扩 MCP 工具（如 `HOME.MCP.13`）；Portal 接入按日用价值另评。
-- HealthOS 最小状态契约：只暴露 capacity/readiness，不上传原始健康明细（等 HLT-5）。
-- **不做：** 再造第 11 个 app；无第二项目时的 Home 多项目云同步；Vault 原文上云抢在 watcher 之前。
+1. **使用验收（Ken）** — AIOS 三问 + Portal 角标；否则 MCP/角标不算日用复利。
+2. **真机 gate（Ken）** — SCHED / CAPTURE / HLT-5。
+3. **日用真源加厚（Agent）** — Knowledge `VAULT.0` rebuild 验收；USAGE 本机探针。
+4. **条件刀** — 装 HA → `HOME.DEVICE.12`；wikilink 不够用 → `object_ref`；HLT-5 后 → Status 最小 capacity 契约（不上传明细）。
+5. **不做** — 第 11 app；无第二项目 Home 多项目云同步；Vault 抢先上云；无消费者 `INTG.EVENTS.2`。
 
 ## 产品原则（防止方向漂移）
 

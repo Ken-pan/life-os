@@ -2,6 +2,24 @@
 
 **URL：** [portal.kenos.space](https://portal.kenos.space) · **Workspace：** `portal` · **Dev 端口：** 5195
 
+## 终局（Done when）
+
+> 回链 [`NORTH_STAR`](../../architecture/NORTH_STAR.md) · 取舍 [`COMPOUND`](../COMPOUND.md)。非排期。
+
+**回答的问题：** 现在最重要的是什么？
+
+**近程成功（日用闭环）：** 早/晚一眼五卡 + 角标可信，点一下跳到该做事的站。
+
+**Done when：**
+1. 今日摘要口径与各站真源一致（含 Planner Today 对齐 ✅）
+2. 角标 = 信任数字（pending + 未完成账单任务 ✅）；随任务消减
+3. ⌘K / 继续 / 默认跳转可用 ✅
+4. 维护态：不为凑「九 app」硬加 AIOS / Knowledge / Health 卡
+
+**故意不做：** 把 Portal 做成第九个产品面；无每日触点时硬凑本地优先 app 卡。
+
+**与底座：** SSO ✅ · `core_*` / `portal_today_summary` ✅ · 角标消费 events/任务 ✅ · 不经 MCP。
+
 ## 一句话
 
 六站启动器 + `core_*` 读模型 + **五卡今日摘要**（含 Home 实验） + ⌘K 跨站深链；Growth **PORT.GROWTH.1–PORT.GROWTH.9 ✅**。

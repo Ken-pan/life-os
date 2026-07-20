@@ -1,7 +1,7 @@
 ---
 title: Life OS Roadmap
 owner: kenpan
-last_verified: 2026-07-18-roi-push
+last_verified: 2026-07-18-endstate
 doc_role: status-hub
 priority_model: 2026-07-12-single-branch
 ---
@@ -25,14 +25,25 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 **取舍一句话：** 复利不在再做一个 app，而在让已有 OS **共享身份 / 事件 / 对象引用 / AIOS 工具面**，保持 **CI 与真源完整**，并用 **真实用量 / 功能利用率** 决定加码还是砍面（详见 [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md) · [`roadmap/USAGE_AUDIT.md`](./roadmap/USAGE_AUDIT.md)）。
 
-**代码状态快照（2026-07-17 晚）：**
+## 终局与距离
 
-- **HealthOS 第九 app：** HLT-0–4 已提交；companion Xcode 工程已入仓（`5a2b7773`）；真机签名 / HealthKit / iCloud / LAN 连续交付仍待用户 gate（HLT-5）。
-- **Home 云链路 + 认亲主航道已入仓：** 扫描 / 照片 / 事件 + object recognition 生产且 git 闭环；安静扫描、matcher、证据 UI、**/plan 横幅**、**Mac auto-refine 管线**（`4675dd06`）均已提交并验证。可编辑 spatial 项目仍本地真源。`HOME.RECOG.1r` ✅ 真机收口（2026-07-17 夜：区域高精度补扫 + 双模式开关遥测坐实；质量摘要按用户「不看」删除改「只在有事时弹」）；`HOME.RECOG.refine` launchd 已用户激活（runs=3）。
-- **Knowledge 块编辑器已 checkpoint 并扩面：** 编辑器 / library 入仓；另加 GFM 表格块 + 行内高亮（`bbfd7fb2`，unit 180）。下一刀日用复利是 **KNOW.VAULT.0** watcher。Vault 正文仍不上云。
-- **Knowledge↔Planner 跨 OS 引用试点仍在：** 双向语义检索；`object_ref` 稳定化未做。
-- **Design Catalog 九品牌：** 收集规模约 922 smoke / 147 a11y / 524 visual（以当次 CI 为准）。
-- **master CI（PLAT.CI.0 ✅ 已收口）：** 样式 / portal 对比度 / a11y 已绿；concurrency 已按 SHA 分桶（`4931c68f`）；design-catalog `home/aios/portal/knowledge/health` visual 基线已补齐（290 张，CI 同镜像生成，四生产站 234 张零漂移）。远程 Actions **7/7 全绿**（run [`29618672879`](https://github.com/Ken-pan/life-os/actions/runs/29618672879)，`b2304bee`）。
+> 愿景全文 → [`architecture/NORTH_STAR.md`](./architecture/NORTH_STAR.md) · 各 OS Done when → [`roadmap/apps/`](./roadmap/apps/README.md) §终局 · 取舍 → [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md)
+
+**整体终局：** 一件事只记一次；九个产品 OS（+ 独立仓 Paper）各答一个问题；AIOS 默认安静地读 MCP / `core_*`，必要时经 `life_events` 写回；你保留决定权。
+
+**今天距离：** 联邦制已通（SSO · events · MCP 舰队 · wikilink）。联合制关键前沿仍是 `object_ref` + 有消费者的时间线——**按痛点推进，不按愿景开大坑。**
+
+**产品主线（工程主航道可空）：** Ken 使用验收 / 真机 gate → 日用真源加厚（Vault watcher · USAGE）→ 条件刀（HA · object_ref · HLT-5 后 Status 契约）。
+
+**代码状态快照（2026-07-18 · Phase 7 后）：**
+
+- **MCP 舰队日用闭环：** Planner/Finance/Fitness/Home `/api/mcp` 生产 4/4；AIOS 登录自动 `ensureLifeOsMcpFleet`；`qa:mcp-fleet` 绿。
+- **跨 OS 引用：** Planner + Finance 备注 → `KnowledgeNoteLinks`（`knowledgeos://` + web）；KnowledgeOS.app 已装。
+- **Portal：** Finance 角标（pending + 未完成账单任务）已部署 `portal.kenos.space`。
+- **HealthOS 第九 app：** HLT-0–4 已提交；真机签名 / HealthKit / iCloud / LAN 仍待用户 gate（HLT-5）。
+- **Home：** RECOG 主航道 + MCP.13 `where_is` ✅；DEVICE.12 预检本机无 HA → spike gated。
+- **Knowledge：** 块编辑器 + wikilink 深链；Vault 正文仍不上云；`object_ref` 按需。
+- **master CI：** 样式 / portal / a11y / design-catalog 以当次 Actions 为准；远程曾 7/7 全绿（见 SHIPPED）。
 
 ## 状态面板（每周扫一眼）
 
@@ -44,11 +55,11 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 | 序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 闭环验收 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| — | — | **Agent 主航道暂空** | — | — | — | — | 按需：`object_ref` 稳定契约（wikilink 已有 Planner+Finance） |
+| — | — | **工程主航道暂空** · **产品主线 = 验收 + 真源** | — | — | — | — | Ken：AIOS/Portal · SCHED/CAPTURE/HLT-5；Agent：VAULT.0 / USAGE（有空） |
 
-**已收割（至 2026-07-18）：** … · **PLAT.DEPLOY.MCP** · **qa:mcp-fleet** · **Finance 备注 wikilink** · AIOS MCP JWT 续期 · KNOW.XREF.5n · GYMS.MCP.1 · FINC.MCP.1 · … — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
+**已收割（至 2026-07-18）：** … · MCP 舰队 · demoMode · 深链 · 角标 · PLAT.DOCS.2 · KnowledgeNoteLinks · … — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
 
-**User config：** MCP 四站 ✅ · KnowledgeOS.app ✅ · **AIOS.app 已重装（登录自动舰队）** ✅ · **Portal 角标已部署** ✅。打开 AIOS 试问一句即可验收。真机：SCHED / CAPTURE / HLT-5。HA 未装 → DEVICE.12 仍 gated（见预检）。
+**User config：** MCP 四站 ✅ · KnowledgeOS.app ✅ · AIOS.app ✅ · Portal 角标 ✅。打开 AIOS 试问一句即可验收。真机：SCHED / CAPTURE / HLT-5。HA 未装 → DEVICE.12 仍 gated。
 
 **Agent 分线全文：** [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md)
 
@@ -79,32 +90,36 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 **2026-07-09 已验收（见 §Shipped）：** Phase 0–6 — **FINC.CORE.3** · **PORT.GROWTH.4b-M/H** · **PORT.GROWTH.6** · **PORT.GROWTH.8** · **PORT.GROWTH.9** · **MUSC.PIPE.5** · **HOME.PROJ.6a** · **PLNR.CORE.2** · **GYMS.CORE.0/GYMS.EVENTS.1** · **INTG.EVENTS.1b** · CI 接线。
 
-### Next — 已排期
+### Next — 已排期（均带触发条件）
 
 | 顺序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 触发 / 最小范围 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ~~1–3~~ | ~~RECOG.1r / UIUX.0 / MCP.0~~ ✅ | — | — | — | — | 2026-07-17 | — |
-| ~~4~~ | ~~**PLAT.DEMO.0**~~ ✅ | 跨 app demoMode 合同 | Platform | — | — | 2026-07-18 | 八 app + uiux-review；不抽共享包 |
-| ~~5~~ | ~~**PLAT.USAGE.0b**~~ ✅ | 用量审计节奏化 | Platform | — | — | 2026-07-18 | `--apply` + AIOS 探针；Knowledge/Health 本机可选 |
-| 6 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用契约 | Knowledge | P2 | ◆◆ | 1–2d | wikilink 已有 Planner+Finance；稳定契约仍按需 |
-| ~~7~~ | ~~**GYMS.MCP.1**~~ ✅ | Fitness MCP | Fitness | — | — | 2026-07-18 | today_training · recent_sessions · readiness_hint |
+| 1 | ~~**KNOW.VAULT.0** 验收~~ | Vault watcher 原生 rebuild | Knowledge | P2 | ◆ | <0.5d | 清单已写；Agent 已 `npm run app:knowledge`——剩 Ken 点验 |
+| ~~2~~ | ~~**PLAT.USAGE.0c**~~ ✅ | Knowledge/Health 本机 USAGE 探针 | Platform | — | — | 2026-07-18 | Vault mtime · Focus jsonl；见 usage-audit |
+| 3 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用契约 | Knowledge | P2 | ◆◆ | 1–2d | **痛点触发**：wikilink 不够用（多端同实体）才开 |
+| 4 | **HOME.DEVICE.12** | HA 设备摸底 spike | Home | P2 | 🔥 | 0.5d | **Ken 装 Home Assistant 后**；预检已证本机无 HA |
+| 5 | **HLT-Status 契约研判** | capacity/readiness 最小跨 OS | Health | P3 | ◆ | 研判 | **HLT-5 gate 通过后**；不上传健康明细 |
 
-**后移：** `HOME.PROJ.7`（无第二真实项目不造多项目）、`KNOW.SYNC.1`（先 watcher）、`MUSC.PIPE.4` / `GYMS.MEDIA.3` / `GYMS.SYNC.4`（维护级）、Portal 硬凑本地优先 app 卡。
+**已划掉（2026-07-17–18）：** RECOG.1r · UIUX.0 · MCP.0 · PLAT.DEMO.0 · PLAT.USAGE.0b · **PLAT.USAGE.0c** · GYMS.MCP.1 · FINC.MCP.1 · FINC.GROWTH.4 — 见 SHIPPED。
+
+**后移：** `HOME.PROJ.7`（无第二真实项目）、`KNOW.SYNC.1`（先 watcher）、`MUSC.PIPE.4` / `GYMS.MEDIA.3` / `GYMS.SYNC.4`（维护级）、Portal 硬凑本地优先 app 卡、`INTG.EVENTS.2`（无消费者）。
 
 **PaperOS（`PAPR.*`）后续排期已迁出独立仓库** — 见 [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)。
 
 分 app 细节 → [`roadmap/apps/`](./roadmap/apps/README.md) · Growth / Home → [`roadmap/GROWTH.md`](./roadmap/GROWTH.md) · [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)
 
-### 推荐执行顺序（2026-07-18 · 复利推进中）
+### 推荐执行顺序（2026-07-18 · 终局条款补全后）
 
 ```text
-Phase 1 ✅ FINC.MCP.1 · FINC.GROWTH.4 · PLAT.DEMO.0 · PLAT.USAGE.0b · PLNR.ATTACH.1
-Phase 2 ✅ GYMS.MCP.1 · AIOS 一键 MCP 舰队
-Phase 3 ✅ AIOS MCP JWT 自动续期 · KNOW.XREF.5n 原生 deep-link
-Phase 4 ✅ PLAT.DEPLOY.MCP · qa:mcp-fleet · Finance 备注 wikilink
-Phase 5 ✅ AIOS 登录自动 ensure 舰队 · KnowledgeOS.app 安装
-Phase 6 ✅ AIOS.app 重装（自动舰队进日用）· Portal 角标生产部署 · DEVICE.12 预检（本机无 HA）
-按需      object_ref · HOME.DEVICE.12（Ken 装 HA 后）
+Phase 1–7 ✅ MCP 舰队 · demoMode · 深链 · 角标 · DOCS.2 · KnowledgeNoteLinks（见 SHIPPED）
+Phase 8 ✅ 终局与距离写入 hub + 九 app Done when（本文档轮）
+
+下一程战略序（非空表愿望清单）
+  1 Ken   使用验收：AIOS 三问 + Portal 角标
+  2 Ken   真机 gate：SCHED · CAPTURE · HLT-5
+  3 Agent 日用真源：KNOW.VAULT.0 rebuild 验收 · USAGE 本机探针
+  4 条件  装 HA → DEVICE.12 · wikilink 痛点 → object_ref · HLT-5 后 → Status 契约
+  5 不做  第 11 app · 多项目云同步 · Vault 抢先上云 · INTG.EVENTS.2
 
 并行用户 gate
   ✅ MCP 舰队 / KnowledgeOS / AIOS.app / Portal 角标

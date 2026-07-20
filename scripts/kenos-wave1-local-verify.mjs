@@ -17,7 +17,10 @@ const root = process.cwd()
 const container = `kenos-wave1-verify-${process.pid}`
 const image = 'public.ecr.aws/supabase/postgres:17.6.1.143'
 const password = 'kenos-wave1-disposable-local-only'
-const reportPath = join('/tmp/kenos-wave1-restore-drill', 'local-verify-report.json')
+const reportPath = join(
+  '/tmp/kenos-wave1-restore-drill',
+  'local-verify-report.json',
+)
 
 const formalMigrations = [
   'apps/finance/supabase/migrations/20260719130100_kenos_wave1_plan_create_task_command.sql',
@@ -44,7 +47,9 @@ function run(command, args, options = {}) {
   if (result.status !== 0) {
     process.stderr.write(result.stdout || '')
     process.stderr.write(result.stderr || '')
-    throw new Error(`${command} ${args.join(' ')} failed with status ${result.status}`)
+    throw new Error(
+      `${command} ${args.join(' ')} failed with status ${result.status}`,
+    )
   }
   return result.stdout
 }
@@ -256,7 +261,8 @@ const report = {
   },
   hostedStaging: {
     status: 'UNAVAILABLE',
-    reason: 'Life OS Staging 2 (dsiloxzjnsvjnhbruibl) removed; only production iueozzuctstwvzbcxcyh ACTIVE',
+    reason:
+      'Life OS Staging 2 (dsiloxzjnsvjnhbruibl) removed; only production iueozzuctstwvzbcxcyh ACTIVE',
   },
 }
 
@@ -264,13 +270,30 @@ try {
   for (const path of formalMigrations) {
     assert.ok(existsSync(join(root, path)), `missing formal migration ${path}`)
     const body = readFileSync(join(root, path), 'utf8')
-    assert.ok(!/drop policy if exists "planner_tasks_insert_own"/i.test(body), 'Wave 1 must not revoke planner_tasks writes')
-    assert.ok(/set search_path\s*=\s*''/i.test(body) || path.includes('privilege') || path.includes('focus') || path.includes('work') || path.includes('approval') || path.includes('plan'), 'expect fixed search_path in security definer paths')
-    report.formalMigrations.push({ path, sha256: sha256(body), bytes: body.length })
+    assert.ok(
+      !/drop policy if exists "planner_tasks_insert_own"/i.test(body),
+      'Wave 1 must not revoke planner_tasks writes',
+    )
+    assert.ok(
+      /set search_path\s*=\s*''/i.test(body) ||
+        path.includes('privilege') ||
+        path.includes('focus') ||
+        path.includes('work') ||
+        path.includes('approval') ||
+        path.includes('plan'),
+      'expect fixed search_path in security definer paths',
+    )
+    report.formalMigrations.push({
+      path,
+      sha256: sha256(body),
+      bytes: body.length,
+    })
   }
 
   // Revoke must remain review-only
-  const financeMigNames = readdirSync(join(root, 'apps/finance/supabase/migrations'))
+  const financeMigNames = readdirSync(
+    join(root, 'apps/finance/supabase/migrations'),
+  )
   assert.ok(
     !financeMigNames.some((n) => /revoke_planner_tasks/i.test(n)),
     'revoke must not enter finance migrations',
@@ -279,11 +302,24 @@ try {
     assert.ok(existsSync(join(root, path)), `missing review evidence ${path}`)
   }
 
-  run('docker', ['run', '--rm', '--detach', '--name', container, '-e', `POSTGRES_PASSWORD=${password}`, image])
+  run('docker', [
+    'run',
+    '--rm',
+    '--detach',
+    '--name',
+    container,
+    '-e',
+    `POSTGRES_PASSWORD=${password}`,
+    image,
+  ])
   let initialized = false
   for (let attempt = 0; attempt < 120; attempt += 1) {
     const logs = spawnSync('docker', ['logs', container], { encoding: 'utf8' })
-    if (`${logs.stdout}${logs.stderr}`.includes('PostgreSQL init process complete')) {
+    if (
+      `${logs.stdout}${logs.stderr}`.includes(
+        'PostgreSQL init process complete',
+      )
+    ) {
       initialized = true
       break
     }
@@ -529,7 +565,12 @@ order by 1;
       status: 'LOCAL_LOGICAL_RESTORE_VERIFIED',
       restoreTarget: 'docker disposable db kenos_restore_drill',
       durationMs: Date.now() - restoreStarted,
-      countsBefore: { planner_tasks: bt, planner_projects: bp, life_events: be, planner_user_state: bs },
+      countsBefore: {
+        planner_tasks: bt,
+        planner_projects: bp,
+        life_events: be,
+        planner_user_state: bs,
+      },
       countsAfter: {
         planner_tasks: at,
         planner_projects: ap,
@@ -544,7 +585,11 @@ order by 1;
       storageLimitation:
         'DB dump does not restore Storage object bytes; metadata counts recorded separately from production inventory',
     }
-    assert.equal(bt, at, 'task count must remain stable after Wave 1 apply on restore target')
+    assert.equal(
+      bt,
+      at,
+      'task count must remain stable after Wave 1 apply on restore target',
+    )
     assert.equal(hasFocus, 't')
   } else {
     report.restoreDrill = {

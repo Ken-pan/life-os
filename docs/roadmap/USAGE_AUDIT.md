@@ -1,15 +1,15 @@
 ---
 title: Life OS 用量与功能利用率审计
 owner: kenpan
-last_verified: 2026-07-17
+last_verified: 2026-07-18-usage0c
 doc_role: decision-evidence
 review_cadence: monthly
 ---
 
 # 用量与功能利用率审计
 
-> **为什么是复利：** 不知道哪个功能真被用，就会在死功能上继续堆代码，在日用缺口上欠账。单人 Life OS 没有「万人漏斗」——**自己的使用痕迹就是产品真源**。  
-> **排期：** hub `PLAT.USAGE.0` · 透镜 [`COMPOUND.md`](./COMPOUND.md) §决策复利  
+> **为什么是复利：** 不知道哪个功能真被用，就会在死功能上继续堆代码，在日用缺口上欠账。单人 Life OS 没有「万人漏斗」——**自己的使用痕迹就是产品真源**。
+> **排期：** hub `PLAT.USAGE.0` · 透镜 [`COMPOUND.md`](./COMPOUND.md) §决策复利
 > **不做：** Mixpanel / PostHog / 多租户 feature flag SaaS（单用户过度设计，见 extraction audit）。做**第一方信号盘点 + 定期利用率表**。
 
 ## 目标
@@ -36,7 +36,7 @@ review_cadence: monthly
 缺口（按需补，默认 SQL / 脚本，不上埋点中台）：
 
 - 多数 app **无路由级**停留记录（不必一上来做；先用业务表代理）
-- AIOS / HealthOS **本地优先**，用量以本地日志/库为准，勿强行上云
+- ~~AIOS / HealthOS / Knowledge 本地优先无信号~~ → **PLAT.USAGE.0c** 已补：Vault `.md` mtime · Health Focus jsonl；AIOS 仍靠云 `aios.*` 表
 - 功能入口「打开但未完成」目前大多看不见——只在争议功能上加极薄计数
 
 ## 利用率矩阵（模板）
@@ -59,16 +59,16 @@ review_cadence: monthly
 
 **判定口径：**
 
-- **日用** — 7d 内多次 → 护栏与 UX 优先  
-- **偶发** — 30d 有痕迹 → 维护级，不抢主线  
-- **死** — 30d+ 零痕迹且无外部依赖 → 删入口 / 归档文档 / 停迭代  
+- **日用** — 7d 内多次 → 护栏与 UX 优先
+- **偶发** — 30d 有痕迹 → 维护级，不抢主线
+- **死** — 30d+ 零痕迹且无外部依赖 → 删入口 / 归档文档 / 停迭代
 - **未知** — 无信号 → 先补最小代理指标，再决定投不投
 
 ## `PLAT.USAGE.0` 最小闭环
 
-1. **盘点脚本或 SQL 清单**（`scripts/` 或 `docs/qa/`）：对上表「已有信号」跑一遍，输出 Markdown 表。  
-2. **第一版审计报告**写入 `docs/qa/usage-audit-YYYY-MM.md`。  
-3. **反哺 hub：** 死功能进 §Not doing / 分卷 Parked；日用缺口抬升 ROI（写进 `POTENTIAL.md`）。  
+1. **盘点脚本或 SQL 清单**（`scripts/` 或 `docs/qa/`）：对上表「已有信号」跑一遍，输出 Markdown 表。
+2. **第一版审计报告**写入 `docs/qa/usage-audit-YYYY-MM.md`。
+3. **反哺 hub：** 死功能进 §Not doing / 分卷 Parked；日用缺口抬升 ROI（写进 `POTENTIAL.md`）。
 4. **节奏：** 与 hub `last_verified` 同周或每月一次；重大「要不要做 X」决策前加跑。
 
 验收：Ken 能凭报告删掉或冻结至少一项低利用表面，或把一项日用缺口提进 Now——**审计本身要产生决策，不是仪表盘玩具。**

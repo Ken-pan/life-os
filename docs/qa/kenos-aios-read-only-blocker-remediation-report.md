@@ -175,11 +175,11 @@ where id = '133c3694-0243-469b-b01b-5e495646841b';
 
 ## 20. Owner smoke results
 
-| #                                 | Check                                              | Result                                                                         |
-| --------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------ |
-| 1–20 interactive Owner Smoke      | Login → offline×5 → logout → re-login              | **PASS** — `docs/qa/kenos-aios-read-canary-owner-smoke-2026-07-19.md`          |
-| Automated unit/integration        | Spaces / persist / scope / fail-closed             | **PASS**                                                                       |
-| Prod rollback login wall / shells | HTTP 200 for `/` `/spaces` `/inbox` `/focus`       | **PASS** (post-rollback)                                                       |
+| #                                 | Check                                        | Result                                                                |
+| --------------------------------- | -------------------------------------------- | --------------------------------------------------------------------- |
+| 1–20 interactive Owner Smoke      | Login → offline×5 → logout → re-login        | **PASS** — `docs/qa/kenos-aios-read-canary-owner-smoke-2026-07-19.md` |
+| Automated unit/integration        | Spaces / persist / scope / fail-closed       | **PASS**                                                              |
+| Prod rollback login wall / shells | HTTP 200 for `/` `/spaces` `/inbox` `/focus` | **PASS** (post-rollback)                                              |
 
 Phrase: **`AIOS_READ_ONLY_CANARY_OWNER_SMOKE_COMPLETE`**
 

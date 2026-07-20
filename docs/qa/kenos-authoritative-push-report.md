@@ -17,7 +17,7 @@ Note: earlier packet cited tip `0c6b79a0a…`; one docs commit `c4819e9d3` was a
 
 ## 2. Pushed origin/master HEAD
 
-First paused push: `c4819e9d38a441106985d589709dfbc049ad2016`  
+First paused push: `c4819e9d38a441106985d589709dfbc049ad2016`
 READY-docs tip (current): `b49b209ee1ffe3f29d08ac5d231407b60ef6755d`
 
 `git rev-parse master` == `git rev-parse origin/master`
@@ -41,22 +41,22 @@ Unchanged from prior audit of the ahead range:
 
 - 17 `APPROVED_KENOS`
 - 25 `DOCS_TIP_FOR_APPROVED_KENOS`
-- 0 unauthorized/unrelated  
-(+ 1 docs commit `c4819e9d3` recording staging validation / push block, still Kenos docs-only)
+- 0 unauthorized/unrelated
+  (+ 1 docs commit `c4819e9d3` recording staging validation / push block, still Kenos docs-only)
 
 ## 6. Affected Netlify sites (would rebuild without pause)
 
 Because `packages/contracts` (+ aios/planner/finance paths) changed:
 
-| Site | id | Domain |
-| --- | --- | --- |
-| planneros-ken | `82a6cadc-03f9-443c-85f7-26bd4a90f83f` | planner.kenos.space |
-| fitnessos-ken | `0394cf19-7fb7-4fea-81d7-d4a9d025fab3` | fitness.kenos.space |
-| financeos-ken | `fc92f305-8dcf-46c3-82f5-ef511597df1c` | finance.kenos.space |
-| musicos-ken | `83dfdf84-095a-4b8a-955d-106d046a314b` | music.kenos.space |
-| portal-ken | `a5df5c3e-0e42-4f82-aca8-8d6802da357f` | portal.kenos.space |
-| homeos-ken | `69d4c072-d153-499c-90a8-57909df461a4` | home.kenos.space |
-| aios-kenos | `5bfa64b2-7108-479d-b9e2-45f9c4d9f791` | aios-kenos.netlify.app |
+| Site          | id                                     | Domain                 |
+| ------------- | -------------------------------------- | ---------------------- |
+| planneros-ken | `82a6cadc-03f9-443c-85f7-26bd4a90f83f` | planner.kenos.space    |
+| fitnessos-ken | `0394cf19-7fb7-4fea-81d7-d4a9d025fab3` | fitness.kenos.space    |
+| financeos-ken | `fc92f305-8dcf-46c3-82f5-ef511597df1c` | finance.kenos.space    |
+| musicos-ken   | `83dfdf84-095a-4b8a-955d-106d046a314b` | music.kenos.space      |
+| portal-ken    | `a5df5c3e-0e42-4f82-aca8-8d6802da357f` | portal.kenos.space     |
+| homeos-ken    | `69d4c072-d153-499c-90a8-57909df461a4` | home.kenos.space       |
+| aios-kenos    | `5bfa64b2-7108-479d-b9e2-45f9c4d9f791` | aios-kenos.netlify.app |
 
 Also blocked separately: GitHub **UIUX Gallery** workflow (CLI publish to `kenos-uiux-review`).
 
@@ -79,11 +79,11 @@ Status: **`PRODUCTION_CLIENT_AUTOBUILDS_PAUSED`**
 
 ## 9. GitHub workflow results
 
-| Workflow | Result for push `c4819e9d3` |
-| --- | --- |
-| CI | started / in progress (allowed; non-publishing) |
-| UIUX Gallery | disabled — no run |
-| Deploy Netlify (manual) | not triggered (`workflow_dispatch` only) |
+| Workflow                | Result for push `c4819e9d3`                     |
+| ----------------------- | ----------------------------------------------- |
+| CI                      | started / in progress (allowed; non-publishing) |
+| UIUX Gallery            | disabled — no run                               |
+| Deploy Netlify (manual) | not triggered (`workflow_dispatch` only)        |
 
 ## 10. Dirty WIP confirmation
 
@@ -91,7 +91,7 @@ Status: **`PRODUCTION_CLIENT_AUTOBUILDS_PAUSED`**
 
 ## 11. Staging checksum comparison
 
-Staging `prrytaemdsksblwmufei` still has Wave 1 versions `20260719130100`–`20260719130500`.  
+Staging `prrytaemdsksblwmufei` still has Wave 1 versions `20260719130100`–`20260719130500`.
 Working-tree migration sha256 unchanged and match packet baseline `197d69a09…`.
 
 ## 12. Production database unchanged

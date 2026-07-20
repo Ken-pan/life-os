@@ -17,7 +17,7 @@ Production AIOS was not redeployed.
 
 **`AIOS_READ_ONLY_CANARY_OWNER_SMOKE_COMPLETE`**
 
-Core online + offline SPA + write fail-closed + logout/re-login **PASS**.  
+Core online + offline SPA + write fail-closed + logout/re-login **PASS**.
 **Yellow (non-blocking):** Focus lacks global nav link (offline return-to-/focus awkward); document title can lag behind CloudGate; `aios_memory_*` local keys not cleared on logout.
 
 ---
@@ -97,16 +97,16 @@ Service Worker: `navigator.serviceWorker.controller === true` on canary.
 
 ## 5b. Re-login recheck (after Owner「已重新登录」)
 
-| Check | Result |
-| ----- | ------ |
-| Login wall gone; Today data visible | PASS (`/`, h1 Today) |
-| Refresh Today | PASS |
-| `aios_chats_v1` after re-login | empty (0) |
-| Global Assistant chip | **Scope: All Kenos** |
-| Work page scope hint | **Scope: Work** |
-| Work → Context Assistant | `/assistant?scope=work`, chip **Scope: Work** |
-| Sidebar Assistant clears to Global | **Scope: All Kenos** |
-| `aios.conversations` | still 13 / `max_updated` unchanged |
+| Check                               | Result                                        |
+| ----------------------------------- | --------------------------------------------- |
+| Login wall gone; Today data visible | PASS (`/`, h1 Today)                          |
+| Refresh Today                       | PASS                                          |
+| `aios_chats_v1` after re-login      | empty (0)                                     |
+| Global Assistant chip               | **Scope: All Kenos**                          |
+| Work page scope hint                | **Scope: Work**                               |
+| Work → Context Assistant            | `/assistant?scope=work`, chip **Scope: Work** |
+| Sidebar Assistant clears to Global  | **Scope: All Kenos**                          |
+| `aios.conversations`                | still 13 / `max_updated` unchanged            |
 
 ## 6. Production / pause unchanged
 

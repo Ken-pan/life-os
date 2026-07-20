@@ -7,14 +7,14 @@ status: DEPLOYED — NO_LEGACY_REVOKE
 
 # Planner due/schedule bypass + MCP complete → Kenos
 
-| Item | Value |
-| --- | --- |
-| SHA | `9bc298c28a546f9e09dfbc27bfaeef457c3b5fd0` |
-| Deploy (UI) | `6a5e2efe1457d911e47106a7` then functions refresh `6a5e2f18f5e5050e35b63590` |
-| URL | https://planner.kenos.space |
-| Bake | All Track A/B writers On; Owner email cohort; offline queue Off |
-| Executor | disabled |
-| Legacy revoke | **none** |
+| Item          | Value                                                                        |
+| ------------- | ---------------------------------------------------------------------------- |
+| SHA           | `9bc298c28a546f9e09dfbc27bfaeef457c3b5fd0`                                   |
+| Deploy (UI)   | `6a5e2efe1457d911e47106a7` then functions refresh `6a5e2f18f5e5050e35b63590` |
+| URL           | https://planner.kenos.space                                                  |
+| Bake          | All Track A/B writers On; Owner email cohort; offline queue Off              |
+| Executor      | disabled                                                                     |
+| Legacy revoke | **none**                                                                     |
 
 ## Changes
 

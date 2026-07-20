@@ -9,21 +9,21 @@ status: CLIENT_READY — FLAGS_DEFAULT_OFF — RPC_CANARY_PASS
 
 ## Capture
 
-| Item | Value |
-| --- | --- |
-| Flags | `VITE_KENOS_PROD_WRITES=1` + `VITE_KENOS_CAPTURE_INGEST_WRITER=1` (+ optional Owner emails) |
-| Default | Off |
-| Host | `captureWriters.host.js` → `lifeOsReadClient()` public RPC |
-| UI | `CaptureQuick.svelte` — Inbox button ingests when On |
-| RPC canary | PASS — `needs_review`, `autoConvert=false`, outbox pending; cleaned |
-| Executor | disabled |
+| Item       | Value                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------- |
+| Flags      | `VITE_KENOS_PROD_WRITES=1` + `VITE_KENOS_CAPTURE_INGEST_WRITER=1` (+ optional Owner emails) |
+| Default    | Off                                                                                         |
+| Host       | `captureWriters.host.js` → `lifeOsReadClient()` public RPC                                  |
+| UI         | `CaptureQuick.svelte` — Inbox button ingests when On                                        |
+| RPC canary | PASS — `needs_review`, `autoConvert=false`, outbox pending; cleaned                         |
+| Executor   | disabled                                                                                    |
 
 ## Music / Home reads
 
-| Domain | Flag | Source |
-| --- | --- | --- |
-| Music | `VITE_KENOS_PROD_READ_MUSIC` | `portal_today_summary.music` |
-| Home | `VITE_KENOS_PROD_READ_HOME` | `portal_today_summary.home` |
+| Domain | Flag                         | Source                       |
+| ------ | ---------------------------- | ---------------------------- |
+| Music  | `VITE_KENOS_PROD_READ_MUSIC` | `portal_today_summary.music` |
+| Home   | `VITE_KENOS_PROD_READ_HOME`  | `portal_today_summary.home`  |
 
 Both default Off. No domain writers.
 

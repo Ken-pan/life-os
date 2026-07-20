@@ -9,23 +9,23 @@ status: LOCAL_LOGICAL_RESTORE_VERIFIED
 
 ## Gate status
 
-| Claim | Status |
-| --- | --- |
+| Claim                            | Status                                             |
+| -------------------------------- | -------------------------------------------------- |
 | `LOCAL_LOGICAL_RESTORE_VERIFIED` | **YES** — disposable Docker restore + Wave 1 apply |
-| `HOSTED_RESTORE_VERIFIED` | **NO** — isolated hosted staging unavailable |
+| `HOSTED_RESTORE_VERIFIED`        | **NO** — isolated hosted staging unavailable       |
 
 Wave 1 production apply remains blocked until hosted restore/staging Red gates close (see FINAL approval packet).
 
 ## Production snapshot
 
-| Field | Value |
-| --- | --- |
-| Project | `iueozzuctstwvzbcxcyh` |
-| Inventory time | `2026-07-19T15:57:30.774617Z` |
-| `planner_tasks` | 1664 |
-| `planner_projects` | 50 |
-| `life_events` | 21 |
-| `planner_user_state` | 1 |
+| Field                | Value                         |
+| -------------------- | ----------------------------- |
+| Project              | `iueozzuctstwvzbcxcyh`        |
+| Inventory time       | `2026-07-19T15:57:30.774617Z` |
+| `planner_tasks`      | 1664                          |
+| `planner_projects`   | 50                            |
+| `life_events`        | 21                            |
+| `planner_user_state` | 1                             |
 
 ## Drill executed (local logical)
 
@@ -36,12 +36,12 @@ Wave 1 production apply remains blocked until hosted restore/staging Red gates c
 5. Apply formal Wave 1 migrations; counts unchanged
 6. Dual-user checks on separate disposable bootstrap DB via `scripts/kenos-wave1-local-verify.mjs`
 
-| Metric | Before Wave 1 | After Wave 1 |
-| --- | --- | --- |
-| planner_tasks | 1664 | 1664 |
-| planner_projects | 50 | 50 |
-| life_events | 21 | 21 |
-| planner_user_state | 1 | 1 |
+| Metric             | Before Wave 1 | After Wave 1 |
+| ------------------ | ------------- | ------------ |
+| planner_tasks      | 1664          | 1664         |
+| planner_projects   | 50            | 50           |
+| life_events        | 21            | 21           |
+| planner_user_state | 1             | 1            |
 
 Restore duration (script window): ~965 ms.
 RTO observation (local logical): sub-minute for critical tables on disposable host.

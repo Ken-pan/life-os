@@ -17,18 +17,18 @@ All formal timestamps are **after** remote tip `20260717220000`.
 
 ## Apply order
 
-| Order | Formal file | Objects |
-| --- | --- | --- |
-| 1 | `20260719130100_kenos_wave1_plan_create_task_command.sql` | idempotency, Activity, Outbox, `kenos_create_plan_task_action` |
-| 2 | `20260719130200_kenos_wave1_plan_privilege_model.sql` | `kenos_outbox_worker` / transition helper |
-| 3 | `20260719130300_kenos_wave1_action_approvals.sql` | Approval read model + list RPC |
-| 4 | `20260719130400_kenos_wave1_focus_context.sql` | Focus / Deferred / Suggestion + list RPC |
-| 5 | `20260719130500_kenos_wave1_work_domain.sql` | Work domain tables + list RPCs |
+| Order | Formal file                                               | Objects                                                        |
+| ----- | --------------------------------------------------------- | -------------------------------------------------------------- |
+| 1     | `20260719130100_kenos_wave1_plan_create_task_command.sql` | idempotency, Activity, Outbox, `kenos_create_plan_task_action` |
+| 2     | `20260719130200_kenos_wave1_plan_privilege_model.sql`     | `kenos_outbox_worker` / transition helper                      |
+| 3     | `20260719130300_kenos_wave1_action_approvals.sql`         | Approval read model + list RPC                                 |
+| 4     | `20260719130400_kenos_wave1_focus_context.sql`            | Focus / Deferred / Suggestion + list RPC                       |
+| 5     | `20260719130500_kenos_wave1_work_domain.sql`              | Work domain tables + list RPCs                                 |
 
 ## Explicitly NOT in Wave 1
 
-| File | Gate |
-| --- | --- |
+| File                                                                                      | Gate                                      |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------- |
 | `apps/planner/supabase/review/20260719100000_kenos_revoke_planner_tasks_direct_write.sql` | Writer canary/cutover — separate approval |
 
 ## Compatibility / safety properties

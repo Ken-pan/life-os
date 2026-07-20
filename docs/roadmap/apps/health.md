@@ -4,6 +4,24 @@
 
 > HealthOS 已不是 starter 占位：`app.manifest.json`、生成注册表、PWA 矩阵与跨 app switcher 均已收录。当前没有生产 Netlify 站，也未接 Portal；主形态是 Tauri macOS app + 本地 Focus agent + Watch/iPhone HealthKit companion。
 
+## 终局（Done when）
+
+> 回链 [`NORTH_STAR`](../../architecture/NORTH_STAR.md) · 取舍 [`COMPOUND`](../COMPOUND.md)。非排期。Status = Health + Focus。
+
+**回答的问题：** 我现在适合做什么？
+
+**近程成功（日用闭环）：** Watch/iPhone → Mac 状态连续；Focus 窗口按当天状态调节。
+
+**Done when：**
+1. HLT-0–4 能力在仓 ✅；**HLT-5** companion 真机签名 + HealthKit/iCloud/LAN 连续交付
+2. 六维状态可解释（energy/focus/recovery/stress/sleepDebt/physical）
+3. 跨 OS **只**暴露 capacity/readiness 类摘要（HLT-5 后再研判契约）；**永不**上传健康明细
+4. 未进 Portal，直到有每日启动触点与可消费摘要
+
+**故意不做：** 未过 HLT-5 就扩跨 OS 契约；把 Health 做成第二 Apple Health 云同步。
+
+**与底座：** 本地优先 ✅ · 无 SSO 依赖产品主路径 · 无 MCP · object_ref 不适用。
+
 ## 一句话
 
 Life OS 的状态调节中枢：把专注负荷、睡眠、HRV、静息心率与步数变成可解释的六维状态，并据此调整当天专注窗口；原始健康数据本地保存，不向其他 OS 暴露明细。

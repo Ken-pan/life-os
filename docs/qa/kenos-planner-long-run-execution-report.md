@@ -13,13 +13,13 @@ status: KENOS PLANNER PRODUCTION COMPATIBILITY — DEPLOYED_OBSERVED_AND_WRITER_
 
 ### Required sub-verdicts
 
-| # | Phrase | Status |
-| - | ------ | ------ |
-| A | `KENOS PLANNER PRODUCTION COMPATIBILITY CANARY — PASS` | PASS |
-| B | `KENOS PLANNER PRODUCTION COMPATIBILITY CLIENT — DEPLOYED_AND_VERIFIED` | PASS |
-| C | `KENOS PLANNER PRODUCTION COMPATIBILITY — OBSERVATION_PASS` | PASS |
-| D | `KENOS PLAN CREATE-TASK WRITER CANARY PACKET — READY_FOR_OWNER_APPROVAL` | READY |
-| E | `KENOS AIOS READ-ONLY MAINTENANCE PACKET — READY` | READY (no AIOS deploy) |
+| #   | Phrase                                                                   | Status                 |
+| --- | ------------------------------------------------------------------------ | ---------------------- |
+| A   | `KENOS PLANNER PRODUCTION COMPATIBILITY CANARY — PASS`                   | PASS                   |
+| B   | `KENOS PLANNER PRODUCTION COMPATIBILITY CLIENT — DEPLOYED_AND_VERIFIED`  | PASS                   |
+| C   | `KENOS PLANNER PRODUCTION COMPATIBILITY — OBSERVATION_PASS`              | PASS                   |
+| D   | `KENOS PLAN CREATE-TASK WRITER CANARY PACKET — READY_FOR_OWNER_APPROVAL` | READY                  |
+| E   | `KENOS AIOS READ-ONLY MAINTENANCE PACKET — READY`                        | READY (no AIOS deploy) |
 
 ## Credential hygiene
 
@@ -44,12 +44,12 @@ Subsequent tips are docs/report commits only unless noted in git log.
 
 ## 4. Production Planner deploy
 
-| Field | Value |
-| ----- | ----- |
-| Deploy ID | `6a5d7bd5b9334b8e0f03a902` |
-| SHA | `64b365ac8135dff9dda06cdde598310b1dac9e12` |
-| URL | https://planner.kenos.space |
-| Method | `git archive` + bake + `netlify deploy --prod --no-build` |
+| Field     | Value                                                     |
+| --------- | --------------------------------------------------------- |
+| Deploy ID | `6a5d7bd5b9334b8e0f03a902`                                |
+| SHA       | `64b365ac8135dff9dda06cdde598310b1dac9e12`                |
+| URL       | https://planner.kenos.space                               |
+| Method    | `git archive` + bake + `netlify deploy --prod --no-build` |
 
 ## 5. Rollback target
 
@@ -74,10 +74,10 @@ Final: `deletedAt` set; `completedAt` null; not in active UI lists.
 
 ## 9. Residual smoke cleanup
 
-| Smoke task | 起始状态 | 最终状态 | 清理方式 | Legacy | Kenos |
-| ---------- | -------- | -------- | -------- | ------ | ----- |
-| `2902f153…` | active smoke lifecycle | tombstoned | product UI | yes | 0 |
-| `1d41d0d3…` | orphan PROD smoke | tombstoned | product UI (prior window) | yes | 0 |
+| Smoke task  | 起始状态               | 最终状态   | 清理方式                  | Legacy | Kenos |
+| ----------- | ---------------------- | ---------- | ------------------------- | ------ | ----- |
+| `2902f153…` | active smoke lifecycle | tombstoned | product UI                | yes    | 0     |
+| `1d41d0d3…` | orphan PROD smoke      | tombstoned | product UI (prior window) | yes    | 0     |
 
 ## 10. Legacy mutation count (smoke window)
 
@@ -86,8 +86,8 @@ One expected Legacy mutation per explicit UI create/edit/complete/reopen/delete
 
 ## 11. Kenos mutation audit
 
-plan_outbox / plan_activity / action_idempotency / approvals / focus / deferred /
-suggestions / work_* = **0** (live).
+plan*outbox / plan_activity / action_idempotency / approvals / focus / deferred /
+suggestions / work*\* = **0** (live).
 
 ## 12. No-double-write
 
@@ -126,8 +126,8 @@ No console errors in instrumented observation sample.
 
 ## 20. Migration checksum (repo Wave 1 files)
 
-| File | sha256 |
-| ---- | ------ |
+| File               | sha256                                                             |
+| ------------------ | ------------------------------------------------------------------ |
 | `20260719130100_…` | `b7cb2296e9bd426a089a0ff6ec9c1c627803151bba449ce74033bdf0beb37dac` |
 | `20260719130200_…` | `6d3e59c0401c74183b707b0c6057658f873aed3936e7ca4867b086792d4ec0c6` |
 | `20260719130300_…` | `bc25f630238a5f5063a985c1001f4c07a89acfd9bae9aded52701ef3eafabbb9` |

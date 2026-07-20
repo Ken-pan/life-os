@@ -5,9 +5,9 @@
 > **跨站主线：** [`../INTEGRATION.md`](../INTEGRATION.md) · [`../GROWTH.md`](../GROWTH.md)
 > **E2E 证据：** [`../../qa/e2e-issues.md`](../../qa/e2e-issues.md)
 
-**脑暴日期：** 2026-07-09 · **复核：** 2026-07-17 夜（auto-refine + 表格块 + 复利/USAGE）· **执行分线：** [`../AGENT_WORKSTREAMS.md`](../AGENT_WORKSTREAMS.md) · **复利：** [`../COMPOUND.md`](../COMPOUND.md)
+**脑暴日期：** 2026-07-09 · **复核：** 2026-07-18（终局 Done when + Phase 8）· **执行分线：** [`../AGENT_WORKSTREAMS.md`](../AGENT_WORKSTREAMS.md) · **复利：** [`../COMPOUND.md`](../COMPOUND.md) · **愿景：** [`../../architecture/NORTH_STAR.md`](../../architecture/NORTH_STAR.md)
 
-执行顺序以 **hub §推荐执行顺序** 为准；下文不重复 Wave 全文。
+执行顺序以 **hub §推荐执行顺序** 为准；下文不重复 Wave 全文。**各 OS 停手条件**见分卷 **§终局（Done when）**——不是第二份排期表。
 
 ## ID 命名（v2 · APP3）
 
@@ -69,18 +69,18 @@
 
 ## 一览（Top Next）
 
-| App     | 层级   | Top Next                                            | 分卷                                                                      |
-| ------- | ------ | --------------------------------------------------- | ------------------------------------------------------------------------- |
-| Planner | 生产   | 用户 gate：SCHED/CAPTURE 真机；Agent：定向 UI 收口 → 附件 WIP 决策 | [planner.md](./planner.md) |
-| Fitness | 生产   | maintenance；MEDIA.3 / SYNC.4 均 P2 按需 | [fitness.md](./fitness.md) |
-| Finance | 生产   | **FINC.PURCHASE.6.a closure QA** | [finance.md](./finance.md) |
-| Music   | 生产   | paused / maintenance；MUSC.PIPE.4 仅问题触发 | [music.md](./music.md) |
-| Portal  | 启动器 | maintenance；不为凑九 app 扩卡 | [portal.md](./portal.md) |
-| Home    | 实验   | 用户激活 refine · **MCP.13** 优先 · 1r 窄残余 | [home.md](./home.md) |
-| AIOS    | 实验/本地优先 | STABLE.26 ✅ · where_is 经 Home MCP | [aios.md](./aios.md) |
-| KnowledgeOS | 实验/本地优先 | **KNOW.VAULT.0** watcher（编辑器含表格/高亮） | [knowledge.md](./knowledge.md) |
-| HealthOS | 实验/本地优先 | **HLT-5** 用户真机 gate；其余后移 | [health.md](./health.md) |
-| PaperOS | 独立仓库 | 设备 Shell，已迁出 → [paperos.md](./paperos.md)   | [paperos.md](./paperos.md)                                                |
+| App     | 层级   | Top Next（近程） | 终局一瞥 | 分卷 |
+| ------- | ------ | ---------------- | -------- | ---- |
+| Planner | 生产   | Ken：SCHED/CAPTURE 真机 | 捕获→排程→完成可信 | [planner.md](./planner.md) |
+| Fitness | 生产   | maintenance；MEDIA/SYNC 按需 | 今日练 + MCP readiness | [fitness.md](./fitness.md) |
+| Finance | 生产   | Ken：AIOS 结余 + 角标 + Confirm→Undo | 承担得起什么可信 | [finance.md](./finance.md) |
+| Music   | 生产   | paused；PIPE.4 问题触发 | 想听就播 | [music.md](./music.md) |
+| Portal  | 启动器 | maintenance；不硬凑卡 | 一眼最重要 | [portal.md](./portal.md) |
+| Home    | 实验   | refine 激活；**DEVICE.12**（装 HA 后） | 「东西在哪」可答（MCP ✅） | [home.md](./home.md) |
+| AIOS    | 本地优先 | Ken：日用三问验收 | 安静推理内核 | [aios.md](./aios.md) |
+| KnowledgeOS | 本地优先 | **VAULT.0** rebuild 验收 | 日写取代 Obsidian | [knowledge.md](./knowledge.md) |
+| HealthOS | 本地优先 | **HLT-5** 真机 gate | 适合做什么（明细不出本机） | [health.md](./health.md) |
+| PaperOS | 独立仓 | 设备主航道在 paperos 仓 | 安静读和想 | [paperos.md](./paperos.md) |
 
 ## 跨站集成矩阵（只读 / 事件）
 
@@ -97,7 +97,7 @@
 | 阻塞                              | 影响项                                     | 解除方式                                                               |
 | --------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------- |
 | master CI 未稳定全绿（design-catalog a11y 等） | 所有交付可信度 | **PLAT.CI.0**；不得只以本地 gate 代替 |
-| Finance 6.a 只剩 closure QA | 错误估时与重复开发 | 以代码和生产 RPC 为准，勿按「UI/RPC 未实现」估天 |
+| Finance 6.a/6b 工程已齐 | 勿按「未实现」估天 | 剩 Ken 真机签收；IMPORT.5 无痛点不做 |
 | Home 可编辑项目仍本地真源 | 全量跨设备编辑 | 不阻塞 RECOG/MCP；PROJ.4 后移 |
 | `events.ts` 仅少量类型 | INTG.EVENTS.2 智能 | 有场景再扩消费端；✅ 已有 `fitness.workout_logged` |
 

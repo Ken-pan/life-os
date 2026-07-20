@@ -10,7 +10,7 @@
 | [`GROWTH.md`](./GROWTH.md)           | PORT.GROWTH.\* / MUSC.CORE.1 / FINC.GROWTH.1 / HOME.PORTAL.1–HOME.SSO.3 · 外部对标 | Growth 项状态或调研更新时   |
 | [`BACKLOG.md`](./BACKLOG.md)         | 提取候选、决策矩阵、do-not-abstract        | 评估新共享提取时            |
 | [`SHIPPED.md`](./SHIPPED.md)         | 发货日志（日期 · 摘要 · commit）           | 每次从 Now 移入 Shipped 时  |
-| [`apps/`](./apps/README.md)          | **九 app 产品排期**（六部署 web + AIOS + KnowledgeOS + HealthOS） | 单 app 优先级或脑暴更新时   |
+| [`apps/`](./apps/README.md)          | **九 app 产品排期 + §终局 Done when**（勿与 hub Now 双写排期） | 单 app 优先级 / 停手条件变化时 |
 | [`COMPOUND.md`](./COMPOUND.md)       | **复利判据**（使用 × 开发 × 决策）          | 战略重估 / 入 Now 前                  |
 | [`USAGE_AUDIT.md`](./USAGE_AUDIT.md) | **用量 / 功能利用率审计**（`PLAT.USAGE.0`） | 月度或重大排期前                      |
 | [`POTENTIAL.md`](./POTENTIAL.md)     | **当前潜力研判 / ROI 与闭环排序**           | 代码检索、生产状态或优先级重估时 |

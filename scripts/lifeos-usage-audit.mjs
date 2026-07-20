@@ -1,26 +1,26 @@
 #!/usr/bin/env node
 /**
- * PLAT.USAGE.0 — 第一方用量 / 功能利用率盘点（决策复利）。
+ * PLAT.USAGE.0 / 0c — 第一方用量 / 功能利用率盘点（决策复利）。
  *
  * 默认 dry-run：写 docs/qa/usage-audit-YYYY-MM.md 骨架(表用上一版手工快照占位)。
- * `--apply`：经 ./scripts/supabase-sql.sh 跑真查询,**把两张表从实时 JSON 渲染出来**
- * (数字与「日用/偶发/冷」判定都活的),不再重印写死的旧快照。凭证走钥匙串 "Supabase CLI"
- * (见 supabase-sql.sh)。判定是数据算的;战略「建议动作」仍是人工层,复跑后需人工复核。
+ * `--apply`：经 ./scripts/supabase-sql.sh 跑真查询,**把两张表从实时 JSON 渲染出来**。
+ * 本机探针（Knowledge Vault · HealthOS Focus）**始终跑**（PLAT.USAGE.0c），不依赖云。
  *
  * Usage:
  *   node scripts/lifeos-usage-audit.mjs
  *   node scripts/lifeos-usage-audit.mjs --apply
  */
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, writeFileSync, existsSync } from 'node:fs'
+import { mkdirSync, writeFileSync, existsSync, readdirSync, statSync, readFileSync } from 'node:fs'
+import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 // fileURLToPath(不是 .pathname):.pathname 对非 ASCII 目录(仓库路径含「」)会留 %E3%80%8C
-// 百分号编码,existsSync/writeFileSync 拿它当字面目录 → 静默写到乱码目录、--apply 从不生效。
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const APPLY = process.argv.includes('--apply')
 const now = new Date()
+const nowMs = now.getTime()
 const ym = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
 const outDir = join(ROOT, 'docs/qa')
 const outPath = join(outDir, `usage-audit-${ym}.md`)
@@ -90,12 +90,105 @@ if (APPLY && existsSync(join(ROOT, 'scripts/supabase-sql.sh'))) {
 }
 const live = !!data.last_opened && !!data.finance_life
 
+// ── PLAT.USAGE.0c：本机探针（始终跑）──────────────────────────────────────
+function walkMd(dir, out = []) {
+  if (!existsSync(dir)) return out
+  let entries
+  try {
+    entries = readdirSync(dir, { withFileTypes: true })
+  } catch {
+    return out
+  }
+  for (const ent of entries) {
+    if (ent.name === '.git' || ent.name === 'node_modules' || ent.name === '.obsidian') continue
+    const p = join(dir, ent.name)
+    if (ent.isDirectory()) walkMd(p, out)
+    else if (ent.isFile() && /\.md$/i.test(ent.name)) out.push(p)
+  }
+  return out
+}
+
+function countMtime(paths, days) {
+  const cutoff = nowMs - days * 86_400_000
+  let n = 0
+  for (const p of paths) {
+    try {
+      if (statSync(p).mtimeMs >= cutoff) n += 1
+    } catch {
+      /* ignore */
+    }
+  }
+  return n
+}
+
+function parseJsonlTsCounts(filePath) {
+  if (!existsSync(filePath)) return { lines: 0, n7: 0, n30: 0, mtime: null }
+  const st = statSync(filePath)
+  let n7 = 0
+  let n30 = 0
+  let lines = 0
+  const text = readFileSync(filePath, 'utf8')
+  for (const line of text.split('\n')) {
+    const s = line.trim()
+    if (!s) continue
+    lines += 1
+    let o
+    try {
+      o = JSON.parse(s)
+    } catch {
+      continue
+    }
+    let ts = o.ts ?? o.time ?? o.at ?? o.started_at
+    if (typeof ts !== 'number') continue
+    if (ts > 1e12) ts /= 1000
+    const d = (nowMs / 1000 - ts) / 86400
+    if (d <= 7) n7 += 1
+    if (d <= 30) n30 += 1
+  }
+  return { lines, n7, n30, mtime: st.mtimeMs }
+}
+
+function probeLocal() {
+  const vaultRoot = join(homedir(), '「Projects」', 'Vault')
+  const mdPaths = walkMd(vaultRoot)
+  const knowledge = {
+    root: vaultRoot,
+    exists: existsSync(vaultRoot),
+    md_total: mdPaths.length,
+    md_7d: countMtime(mdPaths, 7),
+    md_30d: countMtime(mdPaths, 30),
+    app: existsSync('/Applications/KnowledgeOS.app'),
+  }
+
+  const healthDir = join(homedir(), 'Library', 'Application Support', 'HealthOS')
+  const events = parseJsonlTsCounts(join(healthDir, 'events.jsonl'))
+  const sessions = parseJsonlTsCounts(join(healthDir, 'sessions.jsonl'))
+  const agentLog = join(healthDir, 'agent.log')
+  const health = {
+    dir: healthDir,
+    exists: existsSync(healthDir),
+    events,
+    sessions,
+    agent_log_mtime: existsSync(agentLog) ? statSync(agentLog).mtimeMs : null,
+    app: existsSync('/Applications/HealthOS.app'),
+  }
+
+  return { knowledge, health }
+}
+
+const local = probeLocal()
+
 // ── 判定口径 ───────────────────────────────────────────────────────────────
 const daysSince = (iso) => (iso ? Math.floor((now - new Date(iso)) / 86_400_000) : null)
 const openVerdict = (d) => (d == null ? '未知' : d <= 3 ? '日用' : d <= 30 ? `偶发（~${d}d）` : `冷（${d}d+）`)
 const useVerdict = (n7, n30) => (n7 > 0 ? '日用' : n30 > 0 ? '偶发' : '冷/死')
-/** 本地优先 app:很可能不进 core_user_app_settings,单独标未知(别误判成死) */
 const LOCAL_FIRST = ['aios', 'knowledge', 'health']
+
+function mtimeVerdict(mtimeMs) {
+  if (mtimeMs == null) return '未知'
+  const d = Math.floor((nowMs - mtimeMs) / 86_400_000)
+  return openVerdict(d)
+}
 
 // ── 表 1:跨站打开 ───────────────────────────────────────────────────────────
 const HARDCODED_OPEN = `| finance | 2026-07-17 | 日用 |
@@ -104,7 +197,7 @@ const HARDCODED_OPEN = `| finance | 2026-07-17 | 日用 |
 | planner | 2026-07-17 | 日用 |
 | music | 2026-07-17 | 日用 |
 | portal | 2026-07-13 | 偶发（~4d） |
-| aios / knowledge / health | — | 未知（本地优先，未进 \`core_user_app_settings\` 或未部署） |`
+| aios / knowledge / health | — | 见下方本机探针 |`
 
 function openTable() {
   if (!live) return HARDCODED_OPEN
@@ -114,7 +207,7 @@ function openTable() {
     return `| ${r.app_id} | ${(r.last_opened_at || '').slice(0, 10) || '—'} | ${openVerdict(d)} |`
   })
   const missing = LOCAL_FIRST.filter((a) => !seen.has(a))
-  if (missing.length) lines.push(`| ${missing.join(' / ')} | — | 未知（本地优先，未进表或未部署） |`)
+  if (missing.length) lines.push(`| ${missing.join(' / ')} | — | 未知（云表无）；见本机探针 |`)
   return lines.join('\n')
 }
 
@@ -125,8 +218,8 @@ const HARDCODED_FEATURE = `| Music | \`play_events\` / \`recommendation_events\`
 | Fitness↔Planner | \`fitness.workout_logged\` | 9 / 30d | 偶发→日用边缘 | 事件链有效；勿再扩无消费者事件 |
 | Finance bills | \`finance.bill_due\` | 10 / 30d | 偶发 | 管道健康 |
 | Portal | last_opened | ~4d 前 | 偶发 | 不为凑卡扩本地优先入口 |
-| Knowledge | Vault watcher | — | 未知→即将日用 | **VAULT.0** 刚落地，用几天后再审计 |
-| AIOS / Health | 本地 | — | 未知 | 先 STABLE.26 / HLT-5，不上 Portal 卡 |`
+| Knowledge | Vault \`.md\` mtime | 本机探针 | — | 见 §本机探针 |
+| AIOS / Health | 本地 | — | — | 见 §本机探针 / 云 aios |`
 
 function featureTable() {
   if (!live) return HARDCODED_FEATURE
@@ -134,8 +227,9 @@ function featureTable() {
   const h = data.home?.[0] || {}
   const f = data.finance_life?.[0] || {}
   const a = data.aios?.[0] || {}
-  // Finance 审核缺口判据:积压 proposed 多而近 30d 决策少 = closure 摩擦
   const financeGap = Number(f.proposed) > 50 && Number(f.decisions_30d) < 20
+  const k = local.knowledge
+  const he = local.health
   return [
     `| Music | \`play_events\` / \`recommendation_events\` | ${m.plays_7d} plays 7d · ${m.plays_30d} plays 30d / ${m.rec_30d} rec | **${useVerdict(m.plays_7d, m.plays_30d)}** | 推荐环在转;维护 PIPE 即可 |`,
     `| Home | scans / embeddings / pending recog | ${h.scans_7d} 7d · ${h.scans_30d} 30d · ${h.embeddings} emb · ${h.pending_recog} pending | **${useVerdict(h.scans_7d, h.scans_30d)}** | 认亲主航道;pending 靠横幅消化 |`,
@@ -144,17 +238,46 @@ function featureTable() {
     `| Finance bills | \`finance.bill_due\` | ${f.bill_30d} / 30d | 偶发 | 管道健康 |`,
     `| life_events(总) | outbox 30d | ${f.life_events_30d} / 30d | — | 跨 OS 消费活跃度底数 |`,
     `| AIOS | 对话 / 记忆(云端 aios schema) | ${a.conv_7d} conv 7d · ${a.conv_30d} 30d · ${a.memories} mem | **${useVerdict(a.conv_7d, a.conv_30d)}** | 云同步在用;推理内核方向可投 |`,
-    `| Knowledge / Health | 本地优先 | — | 未知 | 本机另查;VAULT.0 用几天后再审计 |`,
+    `| Knowledge | Vault \`.md\` mtime | ${k.md_7d} / 7d · ${k.md_30d} / 30d · ${k.md_total} total | **${useVerdict(k.md_7d, k.md_30d)}** | 本机探针;VAULT.0 rebuild 后验 watcher |`,
+    `| Health | Focus events/sessions | ev ${he.events.n7}/${he.events.n30} · sess ${he.sessions.n7}/${he.sessions.n30} | **${useVerdict(he.events.n7 || he.sessions.n7, he.events.n30 || he.sessions.n30)}** | Focus 代理在转;HLT-5 仍待真机 |`,
   ].join('\n')
 }
 
+function localProbeSection() {
+  const k = local.knowledge
+  const h = local.health
+  const agentAge = h.agent_log_mtime != null ? mtimeVerdict(h.agent_log_mtime) : '无'
+  const kHint =
+    k.md_7d > 0
+      ? '日用真源在转——值得做 VAULT.0 rebuild 验收，勿抢先 Vault 上云'
+      : '近 7d 无 .md 改动——先确认日写习惯再堆编辑器'
+  const hHint =
+    h.events.n7 || h.sessions.n7
+      ? 'Focus 代理日用——HLT-5 companion 是下一 gate，勿扩 Portal/云明细'
+      : 'Focus 无近期事件——先确认代理在跑'
+  return `## 本机探针（PLAT.USAGE.0c · 始终跑）
+
+| 域 | 路径 / 信号 | 数字 | 判定 |
+| --- | --- | --- | --- |
+| Knowledge Vault | \`${k.root}\` · \`.md\` mtime | ${k.exists ? `${k.md_total} 篇 · 7d ${k.md_7d} · 30d ${k.md_30d}` : '目录不存在'} | **${k.exists ? useVerdict(k.md_7d, k.md_30d) : '未知'}** |
+| KnowledgeOS.app | \`/Applications/KnowledgeOS.app\` | ${k.app ? '已装' : '未装'} | — |
+| Health Focus | \`events.jsonl\` | ${h.exists ? `${h.events.lines} 行 · 7d ${h.events.n7} · 30d ${h.events.n30}` : '无数据目录'} | **${h.exists ? useVerdict(h.events.n7, h.events.n30) : '未知'}** |
+| Health Focus | \`sessions.jsonl\` | ${h.exists ? `${h.sessions.lines} 行 · 7d ${h.sessions.n7}` : '—'} | ${h.exists ? useVerdict(h.sessions.n7, h.sessions.n30) : '—'} |
+| Health agent | \`agent.log\` mtime | ${agentAge} | Focus 代理活跃度 |
+| HealthOS.app | \`/Applications/HealthOS.app\` | ${h.app ? '已装' : '未装'} | HLT-5 前壳可用 |
+
+**决策暗示（本机）：**
+- Knowledge：**${kHint}**。
+- Health：**${hHint}**。`
+}
+
 const stamp = live
-  ? `本次 \`--apply\` 远程复跑(${now.toISOString().slice(0, 16)}Z)`
-  : `未跑远程查询;表为上一版手工快照占位`
+  ? `本次 \`--apply\` 远程复跑(${now.toISOString().slice(0, 16)}Z) + 本机探针`
+  : `未跑远程查询;云表为占位 + 本机探针已跑`
 
 const body = `# Life OS 用量审计 ${ym}
 
-> **Ticket：** PLAT.USAGE.0 · 透镜 [\`../roadmap/USAGE_AUDIT.md\`](../roadmap/USAGE_AUDIT.md)
+> **Ticket：** PLAT.USAGE.0 / **0c** · 透镜 [\`../roadmap/USAGE_AUDIT.md\`](../roadmap/USAGE_AUDIT.md)
 > **生成：** ${now.toISOString()} · \`${APPLY ? '--apply' : 'skeleton'}\` · 数据源:${stamp}
 
 ## 判定口径
@@ -162,7 +285,7 @@ const body = `# Life OS 用量审计 ${ym}
 - **日用** — 7d 内有痕迹
 - **偶发** — 30d 有痕迹 / 打开 ≤30d
 - **冷 / 死** — 30d+ 零痕迹 → 候选冻结或删入口
-- **未知** — 本地优先 app（AIOS / Knowledge / Health）需本机另查
+- **未知** — 云表无信号；本机探针尽量填盲区（Knowledge / Health）
 
 ## 跨站打开（\`last_opened_at\`）
 
@@ -170,21 +293,21 @@ const body = `# Life OS 用量审计 ${ym}
 | --- | --- | --- |
 ${openTable()}
 
-## 功能利用率${live ? '(实时)' : '(手工快照)'}
+## 功能利用率${live ? '(实时)' : '(手工快照 + 本机)'}
 
 | 域 | 信号 | 数字 | 判定 | 决策暗示 |
 | --- | --- | --- | --- | --- |
 ${featureTable()}
 
+${localProbeSection()}
+
 ## 建议动作(人工层 —— 复跑数字后需据实复核)
 
-1. **已收割：** FINC.PURCHASE.6.a closure ✅——干净关联批量确认(proposed 267→93、decisions→180),
-   队列从"日用缺口"回落到"日用·在消化";采购评审已给足证据(明细+金额对比)。剩 owner 真机 QA。
-2. **加码：** KNOW.VAULT.0 用几天验证日用(下次审计看 Vault watcher 是否日用)。当前**无紧急加码**——
-   所有日用 app 健康,是**防表面积爆炸**的好时机,别硬塞新面。
-3. **维持：** Music 推荐环 · Home 认亲 / refine(launchd 已激活)。
-4. **冻结 / 勿扩：** Portal 硬凑本地优先卡 · INTG.EVENTS.2 无消费者智能 · Home 多项目云同步。
-5. **补信号(可选):** AIOS(云端 aios schema 可直查)/ Health(本机)的最小用量探针,填 "未知" 盲区。
+1. **已收割：** FINC.PURCHASE.6.a closure · MCP 舰队 · 终局 Done when 文档。
+2. **你回来后（Ken）：** AIOS 三问 + Portal 角标；SCHED/CAPTURE/HLT-5；KnowledgeOS VAULT.0 rebuild 验收（见 [\`know-vault-0-acceptance.md\`](./know-vault-0-acceptance.md)）。
+3. **维持：** Music 推荐环 · Home 认亲 · Knowledge 日写 · Health Focus 代理。
+4. **冻结 / 勿扩：** Portal 硬凑本地优先卡 · INTG.EVENTS.2 · Home 多项目云同步 · Vault 抢先上云。
+5. **本机盲区已填（0c）：** Knowledge Vault mtime · Health Focus jsonl —— 不再标「完全未知」。
 
 _验收:审计要产生决策而非仪表盘。数字实时化后,每月复跑即可据实调 hub ROI。_
 ${errors.length ? `\n> ⚠️ 部分查询失败(表回退占位):\n${errors.map((e) => `> - ${e}`).join('\n')}\n` : ''}
@@ -197,12 +320,16 @@ ${QUERIES.music}
 
 ${QUERIES.home}
 
+${QUERIES.aios}
+
 ${QUERIES.finance_life}
 \`\`\`
 `
 
 mkdirSync(outDir, { recursive: true })
 writeFileSync(outPath, body)
-console.log(`wrote ${outPath}${live ? ' (live)' : ''}`)
+console.log(
+  `wrote ${outPath}${live ? ' (live)' : ''} · local knowledge md7d=${local.knowledge.md_7d} health ev7d=${local.health.events.n7}`,
+)
 if (errors.length) console.log(`query errors: ${errors.length}\n  ${errors.join('\n  ')}`)
 if (!APPLY) console.log('tip: node scripts/lifeos-usage-audit.mjs --apply  # 钥匙串 Supabase CLI 凭证')

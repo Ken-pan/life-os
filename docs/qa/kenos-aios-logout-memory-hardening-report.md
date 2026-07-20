@@ -114,23 +114,23 @@ On logout / account switch / auth-wall boot:
 
 ## 12. Owner smoke (this canary)
 
-| #     | Check                                | Result                                                   |
-| ----- | ------------------------------------ | -------------------------------------------------------- |
-| 1     | Login                                | PASS (existing session)                                  |
-| 2     | Today                                | PASS                                                     |
-| 3     | Global Assistant                     | **Scope: All Kenos**                                     |
-| 4     | Work Context Assistant               | **Scope: Work**                                          |
-| 5     | `aios_memory_*` present while authed | PASS (4 keys; shape redacted)                            |
-| 6     | Logout                               | PASS                                                     |
-| 7     | user memory cleared                  | PASS (`[]`)                                              |
-| 8     | device setting retained              | PASS (gateway + theme)                                   |
-| 9     | title = Kenos — Sign in              | PASS                                                     |
-| 10    | Back                                 | PASS (title + wall, no leak)                             |
-| 11    | Refresh / direct `/work`             | PASS (title Sign in)                                     |
-| 12    | Login again                          | **PASS** (Owner re-authenticated)                        |
-| 13    | No prior-session residue             | **PASS** — no `SMOKE_PROOF`; Global=`Scope: All Kenos`; Work Context=`Scope: Work`; chats=0; gateway/theme kept |
-| 14    | conversations count                  | **13** unchanged (`max` unchanged)                       |
-| 15    | Kenos domain writes                  | no new conversation rows                                 |
+| #   | Check                                | Result                                                                                                          |
+| --- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| 1   | Login                                | PASS (existing session)                                                                                         |
+| 2   | Today                                | PASS                                                                                                            |
+| 3   | Global Assistant                     | **Scope: All Kenos**                                                                                            |
+| 4   | Work Context Assistant               | **Scope: Work**                                                                                                 |
+| 5   | `aios_memory_*` present while authed | PASS (4 keys; shape redacted)                                                                                   |
+| 6   | Logout                               | PASS                                                                                                            |
+| 7   | user memory cleared                  | PASS (`[]`)                                                                                                     |
+| 8   | device setting retained              | PASS (gateway + theme)                                                                                          |
+| 9   | title = Kenos — Sign in              | PASS                                                                                                            |
+| 10  | Back                                 | PASS (title + wall, no leak)                                                                                    |
+| 11  | Refresh / direct `/work`             | PASS (title Sign in)                                                                                            |
+| 12  | Login again                          | **PASS** (Owner re-authenticated)                                                                               |
+| 13  | No prior-session residue             | **PASS** — no `SMOKE_PROOF`; Global=`Scope: All Kenos`; Work Context=`Scope: Work`; chats=0; gateway/theme kept |
+| 14  | conversations count                  | **13** unchanged (`max` unchanged)                                                                              |
+| 15  | Kenos domain writes                  | no new conversation rows                                                                                        |
 
 ## 13. Conversation row count
 

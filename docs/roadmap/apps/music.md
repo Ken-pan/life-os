@@ -2,6 +2,24 @@
 
 **URL：** [music.kenos.space](https://music.kenos.space) · **Workspace：** `music-os` · **Dev 端口：** 5189
 
+## 终局（Done when）
+
+> 回链 [`NORTH_STAR`](../../architecture/NORTH_STAR.md) · 取舍 [`COMPOUND`](../COMPOUND.md)。非排期。
+
+**回答的问题：** 现在该是什么氛围？
+
+**近程成功（日用闭环）：** 想听就播；推荐不烦；Portal 能看到最近播放。
+
+**Done when：**
+1. 本地优先播放可靠（MUSC.PLAY.8 真机停手条件达标或可接受）
+2. `play_events` 持续喂推荐；Queue 有 reasons 时可见 ✅
+3. Portal 最近播放卡可用 ✅
+4. 进入 **paused / maintenance**；仅问题触发再动 PIPE
+
+**故意不做：** 无误判时开 PIPE.4 全量预览大改；为「氛围 OS」另造社交层。
+
+**与底座：** SSO ✅ · Portal 摘要 ✅ · 无 MCP（暂不需要）· object_ref 不适用。
+
 ## 一句话
 
 本地优先播放器 + 云曲库；**MUSC.CORE.1 ✅** `play_events`（167 行）喂推荐管道。

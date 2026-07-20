@@ -28,6 +28,10 @@
 | Knowledge | **KnowledgeOS.app 重装**（deep-link `knowledgeos://` 登记） | `npm run app:knowledge` → `/Applications/KnowledgeOS.app` |
 | Portal | **FINC.GROWTH.4 角标生产部署** | `portal.kenos.space` CLI deploy |
 | Home | **HOME.DEVICE.12 预检**：本机无 HA → spike 未开 | [`qa/home-device-12-preflight-2026-07-18.md`](../qa/home-device-12-preflight-2026-07-18.md) |
+| Docs | **终局 Done when** hub + 九 app 分卷；Phase 8 | `NORTH_STAR` · `LIFEOS_ROADMAP` · `apps/*` |
+| Platform | **KnowledgeNoteLinks** 共享壳（Planner+Finance） | `platform-web/svelte/knowledge-note-links` |
+| Platform | **PLAT.USAGE.0c** Knowledge/Health 本机探针 | `lifeos-usage-audit.mjs` · [`qa/usage-audit-2026-07.md`](../qa/usage-audit-2026-07.md) |
+| Knowledge | **VAULT.0** app 重装；验收清单 | `npm run app:knowledge` · [`qa/know-vault-0-acceptance.md`](../qa/know-vault-0-acceptance.md) |
 | Platform | **PLAT.DOCS.1** hub/POTENTIAL/AGENT/SHIPPED 划掉已发 Next | 本段 |
 | Platform | **PLAT.MCP.0** / **PLNR.MCP.0** / **KNOW.XREF.5 wikilink** / **PLNR.UIUX.0** 补记 | commits `28ca49c98` · `b490755a5` · `c5151dcfa` · `acff09b12` |
 

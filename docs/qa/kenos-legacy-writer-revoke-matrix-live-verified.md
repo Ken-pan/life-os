@@ -9,14 +9,14 @@ status: LIVE_VERIFIED — NO_REVOKE_YET
 
 Inventory was COMPLETE earlier; this matrix is the live gate. **Revoke nothing yet.**
 
-| Operation | New Writer verified | Owner cohort | All active clients switched | Rollback | Revoke readiness |
-| --- | --- | --- | --- | --- | --- |
-| schedule | PRODUCTION_VERIFIED | Yes | Web Owner path yes; offline queue Off; Apple read-only | Flag unset + prior deploy | **NOT_READY** — keep Legacy for non-cohort / offline / old clients |
-| complete (MCP) | PRODUCTION_VERIFIED | Yes (MCP→Kenos) | MCP host switched; UI complete cohort | Flag / functions rollback | **NOT_READY** — UI non-cohort + sync upsert remain |
-| project | Owner writer live | Yes | Cohort only | Flag unset | **NOT_READY** |
-| create | Owner writer live | Yes | Cohort only; offline Off | Flag unset | **NOT_READY** |
-| complete/reopen (UI) | Owner writer live | Yes | Cohort only | Flag unset | **NOT_READY** |
-| archive/delete | Owner writer live | Yes | restore still Legacy | Flag unset | **NOT_READY** |
+| Operation            | New Writer verified | Owner cohort    | All active clients switched                            | Rollback                  | Revoke readiness                                                   |
+| -------------------- | ------------------- | --------------- | ------------------------------------------------------ | ------------------------- | ------------------------------------------------------------------ |
+| schedule             | PRODUCTION_VERIFIED | Yes             | Web Owner path yes; offline queue Off; Apple read-only | Flag unset + prior deploy | **NOT_READY** — keep Legacy for non-cohort / offline / old clients |
+| complete (MCP)       | PRODUCTION_VERIFIED | Yes (MCP→Kenos) | MCP host switched; UI complete cohort                  | Flag / functions rollback | **NOT_READY** — UI non-cohort + sync upsert remain                 |
+| project              | Owner writer live   | Yes             | Cohort only                                            | Flag unset                | **NOT_READY**                                                      |
+| create               | Owner writer live   | Yes             | Cohort only; offline Off                               | Flag unset                | **NOT_READY**                                                      |
+| complete/reopen (UI) | Owner writer live   | Yes             | Cohort only                                            | Flag unset                | **NOT_READY**                                                      |
+| archive/delete       | Owner writer live   | Yes             | restore still Legacy                                   | Flag unset                | **NOT_READY**                                                      |
 
 ## Priority when ready (one at a time)
 

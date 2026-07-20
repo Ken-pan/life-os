@@ -2,6 +2,24 @@
 
 **URL：** [fitness.kenos.space](https://fitness.kenos.space) · **Workspace：** `fitness-os` · **Dev 端口：** 5190
 
+## 终局（Done when）
+
+> 回链 [`NORTH_STAR`](../../architecture/NORTH_STAR.md) · 取舍 [`COMPOUND`](../COMPOUND.md)。非排期。
+
+**回答的问题：** 身体该怎么练？
+
+**近程成功（日用闭环）：** 今日练得成；恢复度进 Portal / AIOS；完练自动打卡 Planner。
+
+**Done when：**
+1. Focus 训练闭环稳定（组次 / 替代 / Summary）
+2. Portal `workedOutToday` + `workout_logged` → Planner ✅
+3. MCP `today_training` / `recent_sessions` / `readiness_hint` ✅
+4. Coach Lite（容量 / readiness / 热身）够用即维护，不为「更智能」堆面
+
+**故意不做：** 无痛点开 MEDIA.3 / 大同步重构；做成第二社交健身 App。
+
+**与底座：** SSO ✅ · workout events ✅ · MCP ✅ · object_ref 不适用。
+
 ## 一句话
 
 Focus Mode 力量训练 + Coach Lite；Portal **PORT.GROWTH.4** 已读最近完练；**`fitness.workout_logged` 已生产**（GYMS.EVENTS.1 ✅）。

@@ -4,9 +4,28 @@
 **扩展：** `apps/finance/extension` · **Audit：** `apps/finance/docs/pto-audit-export/`
 **订单审核 handoff：** [`../../../apps/finance/docs/merchant-order-audit/DOWNSTREAM_HANDOFF_v1_1.md`](../../../apps/finance/docs/merchant-order-audit/DOWNSTREAM_HANDOFF_v1_1.md)
 
+## 终局（Done when）
+
+> 回链 [`NORTH_STAR`](../../architecture/NORTH_STAR.md) · 取舍 [`COMPOUND`](../COMPOUND.md)。非排期。
+
+**回答的问题：** 我承担得起什么？
+
+**近程成功（日用闭环）：** 结余/STS 可信；支出审核 Confirm→Undo 敢用；Portal 角标随账单任务消减；AIOS 能答「本月结余」。
+
+**Done when：**
+1. STS / Spend 口径统一（FINC.CORE.3 ✅）且 Ken 日用信任数字
+2. PURCHASE 6.a/6b 工程闭环 ✅；owner 真机 Confirm→Undo / 备注签收
+3. MCP `month_summary` / `liquid_cash` ✅；Portal 角标 ✅
+4. 采购备注可链 Knowledge（wikilink ✅）
+5. 账单 → Planner inbox → 做完角标归零，形成信任回路
+
+**故意不做：** 无 CSV 痛点时开 IMPORT.5；把 Finance 做成通用 ERP；无消费者再堆 enrichment 批处理。
+
+**与底座：** SSO ✅ · `bill_due` events ✅ · MCP ✅ · object_ref 未做（备注 wikilink 已接）。
+
 ## 一句话
 
-月度推演 + 历史交易；**`life_events` 生产端**（`finance.bill_due`）；**Amazon / Best Buy / Target 商品级 enrichment** 已有管道，下一步是 **支出审核产品化（FINC.PURCHASE.6）**。
+月度推演 + 历史交易；**`life_events` 生产端**（`finance.bill_due`）；支出审核产品化（FINC.PURCHASE.6.a/6b）与 MCP / Portal 角标已发货，剩日用验收。
 
 ## 当前能力（生产）
 
@@ -42,17 +61,14 @@
 | ~~**FINC.PURCHASE.6b**~~ | ~~退款闭环 / 备注 / 已处理~~ ✅ | — | — | — | — | refundLinks · purchase_notes | ✅ |
 | **FINC.IMPORT.5**    | History CSV 最小导入                | ○   | Product | 3–5d   | Codex                    | `/review/import` 可上传                  | —     |
 
-### 复利视角 · 接下来 ROI 排序（2026-07-18）
+### 复利视角 · 接下来（对齐 §终局）
 
-> 透镜：[`../COMPOUND.md`](../COMPOUND.md)。Finance 信任审核已闭环；下一刀是**跨站消费**（MCP）与 Portal **信任数字一致**（角标）。
+> 透镜：[`../COMPOUND.md`](../COMPOUND.md)。工程项已齐；下一步是**使用闭环**，不是再开产品刀。
 
 | 序 | 事项 | 复利依据 | 归属 |
 | -- | ---- | -------- | ---- |
-| **1** | **FINC.MCP.1** 本月汇总 + 流动现金 | 使用+开发：第三 MCP 消费者；鉴权已抽 | Codex |
-| **2** | **FINC.GROWTH.4** Portal 角标一致 | 使用：Portal 每日放大器 | Codex |
-| 后移 | FINC.IMPORT.5 · FINC.PURCHASE.6c | 线性/边际递减 | — |
-
-**一句话：** 6.a/6b ✅；**MCP.1** 让 AIOS 经 JWT 查结余/支出；**GROWTH.4** 让角标跟「任务做完」对齐。
+| **1** | Ken：AIOS「本月结余」+ Portal 角标消减 + History Confirm→Undo | 近程成功 | Ken |
+| 后移 | FINC.IMPORT.5 · FINC.PURCHASE.6c | 无痛点不做 | — |
 
 ### FINC.PURCHASE.6 — 支出审核（分阶段）
 

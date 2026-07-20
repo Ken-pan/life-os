@@ -3,6 +3,25 @@
 **URL：** [planner.kenos.space](https://planner.kenos.space) · **Workspace：** `planner-os`
 **Hub：** [`../../LIFEOS_ROADMAP.md`](../../LIFEOS_ROADMAP.md) · **E2E：** [`../../qa/e2e-issues.md`](../../qa/e2e-issues.md#planner-planner-os)
 
+## 终局（Done when）
+
+> 回链 [`NORTH_STAR`](../../architecture/NORTH_STAR.md) · 取舍 [`COMPOUND`](../COMPOUND.md)。非排期。
+
+**回答的问题：** 下一步该做什么？
+
+**近程成功（日用闭环）：** 手机捕获 → 排程 → 完成可信；账单/完练进 inbox 不丢。
+
+**Done when：**
+1. `PLNR.SCHED.10b.ios` + `PLNR.CAPTURE.0` 真机 gate 通过（或只记可复现缺陷）
+2. Inbox 稳定消费 `finance.bill_due` / `fitness.workout_logged`
+3. AIOS 经 MCP（真 JWT）能读今日/写完成
+4. 附件粘贴/缩略图可用，不挡主路径
+5. Today 计数与 Portal 摘要口径一致（已 ✅）
+
+**故意不做：** 第二套 GTD；把 Planner 做成万能笔记库；替 Knowledge 存长期记忆。
+
+**与底座：** SSO ✅ · events 消费端 ✅ · MCP ✅ · object_ref 未做（wikilink 备注已够日用）。
+
 ## 一句话
 
 个人任务/日历中枢 + AI 简报；Life OS 里 **`life_events` 唯一消费端**（Finance 账单 → inbox 任务）。
