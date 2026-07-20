@@ -664,3 +664,9 @@ Approved temporary defaults now on file:
 
 - Canary deploy `6a5dbd6d78f6c3d467eabcd8` @ 854ed08e0
 - Awaiting Owner Capture UI smoke; Apple device still blocked
+
+## Capture ingest Owner-limited production (2026-07-20)
+
+- UI canary PASS; prod AIOS `6a5dbdbc196bfd8740751ee4` @ `854ed08e0…`
+- Rollback `6a5dbab9…`; Executor still disabled
+- Apple physical device still Owner-gated (developer disk image)
