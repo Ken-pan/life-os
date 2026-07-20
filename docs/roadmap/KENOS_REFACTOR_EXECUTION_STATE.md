@@ -550,3 +550,10 @@ Approved temporary defaults now on file:
 - Added `planOfflineIntentQueue.core.js` (user-bound, idempotent enqueue, auth-gated flush)
 - Flag `VITE_KENOS_PLAN_OFFLINE_WRITER_QUEUE` default OFF — not baked into production
 - Next: wire host flush for create/update writers behind flag; dual-user + reconnect tests
+
+## AIOS read-only maintenance deploy (2026-07-20)
+
+- Deploy `6a5dabd7c64347bbb6baa531` @ `3d2d7ec1c…`
+- Rollback `6a5d500302c73442caf47132`
+- stop_builds remains true
+- Next: dual-user smoke on AIOS; continue Track C host wiring; Track D Approval/Activity
