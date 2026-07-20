@@ -147,33 +147,38 @@ task identity writer.
 
 ## 12. Logout / cache result
 
-**PENDING / Yellow** (requires Owner + test user cycle on canary)
+**Code PASS / live Yellow** — logout now clears user-scoped tasks/projects/outbox
+and cache (`64b365ac8…`); live Owner→Test User cycle still pending.
 
 ## 13. Legacy Writer endpoint
 
-| Target                                                       | Status          |
-| ------------------------------------------------------------ | --------------- | ------- |
-| `public.planner_tasks` (+ lists/projects/attachments) upsert | Allowed         |
-| `kenos_create_plan_task_action` / Kenos store                | transition RPCs | Blocked |
-| Kenos domain tables insert/update/delete                     | Blocked         |
+| Target | Status |
+| ------ | ------ |
+| `public.planner_tasks` (+ lists/projects/attachments) upsert | Allowed |
+| `planner_user_state` settings blob upsert | Allowed |
+| `kenos_create_plan_task_action` / Kenos store\|transition RPCs | Blocked |
+| Kenos domain tables insert/update/delete | Blocked |
+| Local `kenosActionOutbox` / `kenosActivity` | Client-local only; not in `exportPayload()` |
 
-Evidence: `prodWriteGuard.core.test.js` + baked `KENOS_WRITE_BLOCKED` in canary chunk.
+Evidence: `prodWriteGuard.core.test.js`, `mutationAudit.core.test.js`, baked
+`KENOS_WRITE_BLOCKED` in canary chunk.
 
 ## 14–15. Legacy mutation smoke / correlation
 
-| Phase                         | Result                                                  |
-| ----------------------------- | ------------------------------------------------------- |
-| Phase 1 local/guard           | **PASS** — legacy tables allowed; Kenos writers blocked |
-| Phase 2 production smoke task | **SKIPPED** (not forged)                                |
+| Phase | Result |
+| ----- | ------ |
+| Phase 1 local/guard | **PASS** — legacy allowed; Kenos blocked; E2E create/edit/complete/delete ×3 |
+| Phase 2 production smoke task | **PENDING** (Owner login + dual-account first) |
 
 ## 16. Kenos mutation audit
 
-During canary deploy + local tests: no Kenos store/transition writes introduced.
-Domain tables remain at observation baseline (0) unless unrelated actors write.
+Unit/runtime guard: Kenos RPC/table mutations blocked. Local outbox not shipped
+in cloud payload. Domain tables remain observation baseline unless unrelated
+actors write.
 
 ## 17. Duplicate-write result
 
-**PASS** for guard design — single legacy path; Kenos write path closed.
+**PASS** for guard + audit design — single legacy sync path; Kenos write path closed.
 
 ## 18–19. Read-after-write / shadow mismatches
 
@@ -181,8 +186,8 @@ Not exercised against production data this window (Owner login pending).
 
 ## 20. Offline / reconnect
 
-Planner E2E / PWA coverage remains; Kenos integration did not add a second
-offline write queue. Full canary offline×1 with auth — Yellow.
+Offline contract unit tests PASS; Kenos integration did not add a second write
+queue. Authenticated canary offline×reconnect — Yellow until Owner session.
 
 ## 21. UI/UX findings
 
@@ -191,14 +196,14 @@ Work / Approval / Focus not added as Planner global tabs.
 
 ## 22. Tests and repeated runs
 
-| Suite                                        | Result                              |
-| -------------------------------------------- | ----------------------------------- |
-| AIOS `node --test` (incl. focusSideReads)    | PASS                                |
-| Planner vitest + guard tests                 | PASS (152)                          |
-| `check-kenos-phase1` / `phase6`              | PASS                                |
-| Wave1 checksum                               | PASS                                |
-| Planner E2E desktop full                     | **118 passed** / 6 skipped          |
-| Planner E2E repeat (triage/schedule/project) | PASS (see `/tmp/planner-e2e-2.log`) |
+| Suite | Result |
+| ----- | ------ |
+| AIOS `node --test` (incl. focusSideReads) | PASS |
+| Planner vitest + guard/session/mutation/offline | PASS (163) |
+| `check-kenos-phase1` / `phase6` | PASS |
+| Wave1 checksum | PASS |
+| Planner E2E desktop full (prior) | **118 passed** / 6 skipped |
+| Planner E2E create/edit/complete/delete ×3 | **12/12 PASS** |
 
 ## 23. Migration checksum
 
