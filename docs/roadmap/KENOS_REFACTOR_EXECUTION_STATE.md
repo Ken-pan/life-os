@@ -588,3 +588,25 @@ Approved temporary defaults now on file:
 - Create/archive Work project RPC canaries PASS; embed-task reject PASS; cross-user deny PASS
 - Report: `docs/qa/kenos-track-f-work-create-archive-report.md`
 - Next: CaptureEnvelope + Assistant propose (no Executor); domain Spaces read inventory
+
+## CaptureEnvelope ingest + explicit Plan convert (2026-07-20)
+
+- Migration tip: `20260720220000`
+- Ingest → `needs_review` PASS; cross-user isolation PASS; explicit convert→Plan PASS; autoConvert=false
+- Report: `docs/qa/kenos-capture-envelope-ingest-report.md`
+
+## Portal retirement inventory (2026-07-20)
+
+- Inventory only: `docs/qa/kenos-portal-retirement-inventory.md`
+- No DNS / redirect / sync `redirectToPortal` change
+- Seven sites still `stop_builds=true`
+
+## Program checkpoint
+
+- Track A/B Plan writers: Owner-limited live on Planner
+- Track C offline: foundation + create enqueue; flush remap pending; flag OFF
+- Track D Approval/Activity/Outbox dead-letter: RPC PASS; Executor OFF
+- Track E Focus start/end: RPC PASS
+- Track F Work create/archive: RPC PASS
+- Capture ingest/convert: RPC PASS
+- Remaining blockers to PRODUCTION_COMPLETE: ProductionExecutor, domain Spaces client cutovers, Apple device evidence, Portal soft-redirect parity, Legacy revoke, final UX acceptance
