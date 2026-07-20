@@ -122,7 +122,7 @@
         return;
       }
 
-      applyTaskSchedule(task.id, {
+      void applyTaskSchedule(task.id, {
         dateKey,
         start: formatMinutesAsTime(next.startMinutes),
         durationMinutes: next.durationMinutes,

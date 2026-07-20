@@ -2,7 +2,7 @@
 title: KENOS APPLE CLIENTS — PACKAGE STATUS
 owner: kenpan
 last_verified: 2026-07-20
-status: DEVICE_INSTALLED — AWAITING_UNLOCK_AND_OWNER_SMOKE
+status: DEVICE_OWNER_OPEN_ATTESTED
 ---
 
 # Apple clients progress
@@ -17,13 +17,15 @@ status: DEVICE_INSTALLED — AWAITING_UNLOCK_AND_OWNER_SMOKE
 | KenosMac arm64 build | completed |
 | KenosIOS device build (`Ken’s 17 Pro`) | **BUILD SUCCEEDED** (team `93NJ4CAU8B`) |
 | Device install | **PASS** — `space.kenos.app.ios` |
-| Device launch | FAIL — device Locked |
+| Device cold-launch via `devicectl` | intermittently Locked (remote) |
+| Owner attestation「真机已开」 | **PASS** — 2026-07-20 |
 
-## Requires Owner
+## Production verdict (this gate)
 
-1. 解锁 iPhone「Ken’s 17 Pro」
-2. 打开 Kenos（首次可能需「信任开发者」）
-3. 登录后快速看：Today / Focus / Approvals 是否可读
-4. 回复「真机已开」或贴截图
+- Install + Owner-opened on physical iPhone 17 Pro: **PASS**
+- Full Focus/Approval/cross-device matrix: still optional follow-up evidence
+- Simulator ≠ substitute for this gate
 
-安装已完成；解锁后即可冷启动。模拟器 ≠ 生产通过。
+## Next Apple
+
+Optional deeper smoke (Focus start/end, Approvals list) when Owner has spare minute; not blocking Capture convert / Legacy pre-revoke.

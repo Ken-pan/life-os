@@ -57,10 +57,10 @@
   }
 
   /** @param {import('$lib/types.js').Task} task */
-  function scheduleTaskHere(task) {
+  async function scheduleTaskHere(task) {
     if (!scheduleSlot.dateKey || !scheduleSlot.start) return;
     const start = scheduleSlot.start;
-    const applied = applyTaskSchedule(task.id, {
+    const applied = await applyTaskSchedule(task.id, {
       dateKey: scheduleSlot.dateKey,
       start,
       durationMinutes: scheduleSlot.durationMinutes,

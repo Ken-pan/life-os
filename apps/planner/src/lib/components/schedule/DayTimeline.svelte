@@ -31,7 +31,7 @@
     endScheduleDrag,
   } from '$lib/ui.svelte.js';
   import { S } from '$lib/state.svelte.js';
-  import { updateTask } from '$lib/domain/tasks.js';
+  import { updateTaskScheduleAsync } from '$lib/domain/tasks.js';
 
   /** @type {{ dateKey: string, tasks: import('$lib/types.js').Task[] }} */
   let { dateKey, tasks } = $props();
@@ -213,7 +213,7 @@
   }
 
   /** @param {DragEvent} e */
-  function onDrop(e) {
+  async function onDrop(e) {
     resetDragTarget();
     if (!desktopDnD || !canvasEl) return;
     e.preventDefault();
@@ -236,7 +236,7 @@
       durationMinutes: task.durationMinutes ?? null,
     };
 
-    const applied = applyTaskSchedule(task.id, {
+    const applied = await applyTaskSchedule(task.id, {
       dateKey,
       start: preview.start,
       durationMinutes: preview.durationMinutes,
@@ -247,10 +247,12 @@
       dedupeMs: 4000,
       actionLabel: t('common.undo'),
       onAction: () => {
-        updateTask(task.id, {
+        void updateTaskScheduleAsync(task.id, {
           scheduledDate: previous.scheduledDate,
           scheduledStart: previous.scheduledStart,
           durationMinutes: previous.durationMinutes,
+        }).catch((error) => {
+          console.error('[kenos] DayTimeline schedule undo failed', error);
         });
       },
     });

@@ -361,3 +361,114 @@ export async function executeAssistantCreateTaskCommand({
     persistence: 'local_command_boundary',
   }
 }
+
+/**
+ * Build Kenos complete-task Action for MCP (no Legacy upsert).
+ */
+export function buildCompleteTaskAction(taskId, { authUserId, now = Date.now(), deviceId, actionId, correlationId, idempotencyKey } = {}) {
+  if (!authUserId || !UUID_PATTERN.test(authUserId)) {
+    throw new Error('Authenticated identity is required for Assistant complete-task.')
+  }
+  const id = String(taskId || '').trim()
+  if (!id) throw new Error('Task id is required.')
+  const resolvedActionId = asUuid(actionId)
+  const resolvedCorrelationId = asUuid(correlationId)
+  const resolvedDeviceId = asUuid(deviceId)
+  return {
+    schemaVersion: '1',
+    id: resolvedActionId,
+    actionType: 'plan.complete_task',
+    producer: 'assistant',
+    targetDomain: 'plan',
+    actor: { type: 'assistant', id: authUserId },
+    deviceId: resolvedDeviceId,
+    securityDomain: 'personal',
+    dataClassification: 'personal',
+    requestedRisk: 'R1',
+    payload: { taskId: id },
+    reason: 'Explicit user-requested Assistant MCP complete-task',
+    idempotencyKey: String(idempotencyKey || `mcp_complete:${resolvedCorrelationId}`),
+    requestedAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + 5 * 60 * 1000).toISOString(),
+    correlationId: resolvedCorrelationId,
+  }
+}
+
+/**
+ * Assistant MCP complete-task — hosted Kenos RPC only; no planner_tasks upsert fallback.
+ */
+export async function executeAssistantCompleteTaskCommand({
+  authUserId,
+  taskId,
+  remoteRpc,
+  persistTask,
+} = {}) {
+  if (typeof persistTask === 'function') {
+    return {
+      ok: false,
+      error: {
+        code: 'direct_task_write_forbidden',
+        message: 'MCP complete-task must not receive persistTask/upsert adapters; use hosted Kenos RPC.',
+        class: 'permanent',
+        retryable: false,
+      },
+    }
+  }
+  if (!authUserId || !UUID_PATTERN.test(authUserId)) {
+    return {
+      ok: false,
+      error: {
+        code: 'auth_required',
+        message: 'Authenticated identity is required for Assistant complete-task.',
+        class: 'permanent',
+        retryable: false,
+      },
+    }
+  }
+  let action
+  try {
+    action = buildCompleteTaskAction(taskId, { authUserId })
+  } catch (error) {
+    return {
+      ok: false,
+      error: { code: 'invalid_action_contract', message: error?.message ?? String(error), class: 'permanent', retryable: false },
+    }
+  }
+  if (typeof remoteRpc !== 'function') {
+    return {
+      ok: false,
+      error: {
+        code: 'hosted_rpc_required',
+        message: 'Production MCP complete-task requires hosted kenos_complete_plan_task_action; direct planner_tasks upsert is disabled.',
+        class: 'permanent',
+        retryable: false,
+      },
+      action,
+      persistence: 'blocked_pending_hosted_rpc',
+    }
+  }
+  try {
+    const remote = await remoteRpc(action)
+    if (!remote?.ok) {
+      return {
+        ok: false,
+        error: remote?.error || { code: 'remote_rpc_failed', message: 'Hosted complete-task RPC failed.', class: 'permanent', retryable: false },
+        action,
+      }
+    }
+    return {
+      ok: true,
+      action,
+      taskId,
+      duplicate: Boolean(remote.duplicate),
+      result: remote.result || remote,
+      persistence: 'hosted_rpc',
+    }
+  } catch (error) {
+    return {
+      ok: false,
+      error: { code: 'remote_rpc_failed', message: error?.message ?? String(error), class: 'permanent', retryable: false },
+      action,
+    }
+  }
+}

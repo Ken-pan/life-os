@@ -97,9 +97,10 @@
     });
   });
 
-  function save() {
+  async function save() {
     if (!task || !dateKey || !hasChanges) return;
-    applyTaskSchedule(task.id, { dateKey, start, durationMinutes: duration });
+    const ok = await applyTaskSchedule(task.id, { dateKey, start, durationMinutes: duration });
+    if (!ok) return;
     toast(t('toast.scheduledBlockDetailed', {
       title: task.title,
       date: formattedDate,
@@ -111,9 +112,10 @@
     });
   }
 
-  function clearSchedule() {
+  async function clearSchedule() {
     if (!task) return;
-    clearTaskSchedule(task.id);
+    const ok = await clearTaskSchedule(task.id);
+    if (!ok) return;
     toast(t('toast.scheduleCleared', { title: task.title }), 'success', {
       key: `schedule-clear-${task.id}`,
     });

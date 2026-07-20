@@ -675,3 +675,9 @@ Approved temporary defaults now on file:
 
 - KenosIOS device BUILD SUCCEEDED + installed on Ken’s 17 Pro (`space.kenos.app.ios`)
 - Launch blocked: device Locked — awaiting Owner unlock + trust + smoke
+
+## Apple Owner open + Legacy pre-revoke (2026-07-20)
+
+- Owner「真机已开」attested; KenosIOS installed on 17 Pro
+- Legacy revoke inventory: revoke nothing yet
+- Pre-revoke: due/schedule UI bypass → Kenos async; MCP complete → Kenos RPC; Capture convert client ready (flag Off)

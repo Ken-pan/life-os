@@ -10,7 +10,9 @@ import {
   findTaskToComplete,
   isIsoDate,
   buildCreateTaskAction,
+  buildCompleteTaskAction,
   executeAssistantCreateTaskCommand,
+  executeAssistantCompleteTaskCommand,
 } from './mcpTasks.mjs'
 
 /* buildTask：补齐全字段、默认与 createTask 对齐 */
@@ -192,4 +194,24 @@ const AUTH = '20000000-0000-4000-8000-000000000001'
   })
   assert.equal(hostedBlocked.ok, false)
   assert.equal(hostedBlocked.error.code, 'hosted_rpc_required')
+
+  const completeAction = buildCompleteTaskAction('task-1', { authUserId: AUTH })
+  assert.equal(completeAction.actionType, 'plan.complete_task')
+  assert.equal(completeAction.payload.taskId, 'task-1')
+
+  const completeBlocked = await executeAssistantCompleteTaskCommand({
+    authUserId: AUTH,
+    taskId: 'task-1',
+    persistTask: async () => {},
+  })
+  assert.equal(completeBlocked.ok, false)
+  assert.equal(completeBlocked.error.code, 'direct_task_write_forbidden')
+
+  const completeHosted = await executeAssistantCompleteTaskCommand({
+    authUserId: AUTH,
+    taskId: 'task-1',
+    remoteRpc: async () => ({ ok: true, duplicate: false, result: { taskId: 'task-1' } }),
+  })
+  assert.equal(completeHosted.ok, true)
+  assert.equal(completeHosted.persistence, 'hosted_rpc')
 }

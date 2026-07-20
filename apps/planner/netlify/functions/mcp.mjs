@@ -2,12 +2,12 @@ import { createMcpHandler } from '@life-os/mcp-server';
 import { userIdOf, needLogin } from '@life-os/mcp-server/auth';
 import {
   selectTasks,
-  completeTask,
   findTaskToComplete,
   formatTaskLine,
   isToday,
   isIsoDate,
   executeAssistantCreateTaskCommand,
+  executeAssistantCompleteTaskCommand,
 } from '../../server/mcpTasks.mjs';
 
 /**
@@ -39,19 +39,9 @@ function renderList(tasks, empty) {
 }
 
 /**
- * complete_task still uses legacy upsert until a Kenos complete-task command exists.
- * add_task MUST NOT call this — create path is command-boundary only (P1-002 remediation).
+ * complete_task and add_task both use hosted Kenos command RPCs.
+ * Direct planner_tasks upsert is intentionally unreachable from MCP write tools.
  */
-async function upsertTask(sb, userId, task) {
-  const { error } = await sb.from('planner_tasks').upsert({
-    user_id: userId,
-    id: task.id,
-    data: task,
-    updated_at: new Date(task.updatedAt).toISOString(),
-  });
-  if (error) throw new Error(error.message);
-}
-
 async function invokeCreateTaskRpc(sb, action) {
   const { data, error } = await sb.rpc('kenos_create_plan_task_action', { action_request: action });
   if (error) {
@@ -62,6 +52,26 @@ async function invokeCreateTaskRpc(sb, action) {
         error: {
           code: 'hosted_rpc_required',
           message: 'Hosted kenos_create_plan_task_action is not applied; MCP will not fall back to planner_tasks upsert.',
+          class: 'permanent',
+          retryable: false,
+        },
+      };
+    }
+    return { ok: false, error: { code: 'remote_rpc_failed', message: error.message, class: 'permanent', retryable: false } };
+  }
+  return data;
+}
+
+async function invokeCompleteTaskRpc(sb, action) {
+  const { data, error } = await sb.rpc('kenos_complete_plan_task_action', { action_request: action });
+  if (error) {
+    const missing = /could not find|PGRST202|42883|function .* does not exist/i.test(error.message || '');
+    if (missing) {
+      return {
+        ok: false,
+        error: {
+          code: 'hosted_rpc_required',
+          message: 'Hosted kenos_complete_plan_task_action is not applied; MCP will not fall back to planner_tasks upsert.',
           class: 'permanent',
           retryable: false,
         },
@@ -197,15 +207,21 @@ export default createMcpHandler({
         }
         const target = findTaskToComplete(tasks, { id: args?.id || '', title: args?.title || '' });
         if (!target) return `没找到匹配的未完成任务${args?.title ? `：「${args.title}」` : ''}。`;
-        const done = completeTask(target, Date.now());
         let userId;
         try {
           userId = await userIdOf(supabase);
-          await upsertTask(supabase, userId, done);
         } catch (err) {
-          return `更新任务失败：${err?.message ?? err}`;
+          return `鉴权失败：${err?.message ?? err}`;
         }
-        return `已完成任务：${done.title || '(无标题)'}`;
+        const result = await executeAssistantCompleteTaskCommand({
+          authUserId: userId,
+          taskId: target.id,
+          remoteRpc: (action) => invokeCompleteTaskRpc(supabase, action),
+        });
+        if (!result.ok) {
+          return `完成任务失败：${result.error?.message ?? 'command boundary rejected'}（persistence=${result.persistence || 'none'}）`;
+        }
+        return `已完成任务：${target.title || '(无标题)'}`;
       },
     },
   ],

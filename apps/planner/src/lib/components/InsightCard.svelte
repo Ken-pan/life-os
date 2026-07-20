@@ -6,7 +6,7 @@
   import { buildAiPrompt, tasksFingerprint } from '$lib/services/aiPrompts.js';
   import { fetchAiText, isAiDisabled } from '$lib/services/aiClient.js';
   import { t } from '$lib/i18n/index.js';
-  import { activeTasks, updateTask } from '$lib/domain/tasks.js';
+  import { activeTasks, updateTaskDueDateAsync } from '$lib/domain/tasks.js';
   import { formatDateDisplay } from '$lib/domain/dateFormat.js';
   import { scheduleUndatedTasks, sortUndatedTasks } from '$lib/engine/scheduling.js';
   import { todayKey } from '$lib/state.svelte.js';
@@ -127,7 +127,9 @@
         return;
       }
       for (const { task, date } of results) {
-        updateTask(task.id, { dueDate: date });
+        void updateTaskDueDateAsync(task.id, date).catch((error) => {
+          console.error('[kenos] InsightCard due schedule failed', error);
+        });
       }
       if (results.length === 1) {
         toast(

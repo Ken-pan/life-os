@@ -8,6 +8,7 @@
   import {
     isOverdue,
     updateTask,
+    updateTaskDueDateAsync,
     deleteTaskAsync,
     restoreTask,
   } from '$lib/domain/tasks.js'
@@ -274,7 +275,9 @@
 
   function doTomorrow() {
     const date = tomorrowKey()
-    updateTask(task.id, { dueDate: date })
+    void updateTaskDueDateAsync(task.id, date).catch((error) => {
+      console.error('[kenos] TaskRow due tomorrow failed', error)
+    })
     closeActions()
     toast(
       t('toast.scheduled', { title: task.title, date: fmtDate(date) }),
@@ -304,7 +307,9 @@
 
   function doToday() {
     const date = todayKey()
-    updateTask(task.id, { dueDate: date })
+    void updateTaskDueDateAsync(task.id, date).catch((error) => {
+      console.error('[kenos] TaskRow due today failed', error)
+    })
     closeActions()
     toast(
       t('toast.scheduled', { title: task.title, date: fmtDate(date) }),
@@ -314,7 +319,9 @@
 
   function doThisWeek() {
     const date = thisWeekKey()
-    updateTask(task.id, { dueDate: date })
+    void updateTaskDueDateAsync(task.id, date).catch((error) => {
+      console.error('[kenos] TaskRow due this week failed', error)
+    })
     closeActions()
     toast(
       t('toast.scheduled', { title: task.title, date: fmtDate(date) }),
@@ -323,7 +330,9 @@
   }
 
   function doClearDate() {
-    updateTask(task.id, { dueDate: null })
+    void updateTaskDueDateAsync(task.id, null).catch((error) => {
+      console.error('[kenos] TaskRow clear due failed', error)
+    })
     closeActions()
     toast(
       t('toast.scheduleCleared', { title: task.title }),

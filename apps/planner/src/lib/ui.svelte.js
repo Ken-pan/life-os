@@ -1,7 +1,7 @@
 import { S, flushSave } from './state.svelte.js'
 import { SYSTEM_LIST_INBOX } from './types.js'
 import { createToastStore } from '@life-os/platform-web/svelte/toast-store'
-import { updateTask } from './domain/tasks.js'
+import { updateTask, updateTaskScheduleAsync } from './domain/tasks.js'
 import { DEFAULT_SLOT_DURATION_MINUTES } from './domain/schedule.js'
 import { createTaskEditorDraft } from './taskEditorDraft.js'
 import { t } from './i18n/index.js'
@@ -157,17 +157,27 @@ export function closeScheduleSlot() {
 }
 
 /**
+ * Schedule apply — routes through Kenos writer when Owner cohort flags are On.
  * @param {string} taskId
  * @param {{ dateKey: string, start: string, durationMinutes: number }} payload
  */
-export function applyTaskSchedule(taskId, payload) {
+export async function applyTaskSchedule(taskId, payload) {
   const previous = S.tasks.find((task) => task.id === taskId)
   if (!previous) return false
-  updateTask(taskId, {
-    scheduledDate: payload.dateKey,
-    scheduledStart: payload.start,
-    durationMinutes: payload.durationMinutes,
-  })
+  try {
+    await updateTaskScheduleAsync(taskId, {
+      scheduledDate: payload.dateKey,
+      scheduledStart: payload.start,
+      durationMinutes: payload.durationMinutes,
+    })
+  } catch (error) {
+    toast(t('toast.schedulePersistFailed'), 'error', {
+      key: `schedule-persist-${taskId}`,
+      dedupeMs: 2000,
+    })
+    console.error('[kenos] applyTaskSchedule failed', error)
+    return false
+  }
   if (!flushSave()) {
     S.tasks = S.tasks.map((task) => (task.id === taskId ? previous : task))
     toast(t('toast.schedulePersistFailed'), 'error', {
@@ -181,14 +191,23 @@ export function applyTaskSchedule(taskId, payload) {
 }
 
 /** @param {string} taskId */
-export function clearTaskSchedule(taskId) {
+export async function clearTaskSchedule(taskId) {
   const previous = S.tasks.find((task) => task.id === taskId)
   if (!previous) return false
-  updateTask(taskId, {
-    scheduledDate: null,
-    scheduledStart: null,
-    durationMinutes: null,
-  })
+  try {
+    await updateTaskScheduleAsync(taskId, {
+      scheduledDate: null,
+      scheduledStart: null,
+      durationMinutes: null,
+    })
+  } catch (error) {
+    toast(t('toast.schedulePersistFailed'), 'error', {
+      key: `schedule-persist-${taskId}`,
+      dedupeMs: 2000,
+    })
+    console.error('[kenos] clearTaskSchedule failed', error)
+    return false
+  }
   if (!flushSave()) {
     S.tasks = S.tasks.map((task) => (task.id === taskId ? previous : task))
     toast(t('toast.schedulePersistFailed'), 'error', {
