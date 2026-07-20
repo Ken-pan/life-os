@@ -6,7 +6,7 @@
 | Space Continuity (function) | **PASSED** · Planner / Fitness / Isolation **VALIDATED** |
 | Annotation / evidence binding | Closed in `…T20-12-22-998Z` |
 | Continuity Verification Sheet | Rebuilt from canonical run (not Owner Review) |
-| **P5 Visual Quality** | **IN_PROGRESS** — knives 1–4 DONE · knife 5 open |
+| **P5 Visual Quality** | **IN_PROGRESS** — knives 1–5 DONE · Knife 6 polish open |
 | Owner Review | **NOT OPEN** |
 
 ```text
@@ -61,6 +61,16 @@ OWNER REVIEW — NOT OPEN
 - Capture: `node scripts/qa/kenos-knife4-domain-identity-capture.mjs --port 5197`
 - Continuity: descriptor / deep links / testids **unchanged**
 
-## Still open (later knives)
+## P5 knife 5 — Today type & information rhythm
 
-- Type ramp / Today density (Knife 5)
+- Status: **PASS** (Owner Review still **NOT OPEN**; Visual still **IN_PROGRESS**)
+- Levels: L1 focus+Inbox · L2 Work/Spaces · L3 activity/system
+- Weight differentials (not global scale-up); as-of/sync weakest
+- Continue CTA: `data-testid="kenos-today-continue"` → `openSpaceSwitcherSheet`
+- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife5-today-rhythm/` (`manifest.json` PASS)
+- Capture: `node scripts/qa/kenos-knife5-today-rhythm-capture.mjs --port 5197`
+- Continuity: descriptor / deep links / existing testids **unchanged**
+
+## Still open (later)
+
+- Knife 6: full state polish (loading / empty / error / offline / a11y / dark-light) — **before** Owner Review

@@ -3,7 +3,11 @@
   import Icon from '@life-os/platform-web/svelte/icon'
   import ReadSourceState from '$lib/components/ReadSourceState.svelte'
   import { CONTROL, refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
-  import { rememberExternalResume, launchSpace } from '$lib/kenos/spaceSwitcher.svelte.js'
+  import {
+    rememberExternalResume,
+    launchSpace,
+    openSpaceSwitcherSheet,
+  } from '$lib/kenos/spaceSwitcher.svelte.js'
   import { listKeyForDomainHref } from '$lib/kenos/domainResume.core.js'
   import { TODAY_SPACE_SHORTCUTS, spaceListKey } from '$lib/kenos/spacesList.core.js'
   import { goto } from '$app/navigation'
@@ -86,7 +90,7 @@
         disabled={CONTROL.loading}
         onclick={() => refreshControlCenter({ force: true })}
       >
-        <Icon name="refresh" size={16} strokeWidth={1.75} />
+        <Icon name="refresh" size={14} strokeWidth={1.75} />
         刷新
       </button>
     </div>
@@ -97,252 +101,292 @@
       部分内容暂时无法更新。{CONTROL.error}
     </p>
   {:else if CONTROL.loading}
-    <p class="status-line" aria-live="polite">正在汇总各 Space 状态…</p>
+    <p class="status-line status-line--quiet" aria-live="polite">正在汇总各 Space 状态…</p>
   {:else if today.asOf}
     <p class="status-line status-line--quiet status-line--asof" aria-hidden="true">
       {new Intl.DateTimeFormat('zh-CN', { timeStyle: 'short' }).format(new Date(today.asOf))}
     </p>
   {/if}
 
-  <ReadSourceState
-    state={CONTROL.sources.today}
-    onRetry={() => refreshControlCenter({ force: true })}
-  />
+  <div class="today-sync-quiet">
+    <ReadSourceState
+      state={CONTROL.sources.today}
+      onRetry={() => refreshControlCenter({ force: true })}
+    />
+  </div>
 
   <main class="today-workspace">
-    <section class="focus-section" aria-labelledby="today-focus-title">
-      <div class="section-heading">
-        <div>
-          <p class="section-kicker">现在</p>
-          <h2 id="today-focus-title">真正重要的事</h2>
-        </div>
-        <a href="/assistant" class="text-action">
-          问 Assistant
-          <Icon name="chevron-right" size={15} strokeWidth={1.75} />
-        </a>
-      </div>
-
-      {#if today.priorities.length}
-        <div class="priority-list">
-          {#each today.priorities as item (item.id)}
-            <a
-              class="priority-row priority-row--{item.tone}"
-              href={item.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              onclick={() => {
-                const listKey = listKeyForDomainHref(item.href)
-                if (listKey) {
-                  rememberExternalResume(listKey, {
-                    lastRoute: item.href,
-                    filter: item.title,
-                  })
-                }
-              }}
-            >
-              <span class="priority-marker" aria-hidden="true"></span>
-              <span class="priority-copy">
-                <span class="row-eyebrow">{item.eyebrow}</span>
-                <strong>{item.title}</strong>
-                <span>{item.detail}</span>
-              </span>
-              <span class="row-action">{item.actionLabel}</span>
-            </a>
-          {/each}
-        </div>
-      {:else}
-        <div class="empty-block">
-          <p>{today.emptyReason}</p>
-          <a href="/assistant">从 Assistant 开始</a>
-        </div>
-      {/if}
-    </section>
-
-    <section aria-labelledby="today-decisions-title">
-      <div class="section-heading">
-        <div>
-          <p class="section-kicker">需要你</p>
-          <h2 id="today-decisions-title">等待处理</h2>
-        </div>
-        <a href="/inbox" class="text-action">
-          打开 Inbox
-          <Icon name="chevron-right" size={15} strokeWidth={1.75} />
-        </a>
-      </div>
-      <div class="queue-list">
-        <a href="/inbox" class="queue-row">
-          <span>Inbox</span>
-          <strong aria-label={queue.inboxAvailable ? `${queue.inboxOpen} 条待分类` : 'Inbox 数量暂不可用'}>
-            {formatQueueCount(queue.inboxOpen)}
-          </strong>
-          <small>
-            待归位 {formatQueueCount(queue.inboxOpen)} · 待批准 {formatQueueCount(queue.approvalsOpen)}
-            · 需关注 {formatQueueCount(queue.activityFailures)}
-          </small>
-          <Icon name="chevron-right" size={16} strokeWidth={1.75} />
-        </a>
-      </div>
-    </section>
-
-    <section aria-labelledby="today-work-title">
-      <div class="section-heading">
-        <div>
-          <p class="section-kicker">Spaces</p>
-          <h2 id="today-work-title">Work</h2>
-        </div>
-        <a href="/spaces" class="text-action">
-          全部 Spaces
-          <Icon name="chevron-right" size={15} strokeWidth={1.75} />
-        </a>
-      </div>
-      {#if workCapabilityCopy.kind === 'unavailable' || workCapabilityCopy.kind === 'unauthorized' || workCapabilityCopy.kind === 'error'}
-        <p class="empty-copy" role="status">
-          {workCapabilityCopy.title}
-          {#if workCapabilityCopy.body}
-            <span class="empty-copy-detail">{workCapabilityCopy.body}</span>
-          {/if}
-        </p>
-      {:else if workCapabilityCopy.kind === 'empty' || (prodWorkReadOn && ['empty', 'ready', 'partial', 'stale'].includes(CONTROL.sources?.work?.status) && !workCards.length)}
-        <p class="empty-copy" role="status">
-          {workCapabilityCopy.kind === 'empty' ? workCapabilityCopy.title : '暂无 Work 卡片'}
-          {#if workCapabilityCopy.kind === 'empty' && workCapabilityCopy.body}
-            <span class="empty-copy-detail">{workCapabilityCopy.body}</span>
-          {:else}
-            <span class="empty-copy-detail">可从 Spaces 进入整理；这是空列表，不是读取失败。</span>
-          {/if}
-        </p>
-      {:else if workCards.length}
-        <div class="signal-list">
-          {#each workCards as card (card.id)}
-            <a
-              href={card.deepLink || '/work'}
-              class="signal-row"
-              owner={card.ownerDomain}
-              data-owner-domain={card.ownerDomain}
-            >
-              <span class="signal-label">{workKindLabel[card.kind] || card.kind}</span>
-              <strong>{card.title}</strong>
-              <span>{card.summary}</span>
-              <Icon name="chevron-right" size={14} strokeWidth={1.75} />
-            </a>
-          {/each}
-        </div>
-      {:else if WORK.status === 'unsupported' && !prodWorkReadOn}
-        <p class="empty-copy" role="status">Work 正在准备中。相关任务可先在 Plan 里管理。</p>
-      {:else}
-        <p class="empty-copy">暂无 Work 卡片。</p>
-      {/if}
-    </section>
-
-    {#if today.signals.length}
-      <section aria-labelledby="today-signals-title">
+    <div class="today-level-1">
+      <section class="focus-section" aria-labelledby="today-focus-title">
         <div class="section-heading">
           <div>
-            <p class="section-kicker">状态</p>
-            <h2 id="today-signals-title">来自 Spaces</h2>
+            <p class="section-kicker">现在</p>
+            <h2 id="today-focus-title">真正重要的事</h2>
+          </div>
+          <div class="section-heading-actions">
+            <button
+              type="button"
+              class="text-action text-action--continue"
+              data-testid="kenos-today-continue"
+              aria-label="Continue to a recent Space"
+              onclick={openSpaceSwitcherSheet}
+            >
+              继续刚才的事
+              <Icon name="history" size={15} strokeWidth={1.75} />
+            </button>
+            <a href="/assistant" class="text-action">
+              问 Assistant
+              <Icon name="chevron-right" size={15} strokeWidth={1.75} />
+            </a>
           </div>
         </div>
-        <div class="signal-list">
-          {#each today.signals as signal (signal.id)}
-            <a
-              href={signal.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="signal-row"
-              onclick={() => {
-                const listKey = listKeyForDomainHref(signal.href)
-                if (listKey) {
-                  rememberExternalResume(listKey, {
-                    lastRoute: signal.href,
-                    filter: signal.value,
-                  })
-                }
-              }}
+
+        {#if today.priorities.length}
+          <div class="priority-list">
+            {#each today.priorities as item, index (item.id)}
+              <a
+                class={[
+                  'priority-row',
+                  `priority-row--${item.tone}`,
+                  (index === 0 || item.tone === 'critical') && 'priority-row--hero',
+                ]}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onclick={() => {
+                  const listKey = listKeyForDomainHref(item.href)
+                  if (listKey) {
+                    rememberExternalResume(listKey, {
+                      lastRoute: item.href,
+                      filter: item.title,
+                    })
+                  }
+                }}
+              >
+                <span class="priority-marker" aria-hidden="true"></span>
+                <span class="priority-copy">
+                  <span class="row-eyebrow">{item.eyebrow}</span>
+                  <strong>{item.title}</strong>
+                  <span class="row-detail">{item.detail}</span>
+                </span>
+                <span class="row-action">{item.actionLabel}</span>
+              </a>
+            {/each}
+          </div>
+        {:else}
+          <div class="empty-block">
+            <p>{today.emptyReason}</p>
+            <div class="empty-block-actions">
+              <button
+                type="button"
+                class="text-action text-action--continue"
+                aria-label="Continue to a recent Space"
+                onclick={openSpaceSwitcherSheet}
+              >
+                继续刚才的事
+                <Icon name="history" size={15} strokeWidth={1.75} />
+              </button>
+              <a href="/assistant">从 Assistant 开始</a>
+            </div>
+          </div>
+        {/if}
+      </section>
+
+      <section class="decisions-section" aria-labelledby="today-decisions-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">需要你</p>
+            <h2 id="today-decisions-title">等待处理</h2>
+          </div>
+          <a href="/inbox" class="text-action">
+            打开 Inbox
+            <Icon name="chevron-right" size={15} strokeWidth={1.75} />
+          </a>
+        </div>
+        <div class="queue-list">
+          <a href="/inbox" class="queue-row">
+            <span class="queue-label">Inbox</span>
+            <strong
+              class="queue-count"
+              aria-label={queue.inboxAvailable ? `${queue.inboxOpen} 条待分类` : 'Inbox 数量暂不可用'}
             >
-              <span class="signal-label">{signal.label}</span>
-              <strong>{signal.value}</strong>
-              <span>{signal.detail}{signal.stale ? ' · 数据陈旧' : ''}</span>
-              <Icon name="external" size={14} strokeWidth={1.75} />
-            </a>
-          {/each}
+              {formatQueueCount(queue.inboxOpen)}
+            </strong>
+            <small>
+              待归位 {formatQueueCount(queue.inboxOpen)} · 待批准 {formatQueueCount(queue.approvalsOpen)}
+              · 需关注 {formatQueueCount(queue.activityFailures)}
+            </small>
+            <Icon name="chevron-right" size={16} strokeWidth={1.75} />
+          </a>
         </div>
       </section>
-    {/if}
+    </div>
 
-    <section aria-labelledby="today-activity-title">
-      <div class="section-heading">
-        <div>
-          <p class="section-kicker">可追溯</p>
-          <h2 id="today-activity-title">系统已处理</h2>
-        </div>
-        <a href="/inbox#activity" class="text-action">查看全部</a>
-      </div>
-      {#if recentActivity.length}
-        <div class="activity-list">
-          {#each recentActivity as item (item.id)}
-            <div class="activity-row">
-              <span class="activity-state activity-state--{item.status}"></span>
-              <div>
-                <strong>{item.safeSummary ?? item.summary}</strong>
-                <span>{item.resultDetail ?? item.result}</span>
-              </div>
-              <time datetime={item.occurredAt}>{item.occurredAt
-                ? new Intl.DateTimeFormat('zh-CN', { timeStyle: 'short' }).format(new Date(item.occurredAt))
-                : item.occurredLabel}</time>
-            </div>
-          {/each}
-        </div>
-      {:else}
-        <p class="empty-copy">最近没有需要展示的系统处理记录。</p>
-      {/if}
-    </section>
-
-    <section aria-labelledby="today-spaces-title">
-      <div class="section-heading">
-        <div>
-          <p class="section-kicker">进入领域</p>
-          <h2 id="today-spaces-title">Spaces</h2>
-        </div>
-        <a href="/spaces" class="text-action">全部</a>
-      </div>
-      <nav class="space-list" aria-label="Kenos Spaces">
-        {#each TODAY_SPACE_SHORTCUTS as space (space.id)}
-          <a
-            class="space-shortcut"
-            href={space.href}
-            data-space-id={space.id}
-            style:--space-accent={space.accent || 'transparent'}
-            onclick={(e) => onTodaySpace(space, e)}
-          >
-            <span
-              class="space-shortcut-rail"
-              style:background={space.accent || 'var(--border)'}
-              aria-hidden="true"
-            ></span>
-            {#if space.icon}
-              <span
-                class="space-shortcut-icon"
-                style:color={space.accent
-                  ? `color-mix(in srgb, ${space.accent} 78%, var(--t2))`
-                  : 'var(--t2)'}
-                aria-hidden="true"
-              >
-                <Icon name={space.icon} size={14} strokeWidth={1.75} />
-              </span>
-            {/if}
-            <span class="space-shortcut-text">
-              <strong>{space.label}</strong>
-              <span>{space.detail}</span>
-            </span>
+    <div class="today-level-2">
+      <section aria-labelledby="today-work-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Spaces</p>
+            <h2 id="today-work-title">Work</h2>
+          </div>
+          <a href="/spaces" class="text-action">
+            全部 Spaces
+            <Icon name="chevron-right" size={15} strokeWidth={1.75} />
           </a>
-        {/each}
-      </nav>
-    </section>
+        </div>
+        {#if workCapabilityCopy.kind === 'unavailable' || workCapabilityCopy.kind === 'unauthorized' || workCapabilityCopy.kind === 'error'}
+          <p class="empty-copy" role="status">
+            {workCapabilityCopy.title}
+            {#if workCapabilityCopy.body}
+              <span class="empty-copy-detail">{workCapabilityCopy.body}</span>
+            {/if}
+          </p>
+        {:else if workCapabilityCopy.kind === 'empty' || (prodWorkReadOn && ['empty', 'ready', 'partial', 'stale'].includes(CONTROL.sources?.work?.status) && !workCards.length)}
+          <p class="empty-copy" role="status">
+            {workCapabilityCopy.kind === 'empty' ? workCapabilityCopy.title : '暂无 Work 卡片'}
+            {#if workCapabilityCopy.kind === 'empty' && workCapabilityCopy.body}
+              <span class="empty-copy-detail">{workCapabilityCopy.body}</span>
+            {:else}
+              <span class="empty-copy-detail">可从 Spaces 进入整理；这是空列表，不是读取失败。</span>
+            {/if}
+          </p>
+        {:else if workCards.length}
+          <div class="signal-list">
+            {#each workCards as card (card.id)}
+              <a
+                href={card.deepLink || '/work'}
+                class="signal-row"
+                owner={card.ownerDomain}
+                data-owner-domain={card.ownerDomain}
+              >
+                <span class="signal-label">{workKindLabel[card.kind] || card.kind}</span>
+                <strong>{card.title}</strong>
+                <span>{card.summary}</span>
+                <Icon name="chevron-right" size={14} strokeWidth={1.75} />
+              </a>
+            {/each}
+          </div>
+        {:else if WORK.status === 'unsupported' && !prodWorkReadOn}
+          <p class="empty-copy" role="status">Work 正在准备中。相关任务可先在 Plan 里管理。</p>
+        {:else}
+          <p class="empty-copy">暂无 Work 卡片。</p>
+        {/if}
+      </section>
+
+      {#if today.signals.length}
+        <section aria-labelledby="today-signals-title">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">状态</p>
+              <h2 id="today-signals-title">来自 Spaces</h2>
+            </div>
+          </div>
+          <div class="signal-list">
+            {#each today.signals as signal (signal.id)}
+              <a
+                href={signal.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="signal-row"
+                onclick={() => {
+                  const listKey = listKeyForDomainHref(signal.href)
+                  if (listKey) {
+                    rememberExternalResume(listKey, {
+                      lastRoute: signal.href,
+                      filter: signal.value,
+                    })
+                  }
+                }}
+              >
+                <span class="signal-label">{signal.label}</span>
+                <strong>{signal.value}</strong>
+                <span>{signal.detail}{signal.stale ? ' · 数据陈旧' : ''}</span>
+                <Icon name="external" size={14} strokeWidth={1.75} />
+              </a>
+            {/each}
+          </div>
+        </section>
+      {/if}
+
+      <section aria-labelledby="today-spaces-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">进入领域</p>
+            <h2 id="today-spaces-title">Spaces</h2>
+          </div>
+          <a href="/spaces" class="text-action">全部</a>
+        </div>
+        <nav class="space-list" aria-label="Kenos Spaces">
+          {#each TODAY_SPACE_SHORTCUTS as space (space.id)}
+            <a
+              class="space-shortcut"
+              href={space.href}
+              data-space-id={space.id}
+              style:--space-accent={space.accent || 'transparent'}
+              onclick={(e) => onTodaySpace(space, e)}
+            >
+              <span
+                class="space-shortcut-rail"
+                style:background={space.accent || 'var(--border)'}
+                aria-hidden="true"
+              ></span>
+              {#if space.icon}
+                <span
+                  class="space-shortcut-icon"
+                  style:color={space.accent
+                    ? `color-mix(in srgb, ${space.accent} 78%, var(--t2))`
+                    : 'var(--t2)'}
+                  aria-hidden="true"
+                >
+                  <Icon name={space.icon} size={14} strokeWidth={1.75} />
+                </span>
+              {/if}
+              <span class="space-shortcut-text">
+                <strong>{space.label}</strong>
+                <span>{space.detail}</span>
+              </span>
+            </a>
+          {/each}
+        </nav>
+      </section>
+    </div>
+
+    <div class="today-level-3">
+      <section aria-labelledby="today-activity-title">
+        <div class="section-heading section-heading--quiet">
+          <div>
+            <p class="section-kicker">可追溯</p>
+            <h2 id="today-activity-title">系统已处理</h2>
+          </div>
+          <a href="/inbox#activity" class="text-action text-action--quiet">查看全部</a>
+        </div>
+        {#if recentActivity.length}
+          <div class="activity-list">
+            {#each recentActivity as item (item.id)}
+              <div class="activity-row">
+                <span class="activity-state activity-state--{item.status}"></span>
+                <div>
+                  <strong>{item.safeSummary ?? item.summary}</strong>
+                  <span>{item.resultDetail ?? item.result}</span>
+                </div>
+                <time datetime={item.occurredAt}>{item.occurredAt
+                  ? new Intl.DateTimeFormat('zh-CN', { timeStyle: 'short' }).format(new Date(item.occurredAt))
+                  : item.occurredLabel}</time>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <p class="empty-copy empty-copy--quiet">最近没有需要展示的系统处理记录。</p>
+        {/if}
+      </section>
+    </div>
   </main>
 </div>
 
 <style>
   .today-page {
+    --today-level-gap: clamp(40px, 5vw, 48px);
+    --today-section-gap: 28px;
     width: min(100% - 32px, var(--kenos-content-max, 820px));
     margin-inline: auto;
     padding: var(--kenos-space-page-top, 24px) 0 var(--kenos-mobile-bottom-pad, 96px);
@@ -352,7 +396,7 @@
     align-items: flex-end;
     justify-content: space-between;
     gap: var(--kenos-space-md, 16px);
-    padding-bottom: var(--kenos-space-lg, 24px);
+    padding-bottom: var(--kenos-space-xl, 32px);
     border-bottom: 1px solid var(--border);
   }
   @media (max-width: 899px) {
@@ -384,12 +428,12 @@
     margin: 0;
     color: var(--t1);
     font-size: var(--kenos-type-page);
-    font-weight: var(--kenos-weight-page);
+    font-weight: 680;
     letter-spacing: var(--kenos-tracking-page);
     line-height: var(--kenos-leading-page);
   }
   .today-intro {
-    margin: var(--kenos-title-to-body, 10px) 0 0;
+    margin: var(--kenos-title-to-body, 12px) 0 0;
     color: var(--t2);
     font-size: var(--kenos-type-body);
     font-weight: var(--kenos-weight-body);
@@ -426,42 +470,101 @@
     cursor: pointer;
     text-decoration: none;
   }
+  .quiet-button {
+    color: var(--t3);
+    font-size: 12px;
+    opacity: 0.72;
+  }
   .quiet-button:hover,
   .text-action:hover {
     color: var(--t1);
+    opacity: 1;
   }
   .quiet-button:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
+  }
+  .text-action--continue {
+    color: var(--t1);
+    font-weight: 600;
+  }
+  .text-action--quiet {
+    color: var(--t3);
+    font-size: var(--text-sm);
+  }
+  .section-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
   .status-line {
-    margin: 10px 0 0;
+    margin: 6px 0 0;
   }
   .status-line--quiet {
-    font-size: 12px;
-    opacity: 0.55;
+    font-size: 11px;
+    opacity: 0.45;
+    letter-spacing: 0.01em;
   }
   .status-line--asof {
-    margin-top: -4px;
-    margin-bottom: 2px;
-    font-size: 11px;
+    margin-top: 4px;
+    margin-bottom: 0;
+    font-size: 10px;
+    opacity: 0.4;
   }
   .status-line--error {
     color: var(--critical);
+    opacity: 1;
+  }
+  .today-sync-quiet {
+    margin-top: 2px;
+    margin-bottom: 0;
+  }
+  .today-sync-quiet :global(.read-source-state) {
+    margin: 4px 0 0;
+    padding: 4px 0;
+    border-left: 0;
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--t3);
+    opacity: 0.55;
+  }
+  .today-sync-quiet :global(.read-source-state--ready),
+  .today-sync-quiet :global(.read-source-state--empty) {
+    border-left: 0;
+  }
+  .today-sync-quiet :global(.read-source-state__label) {
+    color: var(--t3);
+    font-weight: 500;
+  }
+  .today-sync-quiet :global(.read-source-state time),
+  .today-sync-quiet :global(.read-source-state p) {
+    display: none;
+  }
+  /* Errors/offline still visible but compact */
+  .today-sync-quiet :global(.read-source-state--error),
+  .today-sync-quiet :global(.read-source-state--offline),
+  .today-sync-quiet :global(.read-source-state--permission_denied) {
+    opacity: 0.95;
+    padding-left: 10px;
+    border-left: 2px solid var(--critical);
   }
   .today-workspace {
     display: grid;
-    gap: var(--kenos-section-gap, 36px);
-    padding-top: var(--kenos-section-gap, 36px);
+    gap: var(--today-level-gap);
+    padding-top: calc(var(--today-level-gap) * 0.65);
+  }
+  .today-level-1,
+  .today-level-2,
+  .today-level-3 {
+    display: grid;
+    gap: var(--today-section-gap);
+  }
+  .today-level-3 {
+    gap: 16px;
+    opacity: 0.92;
   }
   @media (min-width: 1024px) {
-    .today-workspace {
-      grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
-      column-gap: clamp(28px, 4vw, 48px);
-      align-items: start;
-    }
-    .today-workspace > .focus-section {
-      grid-column: 1;
-    }
     .today-page {
       width: min(100% - 48px, var(--kenos-content-max-wide, 1100px));
     }
@@ -471,15 +574,34 @@
     align-items: end;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
-  h2 {
+  .section-heading--quiet {
+    margin-bottom: 8px;
+  }
+  .today-level-1 h2 {
+    margin: 0;
+    color: var(--t1);
+    font-size: calc(var(--kenos-type-section) * 1.06);
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+  .today-level-2 h2 {
     margin: 0;
     color: var(--t1);
     font-size: var(--kenos-type-section);
     font-weight: var(--kenos-weight-section);
     letter-spacing: -0.02em;
     line-height: 1.25;
+  }
+  .today-level-3 h2 {
+    margin: 0;
+    color: var(--t2);
+    font-size: calc(var(--kenos-type-section) * 0.9);
+    font-weight: 560;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
   }
   .priority-list,
   .queue-list,
@@ -492,13 +614,21 @@
     grid-template-columns: 4px minmax(0, 1fr) auto;
     gap: 18px;
     align-items: center;
-    padding: 22px 0;
+    padding: 26px 0;
     border-bottom: 1px solid var(--border);
     color: inherit;
     text-decoration: none;
     transition:
       opacity var(--dur-fast) var(--ease-standard),
       transform var(--dur-fast) var(--ease-standard);
+  }
+  .priority-row:not(.priority-row--hero) {
+    padding: 18px 0;
+    opacity: 0.88;
+  }
+  .priority-row:not(.priority-row--hero) .priority-copy strong {
+    font-size: clamp(17px, 2.4vw, 20px);
+    font-weight: 560;
   }
   .priority-row:hover {
     transform: translateX(3px);
@@ -517,20 +647,30 @@
   }
   .priority-copy {
     display: grid;
-    gap: 4px;
+    gap: 5px;
+  }
+  .priority-row--hero .priority-copy {
+    gap: 6px;
   }
   .priority-copy strong {
     color: var(--t1);
-    font-size: clamp(19px, 3vw, 24px);
-    font-weight: 590;
+    font-size: clamp(21px, 3.2vw, 26px);
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
   }
-  .priority-copy > span:last-child,
-  .signal-row > span,
+  .row-detail,
+  .signal-row > span:not(.signal-label),
   .activity-row span,
   .empty-copy,
   .empty-block {
     color: var(--t3);
     font-size: var(--text-md);
+  }
+  .row-detail {
+    font-size: var(--text-sm);
+    font-weight: 450;
+    line-height: 1.4;
   }
   .empty-copy-detail {
     display: block;
@@ -538,43 +678,64 @@
     color: var(--t3);
     font-size: var(--text-sm);
   }
+  .empty-copy--quiet {
+    font-size: var(--text-sm);
+    opacity: 0.85;
+  }
   .row-eyebrow {
-    color: var(--t2);
-    font-size: var(--text-xs);
-    font-weight: 650;
+    color: var(--t3);
+    font-size: 11px;
+    font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+    opacity: 0.85;
   }
   .row-action {
     color: var(--t2);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  .priority-row--hero .row-action {
     font-size: var(--text-md);
+    color: var(--t1);
   }
   .queue-row {
     display: grid;
-    grid-template-columns: minmax(100px, 0.65fr) 42px minmax(0, 1fr) auto;
+    grid-template-columns: minmax(100px, 0.65fr) auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 16px;
-    min-height: 58px;
+    min-height: 72px;
+    padding: 8px 0;
     border-bottom: 1px solid var(--border);
     color: var(--t1);
     text-decoration: none;
   }
+  .queue-label {
+    font-weight: 560;
+  }
+  .queue-count,
   .queue-row strong {
     font-variant-numeric: tabular-nums;
-    font-size: var(--text-2xl);
+    font-size: clamp(28px, 4vw, 36px);
+    font-weight: 680;
+    letter-spacing: -0.03em;
+    line-height: 1;
   }
   .queue-row small {
     color: var(--t3);
+    font-size: 12px;
+    opacity: 0.8;
   }
   .count-alert {
     color: var(--critical);
   }
-  .signal-row {
+  .today-level-2 .signal-row {
     display: grid;
     grid-template-columns: 96px minmax(180px, 0.8fr) minmax(0, 1fr) auto;
     gap: 16px;
     align-items: center;
-    min-height: 64px;
+    min-height: 56px;
+    padding: 10px 0;
     border-bottom: 1px solid var(--border);
     color: inherit;
     text-decoration: none;
@@ -582,35 +743,42 @@
   .signal-label {
     color: var(--t2) !important;
     font-weight: 600;
+    font-size: var(--text-sm);
   }
-  .signal-row strong {
+  .today-level-2 .signal-row strong {
     color: var(--t1);
+    font-size: var(--text-md);
     font-weight: 560;
   }
   .activity-row {
     display: grid;
     grid-template-columns: 8px minmax(0, 1fr) auto;
-    gap: 16px;
+    gap: 12px;
     align-items: start;
-    padding: 18px 0;
-    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   }
   .activity-row > div {
     display: grid;
-    gap: 4px;
+    gap: 2px;
   }
   .activity-row strong {
-    color: var(--t1);
-    font-weight: 560;
+    color: var(--t2);
+    font-size: var(--text-sm);
+    font-weight: 520;
+  }
+  .activity-row span {
+    font-size: 12px;
   }
   .activity-row time {
     color: var(--t3);
-    font-size: var(--text-sm);
+    font-size: 11px;
+    opacity: 0.75;
   }
   .activity-state {
-    width: 7px;
-    height: 7px;
-    margin-top: 6px;
+    width: 6px;
+    height: 6px;
+    margin-top: 5px;
     border-radius: 50%;
     background: var(--t3);
   }
@@ -629,7 +797,7 @@
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    padding: 16px 14px;
+    padding: 14px 12px;
     border-right: 1px solid var(--border);
     color: inherit;
     text-decoration: none;
@@ -658,26 +826,34 @@
   }
   .space-shortcut-text {
     display: grid;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
   }
   .space-shortcut-text strong {
     color: var(--t1);
-    font-weight: 600;
+    font-size: var(--text-md);
+    font-weight: 560;
   }
   .space-shortcut-text span {
     color: var(--t3);
-    font-size: var(--text-sm);
+    font-size: 12px;
   }
   .empty-block {
-    padding: 20px 0;
+    padding: 24px 0;
     border-block: 1px solid var(--border);
   }
   .empty-block p {
-    margin: 0 0 8px;
+    margin: 0 0 12px;
+  }
+  .empty-block-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
   }
   .empty-block a {
-    color: var(--t1);
+    color: var(--t2);
+    font-size: var(--text-md);
   }
   .shadow-section {
     padding-top: 4px;
@@ -704,6 +880,8 @@
     .today-page {
       width: min(100% - 28px, var(--kenos-content-max, 820px));
       padding-top: var(--kenos-space-page-top, 24px);
+      --today-level-gap: 40px;
+      --today-section-gap: 24px;
     }
     .today-header {
       align-items: flex-start;
@@ -712,19 +890,23 @@
     .today-actions {
       justify-content: flex-start;
     }
+    .section-heading-actions {
+      justify-content: flex-start;
+    }
     .queue-row {
-      grid-template-columns: minmax(0, 1fr) 34px auto;
-      padding: 12px 0;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      padding: 14px 0;
+      min-height: 64px;
     }
     .queue-row small {
       grid-column: 1 / 3;
       grid-row: 2;
     }
-    .signal-row {
+    .today-level-2 .signal-row {
       grid-template-columns: 72px minmax(0, 1fr) auto;
-      padding: 14px 0;
+      padding: 12px 0;
     }
-    .signal-row > span:not(.signal-label) {
+    .today-level-2 .signal-row > span:not(.signal-label) {
       grid-column: 2 / 4;
     }
     .space-list {

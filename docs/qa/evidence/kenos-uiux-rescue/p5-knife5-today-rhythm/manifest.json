@@ -1,0 +1,69 @@
+{
+  "capturedAt": "2026-07-20T22:17:58.111Z",
+  "knife": "5-today-rhythm",
+  "base": "http://127.0.0.1:5197",
+  "shots": [
+    {
+      "vp": "390x844",
+      "file": "today-390x844.png",
+      "fileL3": null,
+      "probe": {
+        "hasLevels": true,
+        "hasContinue": true,
+        "hasHero": true,
+        "titleFs": 28,
+        "heroTitleFs": 21,
+        "queueFs": 28,
+        "activityFs": 12,
+        "asofFs": 10,
+        "levelGap": 40,
+        "l1Order": "l1-before-l2",
+        "l2Order": "l2-before-l3"
+      },
+      "continueOpen": true,
+      "weightOk": true
+    },
+    {
+      "vp": "768x1024",
+      "file": "today-768x1024.png",
+      "fileL3": "today-l3-768x1024.png",
+      "probe": {
+        "hasLevels": true,
+        "hasContinue": true,
+        "hasHero": true,
+        "titleFs": 34.56,
+        "heroTitleFs": 24.576,
+        "queueFs": 30.72,
+        "activityFs": 12,
+        "asofFs": 10,
+        "levelGap": 40,
+        "l1Order": "l1-before-l2",
+        "l2Order": "l2-before-l3"
+      },
+      "continueOpen": true,
+      "weightOk": true
+    },
+    {
+      "vp": "1440x900",
+      "file": "today-1440x900.png",
+      "fileL3": "today-l3-1440x900.png",
+      "probe": {
+        "hasLevels": true,
+        "hasContinue": true,
+        "hasHero": true,
+        "titleFs": 36,
+        "heroTitleFs": 26,
+        "queueFs": 36,
+        "activityFs": 12,
+        "asofFs": 10,
+        "levelGap": 48,
+        "l1Order": "l1-before-l2",
+        "l2Order": "l2-before-l3"
+      },
+      "continueOpen": true,
+      "weightOk": true
+    }
+  ],
+  "failures": [],
+  "pass": true
+}
