@@ -647,3 +647,8 @@ Approved temporary defaults now on file:
 - Money read module ready; flag Off until next bake
 - Apple KenosContracts `swift test` PASS; device evidence Owner-gated
 
+## Apple simulator builds (2026-07-20)
+
+- KenosIOS simulator BUILD SUCCEEDED; KenosMac local build ok
+- Physical device blocked: developer disk image mount (Owner unlock/trust)
+- AIOS Money bake deploy `6a5dbab9be3994266b344cf3`
