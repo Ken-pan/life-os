@@ -681,3 +681,8 @@ Approved temporary defaults now on file:
 - Owner「真机已开」attested; KenosIOS installed on 17 Pro
 - Legacy revoke inventory: revoke nothing yet
 - Pre-revoke: due/schedule UI bypass → Kenos async; MCP complete → Kenos RPC; Capture convert client ready (flag Off)
+
+## Planner pre-revoke bypass deploy (2026-07-20)
+
+- SHA `9bc298c28…`; deploy `6a5e2f18f5e5050e35b63590` (UI+functions)
+- Due/schedule UI + MCP complete on Kenos; Legacy still not revoked
