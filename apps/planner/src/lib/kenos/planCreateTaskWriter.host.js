@@ -13,6 +13,13 @@ import {
   isPlanCreateTaskWriterEnabled,
   materializeHostedCreateTask,
 } from './planCreateTaskWriter.core.js'
+import {
+  enqueueOfflineIntent,
+  isPlanOfflineWriterQueueEnabled,
+  loadOfflineQueue,
+  persistOfflineQueue,
+  bindOfflineQueueToUser,
+} from './planOfflineIntentQueue.core.js'
 
 let reminderTimer = null
 
@@ -23,6 +30,10 @@ function afterHostedCreate() {
   reminderTimer = setTimeout(() => {
     syncRemindersToServiceWorker()
   }, 400)
+}
+
+function isBrowserOffline() {
+  return typeof navigator !== 'undefined' && navigator.onLine === false
 }
 
 /**
@@ -70,6 +81,45 @@ export async function createTaskViaHostedKenosWriter(input = {}) {
       correlationId: input.correlationId,
     },
   )
+
+  // Track C: when offline queue flag is ON and browser is offline, enqueue only.
+  // Never Legacy dual-write. Optimistic local materialize for UX.
+  if (isPlanOfflineWriterQueueEnabled() && isBrowserOffline()) {
+    let queue = bindOfflineQueueToUser(loadOfflineQueue(localStorage), authUserId)
+    const provisionalTaskId = action.id
+    const enqueued = enqueueOfflineIntent(queue, {
+      id: action.id,
+      actionType: action.actionType,
+      idempotencyKey: action.idempotencyKey,
+      correlationId: action.correlationId,
+      actionRequest: action,
+      enqueuedAt: Date.now(),
+    })
+    persistOfflineQueue(localStorage, enqueued.state)
+    const task = materializeHostedCreateTask(
+      {
+        ok: true,
+        taskId: provisionalTaskId,
+        duplicate: enqueued.duplicate,
+        activityId: null,
+        outboxId: null,
+      },
+      {
+        ...input,
+        title,
+        listId: input.listId || S.settings?.defaultListId || SYSTEM_LIST_INBOX,
+      },
+      action,
+    )
+    task.meta = {
+      ...(task.meta || {}),
+      offlineQueued: true,
+      legacyDirty: false,
+    }
+    S.tasks = [task, ...S.tasks.filter((t) => t.id !== task.id)]
+    afterHostedCreate()
+    return task
+  }
 
   const { data, error } = await supabase.rpc('kenos_create_plan_task_action', {
     action_request: action,

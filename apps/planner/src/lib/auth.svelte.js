@@ -4,6 +4,7 @@ import { clearAllCache } from './localCache.js'
 import { syncBidirectional, resetSyncCooldown } from './sync.js'
 import { clearSessionUserData } from './state.svelte.js'
 import { buildSignedOutState } from './kenos/sessionCleanup.core.js'
+import { clearOfflineQueue } from './kenos/planOfflineIntentQueue.core.js'
 import { t } from './i18n/index.js'
 
 /** Tracks whether this tab ever held an authenticated session (avoid wiping local-first cold start). */
@@ -13,6 +14,7 @@ function clearUserSessionSurfaces() {
   resetSyncCooldown()
   clearAllCache()
   clearSessionUserData(buildSignedOutState)
+  if (typeof localStorage !== 'undefined') clearOfflineQueue(localStorage)
   if (typeof document !== 'undefined' && /·/.test(document.title || '')) {
     document.title = 'PLANNER.OS'
   }
