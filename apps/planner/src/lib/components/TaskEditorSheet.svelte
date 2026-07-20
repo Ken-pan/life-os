@@ -1,8 +1,9 @@
 <script>
   import { S, uid } from '$lib/state.svelte.js';
-  import { createTaskAsync, updateTask, updateTaskTitleAsync, updateTaskDueDateAsync, deleteTask, restoreTask, addSubtask } from '$lib/domain/tasks.js';
+  import { createTaskAsync, updateTask, updateTaskTitleAsync, updateTaskDueDateAsync, updateTaskScheduleAsync, deleteTask, restoreTask, addSubtask } from '$lib/domain/tasks.js';
   import { isPlanUpdateTaskTitleWriterEnabled } from '$lib/kenos/planUpdateTaskTitleWriter.core.js';
   import { isPlanUpdateTaskDueDateWriterEnabled } from '$lib/kenos/planUpdateTaskDueDateWriter.core.js';
+  import { isPlanUpdateTaskScheduleWriterEnabled } from '$lib/kenos/planUpdateTaskScheduleWriter.core.js';
   import { taskEditor, closeTaskEditor, toast } from '$lib/ui.svelte.js';
   import { fetchTaskBreakdown, isAiDisabled } from '$lib/services/aiClient.js';
   import { t, listLabel } from '$lib/i18n/index.js';
@@ -170,13 +171,44 @@
         });
       } else {
         const rest = { ...payload };
+        const original = S.tasks.find((t) => t.id === taskEditor.taskId);
         if (isPlanUpdateTaskTitleWriterEnabled()) {
-          await updateTaskTitleAsync(taskEditor.taskId, payload.title);
+          const nextTitle = String(payload.title).trim();
+          const prevTitle = String(original?.title || '').trim();
+          if (nextTitle !== prevTitle) {
+            await updateTaskTitleAsync(taskEditor.taskId, payload.title);
+          }
           delete rest.title;
         }
         if (isPlanUpdateTaskDueDateWriterEnabled()) {
-          await updateTaskDueDateAsync(taskEditor.taskId, payload.dueDate);
+          const nextDue = payload.dueDate || null;
+          const prevDue = original?.dueDate || null;
+          if (nextDue !== prevDue) {
+            await updateTaskDueDateAsync(taskEditor.taskId, payload.dueDate);
+          }
           delete rest.dueDate;
+        }
+        if (isPlanUpdateTaskScheduleWriterEnabled()) {
+          const nextScheduledDate = payload.scheduledDate || null;
+          const prevScheduledDate = original?.scheduledDate || null;
+          const nextScheduledStart = payload.scheduledStart || null;
+          const prevScheduledStart = original?.scheduledStart || null;
+          const nextDuration = payload.durationMinutes ?? null;
+          const prevDuration = original?.durationMinutes ?? null;
+          if (
+            nextScheduledDate !== prevScheduledDate ||
+            nextScheduledStart !== prevScheduledStart ||
+            nextDuration !== prevDuration
+          ) {
+            await updateTaskScheduleAsync(taskEditor.taskId, {
+              scheduledDate: payload.scheduledDate ?? null,
+              scheduledStart: payload.scheduledStart ?? null,
+              durationMinutes: payload.durationMinutes ?? null,
+            });
+          }
+          delete rest.scheduledDate;
+          delete rest.scheduledStart;
+          delete rest.durationMinutes;
         }
         updateTask(taskEditor.taskId, rest);
         toast(t('toast.saved'));

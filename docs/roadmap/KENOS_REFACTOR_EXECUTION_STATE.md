@@ -479,3 +479,17 @@ Approved temporary defaults now on file:
 - RPC canary PASS (seed `ea0b1b72…` tombstoned); anon denied
 - Client + TaskEditorSheet routing ready
 - Next: Owner-limited production bake (create+title+due), then scheduling writer
+
+### Due-date Owner-limited deploy
+
+- Prod Planner: `6a5da59abaef82dd7d107618` @ `72409a56b…`
+- Writer canary: `6a5da5b2196bfd3af9751ed7`
+- stop_builds remains true on seven production sites
+
+## Plan Schedule Writer (2026-07-20)
+
+- Migration tip: `20260720120000` (`kenos_update_plan_task_schedule_action`)
+- RPC canary PASS (seed `67430841…` tombstoned)
+- Due-date Owner UI canary PASS on prod deploy `6a5da59a…` (task `c8212268…` tombstoned)
+- Client skip-unchanged title/due + schedule routing ready
+- Next: production bake with schedule flag; then project-relation writer

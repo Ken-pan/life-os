@@ -2,7 +2,7 @@
 title: KENOS PLAN UPDATE-TASK-DUE-DATE WRITER
 owner: kenpan
 last_verified: 2026-07-20
-status: RPC_CANARY_PASS_CLIENT_READY
+status: OWNER_LIMITED_DEPLOYED
 ---
 
 # Plan Update-Task-Due-Date Writer
@@ -36,6 +36,20 @@ Task id (tombstoned): `ea0b1b72-c100-4eb4-9c02-367adfe53ced`
 - Modules: `planUpdateTaskDueDateWriter.core.js` / `.host.js`
 - UI: TaskEditorSheet routes dueDate through `updateTaskDueDateAsync`
 
+
+## Production Owner-limited bake (create + title + due)
+
+| Item | Value |
+| --- | --- |
+| SHA | `72409a56bdc8a35cdb2f7915898f06ec41ecf28d` |
+| Prod deploy | `6a5da59abaef82dd7d107618` |
+| Writer canary deploy | `6a5da5b2196bfd3af9751ed7` |
+| URL | https://planner.kenos.space |
+| Rollback | `6a5da4193cdc6237e224c868` / `6a5da2eaedadacd1b63ad3e5` |
+| Seven sites stop_builds | true (unchanged except Planner deploy tip) |
+
+Bake flags: PROD_WRITES + CREATE + UPDATE_TITLE + UPDATE_DUE_DATE + Owner email cohort.
+
 ## Continuity
 
-Next after Owner-limited production bake: Plan scheduling writer (scheduledDate / start / duration), then project-relation.
+Next: Plan scheduling writer (scheduledDate / start / duration). (scheduledDate / start / duration), then project-relation.
