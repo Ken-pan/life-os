@@ -506,3 +506,10 @@ Approved temporary defaults now on file:
 - RPC canary PASS (seed `a29faab6…` tombstoned)
 - Schedule Owner UI canary PASS on `6a5da757…`
 - Next: production bake with project flag; then complete/reopen/archive writers
+
+### Project Owner-limited deploy
+
+- Prod Planner: `6a5da8be98d354ec82096b28` @ `3248cacc8…`
+- Migration tip: `20260720130000`
+- Active Owner-limited writers: create, title, due, schedule, project
+- Next Track B: complete / reopen / archive-delete
