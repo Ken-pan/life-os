@@ -432,14 +432,23 @@ Approved temporary defaults now on file:
 - Defaults on non-canary builds: Focus/Work/Today overlay Off; Approvals On; writes fail-closed.
 - Still blocked without separate phrases: full client deploy, writer canary, restore builds / Gallery.
 
-## Planner Compatibility long-run (2026-07-19)
+## Planner Compatibility long-run (2026-07-19 → 2026-07-20)
 
 - Phrase: `APPROVE_KENOS_PLANNER_PRODUCTION_COMPATIBILITY_DEPLOY`
 - Canary: https://planner-kenos-compat-canary.netlify.app · deploy `6a5d678c1967b65603b10ff0`
-- Code-bearing canary SHA: `64b365ac8135dff9dda06cdde598310b1dac9e12`
-- Verdict: `PASS_WITH_BLOCKERS` — waiting Owner login for production-data read + dual-account + Legacy smoke
-- Autonomous: logout user-scope cleanup; mutation audit tests; E2E create/edit/complete/delete ×3 PASS
-- Production Planner **not** deployed; seven sites `stop_builds=true`; Gallery `disabled_manually`
-- AIOS maintenance packet: `docs/qa/kenos-aios-read-only-maintenance-packet.md` — READY (do not deploy in this task)
-- Writer packet: `docs/qa/kenos-plan-create-task-writer-canary-packet.md` — NOT_READY
-- Next Owner action: login Planner Canary, reply「已登录」
+- Code-bearing SHA: `64b365ac8135dff9dda06cdde598310b1dac9e12`
+- Canary verdict: `KENOS PLANNER PRODUCTION COMPATIBILITY CANARY — PASS`
+- Production Planner deploy: `6a5d7bd5b9334b8e0f03a902` (rollback `6a5c617e6e1b41000893a948`)
+- Client: `KENOS PLANNER PRODUCTION COMPATIBILITY CLIENT — DEPLOYED_AND_VERIFIED`
+- Observation: `KENOS PLANNER PRODUCTION COMPATIBILITY — OBSERVATION_PASS`
+- Final: `KENOS PLANNER PRODUCTION COMPATIBILITY — DEPLOYED_OBSERVED_AND_WRITER_PACKET_READY`
+- Reports:
+  - `docs/qa/kenos-planner-production-compatibility-canary-report.md`
+  - `docs/qa/kenos-planner-production-compatibility-deploy-report.md`
+  - `docs/qa/kenos-planner-production-observation-report.md`
+  - `docs/qa/kenos-planner-long-run-execution-report.md`
+- AIOS maintenance packet: `READY` (not redeployed)
+- Writer packet: `READY_FOR_OWNER_APPROVAL`
+- Seven sites `stop_builds=true`; Gallery `disabled_manually`; Kenos writers still off
+- DB tip unchanged: `20260719130500`; Kenos domain mutation 0
+- Next Owner phrase (separate): `APPROVE_KENOS_PLAN_CREATE_TASK_WRITER_CANARY`

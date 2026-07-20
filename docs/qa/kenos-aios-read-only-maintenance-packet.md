@@ -1,7 +1,7 @@
 ---
 title: KENOS AIOS READ-ONLY MAINTENANCE PACKET
 owner: kenpan
-last_verified: 2026-07-19
+last_verified: 2026-07-20
 status: KENOS AIOS READ-ONLY MAINTENANCE PACKET — READY
 ---
 
@@ -19,10 +19,10 @@ future AIOS-only maintenance redeploy.
 Planner Compatibility Canary shipped shared AIOS fixes that production AIOS does
 **not** yet include:
 
-| Fix | In code since | On AIOS prod (`6a5d5003…` / `f87336224…`) |
-| --- | ------------- | ----------------------------------------- |
-| Optional Focus deferred/suggestions capability + skip network when unavailable | `02aed2a92…` | **No** |
-| Product degraded copy (empty / unavailable / degraded / …) | `02aed2a92…` | **No** |
+| Fix                                                                            | In code since | On AIOS prod (`6a5d5003…` / `f87336224…`) |
+| ------------------------------------------------------------------------------ | ------------- | ----------------------------------------- |
+| Optional Focus deferred/suggestions capability + skip network when unavailable | `02aed2a92…`  | **No**                                    |
+| Product degraded copy (empty / unavailable / degraded / …)                     | `02aed2a92…`  | **No**                                    |
 
 Evidence: Observation Yellow was GET 400 on `kenos_deferred_items` /
 `kenos_proactive_suggestions` wrong-column selects. Fixed on
