@@ -9,6 +9,7 @@ import { supabase } from '../supabase.js'
 import { syncRemindersToServiceWorker } from '../services/reminders.js'
 import {
   buildPlanUiCreateTaskAction,
+  isPlanCreateTaskWriterCohortMember,
   isPlanCreateTaskWriterEnabled,
   materializeHostedCreateTask,
 } from './planCreateTaskWriter.core.js'
@@ -44,6 +45,9 @@ export async function createTaskViaHostedKenosWriter(input = {}) {
   const authUserId = session?.user?.id
   if (!authUserId) {
     throw new Error('Authentication required for Plan create-task writer')
+  }
+  if (!isPlanCreateTaskWriterCohortMember(session?.user?.email)) {
+    throw new Error('Plan create-task writer cohort does not include this account')
   }
 
   const title = String(input.title || '').trim()

@@ -7,8 +7,9 @@ import {
   restoreAttachmentsForOwner,
   softDeleteAttachmentsForOwner,
 } from '../services/attachmentService.js';
-import { isPlanCreateTaskWriterEnabled, markKenosCreatedTaskLegacyDirty } from '../kenos/planCreateTaskWriter.core.js';
+import { isPlanCreateTaskWriterCohortMember, isPlanCreateTaskWriterEnabled, markKenosCreatedTaskLegacyDirty } from '../kenos/planCreateTaskWriter.core.js';
 import { createTaskViaHostedKenosWriter } from '../kenos/planCreateTaskWriter.host.js';
+import { supabase } from '../supabase.js';
 
 let reminderTimer = null;
 
@@ -40,15 +41,33 @@ export function createTask(input = {}) {
 }
 
 /**
- * Single create entry for UI. Routes to hosted Kenos writer when canary flags are on.
+ * Single create entry for UI. Routes to hosted Kenos writer when canary flags are on
+ * and the signed-in user is in the Owner cohort (if cohort env is set).
  * @param {Partial<import('../types.js').Task> & { idempotencyKey?: string, correlationId?: string }} input
  * @returns {Promise<import('../types.js').Task>}
  */
 export async function createTaskAsync(input = {}) {
   if (isPlanCreateTaskWriterEnabled()) {
-    return createTaskViaHostedKenosWriter(input);
+    if (!supabase) {
+      throw new Error('Supabase is not configured for Plan create-task writer')
+    }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    const email = session?.user?.email
+    if (isPlanCreateTaskWriterCohortMember(email)) {
+      return createTaskViaHostedKenosWriter(input)
+    }
+    // Outside Owner cohort: Legacy create only (not a Kenos failure fallback).
+    const result = executeCreateTaskCommand({ source: 'plan_ui', ...input })
+    if (!result.ok) throw new Error(result.error.message)
+    clearTimeout(reminderTimer)
+    reminderTimer = setTimeout(() => {
+      syncRemindersToServiceWorker()
+    }, 400)
+    return result.task
   }
-  return createTask(input);
+  return createTask(input)
 }
 
 

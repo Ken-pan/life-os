@@ -18,6 +18,20 @@ export function isPlanCreateTaskWriterEnabled(env = import.meta.env) {
   return env?.VITE_KENOS_PROD_WRITES === '1' && env?.VITE_KENOS_PLAN_CREATE_TASK_WRITER === '1'
 }
 
+/**
+ * Optional Owner-limited cohort. When set, only listed emails use Kenos create;
+ * everyone else keeps Legacy create (cohort routing, not failure fallback).
+ * @param {string | null | undefined} email
+ * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
+ */
+export function isPlanCreateTaskWriterCohortMember(email, env = import.meta.env) {
+  const raw = String(env?.VITE_KENOS_PLAN_CREATE_TASK_WRITER_OWNER_EMAILS || '').trim()
+  if (!raw) return true // no cohort restriction (isolated canary bake)
+  if (!email) return false
+  const allowed = raw.split(',').map((item) => item.trim().toLowerCase()).filter(Boolean)
+  return allowed.includes(String(email).trim().toLowerCase())
+}
+
 export function contractUuid() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {

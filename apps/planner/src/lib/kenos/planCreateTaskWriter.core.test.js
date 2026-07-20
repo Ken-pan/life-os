@@ -7,6 +7,7 @@ import {
 import {
   buildPlanUiCreateTaskAction,
   filterTasksForLegacySync,
+  isPlanCreateTaskWriterCohortMember,
   isPlanCreateTaskWriterEnabled,
   materializeHostedCreateTask,
   shouldSkipLegacyCreateSync,
@@ -38,6 +39,20 @@ describe('plan create-task writer flags', () => {
         VITE_KENOS_COMPAT_CANARY: '1',
       }),
     ).toBe(false)
+  })
+
+  it('restricts optional owner email cohort', () => {
+    expect(isPlanCreateTaskWriterCohortMember('a@b.com', {})).toBe(true)
+    expect(
+      isPlanCreateTaskWriterCohortMember('a@b.com', {
+        VITE_KENOS_PLAN_CREATE_TASK_WRITER_OWNER_EMAILS: '334452284ken@gmail.com',
+      }),
+    ).toBe(false)
+    expect(
+      isPlanCreateTaskWriterCohortMember('334452284ken@gmail.com', {
+        VITE_KENOS_PLAN_CREATE_TASK_WRITER_OWNER_EMAILS: '334452284ken@gmail.com',
+      }),
+    ).toBe(true)
   })
 
   it('unblocks create RPC only when both writer flags are on', () => {

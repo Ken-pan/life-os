@@ -452,3 +452,12 @@ Approved temporary defaults now on file:
 - Seven sites `stop_builds=true`; Gallery `disabled_manually`; Kenos writers still off
 - DB tip unchanged: `20260719130500`; Kenos domain mutation 0
 - Next Owner phrase (separate): `APPROVE_KENOS_PLAN_CREATE_TASK_WRITER_CANARY`
+
+## Plan Create-Task Writer Canary (2026-07-20)
+
+- Phrase: covered by `APPROVE_KENOS_AUTONOMOUS_PRODUCTION_COMPLETION_PROGRAM`
+- Code SHA: `11faf188e03e383942f536cf1901673cc42a4f2b` (+ cohort follow-up)
+- Canary: https://planner-kenos-writer-canary.netlify.app · deploy `6a5da1ca1967b604e7b10fe0`
+- Verdict: `KENOS PLAN CREATE-TASK WRITER CANARY — PASS`
+- Report: `docs/qa/kenos-plan-create-task-writer-canary-report.md`
+- Next auto: Owner-limited production bake with email cohort
