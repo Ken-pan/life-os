@@ -2,7 +2,7 @@
 title: KENOS PLAN UPDATE-TASK-TITLE WRITER — MIGRATION + RPC CANARY
 owner: kenpan
 last_verified: 2026-07-20
-status: RPC_CANARY_PASS_CLIENT_WIRING_IN_PROGRESS
+status: OWNER_LIMITED_DEPLOYED
 ---
 
 # Plan Update-Task-Title Writer
@@ -32,8 +32,18 @@ Task id (tombstoned): `e63020cd-99ff-47d9-b773-c7470c2e5284`
 
 - Guard denylist includes new RPC
 - Flag: `VITE_KENOS_PLAN_UPDATE_TASK_TITLE_WRITER=1` (+ prod writes + Owner email cohort)
-- Host/core modules added; UI `updateTask` routing next
+- Host/core modules + TaskEditorSheet title routing
+
+## Production Owner-limited bake (create + edit)
+
+| Item | Value |
+| --- | --- |
+| SHA | `082d0878843ed92dba24955f0e4cfb8f54b705b0` |
+| Deploy | `6a5da4193cdc6237e224c868` |
+| URL | https://planner.kenos.space |
+| Rollback | `6a5da2eaedadacd1b63ad3e5` / `6a5d7bd5b9334b8e0f03a902` |
 
 ## Continuity
 
-Create writer remains Owner-limited on production Planner deploy `6a5da2ea…`.
+Create writer remains Owner-limited. Edit title writer Owner-limited live.
+Next: Plan due-date / scheduling writer.

@@ -461,3 +461,14 @@ Approved temporary defaults now on file:
 - Verdict: `KENOS PLAN CREATE-TASK WRITER CANARY — PASS`
 - Report: `docs/qa/kenos-plan-create-task-writer-canary-report.md`
 - Next auto: Owner-limited production bake with email cohort
+
+## Plan Create + Update-Title Writers (2026-07-20)
+
+- Autonomous phrase: `APPROVE_KENOS_AUTONOMOUS_PRODUCTION_COMPLETION_PROGRAM`
+- Create canary PASS; Owner-limited create PASS
+- Migration tip: `20260720100000` (`kenos_update_plan_task_title_action`)
+- Update-title RPC canary PASS
+- Production Planner deploy: `6a5da4193cdc6237e224c868` @ `082d08788…`
+- Bake: create + update-title writers ON; Owner email cohort
+- Seven sites still paused; Gallery not restored
+- Next: due-date / scheduling writer
