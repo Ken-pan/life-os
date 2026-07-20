@@ -1,5 +1,11 @@
 import Combine
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
+#if canImport(AppKit)
+import AppKit
+#endif
 import KenosActions
 import KenosClient
 import KenosDesign
@@ -38,6 +44,11 @@ final class KenosAppModel: ObservableObject {
     @Published var streaming = false
     /// Capture sheet while Focus hides TabView/Sidebar.
     @Published var showCaptureSheet = false
+    /// Temporary Space Switcher layer (not a 5th tab).
+    @Published var showSpaceSwitcher = false
+    /// Recent Space ids (user-scoped; cleared with session cache directory).
+    @Published var recentSpaceIds: [String] = []
+    @Published var pinnedSpaceIds: [String] = []
     let focusStore: KenosFocusStore
 
     enum InboxDestination: String, Hashable {
@@ -45,8 +56,30 @@ final class KenosAppModel: ObservableObject {
     }
 
     enum SpacesDestination: String, Hashable {
-        case work
+        case work, training, money, home, plan, music
     }
+
+    struct SpaceCatalogEntry: Identifiable, Hashable {
+        let id: String
+        let title: String
+        let subtitle: String
+        let kind: Kind
+        enum Kind: Hashable {
+            case hosted(SpacesDestination)
+            case external(URL)
+            case comingSoon
+        }
+    }
+
+    static let spaceCatalog: [SpaceCatalogEntry] = [
+        .init(id: "work", title: "Work", subtitle: "Projects and decisions", kind: .hosted(.work)),
+        .init(id: "plan", title: "Plan", subtitle: "Tasks and schedule", kind: .external(URL(string: "https://planner.kenos.space")!)),
+        .init(id: "training", title: "Training", subtitle: "Fitness workouts", kind: .external(URL(string: "https://fitness.kenos.space")!)),
+        .init(id: "money", title: "Money", subtitle: "Finance decisions", kind: .external(URL(string: "https://finance.kenos.space")!)),
+        .init(id: "music", title: "Music", subtitle: "Library and playback", kind: .external(URL(string: "https://music.kenos.space")!)),
+        .init(id: "home", title: "Home", subtitle: "Spaces and items", kind: .external(URL(string: "https://home.kenos.space")!)),
+        .init(id: "library", title: "Library", subtitle: "Documents and references", kind: .comingSoon),
+    ]
 
     /// Compatibility alias for older call sites / handoff reviews.
     typealias MoreDestination = InboxDestination
@@ -197,6 +230,49 @@ final class KenosAppModel: ObservableObject {
             return
         }
         presentInboxDestination(.capture)
+    }
+
+    func openSpaceSwitcher() {
+        showSpaceSwitcher = true
+    }
+
+    func touchRecentSpace(id: String) {
+        recentSpaceIds = [id] + recentSpaceIds.filter { $0 != id }
+        if recentSpaceIds.count > 6 {
+            recentSpaceIds = Array(recentSpaceIds.prefix(6))
+        }
+    }
+
+    func togglePinnedSpace(id: String) {
+        if pinnedSpaceIds.contains(id) {
+            pinnedSpaceIds.removeAll { $0 == id }
+        } else {
+            pinnedSpaceIds.append(id)
+        }
+    }
+
+    func openSpace(_ entry: SpaceCatalogEntry) {
+        touchRecentSpace(id: entry.id)
+        showSpaceSwitcher = false
+        switch entry.kind {
+        case .hosted(let destination):
+            presentSpacesDestination(destination)
+        case .external(let url):
+            #if os(iOS)
+            UIApplication.shared.open(url)
+            #elseif os(macOS)
+            NSWorkspace.shared.open(url)
+            #endif
+        case .comingSoon:
+            selectedTab = .spaces
+        }
+    }
+
+    func returnToSystem(_ tab: Tab) {
+        showSpaceSwitcher = false
+        selectedTab = tab
+        spacesDestination = nil
+        inboxDestination = nil
     }
 
     func sendAssistant(_ text: String) async {

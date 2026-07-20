@@ -13,7 +13,13 @@
   import BottomNav from '$lib/components/BottomNav.svelte'
   import CaptureQuick from '$lib/components/CaptureQuick.svelte'
   import FocusSessionShell from '$lib/components/FocusSessionShell.svelte'
+  import SpaceSwitcher from '$lib/components/SpaceSwitcher.svelte'
   import { FOCUS, focusFlags, hydrateFocusStore } from '$lib/kenos/focusStore.svelte.js'
+  import {
+    hydrateSpaceSwitcher,
+    noteSpaceVisit,
+    syncSpaceSwitcherOwner,
+  } from '$lib/kenos/spaceSwitcher.svelte.js'
   import { ICONS } from '$lib/iconRegistry.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { refreshGateway } from '$lib/chat.svelte.js'
@@ -73,6 +79,7 @@
   const showReturnBanner = $derived(focusFlags().showReturnBanner)
 
   let captureOpen = $state(false)
+  let spaceSwitcherOpen = $state(false)
   let online = $state(typeof navigator !== 'undefined' ? navigator.onLine : true)
   let wasOffline = $state(false)
   let reconnectAttempts = $state(0)
@@ -159,11 +166,13 @@
 
   onMount(() => {
     hydrateFocusStore()
+    hydrateSpaceSwitcher()
     applyTheme()
     applyLocale()
     refreshGateway()
     // 云同步恢复后：自动写入 Life OS MCP 舰队，再发现工具
     initCloud().then(() => {
+      syncSpaceSwitcherOwner()
       if (CLOUD_BUILD && !isCloudAuthorized()) {
         // Auth wall: do not seed/hydrate prior-user memory
         return
@@ -219,6 +228,7 @@
 
   afterNavigate(() => {
     resetScrollLock()
+    noteSpaceVisit(page.url.pathname)
   })
 </script>
 
@@ -237,6 +247,19 @@
     </div>
   {/if}
   <CaptureQuick bind:open={captureOpen} />
+  <SpaceSwitcher bind:open={spaceSwitcherOpen} />
+  {#if !gated && !hideGlobalNav && page.url.pathname !== '/spaces'}
+    <button
+      type="button"
+      class="space-switcher-fab"
+      data-testid="kenos-space-switcher-fab"
+      aria-label="Open Space switcher"
+      onclick={() => (spaceSwitcherOpen = true)}
+    >
+      <span class="fab-kicker">Space</span>
+      <span class="fab-label">Switch</span>
+    </button>
+  {/if}
   {#if showReturnBanner && page.url.pathname !== '/focus'}
     <FocusSessionShell />
   {/if}
@@ -251,7 +274,10 @@
       {#if hideGlobalNav}
         <!-- Focus Session: hide global Tab/Sidebar entirely -->
       {:else if projection === 'desktop'}
-        <ChatSidebar onCapture={() => (captureOpen = true)} />
+        <ChatSidebar
+          onCapture={() => (captureOpen = true)}
+          onSpaceSwitcher={() => (spaceSwitcherOpen = true)}
+        />
       {:else}
         <BottomNav />
       {/if}
@@ -261,6 +287,19 @@
       <LifeOsAppBar title={pageTitle} hidden={isAssistant || hasCustomHeader || hideGlobalNav}>
         {#snippet leading()}
           <span class="page-title">{t('app.name')}</span>
+        {/snippet}
+        {#snippet trailing()}
+          {#if !hideGlobalNav}
+            <button
+              type="button"
+              class="space-switcher-trigger"
+              data-testid="kenos-space-switcher-trigger"
+              aria-label="Open Space switcher"
+              onclick={() => (spaceSwitcherOpen = true)}
+            >
+              Spaces
+            </button>
+          {/if}
         {/snippet}
       </LifeOsAppBar>
     {/snippet}
@@ -282,5 +321,54 @@
     color: var(--warning);
     background: color-mix(in srgb, var(--warning-subtle, var(--warning)) 55%, var(--bg));
     border-bottom: 1px solid color-mix(in srgb, var(--warning) 35%, var(--border));
+  }
+  :global(.space-switcher-trigger) {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--t1);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    padding: 6px 10px;
+    min-height: 36px;
+    border-radius: var(--radius-control, 10px);
+    cursor: pointer;
+  }
+  .space-switcher-fab {
+    position: fixed;
+    z-index: 40;
+    right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: calc(var(--mobile-content-inset-tabbar, 64px) + 12px);
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    min-width: 72px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control, 10px);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    color: var(--t1);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--t1) 8%, transparent);
+    backdrop-filter: blur(12px);
+    cursor: pointer;
+  }
+  .fab-kicker {
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--t3);
+  }
+  .fab-label {
+    font-size: var(--text-sm);
+    font-weight: 650;
+  }
+  @media (max-width: 899px) {
+    .space-switcher-fab {
+      display: flex;
+    }
   }
 </style>

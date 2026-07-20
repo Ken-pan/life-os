@@ -95,6 +95,12 @@ export const AIOS_CLIENT_STORAGE_INVENTORY = Object.freeze([
     notes: 'Local Focus session projection',
   },
   {
+    key: 'kenos.spaceSwitcher.v1',
+    classification: 'USER_SCOPED_CACHE',
+    containsUserContent: true,
+    notes: 'Recent/pinned Spaces + resume routes (user-scoped)',
+  },
+  {
     key: 'aios_gateway_url_v1',
     classification: 'DEVICE_GENERIC_SETTING',
     containsUserContent: false,
@@ -119,9 +125,12 @@ export const AUTH_WALL_DOCUMENT_TITLE = 'Kenos — Sign in'
 /** Exact keys always removed on logout / user switch (fail-closed). */
 export const USER_SCOPED_STORAGE_KEYS = Object.freeze(
   AIOS_CLIENT_STORAGE_INVENTORY.filter((row) =>
-    ['USER_SCOPED_MEMORY', 'USER_SCOPED_CACHE', 'AUTH_SESSION_DERIVED', 'UNKNOWN'].includes(
-      row.classification,
-    ),
+    [
+      'USER_SCOPED_MEMORY',
+      'USER_SCOPED_CACHE',
+      'AUTH_SESSION_DERIVED',
+      'UNKNOWN',
+    ].includes(row.classification),
   ).map((row) => row.key),
 )
 
@@ -168,7 +177,11 @@ export function shouldClearClientStorageKey(key) {
   const cls = classifyClientStorageKey(k)
   if (cls === 'DEVICE_GENERIC_SETTING') return false
   // UNKNOWN under aios_memory_* or other aios_* → fail closed (clear)
-  if (cls === 'UNKNOWN' && (k.startsWith('aios_memory_') || k.startsWith('aios_'))) return true
+  if (
+    cls === 'UNKNOWN' &&
+    (k.startsWith('aios_memory_') || k.startsWith('aios_'))
+  )
+    return true
   return false
 }
 
@@ -215,7 +228,8 @@ export function clearUserScopedClientStorage(options = {}) {
       try {
         if (store.getItem(key) != null) {
           store.removeItem(key)
-          if (!cleared.includes(`${label}:${key}`)) cleared.push(`${label}:${key}`)
+          if (!cleared.includes(`${label}:${key}`))
+            cleared.push(`${label}:${key}`)
         }
       } catch (err) {
         errors.push(`${label}:${key}:${String(err?.message || err)}`)
@@ -233,7 +247,9 @@ export function clearUserScopedClientStorage(options = {}) {
       if (raw) {
         const parsed = JSON.parse(raw)
         const settings =
-          parsed?.settings && typeof parsed.settings === 'object' ? parsed.settings : {}
+          parsed?.settings && typeof parsed.settings === 'object'
+            ? parsed.settings
+            : {}
         const nextSettings = options.stripAiososUserFields(settings)
         ls.setItem('aiosos_v1', JSON.stringify({ settings: nextSettings }))
         cleared.push('local:aiosos_v1:userFields')

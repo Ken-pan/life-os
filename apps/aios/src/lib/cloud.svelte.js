@@ -4,7 +4,11 @@ import {
   LIFE_OS_PERSONAL_OWNER_EMAIL,
 } from '@life-os/sync'
 import { t } from '$lib/i18n/index.js'
-import { S, applyCloudSettings, applyDeviceOnlySettings } from '$lib/state.svelte.js'
+import {
+  S,
+  applyCloudSettings,
+  applyDeviceOnlySettings,
+} from '$lib/state.svelte.js'
 import { supabase as sb, isSupabaseConfigured } from '$lib/supabase.js'
 import {
   C,
@@ -30,6 +34,7 @@ import {
   stripUserFieldsFromSettings,
 } from '$lib/kenos/clientSessionCleanup.core.js'
 import { resetFocusStore } from '$lib/kenos/focusStore.svelte.js'
+import { clearSpaceSwitcherState } from '$lib/kenos/spaceSwitcher.core.js'
 import { CLOUD_BUILD } from '$lib/env.js'
 /**
  * 云端同步:Life OS 统一 Supabase 账户,登录即用,零配置。
@@ -76,6 +81,17 @@ export function clearUserScopedSessionState() {
     resetFocusStore()
   } catch {
     /* ignore */
+  }
+  try {
+    clearSpaceSwitcherState(browser ? localStorage : undefined)
+  } catch {
+    /* ignore */
+  }
+  // Dynamic import avoids static cycle with spaceSwitcher.svelte.js (which reads CLOUD).
+  if (browser) {
+    void import('$lib/kenos/spaceSwitcher.svelte.js')
+      .then((m) => m.clearSpaceSwitcherOnLogout())
+      .catch(() => {})
   }
   const result = clearUserScopedClientStorage({
     localStorage: browser ? localStorage : undefined,
@@ -163,7 +179,11 @@ export async function initCloud() {
     const nextId = u?.id ?? null
     const prevId = lastAuthUserId
     // Sign-out or account switch: drop prior user local state fail-closed.
-    if (event === 'SIGNED_OUT' || (prevId && !nextId) || (prevId && nextId && prevId !== nextId)) {
+    if (
+      event === 'SIGNED_OUT' ||
+      (prevId && !nextId) ||
+      (prevId && nextId && prevId !== nextId)
+    ) {
       clearUserScopedSessionState()
     }
     lastAuthUserId = nextId
@@ -217,7 +237,8 @@ export async function signInCloud(email, password) {
     if (isCloudAuthorized()) {
       hydrateMemoryFromLocalStorage()
       try {
-        const { seedDefaultMemories, backfillVectors } = await import('$lib/memory.svelte.js')
+        const { seedDefaultMemories, backfillVectors } =
+          await import('$lib/memory.svelte.js')
         seedDefaultMemories()
         void backfillVectors()
       } catch {

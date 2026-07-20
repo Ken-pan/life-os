@@ -51,13 +51,13 @@
     border-left-color: var(--positive);
   }
   .read-source-state--partial,
-  .read-source-state--stale {
+  .read-source-state--stale,
+  .read-source-state--unavailable,
+  .read-source-state--unsupported {
     border-left-color: var(--warning);
   }
   .read-source-state--offline,
-  .read-source-state--unavailable,
   .read-source-state--permission_denied,
-  .read-source-state--unsupported,
   .read-source-state--error {
     border-left-color: var(--critical);
   }

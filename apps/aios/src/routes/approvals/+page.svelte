@@ -79,11 +79,11 @@
 
   <p class="control-notice" role="status">
     {#if CONTROL.demo}
-      生产审批决定与 Executor 尚未批准。此处只读；确认/拒绝按钮仅在本地演练模式可用，不会写入生产。
+      这是本地演练：确认/拒绝不会改动真实数据，也不会自动执行已批准的动作。
     {:else if decideWriterEnabled}
-      Owner-limited decide 已启用；Executor 仍未开启。确认/拒绝只写入审批决定，不会自动执行。
+      你可以在此做出决定；已批准的动作仍不会自动执行，需另行确认执行。
     {:else}
-      生产审批决定与 Executor 尚未批准。此处只读；确认/拒绝按钮仅在本地演练模式可用，不会写入生产。
+      当前为只读：确认/拒绝仅在本地演练可用，不会写入真实数据，也不会自动执行。
     {/if}
   </p>
 

@@ -36,7 +36,7 @@ import {
  * @property {{ light: string, dark: string }} accent 主色
  * @property {'light' | 'dark' | 'auto'} defaultTheme
  * @property {CorePage[]} pages 6~8 个核心页面
- * @property {'localStorage' | 'demo' | 'indexeddb'} [seedKind] 预置数据方式（见 uiux-review.mjs seeders）
+ * @property {'localStorage' | 'demo' | 'indexeddb' | 'kenos'} [seedKind] 预置数据方式（见 uiux-review.mjs seeders）
  * @property {boolean} [authGate] 首屏可能是登录页
  */
 
@@ -147,16 +147,18 @@ export const UIUX_REVIEW_APPS = {
     ],
   }),
   aios: hydrate('aios', {
-    // 对话是高频高复杂页：同一页展示不同能力（代码/检索/生图/产物预览/数据/翻译）。
-    // ?chat=<id> 选具体 demo 会话（仅 demo 生效，见 aios demoMode/chat）。
+    // Kenos system shell IA: Today · Assistant · Spaces · Inbox (+ overlays)
+    // seedKind kenos → localStorage kenos_phase2_demo (requires non-cloud build)
+    seedKind: 'kenos',
     pages: [
-      { path: '/', title: '对话 · 代码调试', settle: 500 },
-      { path: '/?chat=demo-chat-runes', title: '对话 · 联网检索+思考', settle: 500 },
-      { path: '/?chat=demo-chat-image', title: '对话 · 图片生成', settle: 500 },
-      { path: '/?chat=demo-chat-clock', title: '对话 · HTML 产物预览', settle: 600, prep: [{ click: 'button.md-preview', settle: 700 }] },
-      { path: '/?chat=demo-chat-sales', title: '对话 · 数据分析', settle: 500 },
-      { path: '/?chat=demo-chat-translate', title: '对话 · 中英翻译', settle: 500 },
-      { path: '/history', title: '历史会话' },
+      { path: '/?kenosDemo=1', title: 'Today', settle: 700 },
+      { path: '/assistant?kenosDemo=1', title: 'Assistant', settle: 500 },
+      { path: '/spaces?kenosDemo=1', title: 'Spaces 目录', settle: 400 },
+      { path: '/inbox?kenosDemo=1', title: 'Inbox', settle: 500 },
+      { path: '/approvals?kenosDemo=1', title: 'Approvals', settle: 400 },
+      { path: '/activity?kenosDemo=1', title: 'Activity', settle: 400 },
+      { path: '/spaces/training?kenosDemo=1', title: 'Training Space', settle: 500 },
+      { path: '/work?kenosDemo=1', title: 'Work hub', settle: 500 },
     ],
   }),
 }

@@ -28,7 +28,7 @@
     <button type="button" onclick={begin}>开始 Deep Work Focus</button>
   </section>
 
-  <p class="note">本地模拟：不修改生产 Work/Plan，不走生产 Executor。</p>
+  <p class="note">本地模拟：不会修改真实 Work/Plan 数据，也不会自动执行已批准动作。</p>
   <div class="links">
     <a href="/work">打开完整 Work hub</a>
     <a href="/spaces">‹ All Spaces</a>

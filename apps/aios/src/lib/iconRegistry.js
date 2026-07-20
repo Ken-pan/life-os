@@ -41,6 +41,7 @@ import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard'
 import Plug from '@lucide/svelte/icons/plug'
 import Square from '@lucide/svelte/icons/square'
 import SquarePen from '@lucide/svelte/icons/square-pen'
+import Star from '@lucide/svelte/icons/star'
 import Trash2 from '@lucide/svelte/icons/trash-2'
 import Wrench from '@lucide/svelte/icons/wrench'
 import X from '@lucide/svelte/icons/x'
@@ -90,6 +91,7 @@ export const ICONS = {
   plug: Plug,
   stop: Square,
   compose: SquarePen,
+  star: Star,
   trash: Trash2,
   wrench: Wrench,
   x: X,

@@ -192,6 +192,7 @@ function killServers() {
  */
 async function seed(page, app) {
   if (app.seedKind === 'demo') return seedDemoFlag(page)
+  if (app.seedKind === 'kenos') return seedKenosLocalDemo(page)
   if (app.seedKind === 'indexeddb' && app.id === 'music')
     return seedMusicLibrary(page)
   return 'default'
@@ -207,6 +208,19 @@ async function seedDemoFlag(page) {
     localStorage.setItem('fos_demo', '1')
   })
   return 'demo'
+}
+
+/**
+ * AIOS / Kenos local UIUX fixture — control-surface demo + chat demo flags.
+ * Only meaningful when preview was built without VITE_AIOS_CLOUD=1 (auth wall off).
+ * @param {import('playwright').Page} page
+ */
+async function seedKenosLocalDemo(page) {
+  await page.evaluate(() => {
+    localStorage.setItem('aios_demo', '1')
+    localStorage.setItem('kenos_phase2_demo', '1')
+  })
+  return 'kenos'
 }
 
 /** @param {import('playwright').Page} page */

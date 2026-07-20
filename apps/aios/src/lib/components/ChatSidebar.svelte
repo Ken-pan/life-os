@@ -8,12 +8,21 @@
   import { isSystemNavActive, systemNavItems, SYSTEM_NAV_HREFS } from '$lib/kenos/systemNav.js'
   import { KENOS_SPACES } from '$lib/kenos/controlCenter.core.js'
   import { clearAssistantContext } from '$lib/kenos/assistantContext.svelte.js'
+  import { SPACE_SWITCHER } from '$lib/kenos/spaceSwitcher.svelte.js'
 
-  let { onCapture = undefined } = $props()
+  let { onCapture = undefined, onSpaceSwitcher = undefined } = $props()
 
   const onChatRoute = $derived(page.url.pathname === '/assistant')
   const primaryItems = $derived(systemNavItems(t))
-  const recentSpaces = $derived(KENOS_SPACES.slice(0, 3))
+  const recentSpaces = $derived.by(() => {
+    const fromStore = SPACE_SWITCHER.sections.find((s) => s.id === 'recent')?.items ?? []
+    if (fromStore.length) return fromStore
+    return KENOS_SPACES.slice(0, 3).map((space) => ({
+      ...space,
+      listKey: `external:${space.id}`,
+      external: true,
+    }))
+  })
 
   let query = $state('')
   const filtered = $derived.by(() => {
@@ -62,6 +71,16 @@
       <button
         type="button"
         class="icon-btn"
+        title="Space switcher"
+        aria-label="Open Space switcher"
+        data-testid="kenos-space-switcher-sidebar"
+        onclick={() => onSpaceSwitcher?.()}
+      >
+        <Icon name="globe" size={18} strokeWidth={1.75} />
+      </button>
+      <button
+        type="button"
+        class="icon-btn"
         title="{t('nav.capture')} (⌘K)"
         aria-label={t('nav.capture')}
         onclick={() => onCapture?.()}
@@ -97,10 +116,20 @@
 
   {#if !onChatRoute}
     <div class="recent-spaces" aria-label="Recent spaces">
-      <p class="recent-label">Recent</p>
-      <a class="recent-link" href="/work">Work</a>
-      {#each recentSpaces as space (space.id)}
-        <a class="recent-link" href={space.href} target="_blank" rel="noopener noreferrer">{space.label}</a>
+      <div class="recent-head">
+        <p class="recent-label">Recent</p>
+        <button type="button" class="recent-all" onclick={() => onSpaceSwitcher?.()}>
+          All
+        </button>
+      </div>
+      {#each recentSpaces as space (space.listKey || space.id)}
+        {#if space.external}
+          <a class="recent-link" href={space.href} target="_blank" rel="noopener noreferrer"
+            >{space.label}</a
+          >
+        {:else}
+          <a class="recent-link" href={space.href}>{space.label}</a>
+        {/if}
       {/each}
     </div>
   {/if}
@@ -298,12 +327,31 @@
     gap: 2px;
     padding: 8px 8px 4px;
   }
+  .recent-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-inline: 2px;
+  }
   .recent-label {
     margin: 0;
     padding: 2px 10px 4px;
     font-size: var(--text-xs);
     letter-spacing: 0.05em;
     color: var(--sidebar-muted);
+    text-transform: uppercase;
+  }
+  .recent-all {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--sidebar-muted);
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: 650;
+    padding: 4px 8px;
+    cursor: pointer;
   }
   .recent-link {
     padding: 6px 10px;
