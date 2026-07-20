@@ -1,6 +1,6 @@
 <script>
   import { S, uid } from '$lib/state.svelte.js';
-  import { createTaskAsync, updateTask, updateTaskTitleAsync, updateTaskDueDateAsync, updateTaskScheduleAsync, updateTaskProjectAsync, deleteTask, restoreTask, addSubtask } from '$lib/domain/tasks.js';
+  import { createTaskAsync, updateTask, updateTaskTitleAsync, updateTaskDueDateAsync, updateTaskScheduleAsync, updateTaskProjectAsync, deleteTaskAsync, restoreTask, addSubtask } from '$lib/domain/tasks.js';
   import { isPlanUpdateTaskTitleWriterEnabled } from '$lib/kenos/planUpdateTaskTitleWriter.core.js';
   import { isPlanUpdateTaskDueDateWriterEnabled } from '$lib/kenos/planUpdateTaskDueDateWriter.core.js';
   import { isPlanUpdateTaskScheduleWriterEnabled } from '$lib/kenos/planUpdateTaskScheduleWriter.core.js';
@@ -166,7 +166,7 @@
         });
         toast(t('toast.taskCreated'), {
           actionLabel: t('common.undo'),
-          onAction: () => deleteTask(created.id),
+          onAction: () => { void deleteTaskAsync(created.id) },
           key: `task-created:${created.id}`,
           dedupeMs: 0,
         });
@@ -304,17 +304,21 @@
     requestClose();
   }
 
-  function remove() {
+  async function remove() {
     if (!taskEditor.taskId) return;
     const taskId = taskEditor.taskId;
-    deleteTask(taskId);
-    toast(t('toast.deleted'), {
-      actionLabel: t('common.undo'),
-      onAction: () => restoreTask(taskId),
-      key: `task-deleted:${taskId}`,
-      dedupeMs: 0,
-    });
-    closeTaskEditor();
+    try {
+      await deleteTaskAsync(taskId);
+      toast(t('toast.deleted'), {
+        actionLabel: t('common.undo'),
+        onAction: () => restoreTask(taskId),
+        key: `task-deleted:${taskId}`,
+        dedupeMs: 0,
+      });
+      closeTaskEditor();
+    } catch (error) {
+      toast(error?.message || t('toast.schedulePersistFailed'), 'warn');
+    }
   }
 
   function addSub() {

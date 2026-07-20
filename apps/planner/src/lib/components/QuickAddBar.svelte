@@ -1,5 +1,5 @@
 <script>
-  import { createTaskAsync, deleteTask } from '$lib/domain/tasks.js';
+  import { createTaskAsync, deleteTaskAsync } from '$lib/domain/tasks.js';
   import { S } from '$lib/state.svelte.js';
   import { SYSTEM_LIST_INBOX } from '$lib/types.js';
   import { t } from '$lib/i18n/index.js';
@@ -83,7 +83,7 @@
       suggestionsDismissed = false;
       toast(toastOnAdd || t('toast.taskCreated'), {
         actionLabel: t('common.undo'),
-        onAction: () => deleteTask(created.id),
+        onAction: () => { void deleteTaskAsync(created.id) },
         key: `task-created:${created.id}`,
         dedupeMs: 0,
       });

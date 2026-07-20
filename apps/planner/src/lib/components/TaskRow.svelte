@@ -8,7 +8,7 @@
   import {
     isOverdue,
     updateTask,
-    deleteTask,
+    deleteTaskAsync,
     restoreTask,
   } from '$lib/domain/tasks.js'
   import { formatDateShort } from '$lib/domain/dateFormat.js'
@@ -344,7 +344,9 @@
 
   function doDelete() {
     const id = task.id
-    deleteTask(id)
+    void deleteTaskAsync(id).catch((error) => {
+      toast(error?.message || t('toast.schedulePersistFailed'), 'warn')
+    })
     closeActions()
     toast(t('toast.deleted'), 'success', {
       actionLabel: t('common.undo'),

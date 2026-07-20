@@ -1,6 +1,6 @@
 <script>
   import { S, todayKey, getListById, dateKeyOf } from '$lib/state.svelte.js'
-  import { updateTask, deleteTask, toggleCompleteAsync, isOverdue } from '$lib/domain/tasks.js'
+  import { updateTask, deleteTaskAsync, toggleCompleteAsync, isOverdue } from '$lib/domain/tasks.js'
   import { listLabel, t } from '$lib/i18n/index.js'
   import { formatDateShort } from '$lib/domain/dateFormat.js'
   import { editTask } from '$lib/taskUi.js'
@@ -103,12 +103,15 @@
     }
   }
 
-  function doDelete() {
+  async function doDelete() {
     if (!currentTask) return
-    const id = currentTask.id
-    deleteTask(id)
-    processedCount += 1
-    toast(t('triage.deleted'), 'success')
+    try {
+      await deleteTaskAsync(currentTask.id)
+      processedCount += 1
+      toast(t('triage.deleted'), 'success')
+    } catch (error) {
+      toast(error?.message || 'Delete failed', 'error')
+    }
   }
 
   function doEdit() {

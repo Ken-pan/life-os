@@ -528,3 +528,10 @@ Approved temporary defaults now on file:
 - Active Owner-limited writers: create, title, due, schedule, project, complete, reopen
 - Seven sites stop_builds=true
 - Next: archive/delete writer → Track C offline → Approval/Activity/Outbox worker
+
+## Plan Archive Writer (2026-07-20)
+
+- Migration tip: `20260720150000` (`kenos_archive_plan_task_action`)
+- RPC canary PASS (`f78de805…`)
+- Client deleteTaskAsync wired
+- Track B Plan update writers: title, due, schedule, project, complete, reopen, archive

@@ -26,6 +26,8 @@ import {
   completeTaskViaHostedKenosWriter,
   reopenTaskViaHostedKenosWriter,
 } from '../kenos/planCompleteReopenTaskWriter.host.js';
+import { isPlanArchiveTaskWriterCohortMember, isPlanArchiveTaskWriterEnabled } from '../kenos/planArchiveTaskWriter.core.js';
+import { archiveTaskViaHostedKenosWriter } from '../kenos/planArchiveTaskWriter.host.js';
 import { supabase } from '../supabase.js';
 
 let reminderTimer = null;
@@ -264,6 +266,9 @@ export async function toggleCompleteAsync(id) {
  * @param {string} id
  */
 export function deleteTask(id) {
+  if (isPlanArchiveTaskWriterEnabled()) {
+    throw new Error('Plan archive-task writer is enabled; use deleteTaskAsync (no Legacy archive fallback).');
+  }
   const now = Date.now();
   S.tasks = S.tasks.map((t) => {
     if (t.id !== id) return t;
@@ -272,6 +277,32 @@ export function deleteTask(id) {
   });
   softDeleteAttachmentsForOwner('task', id);
   afterMutation();
+}
+
+/**
+ * Archive/delete entry: Kenos writer when enabled+cohort, else Legacy deleteTask.
+ * @param {string} id
+ */
+export async function deleteTaskAsync(id) {
+  if (isPlanArchiveTaskWriterEnabled()) {
+    if (!supabase) throw new Error('Supabase is not configured for Plan archive writer');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (isPlanArchiveTaskWriterCohortMember(session?.user?.email)) {
+      return archiveTaskViaHostedKenosWriter(id);
+    }
+    // Outside cohort: Legacy soft-delete only.
+    const now = Date.now();
+    S.tasks = S.tasks.map((t) => {
+      if (t.id !== id) return t;
+      const base = markKenosCreatedTaskLegacyDirty(t);
+      return { ...base, deletedAt: now, updatedAt: now };
+    });
+    softDeleteAttachmentsForOwner('task', id);
+    afterMutation();
+    return S.tasks.find((t) => t.id === id) || null;
+  }
+  deleteTask(id);
+  return S.tasks.find((t) => t.id === id) || null;
 }
 
 /** 撤销删除（清除墓碑，任务重新出现在列表中） */
