@@ -9,7 +9,7 @@
   import ReportBugButton from '@life-os/platform-web/svelte/feedback'
   import { supabase } from '$lib/supabase.js'
   import { auth } from '$lib/auth.svelte.js'
-  import { createTask } from '$lib/domain/tasks.js'
+  import { createTaskAsync } from '$lib/domain/tasks.js'
   import { uploadAttachment, createLinkAttachment } from '$lib/services/attachmentService.js'
 
   /** @type {{ title?: string, subtitle?: string, backHref?: string, backLabel?: string, historyBack?: boolean }} */
@@ -35,9 +35,9 @@
       }
     }
 
-    // Create Bug Task (local first). Upload failures must reject so ReportBugButton
+    // Create Bug Task (local first / hosted Kenos when writer flags on). Upload failures must reject so ReportBugButton
     // shows error instead of a false "submitted successfully" toast.
-    const task = createTask({
+    const task = await createTaskAsync({
       title: bugTitle,
       notes,
       priority: severity === 'high' ? 'P1' : severity === 'low' ? 'P3' : 'P2',

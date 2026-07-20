@@ -70,7 +70,12 @@ export function buildAttachmentSyncRows(userId, attachments) {
 /** @param {string} userId @param {object[]} tasks */
 export function buildTaskSyncRows(userId, tasks) {
   const now = new Date().toISOString();
-  return tasks.map((task) => ({
+  // Kenos create-task writer already inserted the row; skip Legacy create upsert
+  // until a local lifecycle edit marks legacyDirty.
+  const syncable = (tasks || []).filter(
+    (task) => !(task?.meta?.kenosWriterCreate && task?.meta?.legacyDirty !== true),
+  );
+  return syncable.map((task) => ({
     user_id: userId,
     id: task.id,
     data: task,

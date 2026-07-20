@@ -1,6 +1,6 @@
 <script>
   import { S, uid } from '$lib/state.svelte.js';
-  import { createTask, updateTask, deleteTask, restoreTask, addSubtask } from '$lib/domain/tasks.js';
+  import { createTaskAsync, updateTask, deleteTask, restoreTask, addSubtask } from '$lib/domain/tasks.js';
   import { taskEditor, closeTaskEditor, toast } from '$lib/ui.svelte.js';
   import { fetchTaskBreakdown, isAiDisabled } from '$lib/services/aiClient.js';
   import { t, listLabel } from '$lib/i18n/index.js';
@@ -28,6 +28,7 @@
 
   let subtaskDraft = $state('');
   let aiBusy = $state(false);
+  let saving = $state(false);
   let showAdvanced = $state(false);
   let showDiscardConfirm = $state(false);
   let showDeleteConfirm = $state(false);
@@ -119,7 +120,8 @@
     };
   }
 
-  function save() {
+  async function save() {
+    if (saving) return;
     if (!draft?.title?.trim()) {
       showTitleError = true;
       titleInput?.focus();
@@ -151,22 +153,29 @@
         kind: normalizeTaskKind(draft.meta?.kind),
       },
     };
-    if (isNew) {
-      const created = createTask({
-        ...payload,
-        listId: payload.listId || S.settings.defaultListId || SYSTEM_LIST_INBOX
-      });
-      toast(t('toast.taskCreated'), {
-        actionLabel: t('common.undo'),
-        onAction: () => deleteTask(created.id),
-        key: `task-created:${created.id}`,
-        dedupeMs: 0,
-      });
-    } else {
-      updateTask(taskEditor.taskId, payload);
-      toast(t('toast.saved'));
+    saving = true;
+    try {
+      if (isNew) {
+        const created = await createTaskAsync({
+          ...payload,
+          listId: payload.listId || S.settings.defaultListId || SYSTEM_LIST_INBOX
+        });
+        toast(t('toast.taskCreated'), {
+          actionLabel: t('common.undo'),
+          onAction: () => deleteTask(created.id),
+          key: `task-created:${created.id}`,
+          dedupeMs: 0,
+        });
+      } else {
+        updateTask(taskEditor.taskId, payload);
+        toast(t('toast.saved'));
+      }
+      closeTaskEditor();
+    } catch (error) {
+      toast(error?.message || t('toast.schedulePersistFailed'), 'warn');
+    } finally {
+      saving = false;
     }
-    closeTaskEditor();
   }
 
   function requestClose() {

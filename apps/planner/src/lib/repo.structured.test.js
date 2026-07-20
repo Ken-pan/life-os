@@ -28,6 +28,25 @@ describe('structured sync row builders', () => {
     expect(rows[0].data.deletedAt).toBe(200);
   });
 
+  it('buildTaskSyncRows skips Kenos create rows until legacyDirty', () => {
+    const rows = buildTaskSyncRows('user-1', [
+      {
+        id: 'kenos-1',
+        title: 'Canary',
+        updatedAt: 100,
+        meta: { kenosWriterCreate: true, legacyDirty: false },
+      },
+      {
+        id: 'kenos-2',
+        title: 'Edited',
+        updatedAt: 200,
+        meta: { kenosWriterCreate: true, legacyDirty: true },
+      },
+      { id: 'legacy-1', title: 'Legacy', updatedAt: 300 },
+    ]);
+    expect(rows.map((row) => row.id)).toEqual(['kenos-2', 'legacy-1']);
+  });
+
   it('buildListSyncRows uses the list updatedAt for the row timestamp', () => {
     const rows = buildListSyncRows('user-1', [
       { id: 'inbox', title: 'Inbox', updatedAt: 1_700_000_000_000 }

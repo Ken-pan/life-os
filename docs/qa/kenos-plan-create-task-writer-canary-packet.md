@@ -2,7 +2,7 @@
 title: KENOS PLAN CREATE-TASK WRITER CANARY PACKET
 owner: kenpan
 last_verified: 2026-07-20
-status: KENOS PLAN CREATE-TASK WRITER CANARY PACKET — READY_FOR_OWNER_APPROVAL
+status: APPROVED_UNDER_AUTONOMOUS_COMPLETION_PROGRAM — EXECUTING
 ---
 
 # KENOS PLAN CREATE-TASK WRITER CANARY PACKET
@@ -11,7 +11,9 @@ status: KENOS PLAN CREATE-TASK WRITER CANARY PACKET — READY_FOR_OWNER_APPROVAL
 
 ## Verdict
 
-**`KENOS PLAN CREATE-TASK WRITER CANARY PACKET — READY_FOR_OWNER_APPROVAL`**
+**`KENOS PLAN CREATE-TASK WRITER CANARY — EXECUTING_UNDER_AUTONOMOUS_PROGRAM`**
+
+Authorized by `APPROVE_KENOS_AUTONOMOUS_PRODUCTION_COMPLETION_PROGRAM`. Internal packet gate passed; continuing to canary bake/deploy.
 
 Planner production compatibility is deployed, smoke-cleaned, and observation-passed.
 This packet is ready for the separate Writer Canary approval phrase. Writers remain
@@ -19,20 +21,20 @@ This packet is ready for the separate Writer Canary approval phrase. Writers rem
 
 ## Closed NOT_READY reasons
 
-| Prior gap | Closure |
-| --------- | ------- |
-| Planner compat not production-verified | Canary PASS + deploy `6a5d7bd5…` + observation PASS |
-| Dual-account / logout isolation unknown | Live verified (same deploy window) |
-| Smoke lifecycle incomplete | create→edit→complete→reopen→delete + cleanup table |
-| Kenos mutation unknown | Domain tables audited **0** |
-| Packet phrase mismatch | Now exact `READY_FOR_OWNER_APPROVAL` |
+| Prior gap                               | Closure                                             |
+| --------------------------------------- | --------------------------------------------------- |
+| Planner compat not production-verified  | Canary PASS + deploy `6a5d7bd5…` + observation PASS |
+| Dual-account / logout isolation unknown | Live verified (same deploy window)                  |
+| Smoke lifecycle incomplete              | create→edit→complete→reopen→delete + cleanup table  |
+| Kenos mutation unknown                  | Domain tables audited **0**                         |
+| Packet phrase mismatch                  | Now exact `READY_FOR_OWNER_APPROVAL`                |
 
 ## 1. Single Writer Owner
 
-| Cohort | Create intent owner |
-| ------ | ------------------- |
-| Owner session + explicit writer flag ON | Kenos `plan.create_task` command RPC only |
-| Everyone else / flag OFF | Legacy `planner_tasks` structured sync only |
+| Cohort                                  | Create intent owner                         |
+| --------------------------------------- | ------------------------------------------- |
+| Owner session + explicit writer flag ON | Kenos `plan.create_task` command RPC only   |
+| Everyone else / flag OFF                | Legacy `planner_tasks` structured sync only |
 
 Never: Legacy create + Kenos command for the same intent.
 
@@ -60,11 +62,11 @@ At canary GO (not now):
 
 ## 4. Failure / retry / no-fallback
 
-| Case | Required behavior |
-| ---- | ----------------- |
-| Kenos command fails | User-visible error; **no** automatic Legacy create fallback |
-| Retry | Same idempotency key; expect duplicate=false / already-created handling |
-| Flag off mid-flight | Restore Legacy create routing; do not reverse-sync dual-write |
+| Case                | Required behavior                                                       |
+| ------------------- | ----------------------------------------------------------------------- |
+| Kenos command fails | User-visible error; **no** automatic Legacy create fallback             |
+| Retry               | Same idempotency key; expect duplicate=false / already-created handling |
+| Flag off mid-flight | Restore Legacy create routing; do not reverse-sync dual-write           |
 
 ## 5. Exact command contract
 
@@ -92,14 +94,14 @@ Repo evidence: Wave 1 migrations tip `20260719130500`; local adapter tests in
 
 Must reconfirm immediately before Writer Canary GO:
 
-| Item | Status now |
-| ---- | ---------- |
-| Latest production physical/WALG backup timestamp | **Revalidate at T-0** (do not pretend Wave 1-era dump is fresh) |
+| Item                                              | Status now                                                               |
+| ------------------------------------------------- | ------------------------------------------------------------------------ |
+| Latest production physical/WALG backup timestamp  | **Revalidate at T-0** (do not pretend Wave 1-era dump is fresh)          |
 | Optional safe logical snapshot (no schema change) | Allowed under existing ops dump runbook; **not** restored in this packet |
-| PITR | **false** → remains **Yellow** |
-| Tip | must still be `20260719130500` unless separately approved |
-| Deterministic checksum | record dump checksum + `planner_tasks` sample hash before GO |
-| Restore procedure | local disposable restore drill only; never restore onto production |
+| PITR                                              | **false** → remains **Yellow**                                           |
+| Tip                                               | must still be `20260719130500` unless separately approved                |
+| Deterministic checksum                            | record dump checksum + `planner_tasks` sample hash before GO             |
+| Restore procedure                                 | local disposable restore drill only; never restore onto production       |
 
 ## 8. RLS / grants
 
@@ -144,15 +146,15 @@ Only after Owner phrase. Not created by this packet.
 
 ## 14. Preconditions from Planner compat
 
-| Gate | Status |
-| ---- | ------ |
-| Canary Owner read | PASS |
-| Dual-account isolation | PASS (same deploy window) |
-| Production Legacy smoke + cleanup | PASS |
-| Observation | PASS |
-| Kenos mutation audit | PASS (0) |
-| Fresh backup at Writer T-0 | **Yellow — revalidate at GO** |
-| Writer flag bake live | **Off** (correct until approval) |
+| Gate                              | Status                           |
+| --------------------------------- | -------------------------------- |
+| Canary Owner read                 | PASS                             |
+| Dual-account isolation            | PASS (same deploy window)        |
+| Production Legacy smoke + cleanup | PASS                             |
+| Observation                       | PASS                             |
+| Kenos mutation audit              | PASS (0)                         |
+| Fresh backup at Writer T-0        | **Yellow — revalidate at GO**    |
+| Writer flag bake live             | **Off** (correct until approval) |
 
 ## 15. Exact approval phrase
 

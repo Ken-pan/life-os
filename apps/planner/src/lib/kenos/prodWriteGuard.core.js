@@ -34,13 +34,15 @@ export function isPlannerCompatCanaryMode(env = import.meta.env) {
 }
 
 /**
- * Kenos writers stay closed unless an explicit (future) writer canary flag is set.
- * Compat canary never enables Kenos writes.
+ * Kenos writers stay closed unless BOTH prod-writes and plan-create-task writer
+ * flags are set. Compat / read canary never enables Kenos writes.
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
  */
 export function areKenosWritersBlocked(env = import.meta.env) {
   if (isPlannerCompatCanaryMode(env)) return true
-  if (env?.VITE_KENOS_PROD_WRITES === '1') return false
+  if (env?.VITE_KENOS_PROD_WRITES === '1' && env?.VITE_KENOS_PLAN_CREATE_TASK_WRITER === '1') {
+    return false
+  }
   // Default: block Kenos writers even outside canary (legacy path unaffected).
   return true
 }

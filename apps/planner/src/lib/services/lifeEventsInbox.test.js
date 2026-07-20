@@ -62,8 +62,8 @@ beforeEach(() => {
 })
 
 describe('lifeEventsInbox', () => {
-  it('creates inbox task from finance.bill_due payload', () => {
-    const task = upsertTaskFromFinanceBillDue(billPayload)
+  it('creates inbox task from finance.bill_due payload', async () => {
+    const task = await upsertTaskFromFinanceBillDue(billPayload)
     expect(task.title).toBe('Amex Statement')
     expect(task.dueDate).toBe('2026-08-15')
     expect(task.listId).toBe('inbox')
@@ -74,15 +74,15 @@ describe('lifeEventsInbox', () => {
     expect(S.tasks).toHaveLength(1)
   })
 
-  it('is idempotent by occurrence_id', () => {
-    upsertTaskFromFinanceBillDue(billPayload)
-    upsertTaskFromFinanceBillDue(billPayload)
+  it('is idempotent by occurrence_id', async () => {
+    await upsertTaskFromFinanceBillDue(billPayload)
+    await upsertTaskFromFinanceBillDue(billPayload)
     expect(S.tasks).toHaveLength(1)
     expect(findTaskByFinanceOccurrenceId('occ-123')?.id).toBe(S.tasks[0].id)
   })
 
-  it('creates completed habit from fitness.workout_logged', () => {
-    const task = upsertHabitFromFitnessWorkoutLogged(workoutPayload)
+  it('creates completed habit from fitness.workout_logged', async () => {
+    const task = await upsertHabitFromFitnessWorkoutLogged(workoutPayload)
     expect(task.title).toBe('健身 · 胸')
     expect(task.dueDate).toBe('2026-07-08')
     expect(task.completed).toBe(true)
@@ -93,15 +93,15 @@ describe('lifeEventsInbox', () => {
     })
   })
 
-  it('is idempotent by fitness session_id', () => {
-    upsertHabitFromFitnessWorkoutLogged(workoutPayload)
-    upsertHabitFromFitnessWorkoutLogged(workoutPayload)
+  it('is idempotent by fitness session_id', async () => {
+    await upsertHabitFromFitnessWorkoutLogged(workoutPayload)
+    await upsertHabitFromFitnessWorkoutLogged(workoutPayload)
     expect(S.tasks).toHaveLength(1)
     expect(findTaskByFitnessSessionId(workoutPayload.session_id)?.id).toBe(S.tasks[0].id)
   })
 
-  it('creates inbox task from core.task_captured payload', () => {
-    const task = upsertTaskFromCoreCapture(capturePayload)
+  it('creates inbox task from core.task_captured payload', async () => {
+    const task = await upsertTaskFromCoreCapture(capturePayload)
     expect(task.title).toBe('给妈妈打电话')
     expect(task.dueDate).toBe('2026-07-15')
     expect(task.listId).toBe('inbox')
@@ -113,9 +113,9 @@ describe('lifeEventsInbox', () => {
     expect(S.tasks).toHaveLength(1)
   })
 
-  it('is idempotent by capture_id', () => {
-    upsertTaskFromCoreCapture(capturePayload)
-    upsertTaskFromCoreCapture(capturePayload)
+  it('is idempotent by capture_id', async () => {
+    await upsertTaskFromCoreCapture(capturePayload)
+    await upsertTaskFromCoreCapture(capturePayload)
     expect(S.tasks).toHaveLength(1)
     expect(findTaskByCaptureId(capturePayload.capture_id)?.id).toBe(S.tasks[0].id)
   })

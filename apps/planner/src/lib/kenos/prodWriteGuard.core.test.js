@@ -84,4 +84,25 @@ describe('planner Kenos write guard', () => {
       expect(assertKenosTableMutationAllowed(table, env).ok).toBe(false)
     }
   })
+
+  it('allows Kenos RPC only when both writer flags are set', () => {
+    expect(areKenosWritersBlocked({ VITE_KENOS_PROD_WRITES: '1' })).toBe(true)
+    expect(
+      assertKenosWriteRpcAllowed('kenos_create_plan_task_action', {
+        VITE_KENOS_PROD_WRITES: '1',
+      }).ok,
+    ).toBe(false)
+    expect(
+      areKenosWritersBlocked({
+        VITE_KENOS_PROD_WRITES: '1',
+        VITE_KENOS_PLAN_CREATE_TASK_WRITER: '1',
+      }),
+    ).toBe(false)
+    expect(
+      assertKenosWriteRpcAllowed('kenos_create_plan_task_action', {
+        VITE_KENOS_PROD_WRITES: '1',
+        VITE_KENOS_PLAN_CREATE_TASK_WRITER: '1',
+      }).ok,
+    ).toBe(true)
+  })
 })

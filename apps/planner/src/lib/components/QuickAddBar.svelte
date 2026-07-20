@@ -1,5 +1,5 @@
 <script>
-  import { createTask, deleteTask } from '$lib/domain/tasks.js';
+  import { createTaskAsync, deleteTask } from '$lib/domain/tasks.js';
   import { S } from '$lib/state.svelte.js';
   import { SYSTEM_LIST_INBOX } from '$lib/types.js';
   import { t } from '$lib/i18n/index.js';
@@ -31,6 +31,7 @@
   let composing = $state(false);
   let suggestionsDismissed = $state(false);
   let activeSuggestion = $state(0);
+  let submitting = $state(false);
 
   const canSubmit = $derived(text.trim().length > 0);
   const selectedProject = $derived(getProjectById(selectedProjectId));
@@ -59,30 +60,38 @@
     activeSuggestion = 0;
   }
 
-  function submit() {
+  async function submit() {
     if (ime.isComposing()) return;
+    if (submitting) return;
     const base = cleanTitle() || text.trim();
     if (!base) return;
     const parsed = parseQuickAddTokens(base, todayKey());
     // 若整串都是语法 token，回退用原文，避免创建空标题
     const title = parsed.title || base;
-    const created = createTask({
-      title,
-      listId: listId || S.settings.defaultListId || SYSTEM_LIST_INBOX,
-      dueDate: parsed.dueDate ?? dueDate,
-      priority: parsed.priority ?? undefined,
-      tags: parsed.tags.length ? parsed.tags : undefined,
-      projectId: selectedProjectId || null
-    });
-    text = '';
-    selectedProjectId = projectId;
-    suggestionsDismissed = false;
-    toast(toastOnAdd || t('toast.taskCreated'), {
-      actionLabel: t('common.undo'),
-      onAction: () => deleteTask(created.id),
-      key: `task-created:${created.id}`,
-      dedupeMs: 0,
-    });
+    submitting = true;
+    try {
+      const created = await createTaskAsync({
+        title,
+        listId: listId || S.settings.defaultListId || SYSTEM_LIST_INBOX,
+        dueDate: parsed.dueDate ?? dueDate,
+        priority: parsed.priority ?? undefined,
+        tags: parsed.tags.length ? parsed.tags : undefined,
+        projectId: selectedProjectId || null
+      });
+      text = '';
+      selectedProjectId = projectId;
+      suggestionsDismissed = false;
+      toast(toastOnAdd || t('toast.taskCreated'), {
+        actionLabel: t('common.undo'),
+        onAction: () => deleteTask(created.id),
+        key: `task-created:${created.id}`,
+        dedupeMs: 0,
+      });
+    } catch (error) {
+      toast(error?.message || t('toast.schedulePersistFailed'), 'warn');
+    } finally {
+      submitting = false;
+    }
   }
 
   /** @param {KeyboardEvent} event */

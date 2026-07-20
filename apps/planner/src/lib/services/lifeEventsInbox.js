@@ -1,5 +1,5 @@
 import { parseLifeEvent } from '@life-os/contracts/events'
-import { createTask, updateTask } from '../domain/tasks.js'
+import { createTaskAsync, updateTask } from '../domain/tasks.js'
 import { S } from '../state.svelte.js'
 import { SYSTEM_LIST_INBOX } from '../types.js'
 import { supabase, isSupabaseConfigured } from '../supabase.js'
@@ -53,16 +53,16 @@ export function findTaskByFitnessSessionId(sessionId) {
 
 /**
  * @param {import('@life-os/contracts/events').FinanceBillDueEvent['payload']} payload
- * @returns {import('../types.js').Task}
+ * @returns {Promise<import('../types.js').Task>}
  */
-export function upsertTaskFromFinanceBillDue(payload) {
+export async function upsertTaskFromFinanceBillDue(payload) {
   const existing = findTaskByFinanceOccurrenceId(payload.occurrence_id)
   if (existing) return existing
 
   const amountNote =
     payload.expected_amount != null ? `预计金额：${payload.expected_amount}` : ''
 
-  return createTask({
+  return createTaskAsync({
     title: payload.label,
     dueDate: payload.occurrence_date,
     listId: SYSTEM_LIST_INBOX,
@@ -92,16 +92,16 @@ export function findTaskByCaptureId(captureId) {
 
 /**
  * @param {import('@life-os/contracts/events').CoreTaskCapturedEvent['payload']} payload
- * @returns {import('../types.js').Task}
+ * @returns {Promise<import('../types.js').Task>}
  */
-export function upsertTaskFromCoreCapture(payload) {
+export async function upsertTaskFromCoreCapture(payload) {
   const existing = findTaskByCaptureId(payload.capture_id)
   if (existing) return existing
 
   const src = payload.source ? `来自 ${payload.source}` : ''
   const notes = [payload.notes, src].filter(Boolean).join('\n')
 
-  return createTask({
+  return createTaskAsync({
     title: payload.title,
     dueDate: payload.due_date ?? null,
     listId: SYSTEM_LIST_INBOX,
@@ -118,13 +118,13 @@ export function upsertTaskFromCoreCapture(payload) {
 
 /**
  * @param {import('@life-os/contracts/events').FitnessWorkoutLoggedEvent['payload']} payload
- * @returns {import('../types.js').Task}
+ * @returns {Promise<import('../types.js').Task>}
  */
-export function upsertHabitFromFitnessWorkoutLogged(payload) {
+export async function upsertHabitFromFitnessWorkoutLogged(payload) {
   const existing = findTaskByFitnessSessionId(payload.session_id)
   if (existing) return existing
 
-  const task = createTask({
+  const task = await createTaskAsync({
     title: `健身 · ${fitnessDayLabel(payload.day_id)}`,
     dueDate: payload.session_date,
     listId: SYSTEM_LIST_INBOX,
@@ -212,7 +212,7 @@ export async function consumePendingLifeEvents(client = supabase) {
     }
 
     try {
-      applyLifeEvent(result.event)
+      await applyLifeEvent(result.event)
       await markLifeEventStatus(client, result.envelope.id, 'processed')
       processed += 1
     } catch {

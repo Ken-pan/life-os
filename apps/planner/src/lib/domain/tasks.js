@@ -7,6 +7,8 @@ import {
   restoreAttachmentsForOwner,
   softDeleteAttachmentsForOwner,
 } from '../services/attachmentService.js';
+import { isPlanCreateTaskWriterEnabled, markKenosCreatedTaskLegacyDirty } from '../kenos/planCreateTaskWriter.core.js';
+import { createTaskViaHostedKenosWriter } from '../kenos/planCreateTaskWriter.host.js';
 
 let reminderTimer = null;
 
@@ -19,10 +21,15 @@ function afterMutation() {
 }
 
 /**
+ * Legacy / local create path. Blocked when Plan create-task writer flags are on
+ * so the same intent cannot dual-write via sync createTask.
  * @param {Partial<import('../types.js').Task>} input
  * @returns {import('../types.js').Task}
  */
 export function createTask(input = {}) {
+  if (isPlanCreateTaskWriterEnabled()) {
+    throw new Error('Plan create-task writer is enabled; use createTaskAsync (no Legacy create fallback).');
+  }
   const result = executeCreateTaskCommand({ source: 'plan_ui', ...input });
   if (!result.ok) throw new Error(result.error.message);
   clearTimeout(reminderTimer);
@@ -32,12 +39,24 @@ export function createTask(input = {}) {
   return result.task;
 }
 
+/**
+ * Single create entry for UI. Routes to hosted Kenos writer when canary flags are on.
+ * @param {Partial<import('../types.js').Task> & { idempotencyKey?: string, correlationId?: string }} input
+ * @returns {Promise<import('../types.js').Task>}
+ */
+export async function createTaskAsync(input = {}) {
+  if (isPlanCreateTaskWriterEnabled()) {
+    return createTaskViaHostedKenosWriter(input);
+  }
+  return createTask(input);
+}
+
 
 /** @param {string} id @param {Partial<import('../types.js').Task>} patch */
 export function updateTask(id, patch) {
   const idx = S.tasks.findIndex((t) => t.id === id);
   if (idx < 0) return null;
-  const prev = S.tasks[idx];
+  const prev = markKenosCreatedTaskLegacyDirty(S.tasks[idx]);
   const next = {
     ...prev,
     ...patch,
@@ -47,7 +66,9 @@ export function updateTask(id, patch) {
     subtasks: patch.subtasks ? JSON.parse(JSON.stringify(patch.subtasks)) : prev.subtasks,
     recurrence: patch.recurrence !== undefined ? normalizeRecurrence(patch.recurrence) : prev.recurrence,
     reminderMinutes: patch.reminderMinutes !== undefined ? patch.reminderMinutes : prev.reminderMinutes,
-    meta: patch.meta ? { ...prev.meta, ...patch.meta } : prev.meta
+    meta: patch.meta
+      ? { ...prev.meta, ...patch.meta, legacyDirty: prev.meta?.kenosWriterCreate ? true : patch.meta.legacyDirty }
+      : prev.meta
   };
   S.tasks = S.tasks.map((t) => (t.id === id ? next : t));
   afterMutation();
@@ -64,6 +85,12 @@ function spawnNextRecurrence(task) {
   );
   if (duplicate) return null;
   const tpl = taskTemplateFrom(task);
+  if (isPlanCreateTaskWriterEnabled()) {
+    void createTaskAsync({ ...tpl, dueDate: nextDate }).catch((error) => {
+      console.error('[kenos] recurrence create via hosted writer failed', error);
+    });
+    return null;
+  }
   return createTask({ ...tpl, dueDate: nextDate });
 }
 
@@ -88,7 +115,11 @@ export function toggleComplete(id) {
  */
 export function deleteTask(id) {
   const now = Date.now();
-  S.tasks = S.tasks.map((t) => (t.id === id ? { ...t, deletedAt: now, updatedAt: now } : t));
+  S.tasks = S.tasks.map((t) => {
+    if (t.id !== id) return t;
+    const base = markKenosCreatedTaskLegacyDirty(t);
+    return { ...base, deletedAt: now, updatedAt: now };
+  });
   softDeleteAttachmentsForOwner('task', id);
   afterMutation();
 }
