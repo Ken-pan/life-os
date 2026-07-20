@@ -659,3 +659,8 @@ Approved temporary defaults now on file:
 - Capture ingest client ready (flags Off); RPC canary PASS
 - Music/Home read modules ready (flags Off)
 - Apple device still blocked on developer disk image mount
+
+## Capture ingest writer canary (2026-07-20)
+
+- Canary deploy `6a5dbd6d78f6c3d467eabcd8` @ 854ed08e0
+- Awaiting Owner Capture UI smoke; Apple device still blocked
