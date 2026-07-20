@@ -50,6 +50,17 @@ Task id (tombstoned): `ea0b1b72-c100-4eb4-9c02-367adfe53ced`
 
 Bake flags: PROD_WRITES + CREATE + UPDATE_TITLE + UPDATE_DUE_DATE + Owner email cohort.
 
+## Owner UI canary (production)
+
+| Step | Result |
+| --- | --- |
+| Login Owner | PASS |
+| Quick-add create via Kenos | PASS task `c8212268-d8e1-4cd5-872d-7515b126fb9b` |
+| Editor due → `2026-07-28` via Kenos | PASS `plan.update_task_due_date` |
+| Tombstone | PASS |
+
+Note: first due-only save also emitted an unchanged-title title write; client now skips unchanged title/due writers.
+
 ## Continuity
 
-Next: Plan scheduling writer (scheduledDate / start / duration). (scheduledDate / start / duration), then project-relation.
+Next: Plan scheduling writer Owner-limited bake, then project-relation.

@@ -493,3 +493,9 @@ Approved temporary defaults now on file:
 - Due-date Owner UI canary PASS on prod deploy `6a5da59a…` (task `c8212268…` tombstoned)
 - Client skip-unchanged title/due + schedule routing ready
 - Next: production bake with schedule flag; then project-relation writer
+
+### Schedule Owner-limited deploy
+
+- Prod Planner: `6a5da75720758f2b349bea6c` @ `8c13c6931…`
+- Writer canary: `6a5da76428d4a43aa124b1d6`
+- Migration tip: `20260720120000`
