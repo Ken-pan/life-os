@@ -1,0 +1,347 @@
+{
+  "capturedAt": "2026-07-20T21:52:06.587Z",
+  "knife": "3-ipad-adaptive-material",
+  "decisionTable": [
+    {
+      "width": "<600",
+      "pointer": "any",
+      "mode": "mobile"
+    },
+    {
+      "width": "600–899",
+      "pointer": "any",
+      "mode": "tablet"
+    },
+    {
+      "width": "≥900",
+      "pointer": "touch-first / !fine || !hover",
+      "mode": "tablet-lg"
+    },
+    {
+      "width": "≥900",
+      "pointer": "fine + hover",
+      "mode": "desktop (anchored)"
+    }
+  ],
+  "shots": [
+    {
+      "case": "744x1133",
+      "expect": "tablet",
+      "modeOk": true,
+      "file": "open-744x1133.png",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-tablet",
+        "mode": "layout-tablet",
+        "hasHandle": false,
+        "hasClose": true,
+        "width": 560,
+        "top": 292,
+        "left": 87,
+        "maxHeight": "838.42px",
+        "borderRadius": "22px",
+        "backdrop": "blur(8px) saturate(1.05)",
+        "bgBg": "color(srgb 0 0 0 / 0.28)",
+        "sheetBg": "color(srgb 0.956863 0.956863 0.956863 / 0.92)",
+        "border": "1px solid",
+        "align": "center",
+        "fine": false,
+        "hover": false
+      }
+    },
+    {
+      "case": "768x1024",
+      "expect": "tablet",
+      "modeOk": true,
+      "file": "open-768x1024.png",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-tablet",
+        "mode": "layout-tablet",
+        "hasHandle": false,
+        "hasClose": true,
+        "width": 560,
+        "top": 237,
+        "left": 99,
+        "maxHeight": "757.76px",
+        "borderRadius": "22px",
+        "backdrop": "blur(8px) saturate(1.05)",
+        "bgBg": "color(srgb 0 0 0 / 0.28)",
+        "sheetBg": "color(srgb 0.956863 0.956863 0.956863 / 0.92)",
+        "border": "1px solid",
+        "align": "center",
+        "fine": false,
+        "hover": false
+      }
+    },
+    {
+      "case": "768x1024",
+      "state": "scroll",
+      "file": "scroll-768x1024.png",
+      "scrollProbe": {
+        "switcherScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "case": "820x1180",
+      "expect": "tablet",
+      "modeOk": true,
+      "file": "open-820x1180.png",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-tablet",
+        "mode": "layout-tablet",
+        "hasHandle": false,
+        "hasClose": true,
+        "width": 560,
+        "top": 315,
+        "left": 125,
+        "maxHeight": "873.2px",
+        "borderRadius": "22px",
+        "backdrop": "blur(8px) saturate(1.05)",
+        "bgBg": "color(srgb 0 0 0 / 0.28)",
+        "sheetBg": "color(srgb 0.956863 0.956863 0.956863 / 0.92)",
+        "border": "1px solid",
+        "align": "center",
+        "fine": false,
+        "hover": false
+      }
+    },
+    {
+      "case": "1024x768-touch",
+      "expect": "tablet-lg",
+      "modeOk": true,
+      "file": "open-1024x768-touch.png",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-tablet-lg",
+        "mode": "layout-tablet-lg",
+        "hasHandle": false,
+        "hasClose": true,
+        "width": 640,
+        "top": 101,
+        "left": 187,
+        "maxHeight": "583.68px",
+        "borderRadius": "22px",
+        "backdrop": "blur(8px) saturate(1.05)",
+        "bgBg": "color(srgb 0 0 0 / 0.28)",
+        "sheetBg": "color(srgb 0.956863 0.956863 0.956863 / 0.92)",
+        "border": "1px solid",
+        "align": "center",
+        "fine": false,
+        "hover": false
+      }
+    },
+    {
+      "case": "1024x768-touch",
+      "state": "scroll",
+      "file": "scroll-1024x768-touch.png",
+      "scrollProbe": {
+        "switcherScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "case": "1024x768-touch",
+      "state": "dark",
+      "file": "open-dark-1024x768-touch.png",
+      "darkProbe": {
+        "theme": "dark",
+        "sheetBg": "color(srgb 0.173255 0.173255 0.173255)",
+        "color": "rgb(236, 236, 236)"
+      }
+    },
+    {
+      "case": "1180x820-touch",
+      "expect": "tablet-lg",
+      "modeOk": true,
+      "file": "open-1180x820-touch.png",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-tablet-lg",
+        "mode": "layout-tablet-lg",
+        "hasHandle": false,
+        "hasClose": true,
+        "width": 680,
+        "top": 127,
+        "left": 245,
+        "maxHeight": "623.2px",
+        "borderRadius": "22px",
+        "backdrop": "blur(8px) saturate(1.05)",
+        "bgBg": "color(srgb 0 0 0 / 0.28)",
+        "sheetBg": "color(srgb 0.956863 0.956863 0.956863 / 0.92)",
+        "border": "1px solid",
+        "align": "center",
+        "fine": false,
+        "hover": false
+      }
+    },
+    {
+      "case": "1366x1024-touch",
+      "expect": "tablet-lg",
+      "modeOk": true,
+      "file": "open-1366x1024-touch.png",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-tablet-lg",
+        "mode": "layout-tablet-lg",
+        "hasHandle": false,
+        "hasClose": true,
+        "width": 680,
+        "top": 229,
+        "left": 338,
+        "maxHeight": "778.24px",
+        "borderRadius": "22px",
+        "backdrop": "blur(8px) saturate(1.05)",
+        "bgBg": "color(srgb 0 0 0 / 0.28)",
+        "sheetBg": "color(srgb 0.956863 0.956863 0.956863 / 0.92)",
+        "border": "1px solid",
+        "align": "center",
+        "fine": false,
+        "hover": false
+      }
+    },
+    {
+      "case": "1366x1024-fine",
+      "expect": "desktop",
+      "modeOk": true,
+      "file": "open-1366x1024-fine.png",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-desktop",
+        "mode": "layout-desktop",
+        "hasHandle": false,
+        "hasClose": true,
+        "width": 440,
+        "top": 28,
+        "left": 147,
+        "maxHeight": "758px",
+        "borderRadius": "14px",
+        "backdrop": "none",
+        "bgBg": "rgba(0, 0, 0, 0.2)",
+        "sheetBg": "rgb(244, 244, 244)",
+        "border": "1px solid",
+        "align": "flex-start",
+        "fine": true,
+        "hover": true
+      }
+    },
+    {
+      "case": "1440x900-fine",
+      "expect": "desktop",
+      "modeOk": true,
+      "file": "open-1440x900-fine.png",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-desktop",
+        "mode": "layout-desktop",
+        "hasHandle": false,
+        "hasClose": true,
+        "width": 440,
+        "top": 28,
+        "left": 147,
+        "maxHeight": "666px",
+        "borderRadius": "14px",
+        "backdrop": "none",
+        "bgBg": "rgba(0, 0, 0, 0.2)",
+        "sheetBg": "rgb(244, 244, 244)",
+        "border": "1px solid",
+        "align": "flex-start",
+        "fine": true,
+        "hover": true
+      }
+    },
+    {
+      "case": "1440x900-fine",
+      "state": "scroll",
+      "file": "scroll-1440x900-fine.png",
+      "scrollProbe": {
+        "switcherScrollTop": 0,
+        "mainOverflowY": "hidden"
+      }
+    },
+    {
+      "case": "1440x900-fine",
+      "state": "dark",
+      "file": "open-dark-1440x900-fine.png",
+      "darkProbe": {
+        "theme": "dark",
+        "sheetBg": "rgb(47, 47, 47)",
+        "color": "rgb(236, 236, 236)"
+      }
+    },
+    {
+      "case": "1024x768-fine",
+      "expect": "desktop",
+      "modeOk": true,
+      "file": "open-1024x768-fine.png",
+      "probes": {
+        "layoutClass": "sheet-bg space-switcher-sheet-bg layout-desktop",
+        "mode": "layout-desktop",
+        "hasHandle": false,
+        "hasClose": true,
+        "width": 440,
+        "top": 28,
+        "left": 147,
+        "maxHeight": "568px",
+        "borderRadius": "14px",
+        "backdrop": "none",
+        "bgBg": "rgba(0, 0, 0, 0.2)",
+        "sheetBg": "rgb(244, 244, 244)",
+        "border": "1px solid",
+        "align": "flex-start",
+        "fine": true,
+        "hover": true
+      }
+    }
+  ],
+  "interactions": [
+    {
+      "case": "768x1024",
+      "method": "close",
+      "sheetGone": true,
+      "focus": "kenos-space-switcher-fab"
+    },
+    {
+      "case": "768x1024",
+      "method": "escape",
+      "sheetGone": true,
+      "focus": "kenos-space-switcher-fab"
+    },
+    {
+      "case": "768x1024",
+      "method": "scrim",
+      "sheetGone": true,
+      "focus": "kenos-space-switcher-fab"
+    },
+    {
+      "case": "1024x768-touch",
+      "method": "close",
+      "sheetGone": true,
+      "focus": "kenos-space-switcher-sidebar"
+    },
+    {
+      "case": "1024x768-touch",
+      "method": "escape",
+      "sheetGone": true,
+      "focus": "kenos-space-switcher-sidebar"
+    },
+    {
+      "case": "1024x768-touch",
+      "method": "scrim",
+      "sheetGone": true,
+      "focus": "kenos-space-switcher-sidebar"
+    },
+    {
+      "case": "1440x900-fine",
+      "method": "close",
+      "sheetGone": true,
+      "focus": "kenos-space-switcher-sidebar"
+    },
+    {
+      "case": "1440x900-fine",
+      "method": "escape",
+      "sheetGone": true,
+      "focus": "kenos-space-switcher-sidebar"
+    },
+    {
+      "case": "1440x900-fine",
+      "method": "scrim",
+      "sheetGone": true,
+      "focus": "kenos-space-switcher-sidebar"
+    }
+  ]
+}

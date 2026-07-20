@@ -6,7 +6,7 @@
 | Space Continuity (function) | **PASSED** · Planner / Fitness / Isolation **VALIDATED** |
 | Annotation / evidence binding | Closed in `…T20-12-22-998Z` |
 | Continuity Verification Sheet | Rebuilt from canonical run (not Owner Review) |
-| **P5 Visual Quality** | **IN_PROGRESS** — knife 1 hairline DONE · knife 2 hierarchy DONE · knives 3–5 open |
+| **P5 Visual Quality** | **IN_PROGRESS** — knives 1–3 DONE · knives 4–5 open |
 | Owner Review | **NOT OPEN** |
 
 ```text
@@ -37,7 +37,16 @@ OWNER REVIEW — NOT OPEN
 
 **No READY_FOR_OWNER_REVIEW. No overall visual PASS.**
 
+## P5 knife 3 — iPad adaptive material & interaction mode
+
+- Status: **DONE** — overall P5 Visual still **IN_PROGRESS**
+- Mode core: `continueOverlayMode.core.js` — width + `(pointer: fine)` + `(hover: hover)` (no UA)
+- `≥900` touch-first → `tablet-lg` form sheet (not mechanical desktop)
+- `≥900` fine+hover → desktop anchored (Knife 2 Direction A preserved)
+- Tablet material: lighter scrim, 1px border, soft shadow, light frost; hairline list unchanged
+- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife3-ipad-material/` (`manifest.json`)
+- Continuity regression: **PASSED** (`…T21-52-46-113Z`)
+
 ## Still open (later knives)
-- iPad adaptive material + touch vs fine pointer (Knife 3)
 - Domain identity marks on Spaces directory (Knife 4)
 - Type ramp / Today density (Knife 5)

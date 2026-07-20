@@ -1,7 +1,8 @@
 <script>
   /**
    * Kenos Space Switcher — Continue sheet (not a 5th tab).
-   * P5 Knife 2: mobile bottom sheet / tablet form sheet / desktop anchored panel.
+   * P5 Knife 2: mobile / tablet / desktop anchored.
+   * P5 Knife 3: ≥900 touch-first → tablet-lg form sheet (not forced desktop).
    * Continuity: descriptor schema, owner binding, deep links, E2E testids frozen.
    */
   import { tick } from 'svelte'
@@ -16,13 +17,16 @@
     consumeSpaceSwitcherTrigger,
   } from '$lib/kenos/spaceSwitcher.svelte.js'
   import { SYSTEM_RETURN_LIST_KEY } from '$lib/kenos/spaceSwitcher.core.js'
+  import {
+    resolveContinueOverlayModeFromWindow,
+  } from '$lib/kenos/continueOverlayMode.core.js'
 
   /** @type {{ onClose?: () => void }} */
   let { onClose = undefined } = $props()
 
   let query = $state('')
   let allExpanded = $state(false)
-  /** @type {'mobile' | 'tablet' | 'desktop'} */
+  /** @type {import('$lib/kenos/continueOverlayMode.core.js').ContinueOverlayMode} */
   let layoutMode = $state('mobile')
   let sheetStyle = $state('')
 
@@ -50,17 +54,6 @@
   )
   const showHandle = $derived(layoutMode === 'mobile')
 
-  /**
-   * @returns {'mobile' | 'tablet' | 'desktop'}
-   */
-  function resolveMode() {
-    if (typeof window === 'undefined') return 'mobile'
-    const w = window.innerWidth
-    if (w >= 900) return 'desktop'
-    if (w >= 600) return 'tablet'
-    return 'mobile'
-  }
-
   /** Desktop Direction A — panel anchored to Continue trigger. */
   function updateDesktopAnchor() {
     if (layoutMode !== 'desktop') {
@@ -79,10 +72,8 @@
     const preferEndAlign = r.left > window.innerWidth * 0.45
     let left
     if (preferEndAlign) {
-      // AppBar / right-side Continue — align panel end with trigger
       left = Math.round(r.right - width)
     } else {
-      // Sidebar / left-side Continue — open to the right of trigger
       left = Math.round(r.right + gap)
       if (left + width > window.innerWidth - 12) {
         left = Math.round(r.left - gap - width)
@@ -93,7 +84,6 @@
     if (top + Math.min(360, maxH) > window.innerHeight - 12) {
       top = Math.max(12, Math.round(r.top - gap - Math.min(360, maxH)))
     }
-    // Prefer vertically aligning near trigger when sidebar icon is mid-rail
     if (!preferEndAlign && r.height < 64) {
       top = Math.max(12, Math.min(Math.round(r.top), window.innerHeight - Math.min(360, maxH) - 12))
     }
@@ -114,17 +104,23 @@
       return
     }
     const sync = () => {
-      layoutMode = resolveMode()
+      layoutMode = resolveContinueOverlayModeFromWindow(window)
       updateDesktopAnchor()
     }
     sync()
     const raf = requestAnimationFrame(() => {
       sync()
     })
+    const fineMq = window.matchMedia('(pointer: fine)')
+    const hoverMq = window.matchMedia('(hover: hover)')
+    fineMq.addEventListener?.('change', sync)
+    hoverMq.addEventListener?.('change', sync)
     window.addEventListener('resize', sync)
     window.addEventListener('scroll', sync, true)
     return () => {
       cancelAnimationFrame(raf)
+      fineMq.removeEventListener?.('change', sync)
+      hoverMq.removeEventListener?.('change', sync)
       window.removeEventListener('resize', sync)
       window.removeEventListener('scroll', sync, true)
     }
@@ -436,63 +432,97 @@
     background: color-mix(in srgb, var(--t1) 10%, transparent);
   }
 
-  /* Mobile <600: full-width bottom sheet */
-  @media (max-width: 599px) {
-    :global(.sheet-bg.space-switcher-sheet-bg.layout-mobile) {
-      align-items: flex-end;
-      justify-content: center;
-    }
+  /* Mode styles are class-driven (JS layoutMode) so ≥900 touch-first ≠ desktop. */
 
-    :global(.sheet.space-switcher-sheet) {
-      width: 100%;
-      max-width: none;
-      border-radius: 22px 22px 0 0;
-      max-height: min(78dvh, var(--app-vh, 100dvh));
-      padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  /* Mobile: full-width bottom sheet */
+  :global(.sheet-bg.space-switcher-sheet-bg.layout-mobile) {
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  :global(.sheet-bg.space-switcher-sheet-bg.layout-mobile .space-switcher-sheet) {
+    width: 100%;
+    max-width: none;
+    border-radius: 22px 22px 0 0;
+    max-height: min(78dvh, var(--app-vh, 100dvh));
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
+
+  /*
+   * Tablet + large tablet (iPad): centered form sheet.
+   * Scrim lighter than mobile; restrained panel material (1px + soft shadow + light frost).
+   */
+  :global(.sheet-bg.space-switcher-sheet-bg.layout-tablet),
+  :global(.sheet-bg.space-switcher-sheet-bg.layout-tablet-lg) {
+    align-items: center;
+    justify-content: center;
+    padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px))
+      max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
+    background: color-mix(in srgb, #000 28%, transparent);
+    -webkit-backdrop-filter: blur(8px) saturate(1.05);
+    backdrop-filter: blur(8px) saturate(1.05);
+  }
+
+  :global(.sheet-bg.space-switcher-sheet-bg.layout-tablet .space-switcher-sheet),
+  :global(.sheet-bg.space-switcher-sheet-bg.layout-tablet-lg .space-switcher-sheet) {
+    width: min(560px, calc(100vw - 48px));
+    max-width: min(560px, calc(100vw - 48px));
+    border-radius: 22px;
+    max-height: min(74dvh, var(--app-vh, 100dvh));
+    padding: 14px 18px max(18px, env(safe-area-inset-bottom, 0px));
+    background: color-mix(in srgb, var(--card, var(--bg)) 92%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    box-shadow:
+      0 1px 0 color-mix(in srgb, var(--t1) 5%, transparent),
+      0 12px 32px rgba(0, 0, 0, 0.14);
+    -webkit-backdrop-filter: blur(18px) saturate(1.12);
+    backdrop-filter: blur(18px) saturate(1.12);
+  }
+
+  /* Large tablet / Stage Manager — slightly wider form, still not anchored desktop */
+  :global(.sheet-bg.space-switcher-sheet-bg.layout-tablet-lg .space-switcher-sheet) {
+    width: min(640px, calc(100vw - 64px));
+    max-width: min(640px, calc(100vw - 64px));
+    max-height: min(76dvh, var(--app-vh, 100dvh));
+  }
+
+  @media (min-width: 1100px) {
+    :global(.sheet-bg.space-switcher-sheet-bg.layout-tablet-lg .space-switcher-sheet) {
+      width: min(680px, calc(100vw - 72px));
+      max-width: min(680px, calc(100vw - 72px));
     }
   }
 
-  /* Tablet 600–899: centered form sheet */
-  @media (min-width: 600px) and (max-width: 899px) {
-    :global(.sheet-bg.space-switcher-sheet-bg.layout-tablet) {
-      align-items: center;
-      justify-content: center;
-      padding: 24px max(16px, env(safe-area-inset-right)) 24px
-        max(16px, env(safe-area-inset-left));
-    }
-
-    :global(.sheet.space-switcher-sheet) {
-      width: min(560px, 100%);
-      max-width: 560px;
-      border-radius: var(--radius-overlay, 16px);
-      max-height: min(74vh, var(--app-vh, 100dvh));
-      padding-bottom: 20px;
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
-    }
+  /* Desktop fine-pointer: Direction A anchored — light scrim, no heavy blur */
+  :global(.sheet-bg.space-switcher-sheet-bg.layout-desktop) {
+    align-items: flex-start;
+    justify-content: flex-start;
+    background: rgba(0, 0, 0, 0.2);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    padding: 0;
   }
 
-  /* Desktop ≥900: Direction A anchored panel — light scrim, no heavy blur */
-  @media (min-width: 900px) {
-    :global(.sheet-bg.space-switcher-sheet-bg.layout-desktop) {
-      align-items: flex-start;
-      justify-content: flex-start;
-      background: rgba(0, 0, 0, 0.2);
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-      padding: 0;
-    }
+  :global(.sheet-bg.space-switcher-sheet-bg.layout-desktop .space-switcher-sheet) {
+    width: min(440px, calc(100vw - 24px));
+    max-width: 440px;
+    border-radius: 14px;
+    max-height: min(74vh, var(--app-vh, 100dvh));
+    padding: 12px 16px 16px;
+    background: var(--card, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+    box-shadow:
+      0 1px 0 color-mix(in srgb, var(--t1) 4%, transparent),
+      0 10px 28px rgba(0, 0, 0, 0.14);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 
-    :global(.sheet.space-switcher-sheet) {
-      width: min(440px, calc(100vw - 24px));
-      max-width: 440px;
-      border-radius: 14px;
-      max-height: min(74vh, var(--app-vh, 100dvh));
-      padding: 12px 16px 16px;
-      border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
-      box-shadow:
-        0 1px 0 color-mix(in srgb, var(--t1) 4%, transparent),
-        0 10px 28px rgba(0, 0, 0, 0.14);
-    }
+  /* Dark: keep text contrast independent of frost */
+  :global([data-app='aios'][data-theme='dark'] .sheet-bg.space-switcher-sheet-bg.layout-tablet .space-switcher-sheet),
+  :global([data-app='aios'][data-theme='dark'] .sheet-bg.space-switcher-sheet-bg.layout-tablet-lg .space-switcher-sheet) {
+    background: color-mix(in srgb, var(--card, var(--bg)) 94%, #000 6%);
+    border-color: color-mix(in srgb, var(--border) 70%, transparent);
   }
 
   .switcher {

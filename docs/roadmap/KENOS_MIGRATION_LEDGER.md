@@ -247,4 +247,12 @@ PROPOSED
   - Desktop `≥900`: **anchored** panel to Continue trigger
 - Superseded: early Knife 2 pass that used a **centered** desktop command panel (~460px). Evidence marked under `docs/qa/evidence/kenos-uiux-rescue/p5-knife2-sheet-hierarchy/SUPERSEDED-EARLY-PASS.md`.
 - Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife2-sheet-hierarchy/` (`manifest-r2.json`).
-- Owner Review: **NOT OPEN**. Next visual knife: iPad adaptive material (Knife 3).
+- Owner Review: **NOT OPEN**. Next visual knife: domain identity (Knife 4).
+
+## P5 Knife 3 — iPad adaptive material — DONE
+
+- Status: **DONE** (2026-07-20). Visual Quality overall remains **IN_PROGRESS**.
+- Adaptive rule: `≥900` uses `tablet-lg` form sheet unless `(pointer: fine)` **and** `(hover: hover)` → desktop anchored.
+- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife3-ipad-material/`.
+- Continuity contracts unchanged; regression PASS.
+- Owner Review: **NOT OPEN**.
