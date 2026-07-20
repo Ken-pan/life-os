@@ -145,6 +145,15 @@ export const PORTAL_DEEP_LINKS = [
     keywords: ['music', 'search', '搜索'],
   },
   {
+    id: 'portal-today-soft-redirect',
+    appId: 'portal',
+    title: 'Portal · Today → Kenos',
+    subtitle: 'Owner 限定 soft-redirect（可回滚）',
+    path: '/today',
+    icon: 'layout-dashboard',
+    keywords: ['portal', 'today', 'kenos', 'redirect', '今日'],
+  },
+  {
     id: 'assistant-today',
     appId: 'aios',
     title: 'Kenos · Today',
@@ -249,6 +258,11 @@ function deepLinkToAction(link, query = '') {
     icon: link.icon,
     onSelect: () => {
       if (query) recordRecentSearch(query, link.id, link.title)
+      if (link.appId === 'portal') {
+        const normalized = link.path.startsWith('/') ? link.path : `/${link.path}`
+        window.location.href = normalized
+        return
+      }
       window.location.href = buildPortalDeepLinkUrl(link.appId, link.path)
     },
   }
@@ -295,7 +309,8 @@ export function buildPortalCommandActions({ signOut, query = '', allowedAppKeys 
   }
 
   for (const link of PORTAL_DEEP_LINKS) {
-    if (!allowed.has(link.appId)) continue
+    // Portal-local soft routes (e.g. /today) are always available on this host.
+    if (link.appId !== 'portal' && !allowed.has(link.appId)) continue
     if (
       q &&
       !link.title.toLowerCase().includes(q) &&
