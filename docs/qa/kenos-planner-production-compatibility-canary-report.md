@@ -19,12 +19,20 @@ Isolated Planner canary is live with Kenos writers fail-closed and legacy
 
 Blockers (not security/double-write incidents):
 
-1. Owner authenticated smoke on Planner canary not completed in-agent (canary
-   opened logged-out / local-empty).
-2. Dual-account isolation not re-run (no second account session in agent).
-3. Production Legacy Writer smoke (`KENOS PLANNER COMPAT SMOKE — <ts>`) **skipped**
-   — no Owner-confirmed production mutation this window (per approval: do not
-   fake pass).
+1. Owner authenticated smoke on Planner canary — **WAITING_OWNER_LOGIN**
+2. Dual-account isolation — waiting Owner + Test User login cycle
+3. Production Legacy Writer smoke — blocked until (1)+(2) PASS
+
+Autonomous progress since last report tip (verified live / local):
+
+- Logout isolation fix: clear user-scoped tasks/projects/outbox on authenticated
+  session end; preserve device settings; do not wipe never-logged-in cold start
+- Canary redeployed from `64b365ac8135dff9dda06cdde598310b1dac9e12`
+  (deploy `6a5d678c1967b65603b10ff0`)
+- Mutation audit + offline reconnect contract unit tests
+- Legacy create/edit/complete/delete E2E ×3 consecutive PASS
+- Phase 1/6 guards PASS; Wave 1 checksum unchanged
+- Production Planner still `6a5c617e6e1b41000893a948`; stop_builds=true
 
 No Kenos double-write. Production Planner / AIOS sites untouched.
 
@@ -32,20 +40,23 @@ No Kenos double-write. Production Planner / AIOS sites untouched.
 
 ## Dual-track boundary (frozen)
 
-| Track | Allowed on canary |
-| ----- | ----------------- |
-| Legacy Planner Writer | `planner_tasks` / lists / projects / attachments upsert via existing sync |
-| Kenos Read Path | Capability registry + AIOS Focus/Work/Today read contracts (AIOS canary) |
-| Kenos Writer | **Blocked** — RPC denylist + Kenos table mutation proxy (`KENOS_WRITE_BLOCKED`) |
+| Track                 | Allowed on canary                                                               |
+| --------------------- | ------------------------------------------------------------------------------- |
+| Legacy Planner Writer | `planner_tasks` / lists / projects / attachments upsert via existing sync       |
+| Kenos Read Path       | Capability registry + AIOS Focus/Work/Today read contracts (AIOS canary)        |
+| Kenos Writer          | **Blocked** — RPC denylist + Kenos table mutation proxy (`KENOS_WRITE_BLOCKED`) |
 
 Never: Legacy write + Kenos write.
 
 ## 1. Exact source SHA
 
-`PLANNER_COMPATIBILITY_CANARY_SHA=02aed2a92f773b6acd5635603a8b5940c56ef07e`
+`PLANNER_COMPATIBILITY_CANARY_SHA=64b365ac8135dff9dda06cdde598310b1dac9e12`
 
-Parent tip before this work: `cef0280e17c7cec7fecfeba251a7c619d3e6fcbf`
-(CI success). AIOS production remains
+(Code-bearing: logout isolation + prior guard/Focus-400 fixes. Parent code
+baseline `02aed2a92f773b6acd5635603a8b5940c56ef07e`; earlier docs tip
+`9213582293e0436eab0b11f8e9f46314059eb4cb`.)
+
+AIOS production remains
 `f87336224a4cb8c934aa90fd0819bb26a1e5f795` / deploy `6a5d500302c73442caf47132`.
 
 Canary hosts rebuilt from `git archive` of the freeze SHA (not dirty WIP tip).
@@ -56,24 +67,25 @@ Wave 1 migration sha256 **unchanged** (PASS; tip `20260719130500`).
 
 Pre-change tip CI: https://github.com/Ken-pan/life-os/actions/runs/29705896665 — **success**
 
-Post-push tip (includes freeze code `02aed2a92` + this report):
+Docs tip CI (includes `02aed2a92`):
 https://github.com/Ken-pan/life-os/actions/runs/29707792872 — **success**
-(`headSha=6ae5ed466290c34ade701c2b10161a4c68fb9c14`; jobs: build, planner-e2e-desktop,
-integration-smoke, design-catalog, … all success).
+
+Logout-fix tip `64b365ac8…`: https://github.com/Ken-pan/life-os/actions/runs/29709101185
+(in progress / record on completion).
 
 ## 3. Canary URL / deploy ID
 
-| Field | Value |
-| ----- | ----- |
-| Planner Canary URL | https://planner-kenos-compat-canary.netlify.app |
-| Site ID | `72f536f3-2805-4fea-94c4-10e9c3825574` |
-| Deploy ID | `6a5d5bc1ea467a4e5542aeb1` |
-| Source | `git archive` `02aed2a92f773b6acd5635603a8b5940c56ef07e` |
-| Access | Netlify URL; `noindex` in `app.html`; no custom domain |
-| Rollback / disable | Unpublish / delete site or redeploy empty; production Planner unaffected |
-| AIOS read-canary (Yellow fix) | https://aios-kenos-read-canary.netlify.app deploy `6a5d5bdd654fcb52b5d4f7c3` |
-| Prod Planner published (untouched) | `6a5c617e6e1b41000893a948` |
-| Prod AIOS published (untouched) | `6a5d500302c73442caf47132` |
+| Field                              | Value                                                                        |
+| ---------------------------------- | ---------------------------------------------------------------------------- |
+| Planner Canary URL                 | https://planner-kenos-compat-canary.netlify.app                              |
+| Site ID                            | `72f536f3-2805-4fea-94c4-10e9c3825574`                                       |
+| Deploy ID                          | `6a5d678c1967b65603b10ff0`                                                   |
+| Source                             | `git archive` `64b365ac8135dff9dda06cdde598310b1dac9e12`                     |
+| Access                             | Netlify URL; `noindex` in `app.html`; no custom domain                       |
+| Rollback / disable                 | Unpublish / delete site or redeploy empty; production Planner unaffected     |
+| AIOS read-canary (Yellow fix)      | https://aios-kenos-read-canary.netlify.app deploy `6a5d5bdd654fcb52b5d4f7c3` |
+| Prod Planner published (untouched) | `6a5c617e6e1b41000893a948`                                                   |
+| Prod AIOS published (untouched)    | `6a5d500302c73442caf47132`                                                   |
 
 ## 4. Environment model
 
@@ -139,20 +151,20 @@ task identity writer.
 
 ## 13. Legacy Writer endpoint
 
-| Target | Status |
-| ------ | ------ |
-| `public.planner_tasks` (+ lists/projects/attachments) upsert | Allowed |
-| `kenos_create_plan_task_action` / Kenos store|transition RPCs | Blocked |
-| Kenos domain tables insert/update/delete | Blocked |
+| Target                                                       | Status          |
+| ------------------------------------------------------------ | --------------- | ------- |
+| `public.planner_tasks` (+ lists/projects/attachments) upsert | Allowed         |
+| `kenos_create_plan_task_action` / Kenos store                | transition RPCs | Blocked |
+| Kenos domain tables insert/update/delete                     | Blocked         |
 
 Evidence: `prodWriteGuard.core.test.js` + baked `KENOS_WRITE_BLOCKED` in canary chunk.
 
 ## 14–15. Legacy mutation smoke / correlation
 
-| Phase | Result |
-| ----- | ------ |
-| Phase 1 local/guard | **PASS** — legacy tables allowed; Kenos writers blocked |
-| Phase 2 production smoke task | **SKIPPED** (not forged) |
+| Phase                         | Result                                                  |
+| ----------------------------- | ------------------------------------------------------- |
+| Phase 1 local/guard           | **PASS** — legacy tables allowed; Kenos writers blocked |
+| Phase 2 production smoke task | **SKIPPED** (not forged)                                |
 
 ## 16. Kenos mutation audit
 
@@ -179,13 +191,13 @@ Work / Approval / Focus not added as Planner global tabs.
 
 ## 22. Tests and repeated runs
 
-| Suite | Result |
-| ----- | ------ |
-| AIOS `node --test` (incl. focusSideReads) | PASS |
-| Planner vitest + guard tests | PASS (152) |
-| `check-kenos-phase1` / `phase6` | PASS |
-| Wave1 checksum | PASS |
-| Planner E2E desktop full | **118 passed** / 6 skipped |
+| Suite                                        | Result                              |
+| -------------------------------------------- | ----------------------------------- |
+| AIOS `node --test` (incl. focusSideReads)    | PASS                                |
+| Planner vitest + guard tests                 | PASS (152)                          |
+| `check-kenos-phase1` / `phase6`              | PASS                                |
+| Wave1 checksum                               | PASS                                |
+| Planner E2E desktop full                     | **118 passed** / 6 skipped          |
 | Planner E2E repeat (triage/schedule/project) | PASS (see `/tmp/planner-e2e-2.log`) |
 
 ## 23. Migration checksum
@@ -209,12 +221,12 @@ All production sites `stop_builds=true`. Prod Planner published still
 
 ## 27. Remaining Red / Yellow gates
 
-| Gate | Severity |
-| ---- | -------- |
-| Owner canary authenticated reads | Yellow |
-| Dual-account isolation on canary | Yellow |
-| Production Legacy Writer smoke | Yellow |
-| Prod AIOS yellow-fix redeploy | Yellow (separate phrase) |
+| Gate                             | Severity                 |
+| -------------------------------- | ------------------------ |
+| Owner canary authenticated reads | Yellow                   |
+| Dual-account isolation on canary | Yellow                   |
+| Production Legacy Writer smoke   | Yellow                   |
+| Prod AIOS yellow-fix redeploy    | Yellow (separate phrase) |
 
 ## 28. Readiness for Planner production compatibility deploy
 
