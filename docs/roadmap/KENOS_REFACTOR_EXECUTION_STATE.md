@@ -520,3 +520,11 @@ Approved temporary defaults now on file:
 - RPC canary PASS (seed `3e063fbb…` tombstoned)
 - Client: `toggleCompleteAsync` + taskUi/triage wiring
 - Next: Owner-limited bake; archive/delete writer; then Track C offline
+
+### Complete/Reopen Owner-limited deploy
+
+- Prod Planner: `6a5da9e6a1d60958ea61475f` @ `2e73dab08…`
+- Migration tip: `20260720140000`
+- Active Owner-limited writers: create, title, due, schedule, project, complete, reopen
+- Seven sites stop_builds=true
+- Next: archive/delete writer → Track C offline → Approval/Activity/Outbox worker
