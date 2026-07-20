@@ -17,12 +17,19 @@ import { LIFE_OS_PERSONAL_OWNER_EMAIL } from './constants.js'
  *   onSignedOut?: () => void;
  *   onSyncSession?: (options: { force?: boolean }) => void | Promise<unknown>;
  *   onAllowedAppKeys?: (appKeys: string[] | null) => void;
+ *   landingOrigin?: string | (() => string);
  * }} options
  */
 export function createLifeOsAuth(supabase, options) {
-  const { appId, onSession, onSignedOut, onSyncSession, onAllowedAppKeys } = options
+  const { appId, onSession, onSignedOut, onSyncSession, onAllowedAppKeys, landingOrigin } = options
 
   function getPortalOrigin() {
+    if (typeof landingOrigin === 'function') {
+      const resolved = landingOrigin()
+      if (resolved) return resolved
+    } else if (typeof landingOrigin === 'string' && landingOrigin.trim()) {
+      return landingOrigin.trim()
+    }
     if (typeof window === 'undefined') return 'https://portal.kenos.space'
     const host = window.location.hostname
     if (host === 'localhost' || host === '127.0.0.1') {

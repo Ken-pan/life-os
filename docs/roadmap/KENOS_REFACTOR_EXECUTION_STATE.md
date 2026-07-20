@@ -634,3 +634,8 @@ Approved temporary defaults now on file:
 - Report: `docs/qa/kenos-aios-approval-decide-owner-limited-deploy.md`
 - Next: Fitness/Finance Kenos read canary; Portal soft-redirect prep; Apple Owner gates
 
+## Training Space honest read + Portal landingOrigin hook (2026-07-20)
+
+- Flag `VITE_KENOS_PROD_READ_TRAINING` default Off
+- Report: `docs/qa/kenos-fitness-training-space-read-canary.md`
+- sync `landingOrigin` optional; production Portal redirect unchanged

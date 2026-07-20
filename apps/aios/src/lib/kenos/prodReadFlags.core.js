@@ -53,6 +53,16 @@ export function isProdWorkReadEnabled(env = import.meta.env) {
 }
 
 /**
+ * Training Space production read from portal_today_summary.fitness.
+ * Default Off — never show hardcoded Push Day as production truth.
+ * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
+ */
+export function isProdTrainingReadEnabled(env = import.meta.env) {
+  if (isProdReadCanaryMode(env)) return env?.VITE_KENOS_PROD_READ_TRAINING !== '0'
+  return env?.VITE_KENOS_PROD_READ_TRAINING === '1'
+}
+
+/**
  * When On, Today may attach Kenos Work/Focus capability chips from production reads.
  * Default Off — Today remains legacy portal_today_summary + local Work foundation.
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
@@ -82,6 +92,7 @@ export function prodReadFlagSnapshot(env = import.meta.env) {
     focusDeferred: isProdFocusDeferredReadEnabled(env),
     focusSuggestions: isProdFocusSuggestionsReadEnabled(env),
     work: isProdWorkReadEnabled(env),
+    training: isProdTrainingReadEnabled(env),
     todayOverlay: isProdTodayKenosOverlayEnabled(env),
     shadow: isProdShadowCompareEnabled(env),
     planCommandWrite: false,
