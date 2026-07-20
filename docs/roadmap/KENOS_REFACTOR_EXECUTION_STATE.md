@@ -472,3 +472,10 @@ Approved temporary defaults now on file:
 - Bake: create + update-title writers ON; Owner email cohort
 - Seven sites still paused; Gallery not restored
 - Next: due-date / scheduling writer
+
+## Plan Due-Date Writer (2026-07-20)
+
+- Migration tip: `20260720110000` (`kenos_update_plan_task_due_date_action`)
+- RPC canary PASS (seed `ea0b1b72…` tombstoned); anon denied
+- Client + TaskEditorSheet routing ready
+- Next: Owner-limited production bake (create+title+due), then scheduling writer

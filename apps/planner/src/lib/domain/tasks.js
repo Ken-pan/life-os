@@ -11,6 +11,8 @@ import { isPlanCreateTaskWriterCohortMember, isPlanCreateTaskWriterEnabled, mark
 import { createTaskViaHostedKenosWriter } from '../kenos/planCreateTaskWriter.host.js';
 import { isPlanUpdateTaskTitleWriterCohortMember, isPlanUpdateTaskTitleWriterEnabled } from '../kenos/planUpdateTaskTitleWriter.core.js';
 import { updateTaskTitleViaHostedKenosWriter } from '../kenos/planUpdateTaskTitleWriter.host.js';
+import { isPlanUpdateTaskDueDateWriterCohortMember, isPlanUpdateTaskDueDateWriterEnabled } from '../kenos/planUpdateTaskDueDateWriter.core.js';
+import { updateTaskDueDateViaHostedKenosWriter } from '../kenos/planUpdateTaskDueDateWriter.host.js';
 import { supabase } from '../supabase.js';
 
 let reminderTimer = null;
@@ -110,6 +112,22 @@ export async function updateTaskTitleAsync(id, title) {
     }
   }
   return updateTask(id, { title });
+}
+
+/**
+ * Due-date update entry: Kenos writer when enabled+cohort, else Legacy updateTask.
+ * @param {string} id
+ * @param {string | null | undefined} dueDate
+ */
+export async function updateTaskDueDateAsync(id, dueDate) {
+  if (isPlanUpdateTaskDueDateWriterEnabled()) {
+    if (!supabase) throw new Error('Supabase is not configured for Plan due-date writer');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (isPlanUpdateTaskDueDateWriterCohortMember(session?.user?.email)) {
+      return updateTaskDueDateViaHostedKenosWriter(id, dueDate);
+    }
+  }
+  return updateTask(id, { dueDate: dueDate ?? null });
 }
 
 
