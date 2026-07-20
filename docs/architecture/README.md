@@ -6,7 +6,8 @@
 | ------------------------------------------------ | ------------------------------------------------- |
 | [`NORTH_STAR.md`](./NORTH_STAR.md)               | **愿景** — 终极形态、十 OS 判据、和现在的距离（非排期） |
 | [`SYSTEM_OVERVIEW.md`](./SYSTEM_OVERVIEW.md)     | **体系快照** — app/包清单、不变量、infra；与 hub 冲突时以 hub 为准 |
-| [`KENOS_REFACTOR.md`](./KENOS_REFACTOR.md)       | **Kenos 重构导航** — Constitution、目标架构、Apple 三端、迁移与验收（目标已确认，实施待激活） |
+| [`KENOS_REFACTOR.md`](./KENOS_REFACTOR.md)       | **Kenos 重构导航** — Constitution、目标架构、Apple 三端、迁移与验收 |
+| [`kenos-implementation-status.md`](./kenos-implementation-status.md) | **Kenos 实施审计** — 已提交/生产 canary/本地 WIP/未完成与下一步 |
 | [`../roadmap/COMPOUND.md`](../roadmap/COMPOUND.md) | **复利判据** — 使用 × 开发取舍（排期仍以 hub 为准） |
 | [`contracts.md`](./contracts.md)                 | `@life-os/contracts` export 白名单 + Web 映射     |
 | [`responsive-chrome.md`](./responsive-chrome.md) | 断点 / AppBar / scroll-padding / 壳层契约（六端） |
@@ -19,4 +20,4 @@
 
 **阶段进度：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)
 
-> Kenos 重构文档描述目标与操作方法；在 `LIFEOS_ROADMAP.md` 正式激活前，不代表 Portal、命名、数据 Owner 或原生客户端已经切换。
+> Kenos 已进入受控生产 canary，但 Portal、legacy writer、Executor/outbox delivery、完整 Spaces 和 Apple 分发仍未完成；不要用最高 Phase 编号或本地 WIP 推断阶段已退出。

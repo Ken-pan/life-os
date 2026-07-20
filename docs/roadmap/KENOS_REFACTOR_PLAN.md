@@ -1,14 +1,14 @@
 ---
 title: Kenos 重构分阶段执行计划
 owner: kenpan
-last_verified: 2026-07-18
+last_verified: 2026-07-20
 doc_role: refactor-roadmap-deep-dive
-status: proposed-not-in-now
+status: active-controlled-production-canary-exits-open
 ---
 
 # Kenos 重构分阶段执行计划
 
-> 本文是重构深度计划，不是当前 Now 真源。激活前必须在 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 明确列为当前主航道。实施状态只在 Hub 和 [`KENOS_MIGRATION_LEDGER.md`](./KENOS_MIGRATION_LEDGER.md) 更新，避免多份 Now/Next。
+> 本文是阶段设计和出口条件，不是当前 Now 真源。重构已经进入受控生产 canary，但后续 Phase 的 foundation/部署不自动关闭前序 Phase 的 retirement gate。最新完成度见 [`../architecture/kenos-implementation-status.md`](../architecture/kenos-implementation-status.md)；Now/Next 和迁移状态仍只在 Hub 与 [`KENOS_MIGRATION_LEDGER.md`](./KENOS_MIGRATION_LEDGER.md) 更新。
 
 ## 1. 执行原则
 
@@ -31,7 +31,7 @@ Phase 0  Governance and boundary freeze
   -> Phase 5  Proactive coordination and automation
 ```
 
-Phase 4 的架构准备可在 Phase 0 写文档，但实现不得绕过 Phase 1 的 Action/Sync/Permission 契约。Phase 5 不得提前。
+Phase 4 的架构准备可与前序迁移并行，但实现不得绕过 Phase 1 的 Action/Sync/Permission 契约。Phase 5 可以只准备本地 foundation；ProductionExecutor、通知和主动写入仍必须等待前置硬门。生产 apply、canary、legacy revoke 和 retirement 统一归入 Phase 6 收口。
 
 ## 3. Phase 0 - 治理和边界冻结
 
@@ -305,7 +305,30 @@ AIOS/Knowledge/Health Tauri、Health companion、Music Capacitor 分能力退役
 - 重要协调建议能展示 evidence、constraint、trade-off。
 - 维护时间和人工审核下降，而非增长。
 
-## 9. 横向工作流
+## 9. Phase 6 - 生产收敛与旧系统退役
+
+### 目标
+
+把已验证的 contracts、RPC、客户端与入口从 owner-limited canary 收敛成唯一正式路径，并删除 legacy writer、旧入口、旧壳和永久兼容层。
+
+### 顺序
+
+1. 固定 production baseline、migration tip、deploy/rollback ID、feature flag 和 cohort。
+2. 对账新旧 writer、Activity、Outbox、错误率、延迟和重复副作用。
+3. 先启用可 kill 的最小 reader/worker，再逐 capability 扩大 writer/Executor。
+4. 每次只撤销一个 legacy 入口；完成观察和 rollback drill 后再删除代码。
+5. Portal、旧 native shells、旧 routes/build/registry/compat 逐项达到 retirement gate。
+6. 最终更新 Roadmap、Ledger、System Overview、Shipped 和 runbook，清除过期“待 apply”状态。
+
+### Phase 6 出口
+
+- 核心对象只有一个 writer，legacy revoke/retirement 有生产证据。
+- Outbox delivery、dead-letter、replay、Activity、Approval、Undo 与 kill switch 完成演练。
+- Portal 和被替代旧壳不再构建、部署或承载隐藏写路径。
+- ProductionExecutor 只对通过独立信任 gate 的 capability 开放；默认仍 fail closed。
+- 干净 `origin/master` 上所有相关 guard、build、integration、recovery 和 real-use evidence 通过。
+
+## 10. 横向工作流
 
 ### Security
 
@@ -327,7 +350,7 @@ AIOS/Knowledge/Health Tauri、Health companion、Music Capacitor 分能力退役
 
 继续 token/theme/AppShell/design-catalog 路线。Music 的差异通过 semantic tokens、theme、documented variant、slot/composition 表达；只有 Now Playing、lyrics、mini player、visualization 等真实音乐领域交互保留专属组件。
 
-## 10. 复杂度预算
+## 11. 复杂度预算
 
 每个工作包进入 Now 前写:
 
@@ -346,7 +369,7 @@ AIOS/Knowledge/Health Tauri、Health companion、Music Capacitor 分能力退役
 - 没有长期 Owner。
 - 无真实使用场景和验收指标。
 
-## 11. 暂不执行清单
+## 12. 暂不执行清单
 
 - 全仓 rename、目录 mass move、schema mass rename。
 - 微服务化、多 Supabase 项目。

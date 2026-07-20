@@ -1,7 +1,7 @@
 ---
 title: Life OS 体系架构总览
 owner: kenpan
-last_verified: 2026-07-17-compound-docs
+last_verified: 2026-07-20-kenos-implementation-audit
 doc_role: architecture-snapshot
 ---
 
@@ -11,7 +11,20 @@ doc_role: architecture-snapshot
 
 ## 一句话
 
-Life OS 是个人生活平台：仓库注册表共有**九个产品 app**——**Planner / Fitness / Finance / Music** 四生产站、**Portal** 启动器、**Home** 实验站，以及本地优先的 **AIOS / KnowledgeOS / HealthOS**。前六个有 canonical web surface；AIOS 与 KnowledgeOS 另有实验云端 surface，HealthOS 当前只做本地 Mac + Watch/iPhone companion。`design-catalog` / `starter` 是平台工具，不计入产品 app。PaperOS 是北极星中的第十个 OS，但设备 Shell 已迁出独立仓库，本仓库只保留 Planner 侧 `/api/paper/*` provider。
+Life OS 正在渐进收敛为 Kenos：现有生产站和领域 Owner 继续承载真实数据，AIOS 承担 Assistant/Today/Spaces 控制面，统一 Contracts/Action/Activity/Approval/Outbox 形成系统主干，Apple iOS/macOS/watchOS 客户端提供新的原生日常入口。该迁移仍处于受控生产 canary；Portal 与 legacy writer 尚未退役，不能把“新入口存在”写成“旧系统已删除”。PaperOS 设备 Shell 已迁出独立仓库，本仓库只保留 Planner 侧 `/api/paper/*` provider。
+
+## 0. Kenos 迁移快照（2026-07-20）
+
+| 层 | 当前事实 | 尚未完成 |
+| --- | --- | --- |
+| 数据/动作 | 生产 migration 到 `20260720230000`；Plan、Approval、Outbox、Focus、Work、Capture、Assistant proposal 已有 Kenos schema/RPC | 全量 writer cutover、legacy revoke、outbox delivery worker、ProductionExecutor |
+| Web | AIOS 已有 Today/Assistant/Spaces/Inbox/Approvals/Activity/Focus/Work；Portal `/today` 有 Owner-limited redirect | Portal 默认入口全量切换与 app/build/registry/compat retirement |
+| Domain Spaces | Plan 写 canary；Work/Training/Money/Music/Home 有不同程度 foundation | 每域唯一 writer、完整错误/离线/恢复与旧 surface retirement |
+| Apple | Kenos iOS/macOS/watchOS 工程、共享包、Simulator/Mac build、iPhone install/open 有证据 | App Group/APNs/entitlement、分发、完整真机矩阵、旧 shells retirement |
+| Context | Focus/interruption/建议合同与本地跨端行为通过 guard | 生产通知、跨端 Focus state、Executor/Approval 主动闭环 |
+| UIUX | 六轮本地优化 `91/100`，preview/simulator ready | 该轮没有生产部署 |
+
+完整证据与下一步见 [`kenos-implementation-status.md`](./kenos-implementation-status.md)。
 
 ## 1. App 清单（`apps/`）
 

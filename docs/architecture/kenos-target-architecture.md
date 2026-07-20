@@ -1,13 +1,15 @@
 ---
 title: Kenos 目标架构与治理
 owner: kenpan
-last_verified: 2026-07-18
+last_verified: 2026-07-20
 doc_role: target-architecture
-status: target-approved-implementation-pending
+status: target-approved-implementation-in-controlled-canary
 review_cadence: quarterly-and-before-phase-exit
 ---
 
 # Kenos 目标架构与治理
+
+> 本文定义终局和治理合同，不是当前完成度清单。2026-07-20 起，实施已进入受控生产 canary；本文第 3 节的 2026-07-18 差距表保留为历史设计快照，最新 committed / production / WIP / exit-open 状态见 [`kenos-implementation-status.md`](./kenos-implementation-status.md)。
 
 ## 1. 架构结论
 

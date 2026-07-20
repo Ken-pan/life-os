@@ -1,14 +1,26 @@
 ---
 title: Kenos 重构执行状态
 owner: kenpan
-last_verified: 2026-07-19
-doc_role: cloud-task-execution-state
-status: phase-2-partial-read-only-integration-no-production-cutover
+last_verified: 2026-07-20
+doc_role: execution-history-and-current-state
+status: controlled-production-canary-legacy-cutover-open
 ---
 
-# Kenos Phase 0 Cloud 执行状态
+# Kenos 重构执行状态与阶段历史
 
-> 单次任务恢复点与最终报告；不是 Roadmap Now 或已发货真源。正式状态仍只更新 `LIFEOS_ROADMAP.md`、Migration Ledger 和 Shipped。
+> 本文保留 Phase 0 Cloud 起点与后续阶段的执行历史；不是 Roadmap Now 或已发货真源。当前实施审计见 [`../architecture/kenos-implementation-status.md`](../architecture/kenos-implementation-status.md)，正式状态仍只更新 `LIFEOS_ROADMAP.md`、Migration Ledger 和 Shipped。
+
+## 当前快照（2026-07-20）
+
+- Formal baseline: `502d805c28b29d3d50c0efa2699ab717a301ac45`，审计时与 `origin/master` 同步。
+- Production migration tip: `20260720230000`。
+- Owner cohort: Plan create/title/due/schedule/project/complete/reopen/archive、MCP complete、Capture convert 已走 Kenos command/RPC；非 cohort、未覆盖字段和 sync upsert 仍有 legacy fallback。
+- AIOS / Portal: Approval/Capture canary 与 Portal `/today` owner-limited soft redirect 已有生产证据；Portal 未退役。
+- Apple / Phase 5: 多端代码、构建、device install/open 和本地 contextual behavior 已验证；App Group/APNs/分发、ProductionExecutor 与生产主动能力仍关闭。
+- Program verdict: `CONTROLLED_PRODUCTION_CANARY_WITH_OPEN_EXITS`。不能继续使用早期 `phase-2-partial-read-only-integration-no-production-cutover` 作为当前总状态。
+- Verification debt: Phase 2 正式基线 guard 失败；Phase 3 正式 HEAD 通过但当前本地 WIP 破坏既有合同；Phase 6 输出仍含过期 apply 状态；Phase 0 必须在干净 Git checkout 验证。详见 implementation status 第 6 节。
+
+## 历史基线：Phase 0 Cloud 初始任务
 
 ## Task contract
 
@@ -19,7 +31,7 @@ status: phase-2-partial-read-only-integration-no-production-cutover
 - Production access: prohibited
 - Prompt: [`../ops/kenos-codex-cloud-prompt.md`](../ops/kenos-codex-cloud-prompt.md)
 
-## Current state
+## Initial Cloud task state（historical）
 
 - Status: `DELIVERED_WITH_BASELINE_BLOCKER`
 - Current slice: `S6 — final report complete`

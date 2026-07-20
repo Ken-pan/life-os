@@ -1,12 +1,14 @@
 ---
 title: Kenos 重构质量门与验收手册
 owner: kenpan
-last_verified: 2026-07-18
+last_verified: 2026-07-20
 doc_role: refactor-qa-playbook
-status: ready-for-phase-0
+status: active-gates-with-verifier-maintenance-open
 ---
 
 # Kenos 重构质量门与验收手册
+
+> 这些 gate 已进入实际执行，不再是“ready for Phase 0”。当前 implementation/production/exit-open 状态见 [`../architecture/kenos-implementation-status.md`](../architecture/kenos-implementation-status.md)。2026-07-20 复核发现 Phase 2 正式基线失败、Phase 3 当前本地 WIP 破坏既有合同、Phase 6 输出过期；Phase 0 还必须在干净 Git checkout 验证。在处理完成前不得宣称全套 verifier 通过，也不得删除安全与行为 gate 来换取绿灯。
 
 ## 1. 核心原则
 
@@ -422,6 +424,13 @@ source objects
 - 主动能力独立信任升级。
 - 0 未解释写入。
 - 维护和审核成本下降。
+
+### Phase 6
+
+- Production migration/deploy/flag/cohort/rollback baseline 可复核。
+- Writer cutover 后 legacy revoke，Outbox worker 与 Executor 分权限、分 kill switch。
+- Portal、旧 native shells、旧 routes/build/registry/compat retirement 有观察证据。
+- 生产 restore/rollback/dead-letter/replay 与长期 real-use 通过。
 
 ## 18. 失败记录规则
 

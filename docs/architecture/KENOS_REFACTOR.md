@@ -1,9 +1,9 @@
 ---
 title: Kenos 平台重构计划 - 导航与执行边界
 owner: kenpan
-last_verified: 2026-07-19
+last_verified: 2026-07-20
 doc_role: refactor-program-hub
-status: phase-4b-cross-device-daily-loop-ready-distribution-gates-open
+status: controlled-production-canary-legacy-cutover-open
 review_cadence: every-migration-slice
 ---
 
@@ -11,7 +11,9 @@ review_cadence: every-migration-slice
 
 > 这是本次 Life OS → Kenos 重构的专用导航页。它把最新平台审核中的产品、数据、AI、原生客户端和治理决策转成可执行文档。
 >
-> **诚实状态词汇（审计整改后）：** Phase 1 = `LOCAL_CONTRACT_AND_REVIEW_SQL_READY`（历史 owner 标签 `PASS — READY_FOR_PRODUCTION_REVIEW` 仅表示可开始生产评审文档，**不可** cutover）；Phase 2 = `LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY`（历史 `READ_ONLY_INTEGRATION_READY` 仅=本地/disposable）；Phase 3 = `LOCAL_SIMULATION_AND_CONTRACT_READY`（历史 `WORK_LOOP_FOUNDATION_READY` 仅=本地仿真）；Phase 4A = `PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES`（历史 `APPLE_NATIVE_DAILY_LOOP_READY` 仅=本地 mock foundation）；Phase 4B = `CROSS_DEVICE_DAILY_LOOP_READY` + `PARTIAL_PASS_CROSS_DEVICE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES`。无生产 APNs/App Group/Team、无 Executor、无 Phase 5。P1-001 生产直写仍为 `BLOCKED_PENDING_HOSTED_APPLY_AND_CUTOVER`。当前生产事实、Now/Next 仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
+> **当前诚实状态（2026-07-20）：** 正式基线已经包含 Phase 1–6 的多项实现，生产 migration 到 `20260720230000`，Owner cohort 的 Plan command、Capture/Approval 与 Portal `/today` soft redirect 已进入受控生产 canary；Apple 多端与 Phase 5 Contextual Intelligence 仍主要是 foundation/local verification。全量 writer cutover、legacy revoke、outbox delivery、ProductionExecutor、离线队列、Portal retirement、完整 Spaces 和 Apple 分发仍未完成。详见 [`kenos-implementation-status.md`](./kenos-implementation-status.md)。当前生产事实与 Now/Next 仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 和 production baseline 报告为准。
+>
+> **阶段标签保留：** Phase 4A 指 Apple native daily-loop foundation；Phase 4B 指 watchOS / handoff / notifications 等 cross-device daily-loop foundation。两者已有正式实现与本地/设备证据，但仍是 `EXIT_OPEN`，不得解释为分发、跨端持久状态或旧壳退役完成。
 
 ## 一句话
 
@@ -33,6 +35,7 @@ Kenos 将从“多个互相打通的 OS App”渐进收敛为: **用户感受到
 
 | 先读 | 文档 | 回答什么问题 |
 | --- | --- | --- |
+| 0 | [`kenos-implementation-status.md`](./kenos-implementation-status.md) | 现在实际做到哪里？哪些已提交、已生产验证、仍是 WIP 或尚未收口？ |
 | 1 | [`kenos-constitution.md`](./kenos-constitution.md) | 冲突时按什么原则取舍？什么不能做？ |
 | 2 | [`kenos-decision-register.md`](./kenos-decision-register.md) | 哪些是已确认目标、哪些仍待 owner 冻结？ |
 | 3 | [`kenos-target-architecture.md`](./kenos-target-architecture.md) | 最终产品、领域、数据、AI 和运行架构是什么？ |
@@ -89,7 +92,9 @@ Kenos 将从“多个互相打通的 OS App”渐进收敛为: **用户感受到
 | PaperOS | Paper | `paper` | 设备实现在独立仓库，通过契约接入 |
 | 平台设置 | System | `system` | 管理/恢复控制面，不是日常 Dashboard |
 
-## 正式启动条件
+## 原始正式启动条件（历史门）
+
+> 重构已经进入受控生产 canary；本节保留为治理审计基线，不再表示“实施尚未启动”。尚未满足或后来重新打开的条件统一进入 [`kenos-implementation-status.md`](./kenos-implementation-status.md) 的收口清单和 Migration Ledger，不得用后续实现倒推早期 gate 自动通过。
 
 当且仅当以下条件齐备，才把 `KENOS_REFACTOR_PLAN.md` Phase 0 移入正式 Now:
 
