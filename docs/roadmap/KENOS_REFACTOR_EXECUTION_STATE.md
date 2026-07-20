@@ -627,3 +627,10 @@ Approved temporary defaults now on file:
 - Report: `docs/qa/kenos-aios-approval-decide-ui-canary-pass.md`
 - Next: Owner-limited production AIOS bake
 
+## AIOS Approval decide Owner-limited production (2026-07-20)
+
+- Prod AIOS `6a5db8d377706b5a984d62c1` @ `1ddc17cdb…`
+- Rollback `6a5dabd7c64347bbb6baa531`
+- Report: `docs/qa/kenos-aios-approval-decide-owner-limited-deploy.md`
+- Next: Fitness/Finance Kenos read canary; Portal soft-redirect prep; Apple Owner gates
+
