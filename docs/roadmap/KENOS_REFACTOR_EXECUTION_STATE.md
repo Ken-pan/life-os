@@ -619,3 +619,11 @@ Approved temporary defaults now on file:
 - Production AIOS unchanged (read-only)
 - Report: `docs/qa/kenos-aios-approval-decide-writer-canary-deploy.md`
 
+## AIOS Approval decide UI canary PASS (2026-07-20)
+
+- Schema fix: public client via `lifeOsReadClient()`
+- Fix deploy `6a5db86eed3dbdc22836aa00`
+- Owner UI approve PASS; outbox executor=disabled; cleanup PASS
+- Report: `docs/qa/kenos-aios-approval-decide-ui-canary-pass.md`
+- Next: Owner-limited production AIOS bake
+

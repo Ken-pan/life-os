@@ -1,7 +1,9 @@
 /**
  * AIOS hosted Approval decide — flag-gated; never auto-executes.
+ * Kenos RPCs live in public schema; AIOS default client uses aios schema.
  */
 
+import { lifeOsReadClient } from '../lifeos.js'
 import { supabase } from '../supabase.js'
 import {
   buildApprovalDecideAction,
@@ -32,7 +34,11 @@ export async function decideApprovalViaHostedKenosWriter(input) {
   }
 
   const action = buildApprovalDecideAction(input, { authUserId })
-  const { data, error } = await supabase.rpc('kenos_decide_action_approval_action', {
+  const publicClient = lifeOsReadClient()
+  if (!publicClient) {
+    throw new Error('Public schema client unavailable for Approval decide')
+  }
+  const { data, error } = await publicClient.rpc('kenos_decide_action_approval_action', {
     action_request: action,
   })
   if (error) {
