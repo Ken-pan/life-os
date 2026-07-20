@@ -1,4 +1,4 @@
-import { toggleComplete } from '$lib/domain/tasks.js'
+import { toggleCompleteAsync } from '$lib/domain/tasks.js'
 import { openTaskEditor, openSchedulePopover } from '$lib/ui.svelte.js'
 import { S, todayKey } from '$lib/state.svelte.js'
 
@@ -10,7 +10,9 @@ export function editTask(task) {
 /** @param {string} id */
 export function completeTask(id) {
   if (!S.tasks.find((item) => item.id === id)) return
-  toggleComplete(id)
+  void toggleCompleteAsync(id).catch((error) => {
+    console.error('[kenos] complete/reopen writer failed', error)
+  })
 }
 
 export function tasksRef() {

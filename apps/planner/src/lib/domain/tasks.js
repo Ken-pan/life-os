@@ -17,6 +17,15 @@ import { isPlanUpdateTaskScheduleWriterCohortMember, isPlanUpdateTaskScheduleWri
 import { updateTaskScheduleViaHostedKenosWriter } from '../kenos/planUpdateTaskScheduleWriter.host.js';
 import { isPlanUpdateTaskProjectWriterCohortMember, isPlanUpdateTaskProjectWriterEnabled } from '../kenos/planUpdateTaskProjectWriter.core.js';
 import { updateTaskProjectViaHostedKenosWriter } from '../kenos/planUpdateTaskProjectWriter.host.js';
+import {
+  isPlanCompleteReopenWriterCohortMember,
+  isPlanCompleteTaskWriterEnabled,
+  isPlanReopenTaskWriterEnabled,
+} from '../kenos/planCompleteReopenTaskWriter.core.js';
+import {
+  completeTaskViaHostedKenosWriter,
+  reopenTaskViaHostedKenosWriter,
+} from '../kenos/planCompleteReopenTaskWriter.host.js';
 import { supabase } from '../supabase.js';
 
 let reminderTimer = null;
@@ -194,10 +203,55 @@ function spawnNextRecurrence(task) {
 export function toggleComplete(id) {
   const task = S.tasks.find((t) => t.id === id);
   if (!task) return null;
+  if (isPlanCompleteTaskWriterEnabled() || isPlanReopenTaskWriterEnabled()) {
+    throw new Error('Plan complete/reopen writers are enabled; use toggleCompleteAsync (no Legacy lifecycle fallback).');
+  }
   const completed = !task.completed;
   const updated = updateTask(id, {
     completed,
     completedAt: completed ? Date.now() : null
+  });
+  if (completed && task.recurrence?.rule && task.recurrence.rule !== 'none') {
+    spawnNextRecurrence(task);
+  }
+  return updated;
+}
+
+/**
+ * Complete/reopen entry: Kenos writers when enabled+cohort, else Legacy toggleComplete.
+ * @param {string} id
+ */
+export async function toggleCompleteAsync(id) {
+  const task = S.tasks.find((t) => t.id === id);
+  if (!task) return null;
+  const wantComplete = !task.completed;
+
+  if (wantComplete && isPlanCompleteTaskWriterEnabled()) {
+    if (!supabase) throw new Error('Supabase is not configured for Plan complete writer');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (isPlanCompleteReopenWriterCohortMember(session?.user?.email)) {
+      const updated = await completeTaskViaHostedKenosWriter(id);
+      if (task.recurrence?.rule && task.recurrence.rule !== 'none') {
+        spawnNextRecurrence(task);
+      }
+      return updated;
+    }
+  }
+
+  if (!wantComplete && isPlanReopenTaskWriterEnabled()) {
+    if (!supabase) throw new Error('Supabase is not configured for Plan reopen writer');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (isPlanCompleteReopenWriterCohortMember(session?.user?.email)) {
+      return reopenTaskViaHostedKenosWriter(id);
+    }
+  }
+
+  // Outside cohort (or writer not enabled for this direction): Legacy path only.
+  // Do not call toggleComplete() — it throws when writers are enabled.
+  const completed = wantComplete;
+  const updated = updateTask(id, {
+    completed,
+    completedAt: completed ? Date.now() : null,
   });
   if (completed && task.recurrence?.rule && task.recurrence.rule !== 'none') {
     spawnNextRecurrence(task);

@@ -513,3 +513,10 @@ Approved temporary defaults now on file:
 - Migration tip: `20260720130000`
 - Active Owner-limited writers: create, title, due, schedule, project
 - Next Track B: complete / reopen / archive-delete
+
+## Plan Complete / Reopen Writers (2026-07-20)
+
+- Migration tip: `20260720140000`
+- RPC canary PASS (seed `3e063fbb…` tombstoned)
+- Client: `toggleCompleteAsync` + taskUi/triage wiring
+- Next: Owner-limited bake; archive/delete writer; then Track C offline
