@@ -604,9 +604,11 @@ Approved temporary defaults now on file:
 ## Program checkpoint
 
 - Track A/B Plan writers: Owner-limited live on Planner
-- Track C offline: foundation + create enqueue; flush remap pending; flag OFF
+- Track C offline: foundation + create enqueue + reconnect flush/remap; flag OFF in prod
 - Track D Approval/Activity/Outbox dead-letter: RPC PASS; Executor OFF
 - Track E Focus start/end: RPC PASS
 - Track F Work create/archive: RPC PASS
 - Capture ingest/convert: RPC PASS
-- Remaining blockers to PRODUCTION_COMPLETE: ProductionExecutor, domain Spaces client cutovers, Apple device evidence, Portal soft-redirect parity, Legacy revoke, final UX acceptance
+- Assistant propose: RPC PASS (`autoExecute=false`)
+- Portal inventory complete; redirect not started
+- Remaining blockers to PRODUCTION_COMPLETE: ProductionExecutor, domain Spaces client cutovers, Apple device evidence (Owner signing/MFA), Portal soft-redirect parity, Legacy revoke, final UX acceptance

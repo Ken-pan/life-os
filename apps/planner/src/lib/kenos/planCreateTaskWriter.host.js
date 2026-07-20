@@ -15,6 +15,7 @@ import {
 } from './planCreateTaskWriter.core.js'
 import {
   enqueueOfflineIntent,
+  flushOfflineIntentQueue,
   isPlanOfflineWriterQueueEnabled,
   loadOfflineQueue,
   persistOfflineQueue,
@@ -93,6 +94,7 @@ export async function createTaskViaHostedKenosWriter(input = {}) {
       idempotencyKey: action.idempotencyKey,
       correlationId: action.correlationId,
       actionRequest: action,
+      provisionalTaskId,
       enqueuedAt: Date.now(),
     })
     persistOfflineQueue(localStorage, enqueued.state)
@@ -155,4 +157,96 @@ export async function createTaskViaHostedKenosWriter(input = {}) {
   S.tasks = [...S.tasks.filter((item) => item.id !== task.id), task]
   afterHostedCreate()
   return task
+}
+
+/**
+ * Flush queued create intents after reconnect. Exactly-once via server idempotency.
+ * Remaps provisional local id → server taskId. Never Legacy dual-write.
+ * @returns {Promise<{ flushed: number, remaining: number, blocked: string | null }>}
+ */
+export async function flushOfflineCreateTaskQueue() {
+  if (!isPlanOfflineWriterQueueEnabled()) {
+    return { flushed: 0, remaining: 0, blocked: 'flag_off' }
+  }
+  if (!supabase) {
+    return { flushed: 0, remaining: 0, blocked: 'supabase_missing' }
+  }
+  if (isBrowserOffline()) {
+    return { flushed: 0, remaining: loadOfflineQueue(localStorage).intents?.length || 0, blocked: 'still_offline' }
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const authUserId = session?.user?.id || null
+  let queue = bindOfflineQueueToUser(loadOfflineQueue(localStorage), authUserId)
+  if (!authUserId) {
+    persistOfflineQueue(localStorage, queue)
+    return { flushed: 0, remaining: queue.intents?.length || 0, blocked: 'auth_required' }
+  }
+
+  const createIntents = (queue.intents || []).filter((i) => i.actionType === 'plan.create_task')
+  const otherIntents = (queue.intents || []).filter((i) => i.actionType !== 'plan.create_task')
+  const createOnly = { ...queue, intents: createIntents }
+
+  const result = await flushOfflineIntentQueue(
+    createOnly,
+    async (intent) => {
+      try {
+        const { data, error } = await supabase.rpc('kenos_create_plan_task_action', {
+          action_request: intent.actionRequest,
+        })
+        if (error) return { ok: false, error: error.message || 'rpc_failed' }
+        if (!data?.ok) return { ok: false, error: data?.error?.message || 'rpc_rejected' }
+
+        const serverTaskId = data.taskId || data.result?.taskId
+        const provisionalId = intent.provisionalTaskId || intent.id
+        if (serverTaskId && provisionalId && serverTaskId !== provisionalId) {
+          S.tasks = S.tasks.map((task) => {
+            if (task.id !== provisionalId) return task
+            return {
+              ...task,
+              id: serverTaskId,
+              meta: {
+                ...(task.meta || {}),
+                offlineQueued: false,
+                offlineRemappedFrom: provisionalId,
+                kenosWriterCreate: true,
+                legacyDirty: false,
+              },
+            }
+          })
+        } else if (serverTaskId) {
+          S.tasks = S.tasks.map((task) => {
+            if (task.id !== serverTaskId) return task
+            return {
+              ...task,
+              meta: {
+                ...(task.meta || {}),
+                offlineQueued: false,
+                kenosWriterCreate: true,
+                legacyDirty: false,
+              },
+            }
+          })
+        }
+        return { ok: true, duplicate: !!data.duplicate }
+      } catch (error) {
+        return { ok: false, error: error?.message || 'flush_exception' }
+      }
+    },
+    { authUserId },
+  )
+
+  const nextState = {
+    ...result.state,
+    intents: [...(result.state.intents || []), ...otherIntents],
+  }
+  persistOfflineQueue(localStorage, nextState)
+  if (result.flushed > 0) afterHostedCreate()
+  return {
+    flushed: result.flushed,
+    remaining: nextState.intents.length,
+    blocked: result.blocked,
+  }
 }

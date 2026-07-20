@@ -19,3 +19,10 @@ status: FOUNDATION_READY_FLAG_OFF
 - Production bake does **not** set `VITE_KENOS_PLAN_OFFLINE_WRITER_QUEUE`
 
 Next: reconnect flush worker + id remap + reconnect exactly-once tests exactly-once tests before any production enablement.
+
+
+## Reconnect flush (2026-07-20)
+
+- `flushOfflineCreateTaskQueue` remaps provisional id → server taskId
+- Wired from `sync.js` `online` via dynamic import
+- Production flag still OFF
