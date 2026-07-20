@@ -99,6 +99,8 @@ export function applyState(data, mode = 'replace') {
     S.projects = next.projects
     S.lists = next.lists
     S.attachments = next.attachments
+    S.kenosActionOutbox = next.kenosActionOutbox ?? []
+    S.kenosActivity = next.kenosActivity ?? []
     S.settings = next.settings
     S.schemaVersion = next.schemaVersion
     return
@@ -118,6 +120,17 @@ export function applyState(data, mode = 'replace') {
   if (data.settings) {
     S.settings = mergeSettingsByUpdatedAt(S.settings, data.settings)
   }
+}
+
+/**
+ * Logout / auth-wall cleanup: drop user content, keep device settings, persist.
+ * @param {(state: import('./types.js').AppState) => import('./types.js').AppState} buildEmpty
+ */
+export function clearSessionUserData(buildEmpty) {
+  const next = migrate(buildEmpty(S))
+  applyState(next, 'replace')
+  flushSave()
+  return next
 }
 
 /** 修改设置的统一入口：打上 updatedAt，跨设备 LWW 才能正确收敛 */

@@ -44,4 +44,44 @@ describe('planner Kenos write guard', () => {
     expect(legacy.error).toBeNull()
     expect(calls.some((c) => c[0] === 'upsert' && c[1] === 'planner_tasks')).toBe(true)
   })
+
+  it('compat matrix: legacy tables allowed, Kenos mutations forbidden', async () => {
+    const env = { VITE_KENOS_COMPAT_CANARY: '1' }
+    const legacyTables = [
+      'planner_tasks',
+      'planner_lists',
+      'planner_projects',
+      'planner_attachments',
+      'planner_user_state',
+    ]
+    for (const table of legacyTables) {
+      expect(assertKenosTableMutationAllowed(table, env).ok).toBe(true)
+    }
+    const kenosRpcs = [
+      'kenos_create_plan_task_action',
+      'kenos_store_action_approval',
+      'kenos_transition_action_approval',
+      'kenos_store_work_project',
+      'kenos_store_work_action_proposal',
+      'kenos_transition_plan_outbox',
+    ]
+    for (const rpc of kenosRpcs) {
+      expect(assertKenosWriteRpcAllowed(rpc, env).ok).toBe(false)
+    }
+    const kenosTables = [
+      'kenos_action_approvals',
+      'kenos_focus_contexts',
+      'kenos_deferred_items',
+      'kenos_proactive_suggestions',
+      'kenos_work_projects',
+      'kenos_work_action_proposals',
+      'kenos_work_decisions',
+      'kenos_work_deliverables',
+      'kenos_work_meetings',
+      'kenos_plan_outbox',
+    ]
+    for (const table of kenosTables) {
+      expect(assertKenosTableMutationAllowed(table, env).ok).toBe(false)
+    }
+  })
 })
