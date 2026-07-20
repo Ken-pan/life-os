@@ -535,3 +535,12 @@ Approved temporary defaults now on file:
 - RPC canary PASS (`f78de805…`)
 - Client deleteTaskAsync wired
 - Track B Plan update writers: title, due, schedule, project, complete, reopen, archive
+
+### Archive Owner-limited deploy — Track B Plan writers set live
+
+- Prod Planner: `6a5dab2cde48f1eed103ae1c` @ `48552f31c…`
+- Migration tip: `20260720150000`
+- Owner-limited writers ON: create, title, due, schedule, project, complete, reopen, archive
+- Seven sites stop_builds=true; Gallery not restored
+- ProductionExecutor still disabled; Outbox remains pending by design
+- Next: Track C Plan Offline (durable queue, exactly-once reconnect); then Track D Approval/Activity/Outbox worker; AIOS maintenance deploy
