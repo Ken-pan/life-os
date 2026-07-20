@@ -3,10 +3,14 @@
   import Icon from '@life-os/platform-web/svelte/icon'
   import { t } from '$lib/i18n/index.js'
   import { startNewChat, setDraft, activeConversation } from '$lib/chat.svelte.js'
+  import { isCaptureIngestWriterEnabled } from '$lib/kenos/captureWriters.core.js'
+  import { ingestCaptureViaHostedKenosWriter } from '$lib/kenos/captureWriters.host.js'
 
   let { open = $bindable(false) } = $props()
 
   let draft = $state('')
+  let saving = $state(false)
+  let errorMessage = $state('')
   let textareaEl = $state(/** @type {HTMLTextAreaElement | null} */ (null))
 
   $effect(() => {
@@ -19,9 +23,26 @@
     open = false
   }
 
-  function openInbox() {
-    close()
-    void goto('/inbox#capture')
+  async function saveOrOpenInbox() {
+    const text = draft.trim()
+    if (!isCaptureIngestWriterEnabled() || !text) {
+      close()
+      void goto('/inbox#capture')
+      return
+    }
+
+    saving = true
+    errorMessage = ''
+    try {
+      await ingestCaptureViaHostedKenosWriter({ text })
+      draft = ''
+      close()
+      void goto('/inbox#capture')
+    } catch (err) {
+      errorMessage = err instanceof Error ? err.message : String(err)
+    } finally {
+      saving = false
+    }
   }
 
   function sendToAssistant() {
@@ -54,7 +75,7 @@
   >
     <header class="capture-head">
       <h2 id="capture-quick-title">{t('nav.capture')}</h2>
-      <button type="button" class="capture-icon-btn" aria-label={t('chat.cancel')} onclick={close}>
+      <button type="button" class="capture-icon-btn" aria-label={t('chat.cancel')} disabled={saving} onclick={close}>
         <Icon name="x" size={18} strokeWidth={1.75} />
       </button>
     </header>
@@ -66,9 +87,12 @@
       placeholder={t('nav.capturePlaceholder')}
       aria-label={t('nav.capture')}
     ></textarea>
+    {#if errorMessage}
+      <p role="alert">{errorMessage}</p>
+    {/if}
     <div class="capture-actions">
-      <button type="button" class="secondary" onclick={openInbox}>{t('nav.captureToInbox')}</button>
-      <button type="button" class="primary" onclick={sendToAssistant}>{t('nav.captureToAssistant')}</button>
+      <button type="button" class="secondary" disabled={saving} onclick={saveOrOpenInbox}>{t('nav.captureToInbox')}</button>
+      <button type="button" class="primary" disabled={saving} onclick={sendToAssistant}>{t('nav.captureToAssistant')}</button>
     </div>
   </div>
 {/if}

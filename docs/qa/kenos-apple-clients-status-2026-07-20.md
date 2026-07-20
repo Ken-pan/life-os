@@ -2,31 +2,23 @@
 title: KENOS APPLE CLIENTS — PACKAGE STATUS
 owner: kenpan
 last_verified: 2026-07-20
-status: CONTRACTS_PASS — DEVICE_EVIDENCE_PENDING_OWNER
+status: SIMULATOR_BUILD_PASS — DEVICE_MOUNT_NEEDS_OWNER
 ---
 
 # Apple clients progress
 
-## Automated (no Owner)
+## Automated
 
 | Check | Result |
 | --- | --- |
-| `clients/apple/Packages/KenosContracts` `swift test` | PASS (6 tests) |
-| Production contracts RPCs for Focus/Approval/Capture/Plan | Live in DB tip `20260720230000` |
+| KenosContracts `swift test` | PASS (6) |
+| KenosClient `swift test` | PASS (6) |
+| KenosIOS simulator build (iPhone 17 OS 26.5) | **BUILD SUCCEEDED** |
+| KenosMac arm64 build | completed (local sign) |
+| Physical device `Ken’s 17 Pro` | FAIL — developer disk image could not be mounted |
 
 ## Requires Owner
 
-| Gate | Why |
-| --- | --- |
-| Xcode signing / device trust | Apple Developer account click |
-| True device install smoke | Simulator ≠ production verified |
-| Keychain / Universal Links / APNs | Device + portal entitlements |
+请解锁 iPhone「Ken’s 17 Pro」，在设备上信任本机开发者，并确保已连接；完成后回复「设备已就绪」。
 
-## Explicitly not claimed
-
-- iPhone PRODUCTION_VERIFIED
-- macOS PRODUCTION_VERIFIED
-- Watch PRODUCTION_VERIFIED
-- Cross-device Focus/Inbox sync observed on hardware
-
-Next when Owner available: open Xcode project, trust device, install iPhone build against production contracts, run cold-start/login/Focus/Approval smoke.
+真机安装/冷启动/登录/Focus/Approval smoke 才能计为 PRODUCTION_VERIFIED。

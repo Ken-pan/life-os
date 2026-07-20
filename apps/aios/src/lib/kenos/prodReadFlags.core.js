@@ -73,6 +73,26 @@ export function isProdMoneyReadEnabled(env = import.meta.env) {
 }
 
 /**
+ * Music Space production read from portal_today_summary.music.
+ * Default Off.
+ * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
+ */
+export function isProdMusicReadEnabled(env = import.meta.env) {
+  if (isProdReadCanaryMode(env)) return env?.VITE_KENOS_PROD_READ_MUSIC !== '0'
+  return env?.VITE_KENOS_PROD_READ_MUSIC === '1'
+}
+
+/**
+ * Home Space production read from portal_today_summary.home.
+ * Default Off.
+ * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
+ */
+export function isProdHomeReadEnabled(env = import.meta.env) {
+  if (isProdReadCanaryMode(env)) return env?.VITE_KENOS_PROD_READ_HOME !== '0'
+  return env?.VITE_KENOS_PROD_READ_HOME === '1'
+}
+
+/**
  * When On, Today may attach Kenos Work/Focus capability chips from production reads.
  * Default Off — Today remains legacy portal_today_summary + local Work foundation.
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
@@ -104,10 +124,13 @@ export function prodReadFlagSnapshot(env = import.meta.env) {
     work: isProdWorkReadEnabled(env),
     training: isProdTrainingReadEnabled(env),
     money: isProdMoneyReadEnabled(env),
+    music: isProdMusicReadEnabled(env),
+    home: isProdHomeReadEnabled(env),
     todayOverlay: isProdTodayKenosOverlayEnabled(env),
     shadow: isProdShadowCompareEnabled(env),
     planCommandWrite: false,
     approvalDecisionWrite: false,
+    captureIngestWrite: false,
     focusWrite: false,
     workWrite: false,
     executor: false,

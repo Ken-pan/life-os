@@ -652,3 +652,10 @@ Approved temporary defaults now on file:
 - KenosIOS simulator BUILD SUCCEEDED; KenosMac local build ok
 - Physical device blocked: developer disk image mount (Owner unlock/trust)
 - AIOS Money bake deploy `6a5dbab9be3994266b344cf3`
+
+## Approval UI smoke re-verify + Capture/Music/Home foundation (2026-07-20)
+
+- Owner「已登录」; Approval UI re-smoke PASS (`5d9709e6…` → approved / Owner Inbox decide; cleaned)
+- Capture ingest client ready (flags Off); RPC canary PASS
+- Music/Home read modules ready (flags Off)
+- Apple device still blocked on developer disk image mount

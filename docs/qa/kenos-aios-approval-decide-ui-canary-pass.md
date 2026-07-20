@@ -33,6 +33,10 @@ Host now calls Kenos RPCs via `lifeOsReadClient()` (`public` schema).
 | UI pending → 0; history shows decision | PASS |
 | Cleanup canary rows | PASS |
 
+## Re-verify (2026-07-20 evening)
+
+Owner replied「已登录」; re-seeded `5d9709e6-…`; UI 确认 → `approved` / `Owner Inbox decide`; outbox `approval.decide` pending; pending count 0; cleaned.
+
 ## Next
 
 Owner-limited production AIOS bake (exact SHA, Approval decide ON, READ_CANARY off, deferred/suggestions off). Rollback: `6a5dabd7…`.
