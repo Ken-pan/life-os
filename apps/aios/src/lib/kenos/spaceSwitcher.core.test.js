@@ -223,17 +223,38 @@ describe('spaceSwitcher.core', () => {
     let state = emptySpaceSwitcherState()
     state = touchRecentSpace(state, 'hosted:plan')
     state = setPinnedSpace(state, 'hosted:music', true)
+    const catalog = buildSpaceCatalog({ warn() {} })
     const sections = buildSpaceSwitcherSections({
+      catalog,
       state,
       includeSystemReturn: true,
     })
     assert.equal(sections[0].id, 'recent')
     assert.ok(sections.some((s) => s.id === 'pinned'))
-    assert.ok(sections.some((s) => s.id === 'all'))
+    const all = sections.find((s) => s.id === 'all')
+    assert.ok(all)
+    assert.equal(all.items.length, catalog.length)
     const system = sections.find((s) => s.id === 'system')
     assert.ok(system)
     assert.equal(system.items.length, 1)
     assert.equal(system.items[0].listKey, SYSTEM_RETURN_LIST_KEY)
+  })
+
+  it('keeps All Spaces catalog-complete after demo-like recent seeding', () => {
+    let state = emptySpaceSwitcherState()
+    const catalog = buildSpaceCatalog({ warn() {} })
+    for (const space of catalog) {
+      state = touchRecentSpace(state, space.listKey)
+    }
+    const sections = buildSpaceSwitcherSections({
+      catalog,
+      state,
+      includeSystemReturn: false,
+    })
+    const all = sections.find((s) => s.id === 'all')
+    assert.ok(all)
+    assert.equal(all.items.length, catalog.length)
+    assert.ok(catalog.length >= 6)
   })
 
   it('annotates recent rows with resume filter for Continue copy', () => {

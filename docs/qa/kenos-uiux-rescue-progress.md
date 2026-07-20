@@ -40,12 +40,30 @@ OWNER REVIEW — NOT OPEN
 ## P5 knife 3 — iPad adaptive material & interaction mode
 
 - Status: **DONE** — overall P5 Visual still **IN_PROGRESS**
+- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife3-ipad-material/`
+
+## P5 footnote fix (audit P1–P3) — 2026-07-20
+
+- Status: **PASS** (does not open Owner Review; Visual still IN_PROGRESS)
+- Code: desktop chrome clamp (`continueOverlayAnchor.core.js`), All Spaces = full catalog count, hairline-only list
+- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-footnote-fix-2026-07-20/` (`manifest.json` PASS)
+- Capture: `node scripts/qa/kenos-continue-footnote-fix-capture.mjs --port 5197`
+- Probes: `All Spaces · 8`; desktop left=248 / clearance=8px @1440 & 1024-fine
 - Mode core: `continueOverlayMode.core.js` — width + `(pointer: fine)` + `(hover: hover)` (no UA)
 - `≥900` touch-first → `tablet-lg` form sheet (not mechanical desktop)
 - `≥900` fine+hover → desktop anchored (Knife 2 Direction A preserved)
 - Tablet material: lighter scrim, 1px border, soft shadow, light frost; hairline list unchanged
 - Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife3-ipad-material/` (`manifest.json`)
 - Continuity regression: **PASSED** (`…T21-52-46-113Z`)
+
+## P5 footnote fix (audit P1–P3) — 2026-07-20
+
+- Status: **PASS** (Owner Review still **NOT OPEN**; Visual still **IN_PROGRESS**)
+- P1 desktop chrome clamp: `continueOverlayAnchor.core.js` (flip/shift + sidebar inset)
+- P2 All Spaces count = full catalog (`All Spaces · 8` in demo)
+- P3 list hairlines only (no outer list border box)
+- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-footnote-fix-2026-07-20/` (`manifest.json` PASS)
+- Capture: `node scripts/qa/kenos-continue-footnote-fix-capture.mjs --port 5197`
 
 ## Still open (later knives)
 - Domain identity marks on Spaces directory (Knife 4)

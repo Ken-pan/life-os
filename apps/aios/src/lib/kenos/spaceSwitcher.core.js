@@ -411,11 +411,9 @@ export function buildSpaceSwitcherSections({
 
   const recent = pick(state.recent).slice(0, 4)
   const pinned = pick(state.pinned)
-  const pinnedKeys = new Set(state.pinned)
-  const recentKeys = new Set(state.recent)
-  const all = catalog
-    .filter((s) => !pinnedKeys.has(s.listKey) && !recentKeys.has(s.listKey))
-    .map((space) => annotateSpaceWithResume(space, state, { now }))
+  // All Spaces = full catalog (App Library / Applications honesty).
+  // Recent + Pinned stay shortcut strips; count must not shrink to "remainder".
+  const all = catalog.map((space) => annotateSpaceWithResume(space, state, { now }))
 
   /** @type {Array<{ id: string, title: string, items: SpaceEntry[] }>} */
   const sections = []

@@ -20,6 +20,11 @@
   import {
     resolveContinueOverlayModeFromWindow,
   } from '$lib/kenos/continueOverlayMode.core.js'
+  import {
+    anchoredContinuePanelStyle,
+    computeAnchoredContinuePanel,
+    readContinueChromeLeftInset,
+  } from '$lib/kenos/continueOverlayAnchor.core.js'
 
   /** @type {{ onClose?: () => void }} */
   let { onClose = undefined } = $props()
@@ -36,7 +41,8 @@
   const recentSection = $derived(sections.find((s) => s.id === 'recent'))
   const pinnedSection = $derived(sections.find((s) => s.id === 'pinned'))
   const allSection = $derived(sections.find((s) => s.id === 'all'))
-  const allCount = $derived(allSection?.items?.length ?? 0)
+  /** Honest catalog size — not Recent/Pinned remainder. */
+  const allCount = $derived(SPACE_SWITCHER.catalog.length)
 
   const filteredAll = $derived.by(() => {
     const items = allSection?.items ?? []
@@ -54,7 +60,7 @@
   )
   const showHandle = $derived(layoutMode === 'mobile')
 
-  /** Desktop Direction A — panel anchored to Continue trigger. */
+  /** Desktop Direction A — flip/shift + sidebar chrome clearance. */
   function updateDesktopAnchor() {
     if (layoutMode !== 'desktop') {
       sheetStyle = ''
@@ -66,36 +72,18 @@
       return
     }
     const r = trigger.getBoundingClientRect()
-    const gap = 8
-    const width = Math.min(440, Math.max(320, window.innerWidth - 24))
-    const maxH = Math.min(window.innerHeight * 0.74, window.innerHeight - 24)
-    const preferEndAlign = r.left > window.innerWidth * 0.45
-    let left
-    if (preferEndAlign) {
-      left = Math.round(r.right - width)
-    } else {
-      left = Math.round(r.right + gap)
-      if (left + width > window.innerWidth - 12) {
-        left = Math.round(r.left - gap - width)
-      }
-    }
-    left = Math.max(12, Math.min(left, window.innerWidth - width - 12))
-    let top = Math.round(r.bottom + gap)
-    if (top + Math.min(360, maxH) > window.innerHeight - 12) {
-      top = Math.max(12, Math.round(r.top - gap - Math.min(360, maxH)))
-    }
-    if (!preferEndAlign && r.height < 64) {
-      top = Math.max(12, Math.min(Math.round(r.top), window.innerHeight - Math.min(360, maxH) - 12))
-    }
-    sheetStyle = [
-      'position:fixed',
-      `top:${top}px`,
-      `left:${left}px`,
-      `width:${width}px`,
-      `max-width:${width}px`,
-      `max-height:${Math.round(maxH)}px`,
-      'margin:0',
-    ].join(';')
+    const rect = computeAnchoredContinuePanel({
+      trigger: {
+        left: r.left,
+        right: r.right,
+        top: r.top,
+        bottom: r.bottom,
+        height: r.height,
+      },
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      chromeLeft: readContinueChromeLeftInset(document, window.innerWidth),
+    })
+    sheetStyle = anchoredContinuePanelStyle(rect)
   }
 
   $effect(() => {
@@ -658,14 +646,14 @@
     outline-offset: 2px;
   }
 
-  /* Hairline group — no stacked cards */
+  /* Row hairlines only — no outer box that reads as a soft card group */
   .list {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
     gap: 0;
-    border-top: 1px solid var(--border);
+    border: 0;
     background: transparent;
     overflow: visible;
   }
@@ -675,10 +663,14 @@
     display: flex;
     align-items: stretch;
     gap: 0;
-    border-bottom: 1px solid var(--border);
+    border: 0;
     border-radius: 0;
     background: transparent;
     overflow: visible;
+  }
+
+  .item + .item {
+    border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   }
 
   .item.current {
