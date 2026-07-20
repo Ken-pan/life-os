@@ -2,7 +2,7 @@
 title: KENOS APPLE CLIENTS — PACKAGE STATUS
 owner: kenpan
 last_verified: 2026-07-20
-status: SIMULATOR_BUILD_PASS — DEVICE_MOUNT_NEEDS_OWNER
+status: DEVICE_INSTALLED — AWAITING_UNLOCK_AND_OWNER_SMOKE
 ---
 
 # Apple clients progress
@@ -13,12 +13,17 @@ status: SIMULATOR_BUILD_PASS — DEVICE_MOUNT_NEEDS_OWNER
 | --- | --- |
 | KenosContracts `swift test` | PASS (6) |
 | KenosClient `swift test` | PASS (6) |
-| KenosIOS simulator build (iPhone 17 OS 26.5) | **BUILD SUCCEEDED** |
-| KenosMac arm64 build | completed (local sign) |
-| Physical device `Ken’s 17 Pro` | FAIL — developer disk image could not be mounted |
+| KenosIOS simulator build | BUILD SUCCEEDED |
+| KenosMac arm64 build | completed |
+| KenosIOS device build (`Ken’s 17 Pro`) | **BUILD SUCCEEDED** (team `93NJ4CAU8B`) |
+| Device install | **PASS** — `space.kenos.app.ios` |
+| Device launch | FAIL — device Locked |
 
 ## Requires Owner
 
-请解锁 iPhone「Ken’s 17 Pro」，在设备上信任本机开发者，并确保已连接；完成后回复「设备已就绪」。
+1. 解锁 iPhone「Ken’s 17 Pro」
+2. 打开 Kenos（首次可能需「信任开发者」）
+3. 登录后快速看：Today / Focus / Approvals 是否可读
+4. 回复「真机已开」或贴截图
 
-真机安装/冷启动/登录/Focus/Approval smoke 才能计为 PRODUCTION_VERIFIED。
+安装已完成；解锁后即可冷启动。模拟器 ≠ 生产通过。

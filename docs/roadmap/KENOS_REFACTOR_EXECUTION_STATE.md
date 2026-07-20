@@ -670,3 +670,8 @@ Approved temporary defaults now on file:
 - UI canary PASS; prod AIOS `6a5dbdbc196bfd8740751ee4` @ `854ed08e0…`
 - Rollback `6a5dbab9…`; Executor still disabled
 - Apple physical device still Owner-gated (developer disk image)
+
+## Apple device install (2026-07-20)
+
+- KenosIOS device BUILD SUCCEEDED + installed on Ken’s 17 Pro (`space.kenos.app.ios`)
+- Launch blocked: device Locked — awaiting Owner unlock + trust + smoke
