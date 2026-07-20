@@ -557,3 +557,19 @@ Approved temporary defaults now on file:
 - Rollback `6a5d500302c73442caf47132`
 - stop_builds remains true
 - Next: dual-user smoke on AIOS; continue Track C host wiring; Track D Approval/Activity
+
+## Track C offline host wiring (2026-07-20)
+
+- Create offline enqueue wired in `planCreateTaskWriter.host.js` (flag OFF in prod bake)
+- Logout clears offline queue
+- Provisional local id = action id until flush remap; reconnect flush still pending
+- SHA: `77c39be6d…`
+
+## Track D Approval / Activity / Outbox (2026-07-20)
+
+- Migration tip: `20260720180000`
+- Activity list + Approval request/decide + Outbox list/dead-letter RPC canaries PASS
+- Cross-user decide denied; Executor remains disabled; outbox publish not opened
+- AIOS approval writer cores present; production flags OFF (AIOS stays read-only)
+- Report: `docs/qa/kenos-track-d-approval-activity-outbox-report.md`
+- Next: Track E FocusContext write canary

@@ -7,6 +7,9 @@
 /** Kenos / Plan write RPCs — never callable from Read Client Canary. */
 export const KENOS_WRITE_RPC_DENYLIST = Object.freeze([
   'kenos_create_plan_task_action',
+  'kenos_request_action_approval_action',
+  'kenos_decide_action_approval_action',
+  'kenos_dead_letter_plan_outbox_action',
 ])
 
 /** Tables that must not receive client mutations during read canary. */
@@ -39,7 +42,8 @@ export const KENOS_WRITE_TABLE_DENYLIST = Object.freeze([
  */
 export function classifyMutationKind(input = {}) {
   const kind = String(input.kind || '').toLowerCase()
-  if (kind === 'model_read' || kind === 'read' || kind === 'rpc_read') return 'model_read'
+  if (kind === 'model_read' || kind === 'read' || kind === 'rpc_read')
+    return 'model_read'
   if (kind === 'analytics' || kind === 'logging') return 'analytics_logging'
   if (kind === 'local' || kind === 'local_only') return 'local_only_storage'
 
@@ -53,7 +57,8 @@ export function classifyMutationKind(input = {}) {
   ) {
     return 'conversation_persistence'
   }
-  if (table === 'memories' || table === 'user_state') return 'conversation_persistence'
+  if (table === 'memories' || table === 'user_state')
+    return 'conversation_persistence'
 
   const rpc = String(input.rpc || '')
   const tool = String(input.tool || '')
@@ -120,9 +125,17 @@ export function assertKenosWriteRpcAllowed(rpcName, env = import.meta.env) {
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
  */
 /** AIOS schema sync tables — fail-closed only on cloud / read-canary builds. */
-const AIOS_CLOUD_SYNC_TABLES = Object.freeze(['conversations', 'memories', 'user_state'])
+const AIOS_CLOUD_SYNC_TABLES = Object.freeze([
+  'conversations',
+  'memories',
+  'user_state',
+])
 
-export function assertTableMutationAllowed(table, method, env = import.meta.env) {
+export function assertTableMutationAllowed(
+  table,
+  method,
+  env = import.meta.env,
+) {
   if (!areProductionWritesBlocked(env)) return { ok: true }
   const t = String(table || '')
   const m = String(method || '').toLowerCase()
@@ -167,7 +180,10 @@ export function guardReadOnlyClient(client, env = import.meta.env) {
             if (typeof value !== 'function') {
               return Promise.resolve({
                 data: null,
-                error: { message: `${String(prop)} unavailable`, code: 'KENOS_WRITE_UNAVAILABLE' },
+                error: {
+                  message: `${String(prop)} unavailable`,
+                  code: 'KENOS_WRITE_UNAVAILABLE',
+                },
               })
             }
             return value.apply(target, args)
@@ -177,7 +193,11 @@ export function guardReadOnlyClient(client, env = import.meta.env) {
         return (...args) => {
           const result = value.apply(target, args)
           // Chainable query builders
-          if (result && typeof result === 'object' && typeof result.then !== 'function') {
+          if (
+            result &&
+            typeof result === 'object' &&
+            typeof result.then !== 'function'
+          ) {
             return wrapBuilder(table, result)
           }
           return result
@@ -192,7 +212,8 @@ export function guardReadOnlyClient(client, env = import.meta.env) {
       if (prop === 'rpc' && typeof value === 'function') {
         return (fnName, args, options) => {
           const denied = assertKenosWriteRpcAllowed(fnName, env)
-          if (!denied.ok) return Promise.resolve({ data: null, error: denied.error })
+          if (!denied.ok)
+            return Promise.resolve({ data: null, error: denied.error })
           return value.call(target, fnName, args, options)
         }
       }
