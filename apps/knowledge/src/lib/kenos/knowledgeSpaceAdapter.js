@@ -29,9 +29,16 @@ export function suspendLibrarySpace(opts = {}) {
     opts.pathname ?? (isBrowser() ? window.location.pathname : '/')
   const search = opts.search ?? (isBrowser() ? window.location.search : '')
   let noteId = opts.noteId || null
-  if (!noteId && isBrowser()) {
+  if (!noteId && search) {
     try {
-      noteId = new URLSearchParams(search).get('note')
+      const q = search.startsWith('?') ? search.slice(1) : search
+      noteId = new URLSearchParams(q).get('note')
+    } catch {
+      noteId = null
+    }
+  } else if (!noteId && isBrowser()) {
+    try {
+      noteId = new URLSearchParams(window.location.search).get('note')
     } catch {
       noteId = null
     }

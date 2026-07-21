@@ -7,8 +7,18 @@
   import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
   import { bindViewportHeight, resetScrollLock } from '@life-os/theme'
   import AppBar from '$lib/components/AppBar.svelte'
+  import DomainMusicHeader from '$lib/components/DomainMusicHeader.svelte'
   import SideNav from '$lib/components/SideNav.svelte'
   import BottomNav from '$lib/components/BottomNav.svelte'
+  import {
+    markIosNativeShellDom,
+    isIosNativeShell,
+  } from '@life-os/platform-web/ios-native-shell'
+  import {
+    installHealthLeaveGuard,
+    persistHealthContinue,
+    suspendHealthSpace,
+  } from '$lib/kenos/healthSpaceAdapter.js'
   import { ICONS } from '$lib/iconRegistry.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { t, applyLocale } from '$lib/i18n/index.js'
@@ -16,6 +26,7 @@
   let { children } = $props()
 
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
+  const nativeShell = $derived(isIosNativeShell())
 
   const pageTitle = $derived.by(() => {
     const p = page.url.pathname
@@ -26,6 +37,11 @@
   })
 
   onMount(() => {
+    markIosNativeShellDom()
+    if (isIosNativeShell()) {
+      installHealthLeaveGuard()
+      persistHealthContinue(suspendHealthSpace())
+    }
     applyTheme()
     applyLocale()
     const cleanupTheme = bindAppThemeSystemChange()
@@ -58,7 +74,9 @@
   testIdPrefix="health-shell"
 >
   {#snippet navigation(projection)}
-    {#if projection === 'desktop'}
+    {#if nativeShell}
+      <!-- Single Health domain dock — do not split Focus/Status into separate domains -->
+    {:else if projection === 'desktop'}
       <SideNav />
     {:else}
       <BottomNav />
@@ -66,7 +84,11 @@
   {/snippet}
 
   {#snippet header()}
-    <AppBar title={pageTitle} />
+    {#if nativeShell}
+      <DomainMusicHeader title={pageTitle} domainLabel="Health" />
+    {:else}
+      <AppBar title={pageTitle} />
+    {/if}
   {/snippet}
 
   {#snippet main()}

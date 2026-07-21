@@ -5,8 +5,18 @@
   import { onNavigate, afterNavigate } from '$app/navigation'
   import { page } from '$app/state'
   import AppBar from '$lib/components/AppBar.svelte'
+  import DomainMusicHeader from '$lib/components/DomainMusicHeader.svelte'
   import SideNav from '$lib/components/SideNav.svelte'
   import BottomNav from '$lib/components/BottomNav.svelte'
+  import {
+    markIosNativeShellDom,
+    isIosNativeShell,
+  } from '@life-os/platform-web/ios-native-shell'
+  import {
+    installMusicLeaveGuard,
+    persistMusicContinue,
+    suspendMusicSpace,
+  } from '$lib/kenos/musicSpaceAdapter.js'
   import MiniPlayer from '$lib/components/MiniPlayer.svelte'
   import QueueDrawer from '$lib/components/QueueDrawer.svelte'
   import UtilityPane from '$lib/components/UtilityPane.svelte'
@@ -95,6 +105,7 @@
   const wideContent = $derived(isWideContentRoute(page.url.pathname))
   const onNowPlaying = $derived(page.url.pathname.startsWith('/now-playing'))
   const utilityOpen = $derived(utilityPane.open && !onNowPlaying)
+  const nativeShell = $derived(isIosNativeShell())
 
   const shellDataset = $derived({
     'page-route': pageRoute,
@@ -129,6 +140,11 @@
   })
 
   onMount(() => {
+    markIosNativeShellDom()
+    if (isIosNativeShell()) {
+      installMusicLeaveGuard()
+      persistMusicContinue(suspendMusicSpace())
+    }
     initRecDebug()
     initUtilityPaneWidth()
     installRecDebugConsole()
@@ -270,7 +286,9 @@
   testIdPrefix="music-shell"
 >
   {#snippet navigation(projection)}
-    {#if projection === 'desktop'}
+    {#if nativeShell}
+      <!-- Domain Dock; MiniPlayer remains the single live accessory -->
+    {:else if projection === 'desktop'}
       <SideNav />
     {:else}
       <BottomNav />
@@ -278,14 +296,18 @@
   {/snippet}
 
   {#snippet header()}
-    <AppBar
-      hidden={appBarHidden}
-      title={appBarHidden ? undefined : pageTitle}
-      subtitle={appBarSubtitle}
-      backHref={appBarBackHref}
-      backLabel={appBarBackLabel}
-      bind:searchRef={searchInput}
-    />
+    {#if nativeShell && !appBarHidden}
+      <DomainMusicHeader title={pageTitle || 'Music'} domainLabel="Music" />
+    {:else}
+      <AppBar
+        hidden={appBarHidden}
+        title={appBarHidden ? undefined : pageTitle}
+        subtitle={appBarSubtitle}
+        backHref={appBarBackHref}
+        backLabel={appBarBackLabel}
+        bind:searchRef={searchInput}
+      />
+    {/if}
   {/snippet}
 
   {#snippet main()}

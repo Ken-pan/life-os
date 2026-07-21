@@ -3,8 +3,18 @@
   import { onMount, setContext } from 'svelte'
   import { page } from '$app/state'
   import AppBar from '$lib/components/AppBar.svelte'
+  import DomainMusicHeader from '$lib/components/DomainMusicHeader.svelte'
   import SideNav from '$lib/components/SideNav.svelte'
   import BottomNav from '$lib/components/BottomNav.svelte'
+  import {
+    markIosNativeShellDom,
+    isIosNativeShell,
+  } from '@life-os/platform-web/ios-native-shell'
+  import {
+    installHomeLeaveGuard,
+    persistHomeContinue,
+    suspendHomeSpace,
+  } from '$lib/kenos/homeSpaceAdapter.js'
   import Toast from '$lib/components/Toast.svelte'
   import DocumentHead from '@life-os/platform-web/svelte/head'
   import PortraitGate from '@life-os/platform-web/svelte/portrait-gate'
@@ -34,6 +44,7 @@
   let { children } = $props()
 
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
+  const nativeShell = $derived(isIosNativeShell())
 
   const planRoute = $derived(page.url.pathname === '/plan')
   // /storage 也是「地图页」:满屏画布 + 浮动搜索/清单面板,AppBar 让位给沉浸式,
@@ -84,6 +95,11 @@
   })
 
   onMount(() => {
+    markIosNativeShellDom()
+    if (isIosNativeShell()) {
+      installHomeLeaveGuard()
+      persistHomeContinue(suspendHomeSpace())
+    }
     applyTheme()
     const cleanupAuth = initAuth()
     // 开发免登录同步:未登录的 localhost 窗口自动跟进云端优化副本
@@ -134,7 +150,9 @@
   testIdPrefix="home-shell"
 >
   {#snippet navigation(projection)}
-    {#if projection === 'desktop'}
+    {#if nativeShell}
+      <!-- Domain Dock owns bottom chrome; 3D/storage canvas stays in page -->
+    {:else if projection === 'desktop'}
       <SideNav />
     {:else}
       <BottomNav hidden={planImmersive} />
@@ -142,11 +160,15 @@
   {/snippet}
 
   {#snippet header()}
-    <AppBar
-      title={pageMeta.title}
-      subtitle={pageMeta.subtitle}
-      hidden={planRoute || storageRoute || tidyRoute}
-    />
+    {#if nativeShell && !(planRoute || storageRoute || tidyRoute)}
+      <DomainMusicHeader title={pageMeta.title} domainLabel="Home" />
+    {:else}
+      <AppBar
+        title={pageMeta.title}
+        subtitle={pageMeta.subtitle}
+        hidden={planRoute || storageRoute || tidyRoute}
+      />
+    {/if}
   {/snippet}
 
   {#snippet main()}
