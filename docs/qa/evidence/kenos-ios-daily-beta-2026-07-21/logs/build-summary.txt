@@ -1,0 +1,5 @@
+334:    Signing Identity:     "Apple Development: Pan Juncheng (24LGFN37R4)"
+343:    Signing Identity:     "Apple Development: Pan Juncheng (24LGFN37R4)"
+352:    Signing Identity:     "Apple Development: Pan Juncheng (24LGFN37R4)"
+376:** BUILD SUCCEEDED **
+394:INSTALL_OK origin=http://10.20.202.15:5219 sha=e04f149db6b60d7f5b4b06f764f7b4c94d92b325 build=202607210217 launch_ec=0

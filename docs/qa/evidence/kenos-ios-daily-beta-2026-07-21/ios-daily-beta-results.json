@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-07-21T02:23:00Z",
+  "verdict": "IOS_NOT_READY",
+  "overallPersonalDailyBeta": "HOLD",
+  "macWebDailyBeta": "READY",
+  "macEntry": "http://127.0.0.1:5219/",
+  "macBuildSha": "aff9303903c10752c0ea6ca657a1da36442d6d12",
+  "ios": {
+    "gitShaAtInstall": "c4aa541d47953c4d24382d9771d623deab6ce29b",
+    "appVersion": "1.0.0",
+    "appBuild": "202607210221",
+    "bundleId": "space.kenos.app.ios",
+    "origin": "http://10.20.202.15:5219",
+    "phoneClientIp": "10.20.202.6",
+    "device": {
+      "name": "Ken's 17 Pro",
+      "model": "iPhone 17 Pro",
+      "productType": "iPhone18,1",
+      "osVersion": "27.0",
+      "osBuild": "24A5380h",
+      "udid": "00008150-000C38C20AC0401C",
+      "coredeviceId": "8097F071-CAB6-5AF0-8258-BCD985E9D79E"
+    },
+    "signing": {
+      "style": "Automatic",
+      "team": "93NJ4CAU8B",
+      "identity": "Apple Development: Pan Juncheng (24LGFN37R4)"
+    }
+  },
+  "checks": {
+    "IOS_BUILD": "PASS",
+    "REAL_DEVICE_INSTALL": "PASS",
+    "COLD_LAUNCH": "PASS",
+    "AUTH_PERSISTENCE": "PARTIAL",
+    "TODAY": "PASS",
+    "CONTINUE": "PARTIAL",
+    "PLANNER": "PASS",
+    "FITNESS": "PASS",
+    "ACCOUNT_ISOLATION": "PARTIAL",
+    "BACKGROUND_FOREGROUND": "PASS",
+    "FORCE_QUIT_REOPEN": "PASS",
+    "OFFLINE_RECOVERY": "PASS",
+    "WIFI_CELLULAR": "NOT_RUN",
+    "DARK_MODE": "NOT_RUN",
+    "DYNAMIC_TYPE": "NOT_RUN",
+    "VOICEOVER_BASICS": "NOT_RUN",
+    "P0_P1": "NONE"
+  },
+  "commands": {
+    "deviceBuildInstall": "scripts/kenos-ios-daily-beta/device-build-install.sh exit 0",
+    "kenosCtlRestart": "scripts/kenos-daily-beta/kenos-ctl.sh restart exit 0",
+    "lifecycleRelaunch": "devicectl launch after SIGKILL exit 0"
+  },
+  "fixInstall": {
+    "device": "Ken's 17 Pro",
+    "build": "202607210241",
+    "origin": "http://10.20.202.15:5219",
+    "phoneIp": "10.20.202.6",
+    "spacesNativeShell": "PASS",
+    "inboxNativeShell": "PASS",
+    "planner": "PASS",
+    "fitness": "PASS",
+    "forceQuitRelaunch": "PASS"
+  },
+  "blocker": "signing_15pro_accounts_empty; interactive_a11y_cellular_accountB"
+}

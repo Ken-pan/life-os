@@ -8,16 +8,22 @@
 | Continuity Verification Sheet | Rebuilt from canonical run (not Owner Review)            |
 | **P5 Visual Quality**         | **PASSED**                                               |
 | Current-HEAD Continuity       | **PASSED** (`…T01-39-14-798Z`)                           |
-| Owner Review                  | **OPEN** — rehearsal PASSED · Personal Daily Beta **A** |
+| Owner Review                  | **OPEN** — Mac Web Daily Beta **READY** · iOS **NOT READY** · Overall **HOLD** |
 
 ```text
 KENOS OVERALL CONTINUITY GATE — PASSED (canonical …T20-12-22-998Z)
 KENOS UIUX VISUAL QUALITY — PASSED
 CURRENT-HEAD CONTINUITY REGRESSION — PASSED (…T01-39-14-798Z)
-OWNER REVIEW REHEARSAL — PASSED
-A — PERSONAL DAILY BETA READY
-DAILY ENTRY — http://127.0.0.1:5219/
+MAC WEB DAILY BETA — READY
+  ENTRY — http://127.0.0.1:5219/
+  BUILD — aff9303903c10752c0ea6ca657a1da36442d6d12
+IOS PERSONAL DAILY BETA — NOT READY
+  (real device install + LAN shell/Planner/Fitness proven; a11y/cellular/Account-B gaps)
+OVERALL PERSONAL DAILY BETA — HOLD
+  (Mac-local readiness ≠ Ken Personal Daily Beta — primary device is iPhone)
 ```
+
+Evidence: `docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`
 
 ## P5 knife 1 — SpaceSwitcher hairline (Direction A)
 
