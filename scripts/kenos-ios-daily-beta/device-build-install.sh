@@ -18,12 +18,17 @@ DEVICE="${KENOS_IOS_DEVICE:-8097F071-CAB6-5AF0-8258-BCD985E9D79E}"
 BUNDLE_ID="space.kenos.app.ios"
 
 LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
+LOCAL_HOST="$(scutil --get LocalHostName 2>/dev/null || true)"
 ORIGIN="${KENOS_DAILY_BETA_ORIGIN:-}"
 if [[ -z "$ORIGIN" ]]; then
-  if [[ -n "$LAN_IP" ]]; then
+  if [[ -n "$LOCAL_HOST" ]]; then
+    # Stable mDNS — survives DHCP IP churn without rebuilding.
+    ORIGIN="http://${LOCAL_HOST}.local:5219"
+  elif [[ -n "$LAN_IP" ]]; then
+    echo "WARN: LocalHostName missing — falling back to DHCP IP (P1 residual)" >&2
     ORIGIN="http://${LAN_IP}:5219"
   else
-    echo "ERROR: set KENOS_DAILY_BETA_ORIGIN (phone-reachable, not 127.0.0.1)" >&2
+    echo "ERROR: set KENOS_DAILY_BETA_ORIGIN (prefer http://<LocalHostName>.local:5219)" >&2
     exit 1
   fi
 fi
@@ -33,6 +38,19 @@ case "$ORIGIN" in
     exit 1
     ;;
 esac
+# Refuse baking a raw IPv4 into the app unless Owner explicitly forces it.
+if [[ -z "${KENOS_ALLOW_DHCP_IP_ORIGIN:-}" ]]; then
+  host_part="${ORIGIN#http://}"
+  host_part="${host_part#https://}"
+  host_part="${host_part%%/*}"
+  host_part="${host_part%%:*}"
+  if [[ "$host_part" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "ERROR: refusing DHCP IPv4 origin '$ORIGIN'." >&2
+    echo "  Use http://\$(scutil --get LocalHostName).local:5219" >&2
+    echo "  Or set KENOS_ALLOW_DHCP_IP_ORIGIN=1 to override (not recommended)." >&2
+    exit 1
+  fi
+fi
 
 echo "==> Daily Beta origin: $ORIGIN"
 echo "==> Device: $DEVICE"

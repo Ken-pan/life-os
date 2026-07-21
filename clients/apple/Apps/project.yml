@@ -77,18 +77,23 @@ targets:
             localhost:
               NSExceptionAllowsInsecureHTTPLoads: true
               NSIncludesSubdomains: true
+            local:
+              NSExceptionAllowsInsecureHTTPLoads: true
+              NSIncludesSubdomains: true
             '10.0.0.0/8':
               NSExceptionAllowsInsecureHTTPLoads: true
             '192.168.0.0/16':
               NSExceptionAllowsInsecureHTTPLoads: true
             '172.16.0.0/12':
               NSExceptionAllowsInsecureHTTPLoads: true
+        NSBonjourServices:
+          - _http._tcp
         LSApplicationQueriesSchemes:
           - x-apple-health
           - homescan
         NSLocalNetworkUsageDescription: >-
-          Kenos connects to your Mac Daily Beta on the private LAN when the
-          cloud shell is unavailable.
+          Kenos connects to your Mac Daily Beta on the private LAN (Bonjour
+          .local hostname) when the cloud shell is unavailable.
         NSHealthShareUsageDescription: >-
           Kenos reads Apple Health metrics you enable (sleep, heart, activity,
           workouts, and more) to power Health status. Data stays on your devices
@@ -117,7 +122,8 @@ targets:
         CODE_SIGN_ENTITLEMENTS: iOS/KenosIOS.entitlements
         CURRENT_PROJECT_VERSION: '1'
         MARKETING_VERSION: '1.0.0'
-        KENOS_DAILY_BETA_ORIGIN: 'http://10.20.202.15:5219'
+        # Prefer mDNS hostname — injected at device-build as LocalHostName.local
+        KENOS_DAILY_BETA_ORIGIN: 'http://Kens-M5-Max-MacBook-Pro.local:5219'
     dependencies:
       - package: KenosContracts
       - package: KenosClient

@@ -8,9 +8,16 @@ DEVICE="${KENOS_IOS_DEVICE:-8097F071-CAB6-5AF0-8258-BCD985E9D79E}"
 BUNDLE="${KENOS_IOS_BUNDLE:-space.kenos.app.ios}"
 TEAM="${KENOS_IOS_TEAM:-93NJ4CAU8B}"
 LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
+LOCAL_HOST="$(scutil --get LocalHostName 2>/dev/null || true)"
 ORIGIN="${KENOS_DAILY_BETA_ORIGIN:-}"
-if [[ -z "$ORIGIN" && -n "$LAN_IP" ]]; then
-  ORIGIN="http://${LAN_IP}:5219"
+if [[ -z "$ORIGIN" ]]; then
+  if [[ -f "$HOME/.kenos-daily-beta/lan-origin.txt" ]]; then
+    ORIGIN="$(tr -d '[:space:]' <"$HOME/.kenos-daily-beta/lan-origin.txt")"
+  elif [[ -n "$LOCAL_HOST" ]]; then
+    ORIGIN="http://${LOCAL_HOST}.local:5219"
+  elif [[ -n "$LAN_IP" ]]; then
+    ORIGIN="http://${LAN_IP}:5219"
+  fi
 fi
 APP="${KENOS_IOS_APP:-$ROOT/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app}"
 EVIDENCE="${1:-$ROOT/docs/qa/evidence/kenos-ios-daily-beta-2026-07-21}"
@@ -23,6 +30,15 @@ fail() { echo "[FAIL] $*"; }
 
 echo "==> Kenos iOS Daily Beta doctor $(ts)"
 echo "device=$DEVICE team=$TEAM origin=$ORIGIN"
+echo "local_hostname=${LOCAL_HOST:-none}"
+HOST_PART="${ORIGIN#http://}"; HOST_PART="${HOST_PART#https://}"; HOST_PART="${HOST_PART%%/*}"; HOST_PART="${HOST_PART%%:*}"
+if [[ "$HOST_PART" == *.local ]]; then
+  ok "origin uses stable mDNS hostname ($HOST_PART)"
+elif [[ "$HOST_PART" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  warn "origin still DHCP IPv4 ($HOST_PART) — rebuild with LocalHostName.local"
+else
+  warn "origin host=$HOST_PART"
+fi
 
 # Devices
 DEV_LINE="$(xcrun devicectl list devices 2>/dev/null | grep "$DEVICE" || true)"

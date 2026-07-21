@@ -89,13 +89,41 @@ export function lanIp() {
   )
 }
 
+export function localHostName() {
+  return (
+    sh('scutil', ['--get', 'LocalHostName']).stdout.trim() ||
+    sh('hostname', ['-s']).stdout.trim() ||
+    ''
+  )
+}
+
 export function originBase() {
   const fromEnv = process.env.KENOS_DAILY_BETA_ORIGIN
   if (fromEnv) return fromEnv.replace(/\/$/, '')
   const file = join(process.env.HOME || '', '.kenos-daily-beta/lan-origin.txt')
-  if (existsSync(file)) return readFileSync(file, 'utf8').trim().replace(/\/$/, '')
+  if (existsSync(file)) {
+    const raw = readFileSync(file, 'utf8').trim().replace(/\/$/, '')
+    // Prefer file when it is already a hostname (.local); skip sticky DHCP IP.
+    try {
+      const host = new URL(raw).hostname
+      if (host && !/^\d+\.\d+\.\d+\.\d+$/.test(host)) return raw
+    } catch {
+      /* fall through */
+    }
+  }
+  const mdns = localHostName()
+  if (mdns) return `http://${mdns}.local:5219`
   const ip = lanIp()
   return ip ? `http://${ip}:5219` : ''
+}
+
+export function originIsStableHostname(url = originBase()) {
+  try {
+    const host = new URL(url).hostname
+    return host.endsWith('.local') && !/^\d+\.\d+\.\d+\.\d+$/.test(host)
+  } catch {
+    return false
+  }
 }
 
 export function maskUid(uid) {

@@ -6,7 +6,7 @@ extension Notification.Name {
 }
 
 /// Origins for iOS Personal Daily Beta.
-/// Prefers phone-reachable LAN Mac release over 127.0.0.1 (useless on device).
+/// Prefers phone-reachable stable mDNS hostname over DHCP IPv4 / 127.0.0.1.
 /// When LAN is offline, can fall back to production `*.kenos.space` (cellular-reachable).
 enum KenosDailyBetaConfig {
     static let originDefaultsKey = "kenos.dailyBeta.origin"
@@ -17,7 +17,7 @@ enum KenosDailyBetaConfig {
     /// Public AIOS shell — reachable off LAN (cellular / Mac sleep).
     static let productionKenOsOrigin = URL(string: "https://aios.kenos.space")!
 
-    /// Bundle default from Info.plist (injected at device build).
+    /// Bundle default from Info.plist (injected at device build as `http://<LocalHostName>.local:5219`).
     static var bundleOrigin: URL? {
         guard let raw = Bundle.main.object(forInfoDictionaryKey: "KENOS_DAILY_BETA_ORIGIN") as? String else {
             return nil
@@ -73,22 +73,91 @@ enum KenosDailyBetaConfig {
         }
     }
 
+    private static var lastKnownGoodHostname: String? {
+        get { UserDefaults.standard.string(forKey: KenosOriginResolver.lastKnownGoodHostnameKey) }
+        set {
+            if let newValue, !newValue.isEmpty {
+                UserDefaults.standard.set(newValue, forKey: KenosOriginResolver.lastKnownGoodHostnameKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: KenosOriginResolver.lastKnownGoodHostnameKey)
+            }
+        }
+    }
+
+    /// One-time: clear sticky DHCP IPv4 UserDefaults override when bundle provides `.local`.
+    static func migrateLegacyDhcpOriginIfNeeded() {
+        guard UserDefaults.standard.object(forKey: KenosOriginResolver.migratedDhcpOriginKey) == nil else {
+            return
+        }
+        defer {
+            UserDefaults.standard.set(true, forKey: KenosOriginResolver.migratedDhcpOriginKey)
+        }
+        guard let userHost = userOrigin?.host,
+              KenosOriginResolver.isIpv4Host(userHost),
+              let bundleHost = bundleOrigin?.host,
+              KenosOriginResolver.isMdnsHostname(bundleHost)
+        else { return }
+        UserDefaults.standard.removeObject(forKey: originDefaultsKey)
+        KenosLog.info("daily beta migrated DHCP origin to hostname", category: .network, metadata: [
+            "from": userHost,
+            "to": bundleHost,
+        ])
+    }
+
+    /// Current origin snapshot (shell / planner / fitness share the same host strategy).
+    static var originSnapshot: KenosOriginSnapshot {
+        migrateLegacyDhcpOriginIfNeeded()
+        return KenosOriginResolver.snapshot(
+            userOrigin: userOrigin,
+            bundleOrigin: bundleOrigin,
+            lastKnownGoodHostname: lastKnownGoodHostname,
+            useProductionOverride: useProductionOverride,
+            productionShell: productionKenOsOrigin,
+            migrateDhcpUserOverride: false
+        )
+    }
+
     /// Configured LAN / custom origin (ignores production override) — for Settings + Retry LAN.
     static var configuredLanOrigin: URL {
-        if let userOrigin { return userOrigin }
-        if let bundleOrigin { return bundleOrigin }
-        return URL(string: "http://10.20.202.15:5219")!
+        let snap = KenosOriginResolver.snapshot(
+            userOrigin: userOrigin,
+            bundleOrigin: bundleOrigin,
+            lastKnownGoodHostname: lastKnownGoodHostname,
+            useProductionOverride: false,
+            productionShell: productionKenOsOrigin,
+            migrateDhcpUserOverride: UserDefaults.standard.object(
+                forKey: KenosOriginResolver.migratedDhcpOriginKey
+            ) == nil
+        )
+        if snap.networkScope == .unavailable {
+            // Honest unavailable — still return a non-nil URL for call sites; UI must check status.
+            return URL(string: "http://kenos-daily-beta-unavailable.local:5219")!
+        }
+        return snap.shellOrigin
     }
 
     static var kenOsOrigin: URL {
-        if useProductionOverride { return productionKenOsOrigin }
-        return configuredLanOrigin
+        originSnapshot.shellOrigin
+    }
+
+    /// True when configured strategy is stable mDNS hostname (DHCP IP P1 closed).
+    static var usesStableHostnameStrategy: Bool {
+        let snap = originSnapshot
+        return snap.networkScope == .lanHostname && snap.resolutionStatus != .unavailable
+    }
+
+    static func rememberSuccessfulHostname(_ host: String?) {
+        guard let host, KenosOriginResolver.isMdnsHostname(host) else { return }
+        lastKnownGoodHostname = host
     }
 
     static func setUserOrigin(_ url: URL?) {
         if let url {
             UserDefaults.standard.set(url.absoluteString, forKey: originDefaultsKey)
             UserDefaults.standard.set(true, forKey: enabledDefaultsKey)
+            if let host = url.host, KenosOriginResolver.isMdnsHostname(host) {
+                lastKnownGoodHostname = host
+            }
         } else {
             UserDefaults.standard.removeObject(forKey: originDefaultsKey)
         }
@@ -121,6 +190,7 @@ enum KenosDailyBetaConfig {
            let code = (resp as? HTTPURLResponse)?.statusCode,
            (200..<500).contains(code)
         {
+            rememberSuccessfulHostname(origin.host)
             return true
         }
         var root = URLRequest(url: origin)
@@ -129,6 +199,7 @@ enum KenosDailyBetaConfig {
            let code = (resp as? HTTPURLResponse)?.statusCode,
            (200..<500).contains(code)
         {
+            rememberSuccessfulHostname(origin.host)
             return true
         }
         return false
@@ -154,6 +225,7 @@ enum KenosDailyBetaConfig {
     static func retryLanOrigin() {
         KenosLog.info("daily beta retry LAN", category: .network, metadata: [
             "host": configuredLanOrigin.host ?? "",
+            "doctor": KenosOriginResolver.doctorSummary(originSnapshot),
         ])
         UserDefaults.standard.set(false, forKey: useProductionOverrideKey)
         NotificationCenter.default.post(name: .kenosDailyBetaOriginDidChange, object: kenOsOrigin)
@@ -182,11 +254,13 @@ enum KenosDailyBetaConfig {
     }
 
     static var plannerOrigin: URL {
-        domainOrigin(port: 5188, production: "https://planner.kenos.space")
+        if useProductionOverride { return URL(string: "https://planner.kenos.space")! }
+        return originSnapshot.plannerOrigin
     }
 
     static var fitnessOrigin: URL {
-        domainOrigin(port: 5190, production: "https://fitness.kenos.space")
+        if useProductionOverride { return URL(string: "https://fitness.kenos.space")! }
+        return originSnapshot.fitnessOrigin
     }
 
     static var financeOrigin: URL {

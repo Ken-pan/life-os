@@ -80,6 +80,7 @@
 		8DE649B2A03FC030A56EE043 /* KenosHandoff in Frameworks */ = {isa = PBXBuildFile; productRef = 19A120FF0307DBA12EF068D2 /* KenosHandoff */; };
 		902186FAEB1FB8F4760339DB /* KenosNowPlayingBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D20651392F4F1E22C6A73CA /* KenosNowPlayingBridge.swift */; };
 		90A2B4CFE2A6C72BD4CE22CF /* KenosDomainWebBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8148DD4F9FDB3D34AD2E439E /* KenosDomainWebBridge.swift */; };
+		963CB2C65005404ADF2B79E7 /* KenosOriginResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68853DDFC293E73029EC2CFC /* KenosOriginResolver.swift */; };
 		96A697922F8C12A0459F98BC /* KenosNotifications in Frameworks */ = {isa = PBXBuildFile; productRef = 586EBFF0114E6376D994B13B /* KenosNotifications */; };
 		97C11E1E994FAE18F688460F /* KenosNativeCapabilityBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23ADB28C97E81AEAC15FCA87 /* KenosNativeCapabilityBridgeTests.swift */; };
 		97D4C5EC2FDC8C7061822AA9 /* KenosHandoff in Frameworks */ = {isa = PBXBuildFile; productRef = E5368C8590E3870131BF3C82 /* KenosHandoff */; };
@@ -134,6 +135,7 @@
 		ED1F93AD14F29E5114F9B4D3 /* KenosLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901804A01B5928D0D338A381 /* KenosLog.swift */; };
 		EEF0D984CD8AF951681D8BFD /* KenosSpotlightFoundation.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF359FB85F1D6307D984DA3D /* KenosSpotlightFoundation.swift */; };
 		F02293A30540A692A9180B8B /* KenosGlobalDock.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A969B5676D18F84308547D /* KenosGlobalDock.swift */; };
+		F0F13CED916BA5B50E105820 /* KenosOriginResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68853DDFC293E73029EC2CFC /* KenosOriginResolver.swift */; };
 		F321CB9F9EF88843A980B5C9 /* KenosClient in Frameworks */ = {isa = PBXBuildFile; productRef = DCBC3B9A582488EDD27BEAF2 /* KenosClient */; };
 		F5000DAB14F84E1072A3B139 /* KenosSupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 385D9C38D0BEEADB8A117B74 /* KenosSupabaseConfig.swift */; };
 		F67F3063CB2ECB048625E786 /* KenosMetricKitSubscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50FC9B550D021F3AE74E4F87 /* KenosMetricKitSubscriber.swift */; };
@@ -239,6 +241,7 @@
 		5ECD5ACBC262E2E0C7032071 /* KenosNativeCapabilityBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosNativeCapabilityBridge.swift; sourceTree = "<group>"; };
 		622035903BB67B93EE54A831 /* KenosHealthDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosHealthDay.swift; sourceTree = "<group>"; };
 		64A1E14DB52721AD374837E0 /* KenosActions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KenosActions; path = ../Packages/KenosActions; sourceTree = SOURCE_ROOT; };
+		68853DDFC293E73029EC2CFC /* KenosOriginResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosOriginResolver.swift; sourceTree = "<group>"; };
 		69D455E167842282BAD214D7 /* KenosWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KenosWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C2D8C6E2880D9A8DBB71156 /* KenosSpacesWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosSpacesWidget.swift; sourceTree = "<group>"; };
 		6E3D456D83E65E986765437B /* KenosBugReportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosBugReportTests.swift; sourceTree = "<group>"; };
@@ -568,6 +571,7 @@
 				50FC9B550D021F3AE74E4F87 /* KenosMetricKitSubscriber.swift */,
 				5ECD5ACBC262E2E0C7032071 /* KenosNativeCapabilityBridge.swift */,
 				1D20651392F4F1E22C6A73CA /* KenosNowPlayingBridge.swift */,
+				68853DDFC293E73029EC2CFC /* KenosOriginResolver.swift */,
 				D7D4FFB7ACDC99E07D2F1877 /* KenosPushFoundation.swift */,
 				4D1099739904B12B45B69933 /* KenosRootView.swift */,
 				F8504B8BA496611860E56493 /* KenosShellExperience.swift */,
@@ -919,6 +923,7 @@
 				40A3DCE32954A28ED6DB9D78 /* KenosMetricKitSubscriber.swift in Sources */,
 				409D8171ADE961F2F09E09B5 /* KenosNativeCapabilityBridge.swift in Sources */,
 				E5B1B9224047C6518209FE77 /* KenosNowPlayingBridge.swift in Sources */,
+				F0F13CED916BA5B50E105820 /* KenosOriginResolver.swift in Sources */,
 				AA9D9394828806C878502848 /* KenosPushFoundation.swift in Sources */,
 				51FFCB32AE07F7020AAC0FC8 /* KenosRootView.swift in Sources */,
 				B1872667E84DF2A893FA02A7 /* KenosShellExperience.swift in Sources */,
@@ -1012,6 +1017,7 @@
 				F67F3063CB2ECB048625E786 /* KenosMetricKitSubscriber.swift in Sources */,
 				032470206A7BCA63BA9D759A /* KenosNativeCapabilityBridge.swift in Sources */,
 				902186FAEB1FB8F4760339DB /* KenosNowPlayingBridge.swift in Sources */,
+				963CB2C65005404ADF2B79E7 /* KenosOriginResolver.swift in Sources */,
 				D1AB7DE353A363DE31050C8E /* KenosPushFoundation.swift in Sources */,
 				23447A2729A5702B353BE55F /* KenosRootView.swift in Sources */,
 				873FD582A46AEFE0D10254DE /* KenosShellExperience.swift in Sources */,
@@ -1157,7 +1163,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iOS/Info.plist;
-				KENOS_DAILY_BETA_ORIGIN = "http://10.20.202.15:5219";
+				KENOS_DAILY_BETA_ORIGIN = "http://Kens-M5-Max-MacBook-Pro.local:5219";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1298,7 +1304,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iOS/Info.plist;
-				KENOS_DAILY_BETA_ORIGIN = "http://10.20.202.15:5219";
+				KENOS_DAILY_BETA_ORIGIN = "http://Kens-M5-Max-MacBook-Pro.local:5219";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

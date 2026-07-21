@@ -18,6 +18,7 @@ import {
   macInfo,
   nowIso,
   originBase,
+  originIsStableHostname,
   probeUrl,
   readBuildMeta,
   rollbackTargetExists,
@@ -113,6 +114,21 @@ add('head_vs_installed_drift', {
     report.build.iosBuildSha === report.head
       ? 'aligned'
       : `HEAD≠installed (need rebuild). head=${report.headShort} installed=${(report.build.iosBuildSha || '').slice(0, 9)}`,
+}, 'product')
+
+const stableOrigin = originIsStableHostname(origin)
+add('stable_hostname_origin', {
+  ok: stableOrigin,
+  class: stableOrigin ? 'product' : 'product',
+  reason: stableOrigin
+    ? `mdns=${(() => {
+        try {
+          return new URL(origin).hostname
+        } catch {
+          return '?'
+        }
+      })()}`
+    : `not_stable host=${origin}`,
 }, 'product')
 
 const launch = launchApp(`${origin}/?iosNativeShell=1`)

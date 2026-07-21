@@ -80,6 +80,8 @@
     "kenos:ios-stability:doctor": "bash scripts/kenos-ios-stability/doctor.sh",
     "kenos:ios-stability:log-export": "node scripts/kenos-ios-stability/log-export.mjs",
     "kenos:ios-stability": "node scripts/kenos-ios-stability/run-closure.mjs",
+    "kenos:ios-stability:hostname": "node scripts/kenos-ios-stability/hostname-regression.mjs",
+    "kenos:ios-dogfood-check": "node scripts/kenos-ios-stability/dogfood-check.mjs",
     "app:knowledge": "bash scripts/knowledge/build-app.sh"
   },
   "devDependencies": {

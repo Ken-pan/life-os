@@ -74,6 +74,13 @@
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
 				<true/>
 			</dict>
+			<key>local</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
 			<key>localhost</key>
 			<dict>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
@@ -83,12 +90,16 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_http._tcp</string>
+	</array>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Kenos can use Face ID to unlock sensitive Money and Work surfaces inside the Continuity shell.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Kenos reads Apple Health metrics you enable (sleep, heart, activity, workouts, and more) to power Health status. Data stays on your devices and can optionally sync to your Mac.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Kenos connects to your Mac Daily Beta on the private LAN when the cloud shell is unavailable.</string>
+	<string>Kenos connects to your Mac Daily Beta on the private LAN (Bonjour .local hostname) when the cloud shell is unavailable.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSSupportsLiveActivitiesFrequentUpdates</key>

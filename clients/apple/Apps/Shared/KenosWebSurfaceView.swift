@@ -43,6 +43,7 @@ enum KenosSharedWebAuth {
         if name.contains("kenos.space") { return true }
         if name.contains("netlify.app") { return true }
         if name.contains("localhost") || name.contains("127.0.0.1") { return true }
+        if name.hasSuffix(".local") || name.contains(".local") { return true }
         if let lan = KenosDailyBetaConfig.configuredLanOrigin.host?.lowercased(),
            !lan.isEmpty,
            name.contains(lan)

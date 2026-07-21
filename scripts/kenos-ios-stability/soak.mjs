@@ -14,6 +14,7 @@ import {
   lanIp,
   nowIso,
   originBase,
+  originIsStableHostname,
   probeUrl,
   readBuildMeta,
   sleep,
@@ -183,33 +184,36 @@ for (const svc of ['aios', 'planner', 'fitness']) {
   const start = nowIso()
   const origin = originBase()
   const usesLoopback = /127\.0\.0\.1|localhost/.test(origin)
-  const usesIp = /^\d+\.\d+\.\d+\.\d+$/.test((() => {
+  const host = (() => {
     try {
       return new URL(origin).hostname
     } catch {
       return ''
     }
-  })())
+  })()
+  const usesIp = /^\d+\.\d+\.\d+\.\d+$/.test(host)
+  const stable = originIsStableHostname(origin)
+  const health = probeUrl(
+    'mdns_health',
+    stable ? `${origin}/__health` : `http://${host}:5219/__health`,
+  )
   caseRow('CASE_6_lan_identity', {
     start,
     failureInjected: 'none',
-    uiReactionMs: 0,
+    uiReactionMs: health.ms,
     recoveryMs: 0,
     dataLoss: 0,
     authEffect: 'n/a',
     continueEffect: 'n/a',
-    result: !usesLoopback ? 'PASS' : 'FAIL',
-    note: usesIp
-      ? 'P1 residual: origin uses LAN IP (not stable hostname); DHCP change risk'
-      : 'origin hostname strategy ok',
-    p1: usesIp ? 'hardcoded_or_dhcp_ip_origin' : null,
-    originHost: (() => {
-      try {
-        return new URL(origin).host
-      } catch {
-        return null
-      }
-    })(),
+    result: !usesLoopback && stable && health.ok ? 'PASS' : 'FAIL',
+    note: stable
+      ? 'stable mDNS hostname strategy'
+      : usesIp
+        ? 'P1 residual: origin still uses DHCP IP'
+        : 'origin strategy unexpected',
+    p1: usesIp || !stable ? 'dhcp_ip_origin' : null,
+    originHost: host || null,
+    mdnsHealthOk: health.ok,
   })
 }
 
@@ -289,8 +293,8 @@ writeJson('smoke/network-failure-latest.json', report)
 
 const matrix = `# NETWORK_FAILURE_MATRIX
 
-**run:** \`${RUN_ID}\`  
-**HEAD:** \`${report.head}\`  
+**run:** \`${RUN_ID}\`
+**HEAD:** \`${report.head}\`
 **verdict:** \`${report.verdict}\`
 
 | Case | Result | Injected | Recovery ms | Data loss | Auth | Notes |
