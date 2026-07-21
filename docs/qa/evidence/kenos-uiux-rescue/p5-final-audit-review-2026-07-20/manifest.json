@@ -1,0 +1,129 @@
+{
+  "capturedAt": "2026-07-21T00:48:56.633Z",
+  "purpose": "P5 Final Visual Audit — review batch",
+  "base": "http://127.0.0.1:5197",
+  "knives": "1–6 landed; audit-only shots",
+  "ownerReview": "NOT OPEN",
+  "shots": [
+    {
+      "id": "01-today-390",
+      "file": "01-today-390.png",
+      "viewport": "390x844",
+      "scheme": "light",
+      "layoutMode": null,
+      "path": "/"
+    },
+    {
+      "id": "02-today-768",
+      "file": "02-today-768.png",
+      "viewport": "768x1024",
+      "scheme": "light",
+      "layoutMode": null,
+      "path": "/"
+    },
+    {
+      "id": "03-today-1440",
+      "file": "03-today-1440.png",
+      "viewport": "1440x900",
+      "scheme": "light",
+      "layoutMode": null,
+      "path": "/"
+    },
+    {
+      "id": "04-today-1440-dark",
+      "file": "04-today-1440-dark.png",
+      "viewport": "1440x900",
+      "scheme": "dark",
+      "layoutMode": null,
+      "path": "/"
+    },
+    {
+      "id": "05-spaces-390",
+      "file": "05-spaces-390.png",
+      "viewport": "390x844",
+      "scheme": "light",
+      "layoutMode": null,
+      "path": "/spaces"
+    },
+    {
+      "id": "06-spaces-1440",
+      "file": "06-spaces-1440.png",
+      "viewport": "1440x900",
+      "scheme": "light",
+      "layoutMode": null,
+      "path": "/spaces"
+    },
+    {
+      "id": "07-continue-390",
+      "file": "07-continue-390.png",
+      "viewport": "390x844",
+      "scheme": "light",
+      "layoutMode": "layout-mobile",
+      "path": "/"
+    },
+    {
+      "id": "08-continue-768",
+      "file": "08-continue-768.png",
+      "viewport": "768x1024",
+      "scheme": "light",
+      "layoutMode": "layout-tablet",
+      "path": "/"
+    },
+    {
+      "id": "09-continue-1440",
+      "file": "09-continue-1440.png",
+      "viewport": "1440x900",
+      "scheme": "light",
+      "layoutMode": "layout-desktop",
+      "path": "/"
+    },
+    {
+      "id": "10-continue-1024-touch",
+      "file": "10-continue-1024-touch.png",
+      "viewport": "1024x768",
+      "scheme": "light",
+      "layoutMode": "layout-tablet-lg",
+      "path": "/"
+    },
+    {
+      "id": "11-continue-all-1440",
+      "file": "11-continue-all-1440.png",
+      "viewport": "1440x900",
+      "scheme": "light",
+      "layoutMode": "layout-desktop",
+      "path": "/"
+    },
+    {
+      "id": "12-today-offline-390",
+      "file": "12-today-offline-390.png",
+      "viewport": "390x844",
+      "scheme": "light",
+      "layoutMode": null,
+      "path": "/"
+    },
+    {
+      "id": "13-inbox-1440",
+      "file": "13-inbox-1440.png",
+      "viewport": "1440x900",
+      "scheme": "light",
+      "layoutMode": null,
+      "path": "/inbox"
+    },
+    {
+      "id": "14-states-matrix-1280",
+      "file": "14-states-matrix-1280.png",
+      "viewport": "1280x900",
+      "scheme": "light",
+      "layoutMode": null,
+      "path": "/uiux-states"
+    },
+    {
+      "id": "15-states-matrix-dark",
+      "file": "15-states-matrix-dark.png",
+      "viewport": "1280x900",
+      "scheme": "dark",
+      "layoutMode": null,
+      "path": "/uiux-states"
+    }
+  ]
+}

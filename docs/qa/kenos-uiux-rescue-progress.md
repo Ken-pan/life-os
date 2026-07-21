@@ -1,17 +1,18 @@
 # Kenos Visual Quality Rescue — progress
 
-| Track | Status |
-| ----- | ------ |
-| Four-knife | Owner accepted structural wins |
-| Space Continuity (function) | **PASSED** · Planner / Fitness / Isolation **VALIDATED** |
-| Annotation / evidence binding | Closed in `…T20-12-22-998Z` |
-| Continuity Verification Sheet | Rebuilt from canonical run (not Owner Review) |
-| **P5 Visual Quality** | **IN_PROGRESS** — knives 1–6 DONE · Final Visual Audit next |
-| Owner Review | **NOT OPEN** |
+| Track                         | Status                                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------- |
+| Four-knife                    | Owner accepted structural wins                                                |
+| Space Continuity (function)   | **PASSED** · Planner / Fitness / Isolation **VALIDATED**                      |
+| Annotation / evidence binding | Closed in `…T20-12-22-998Z`                                                   |
+| Continuity Verification Sheet | Rebuilt from canonical run (not Owner Review)                                 |
+| **P5 Visual Quality**         | **PASSED** (Final Audit) · Owner Review still blocked by HEAD Continuity HOLD |
+| Owner Review                  | **NOT OPEN**                                                                  |
 
 ```text
-KENOS OVERALL CONTINUITY GATE — PASSED
-KENOS UIUX VISUAL QUALITY — IN_PROGRESS
+KENOS OVERALL CONTINUITY GATE — PASSED (canonical …T20-12-22-998Z)
+KENOS UIUX VISUAL QUALITY — PASSED
+CURRENT-HEAD CONTINUITY REGRESSION — HOLD
 OWNER REVIEW — NOT OPEN
 ```
 
@@ -34,11 +35,11 @@ OWNER REVIEW — NOT OPEN
 - Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife2-sheet-hierarchy/` (`manifest-r2.json` = canonical)
 - Continuity regression: **PASSED** (`…T21-30-25-542Z`, not new functional canonical)
 
-**No READY_FOR_OWNER_REVIEW. No overall visual PASS.**
+**No READY_FOR_OWNER_REVIEW from Knife 2 alone.**
 
 ## P5 knife 3 — iPad adaptive material & interaction mode
 
-- Status: **DONE** — overall P5 Visual still **IN_PROGRESS**
+- Status: **DONE**
 - Mode core: `continueOverlayMode.core.js` — width + `(pointer: fine)` + `(hover: hover)` (no UA)
 - Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife3-ipad-material/`
 - Continuity regression: **PASSED** (`…T21-52-46-113Z`)
@@ -73,16 +74,23 @@ OWNER REVIEW — NOT OPEN
 
 ## P5 knife 6 — complete product states
 
-- Status: **PASS** (Owner Review still **NOT OPEN**; Visual still **IN_PROGRESS** — needs Final Audit)
+- Status: **PASS WITH ONE HOLD** (UI PASS; HEAD Continuity E2E environment HOLD — see Final Audit)
 - Loading skeletons · empty copy · offline low-noise banner · expired Continue + dismiss · launch debounce
 - Copy sanitization (no demo/entity/route leaks in Continue detail)
 - prefers-reduced-motion · Escape close · 200% zoom probe · light/dark matrix fixtures
 - Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife6-complete-states/` (`manifest.json` PASS)
 - Capture: `node scripts/qa/kenos-knife6-complete-states-capture.mjs --port 5197`
 - Continuity contracts/testids **unchanged**; functional canonical remains `…T20-12-22-998Z`
-- Residual: full Continuity E2E against local preview can PARTIAL (domain sync); not a Knife 6 UI fail
+
+## P5 Final Visual Audit — 2026-07-20/21
+
+- Status: **DONE** (audit-only) — verdict **B**
+- `VISUAL QUALITY: PASSED` · `CURRENT-HEAD REGRESSION: HOLD` · `READY_FOR_OWNER_REVIEW: NO`
+- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-final-audit-review-2026-07-20/`
+- PARTIAL Continuity on HEAD classified **environment/fixture** (`sync.js` fetch / fitness set2), not Knife 6 UI; isolation VALIDATED
+- Next: re-run Continuity E2E on healthy planner+fitness runtime → only then consider Owner Review
 
 ## Still open (later)
 
-- **P5 Final Visual Audit** (audit-only) → then possibly `READY_FOR_OWNER_REVIEW`
-- Do **not** open Owner Review from Knife 6 alone
+- Clear **CURRENT-HEAD Continuity HOLD** (Planner + Fitness restore smoke PASS)
+- Do **not** open Owner Review on visual PASS alone

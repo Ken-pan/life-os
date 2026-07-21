@@ -1,0 +1,94 @@
+{
+  "auditId": "p5-final-visual-audit-2026-07-20",
+  "auditedAt": "2026-07-21T01:15:00.000Z",
+  "mode": "audit-only",
+  "head": "37d3af2b980c2d8466ab9865ea578702fd7a4782",
+  "knife6": "37d3af2b9",
+  "worktreeClean": false,
+  "previewBase": "http://127.0.0.1:5197",
+  "functionalCanonical": "continuity-e2e-2026-07-20T20-12-22-998Z",
+  "currentHeadRuns": [
+    "continuity-e2e-2026-07-21T00-40-41-010Z",
+    "continuity-e2e-2026-07-21T00-41-43-233Z"
+  ],
+  "verdict": {
+    "visualQuality": "PASSED",
+    "currentHeadRegression": "HOLD",
+    "readyForOwnerReview": false,
+    "form": "B"
+  },
+  "knives": {
+    "1": { "status": "PASS", "evidence": "p5-switcher-hairline" },
+    "2": {
+      "status": "PASS",
+      "evidence": "p5-knife2-sheet-hierarchy/manifest-r2.json",
+      "note": "anchored desktop canonical; early centered superseded"
+    },
+    "3": { "status": "PASS", "evidence": "p5-knife3-ipad-material" },
+    "4": { "status": "PASS", "evidence": "p5-knife4-domain-identity" },
+    "5": { "status": "PASS", "evidence": "p5-knife5-today-rhythm" },
+    "6": {
+      "status": "PASS_WITH_ONE_HOLD",
+      "evidence": "p5-knife6-complete-states",
+      "hold": "current-HEAD continuity PARTIAL classified environment"
+    }
+  },
+  "surfaces": {
+    "today": "PASS",
+    "spaces": "PASS",
+    "continue": "PASS",
+    "inbox": "PASS_WITH_REVIEW"
+  },
+  "viewportsChecked": [
+    "390x844",
+    "430x932",
+    "768x1024",
+    "1024x768-touch",
+    "1280x800",
+    "1440x900",
+    "1440x900-dark",
+    "200pct-zoom-probe"
+  ],
+  "a11yProbes": {
+    "keyboardOpen": "PASS",
+    "escapeClose": "PASS",
+    "focusReturn": "PASS",
+    "focusVisible": "PASS",
+    "dialogName": "PASS",
+    "offlineBanner": "PASS",
+    "reducedMotionOpen": "PASS",
+    "zoom200": "PASS"
+  },
+  "unitTestsAtAudit": {
+    "files": [
+      "spaceSwitcher.core.test.js",
+      "productStates.core.test.js",
+      "continueOverlayMode.core.test.js",
+      "continueOverlayAnchor.core.test.js",
+      "domainIdentity.core.test.js"
+    ],
+    "pass": 34,
+    "fail": 0
+  },
+  "blockers": [],
+  "residuals": [
+    "P2-desktop-row-sparsity",
+    "P2-inbox-admin-table-feel",
+    "P2-dark-metadata-human-squint",
+    "P3-state-matrix-not-product-surface"
+  ],
+  "regressionHoldReason": "Planner/Fitness Continuity not VALIDATED on current HEAD; PARTIAL runs explained as environment/fixture failures but do not equal PASS",
+  "artifacts": {
+    "auditMd": "P5_FINAL_VISUAL_AUDIT.md",
+    "regressionReport": "CURRENT_HEAD_REGRESSION_REPORT.md",
+    "blockers": "BLOCKERS.md",
+    "residuals": "RESIDUAL_ISSUES.md",
+    "screenshotManifest": "SCREENSHOT_MANIFEST.md",
+    "boards": [
+      "boards/p5-audit-01-today-spaces.png",
+      "boards/p5-audit-02-continue.png",
+      "boards/p5-audit-03-inbox-states.png"
+    ],
+    "probes": "audit-probes/probe-results.json"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "run_id": "continuity-e2e-2026-07-21T00-40-41-010Z",
+  "finishedAt": "2026-07-21T00:40:49.745Z",
+  "testCommand": "node scripts/qa/kenos-space-continuity-e2e-flows.mjs",
+  "environment": {
+    "aios": "http://127.0.0.1:5197",
+    "planner": "http://127.0.0.1:5188",
+    "fitness": "http://127.0.0.1:5190",
+    "mode": "vite-dev"
+  },
+  "accounts": {
+    "A": {
+      "email": "334452284ken@gmail.com",
+      "authUid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "authUidShort": "c42e"
+    },
+    "B": {
+      "email": "pettimes666666@gmail.com",
+      "authUid": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "authUidShort": "68fe"
+    }
+  },
+  "entities": {
+    "taskId": "kenos-cont-mrtxgbhv",
+    "taskTitleSeed": "Continuity Planner Test 1T00-40-41-010Z",
+    "taskTitleMutated": "Continuity Planner MUT 0-40-41-010Z",
+    "exerciseId": "c_fly",
+    "dayId": "chest",
+    "date": "2026-07-21"
+  },
+  "stamps": {
+    "contract": "IMPLEMENTED",
+    "plannerEntityRestore": "NOT_PROVEN",
+    "plannerContinuity": "NOT_YET_VALIDATED",
+    "fitnessContinuity": "NOT_YET_VALIDATED",
+    "accountIsolation": "PARTIAL",
+    "visualQuality": "IN_PROGRESS",
+    "ownerReview": "NOT_OPEN",
+    "overallContinuityGate": "NOT_PASSED"
+  },
+  "assertions": {
+    "reloadSeesTask": null,
+    "reloadSeesMutated": null,
+    "reloginSeesMutated": null,
+    "kenosSeesMutatedTitle": null,
+    "mutationPersisted": null,
+    "adminWriteUsed": null,
+    "fitnessDbDone": null,
+    "fitnessColdSet3": null,
+    "fitnessColdNoPinSet3": null
+  },
+  "screenshotBindings": [
+    {
+      "filename": "ZZ-error.png",
+      "step_id": "ZZ-error",
+      "run_id": "continuity-e2e-2026-07-21T00-40-41-010Z",
+      "browser_context_id": "ctx-A-browser-context@15372012bc6e0aa1fb97bca855c47c0f",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-21T00:40:49.687Z",
+      "page_url": "about:blank",
+      "asserted_state": null,
+      "sha256": "fb32313e11bc8ffbd5310a1660e630b64cedb4622f8462a5eae2d5464ac8279e"
+    }
+  ],
+  "blockers": [
+    "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5188/\nCall log:\n  - navigating to \"http://127.0.0.1:5188/\", waiting until \"domcontentloaded\"\n\n    at gotoReady (/Users/kenpan/「Projects」/life-os/scripts/qa/kenos-space-continuity-e2e-flows.mjs:84:14)\n    at injectAuth (/Users/kenpan/「Projects」/life-os/scripts/qa/kenos-space-continuity-e2e-flows.mjs:96:9)\n    at main (/Users/kenpan/「Projects」/life-os/scripts/qa/kenos-space-continuity-e2e-flows.mjs:458:11)"
+  ]
+}

@@ -1,0 +1,205 @@
+{
+  "probes": [
+    {
+      "id": "desktop-today-metrics-100",
+      "ok": true,
+      "detail": {
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "sidebarW": 240,
+        "mainW": 1189,
+        "contentColW": 1100,
+        "contentColX": 285,
+        "h1": {
+          "size": "36px",
+          "weight": "680"
+        },
+        "rightGutter": 56
+      }
+    },
+    {
+      "id": "desktop-today-zoom200",
+      "ok": true,
+      "detail": {
+        "continuePresent": true,
+        "scrollH": 1800,
+        "innerH": 900
+      }
+    },
+    {
+      "id": "continue-escape-focus",
+      "ok": true,
+      "detail": {
+        "open": true,
+        "closed": true,
+        "focusBack": "kenos-today-continue",
+        "focusRing": {
+          "activeTestId": "kenos-space-switcher-close",
+          "outline": "color(srgb 0.0509804 0.0509804 0.0509804 / 0.55) solid 2px",
+          "boxShadow": "none"
+        }
+      }
+    },
+    {
+      "id": "dark-contrast-samples",
+      "ok": true,
+      "detail": {
+        "samples": [
+          {
+            "sel": "h1",
+            "text": "Today",
+            "ratio": 13.63,
+            "fg": [
+              236,
+              236,
+              236
+            ],
+            "bg": [
+              33,
+              33,
+              33
+            ],
+            "size": "36px"
+          },
+          {
+            "sel": "aside a",
+            "text": "Today",
+            "ratio": 13.14,
+            "fg": [
+              236,
+              236,
+              236
+            ],
+            "bg": [
+              36,
+              36,
+              36
+            ],
+            "size": "14px"
+          },
+          {
+            "sel": "aside a",
+            "text": "Assistant",
+            "ratio": 13.63,
+            "fg": [
+              236,
+              236,
+              236
+            ],
+            "bg": [
+              33,
+              33,
+              33
+            ],
+            "size": "14px"
+          },
+          {
+            "sel": "[data-testid=\"kenos-today-continue\"]",
+            "text": "继续刚才的事",
+            "ratio": 13.63,
+            "fg": [
+              236,
+              236,
+              236
+            ],
+            "bg": [
+              33,
+              33,
+              33
+            ],
+            "size": "13px"
+          },
+          {
+            "sel": ".section-kicker, .eyebrow, .muted",
+            "text": "现在",
+            "ratio": 4.98,
+            "fg": [
+              143,
+              143,
+              143
+            ],
+            "bg": [
+              33,
+              33,
+              33
+            ],
+            "size": "13px"
+          },
+          {
+            "sel": ".section-kicker, .eyebrow, .muted",
+            "text": "需要你",
+            "ratio": 4.98,
+            "fg": [
+              143,
+              143,
+              143
+            ],
+            "bg": [
+              33,
+              33,
+              33
+            ],
+            "size": "13px"
+          }
+        ],
+        "weakUnder45": [],
+        "railPresent": false
+      }
+    },
+    {
+      "id": "mobile-continue-sheet-prm",
+      "ok": true,
+      "detail": {
+        "open": true,
+        "top": 365,
+        "height": 462,
+        "width": 337,
+        "className": "switcher svelte-17rd7at",
+        "role": null,
+        "label": null
+      }
+    },
+    {
+      "id": "offline-banner",
+      "ok": true,
+      "detail": {
+        "hasOfflineCopy": true,
+        "snippet": "当前离线 · 显示已缓存内容；恢复网络后将自动重试"
+      }
+    },
+    {
+      "id": "tablet-lg-continue-layout",
+      "ok": true,
+      "detail": {
+        "x": 211,
+        "y": 167,
+        "w": 602,
+        "h": 477,
+        "centeredish": true,
+        "className": "switcher svelte-17rd7at"
+      }
+    },
+    {
+      "id": "desktop-spaces-metrics",
+      "ok": true,
+      "detail": {
+        "route": "/spaces",
+        "contentW": 1100,
+        "rightGutter": 56,
+        "h1": "Spaces"
+      }
+    },
+    {
+      "id": "desktop-inbox-metrics",
+      "ok": true,
+      "detail": {
+        "route": "/inbox",
+        "contentW": 1100,
+        "rightGutter": 56,
+        "h1": "Inbox"
+      }
+    }
+  ]
+}

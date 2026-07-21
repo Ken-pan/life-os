@@ -1,0 +1,85 @@
+{
+  "run_id": "continuity-e2e-2026-07-21T00-40-41-010Z",
+  "startedAt": "2026-07-21T00:40:41.012Z",
+  "accounts": {
+    "A": {
+      "id": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "email": "334452284ken@gmail.com"
+    },
+    "B": {
+      "id": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "email": "pettimes666666@gmail.com"
+    }
+  },
+  "entityIds": {
+    "taskId": "kenos-cont-mrtxgbhv",
+    "exerciseId": "c_fly",
+    "dayId": "chest",
+    "date": "2026-07-21"
+  },
+  "stamps": {
+    "flowA": "NOT_YET_VALIDATED",
+    "flowB": "NOT_YET_VALIDATED",
+    "accountIsolation": "PARTIAL"
+  },
+  "blockers": [
+    "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5188/\nCall log:\n  - navigating to \"http://127.0.0.1:5188/\", waiting until \"domcontentloaded\"\n\n    at gotoReady (/Users/kenpan/「Projects」/life-os/scripts/qa/kenos-space-continuity-e2e-flows.mjs:84:14)\n    at injectAuth (/Users/kenpan/「Projects」/life-os/scripts/qa/kenos-space-continuity-e2e-flows.mjs:96:9)\n    at main (/Users/kenpan/「Projects」/life-os/scripts/qa/kenos-space-continuity-e2e-flows.mjs:458:11)"
+  ],
+  "steps": [
+    {
+      "ts": "2026-07-21T00:40:46.743Z",
+      "step": "auth.sessions",
+      "A": "334452284ken@gmail.com",
+      "B": "pettimes666666@gmail.com"
+    },
+    {
+      "ts": "2026-07-21T00:40:47.318Z",
+      "step": "db.seed.planner_task",
+      "taskId": "kenos-cont-mrtxgbhv"
+    },
+    {
+      "ts": "2026-07-21T00:40:49.567Z",
+      "step": "db.before.isolation",
+      "A_rows": 1,
+      "B_rows": 0,
+      "A_error": null,
+      "B_error": null,
+      "A_title": "Continuity Planner Test 1T00-40-41-010Z"
+    },
+    {
+      "ts": "2026-07-21T00:40:49.684Z",
+      "step": "flowA.start"
+    },
+    {
+      "ts": "2026-07-21T00:40:49.687Z",
+      "step": "error",
+      "message": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5188/\nCall log:\n  - navigating to \"http://127.0.0.1:5188/\", waiting until \"domcontentloaded\"\n"
+    }
+  ],
+  "db": {
+    "before": {
+      "A_rows": 1,
+      "B_rows": 0,
+      "A_error": null,
+      "B_error": null,
+      "A_title": "Continuity Planner Test 1T00-40-41-010Z"
+    }
+  },
+  "network": [],
+  "finishedAt": "2026-07-21T00:40:49.745Z",
+  "screenshotBindings": [
+    {
+      "filename": "ZZ-error.png",
+      "step_id": "ZZ-error",
+      "run_id": "continuity-e2e-2026-07-21T00-40-41-010Z",
+      "browser_context_id": "ctx-A-browser-context@15372012bc6e0aa1fb97bca855c47c0f",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-21T00:40:49.687Z",
+      "page_url": "about:blank",
+      "asserted_state": null,
+      "sha256": "fb32313e11bc8ffbd5310a1660e630b64cedb4622f8462a5eae2d5464ac8279e"
+    }
+  ]
+}

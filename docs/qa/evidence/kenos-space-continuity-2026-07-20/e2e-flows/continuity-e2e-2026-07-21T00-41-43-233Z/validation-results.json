@@ -1,0 +1,163 @@
+{
+  "run_id": "continuity-e2e-2026-07-21T00-41-43-233Z",
+  "finishedAt": "2026-07-21T00:44:29.427Z",
+  "testCommand": "node scripts/qa/kenos-space-continuity-e2e-flows.mjs",
+  "environment": {
+    "aios": "http://127.0.0.1:5197",
+    "planner": "http://127.0.0.1:5188",
+    "fitness": "http://127.0.0.1:5190",
+    "mode": "vite-dev"
+  },
+  "accounts": {
+    "A": {
+      "email": "334452284ken@gmail.com",
+      "authUid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "authUidShort": "c42e"
+    },
+    "B": {
+      "email": "pettimes666666@gmail.com",
+      "authUid": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "authUidShort": "68fe"
+    }
+  },
+  "entities": {
+    "taskId": "kenos-cont-mrtxhnia",
+    "taskTitleSeed": "Continuity Planner Test 1T00-41-43-233Z",
+    "taskTitleMutated": "Continuity Planner MUT 0-41-43-233Z",
+    "exerciseId": "c_fly",
+    "dayId": "chest",
+    "date": "2026-07-21"
+  },
+  "stamps": {
+    "contract": "IMPLEMENTED",
+    "plannerEntityRestore": "VALIDATED",
+    "plannerContinuity": "PARTIAL",
+    "fitnessContinuity": "PARTIAL",
+    "accountIsolation": "VALIDATED",
+    "visualQuality": "IN_PROGRESS",
+    "ownerReview": "NOT_OPEN",
+    "overallContinuityGate": "NOT_PASSED"
+  },
+  "assertions": {
+    "reloadSeesTask": null,
+    "reloadSeesMutated": null,
+    "reloginSeesMutated": null,
+    "kenosSeesMutatedTitle": null,
+    "mutationPersisted": null,
+    "adminWriteUsed": null,
+    "fitnessDbDone": null,
+    "fitnessColdSet3": null,
+    "fitnessColdNoPinSet3": null
+  },
+  "screenshotBindings": [
+    {
+      "filename": "A01-planner-task-seed-open.png",
+      "step_id": "A01",
+      "run_id": "continuity-e2e-2026-07-21T00-41-43-233Z",
+      "browser_context_id": "ctx-A-browser-context@8b8584907027dc2256f0d30e98b697b9",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-21T00:42:11.228Z",
+      "page_url": "http://127.0.0.1:5188/upcoming?kenosTask=kenos-cont-mrtxhnia&kenosDetail=1",
+      "asserted_state": null,
+      "sha256": "f6f983b325fb74c550343805a23af8e380d03afdcfac8f1600de4217578ddd78"
+    },
+    {
+      "filename": "A02-planner-task-restored.png",
+      "step_id": "A02",
+      "run_id": "continuity-e2e-2026-07-21T00-41-43-233Z",
+      "browser_context_id": "ctx-A-browser-context@8b8584907027dc2256f0d30e98b697b9",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-21T00:42:11.261Z",
+      "page_url": "http://127.0.0.1:5188/upcoming?kenosTask=kenos-cont-mrtxhnia&kenosDetail=1",
+      "asserted_state": null,
+      "sha256": "08d4eca9c72c561dac3c6c6fc8c44e2a89047b60046be3f52737949b9ac09007"
+    },
+    {
+      "filename": "B01-fitness-focus-set1.png",
+      "step_id": "B01",
+      "run_id": "continuity-e2e-2026-07-21T00-41-43-233Z",
+      "browser_context_id": "ctx-A-browser-context@8b8584907027dc2256f0d30e98b697b9",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-21T00:42:43.900Z",
+      "page_url": "http://127.0.0.1:5190/day/chest/focus?kenosEx=c_fly&kenosSet=1",
+      "asserted_state": null,
+      "sha256": "1c94b677f901a5d3190184f1247a730fe2d7d83b52b48cc6d7c6cc6b75fc3c18"
+    },
+    {
+      "filename": "B01b-fitness-after-set1.png",
+      "step_id": "B01b",
+      "run_id": "continuity-e2e-2026-07-21T00-41-43-233Z",
+      "browser_context_id": "ctx-A-browser-context@8b8584907027dc2256f0d30e98b697b9",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-21T00:43:05.352Z",
+      "page_url": "http://127.0.0.1:5190/day/chest/focus?kenosEx=c_fly&kenosSet=1",
+      "asserted_state": null,
+      "sha256": "a2182d2e2a68283a2b1867665991fbc6cfb01bae9e0babf71ce40e05751ea94f"
+    },
+    {
+      "filename": "B02-UNEXPECTED-not-set2-cta.png",
+      "step_id": "B02",
+      "run_id": "continuity-e2e-2026-07-21T00-41-43-233Z",
+      "browser_context_id": "ctx-A-browser-context@8b8584907027dc2256f0d30e98b697b9",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-21T00:44:27.673Z",
+      "page_url": "http://127.0.0.1:5190/day/chest/focus?kenosEx=c_fly&kenosSet=2",
+      "asserted_state": "FAIL nextSet=null",
+      "sha256": "38f4a916837509911a64dc544b294c3e0ec59fb71a077fb9e11b14368123c4a6"
+    },
+    {
+      "filename": "C01-continue-account-A.png",
+      "step_id": "C01",
+      "run_id": "continuity-e2e-2026-07-21T00-41-43-233Z",
+      "browser_context_id": "ctx-A-browser-context@8b8584907027dc2256f0d30e98b697b9",
+      "auth_uid": "c2831538-94b0-4a57-b034-5e873a53c42e",
+      "auth_uid_short": "…c42e",
+      "account_label": "A",
+      "timestamp": "2026-07-21T00:44:28.092Z",
+      "page_url": "http://127.0.0.1:5197/",
+      "asserted_state": null,
+      "sha256": "2e08baf3a00127230f42a55a10b078872c824cac052d83c0080772233da63c3b"
+    },
+    {
+      "filename": "C02-continue-account-B.png",
+      "step_id": "C02",
+      "run_id": "continuity-e2e-2026-07-21T00-41-43-233Z",
+      "browser_context_id": "ctx-B-browser-context@09673d9f51152d938fb845836cff76ce",
+      "auth_uid": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "auth_uid_short": "…68fe",
+      "account_label": "B",
+      "timestamp": "2026-07-21T00:44:28.670Z",
+      "page_url": "http://127.0.0.1:5197/",
+      "asserted_state": null,
+      "sha256": "f4b528050507e7d6fd3bea22e5bf80f39010b127a60ea0668f9f5495ee17a47f"
+    },
+    {
+      "filename": "C03-continue-after-switch-A-to-B.png",
+      "step_id": "C03",
+      "run_id": "continuity-e2e-2026-07-21T00-41-43-233Z",
+      "browser_context_id": "ctx-B-switch-browser-context@8b8584907027dc2256f0d30e98b697b9",
+      "auth_uid": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+      "auth_uid_short": "…68fe",
+      "account_label": "B",
+      "timestamp": "2026-07-21T00:44:28.897Z",
+      "page_url": "http://127.0.0.1:5197/",
+      "asserted_state": "account-switch shared-physical-ctx",
+      "sha256": "5234dc83f21069287d642c57e286479c6851e63c6fd27a931921db59d894e96b"
+    }
+  ],
+  "blockers": [
+    "Flow A: #task-title missing — cannot UI-mutate",
+    "B02 precondition failed: onSet2=false ctaVisible=false cta=\"\"",
+    "Fitness Focus Continue missing"
+  ]
+}
