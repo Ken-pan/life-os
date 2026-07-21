@@ -4,9 +4,8 @@
 
 ## Optional soft residuals
 
-- Optional: plug **17 Pro USB** so `idevicescreenshot` can capture native Continue / Quick Switch chrome (Wi‑Fi CoreDevice launch already PASS).
-
-- Full Dynamic Type / VoiceOver OS Settings sweep
+- Optional: plug **17 Pro USB** + unlock so `scripts/kenos-ios-daily-beta/wait-usb-native-shot.sh` can capture `04-ios-native-shell.png` (Wi‑Fi CoreDevice launch already PASS).
+- Full Dynamic Type / VoiceOver OS Settings sweep (Focus timer font now scales; OS Settings still manual)
 - Wi‑Fi↔Cellular mid-session
 - Replace LAN-DEPENDENT Mac origin with phone-reachable Owner canary when ready
 

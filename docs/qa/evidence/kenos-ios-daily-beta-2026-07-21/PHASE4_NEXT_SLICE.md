@@ -23,6 +23,14 @@
   - `statusReport.phase4 = EXIT_OPEN`
 - Swift Testing: 2 new tests PASS (`swift test` in KenosClient)
 
+### 3. IA model lock + web/native Continue chrome (post-READY)
+
+- Canonical: `docs/qa/kenos-ios-ia-model-2026-07-21.md`
+- Native: Continue / Switch Space / Quick Switch modes + Live Accessory (`72e5ba6c9`)
+- Web AIOS parity: `continueRecent` / `switchSpace` / `quickSwitch` + SystemBar 44px (`886994baf` → `ac1101604`)
+- LAN Web verify PASS; native unlock launch **PASS_LAUNCH_NO_USB_SHOT** (PNG needs USB)
+- Soft DT: Focus timer uses `KenosTypography.display` (scales) — OS Settings sweep still open
+
 ## Still Owner / distribution gated
 
 | Gate | Status |
@@ -33,11 +41,13 @@
 | TestFlight / App Store | OPEN |
 | Watch/macOS cross-device shared state via App Group | OPEN (needs suite) |
 | Phone-reachable canary replacing LAN-DEPENDENT | OPEN |
+| USB screenshot of native Continue chrome | OPEN (optional soft) |
 
 ## Honesty
 
 ```text
 IOS PERSONAL DAILY BETA: READY (LAN-DEPENDENT)
+IA MODEL: LOCKED (native + web Continue modes)
 PHASE 4: EXIT_OPEN
 APP GROUP: LOCAL_FOUNDATION_ONLY
 ```

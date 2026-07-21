@@ -353,8 +353,10 @@ struct FocusSessionView: View {
                     .foregroundStyle(.secondary)
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     Text(KenosFocusStore.formatDuration(model.focusStore.elapsedSeconds(at: context.date)))
-                        .font(.system(size: 44, weight: .medium, design: .rounded))
+                        .font(KenosTypography.display)
                         .monospacedDigit()
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
                         .accessibilityIdentifier("kenos.focus.timer")
                 }
                 Text(statusLabel(focus.status))

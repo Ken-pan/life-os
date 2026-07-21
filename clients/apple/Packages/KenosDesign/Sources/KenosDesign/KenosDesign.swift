@@ -29,6 +29,8 @@ public enum KenosTypography {
     public static let headline = Font.headline
     public static let body = Font.body
     public static let caption = Font.caption
+    /// Focus / hero numerals — scales with Dynamic Type (no fixed pt).
+    public static let display = Font.system(.largeTitle, design: .rounded).weight(.medium)
 }
 
 public struct KenosStatusBanner: View {
