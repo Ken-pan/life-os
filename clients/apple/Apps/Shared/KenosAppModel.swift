@@ -15,7 +15,7 @@ import KenosStore
 
 @MainActor
 final class KenosAppModel: ObservableObject {
-    /// System top-level IA: Today · Assistant · Spaces · Inbox
+    /// System top-level IA: Spaces (leading) + Today · Assistant · Inbox · Settings capsule.
     enum Tab: String, CaseIterable, Identifiable {
         case today, assistant, spaces, inbox
         var id: String { rawValue }
@@ -59,6 +59,30 @@ final class KenosAppModel: ObservableObject {
     @Published var showSettingsSheet = false
     /// Daily Beta Continuity: Plan / Training load in-app WKWebView (not Safari).
     @Published var continuityURL: URL?
+    /// Shell Navigation v2 — Kenos hall vs Domain dock vs Focus (Focus still uses root branch).
+    @Published var shellMode: ShellMode = .kenos
+    /// Tab to restore when Domain dock slot 1 (Kenos) is tapped.
+    @Published var previousKenosTab: Tab = .today
+    /// Active domain dock slot (0 = Kenos).
+    @Published var domainDockSlot: Int = 1
+    /// Space Shelf (Stage Manager–like) — Domain Mode only.
+    @Published var showSpaceShelf = false
+    /// Domain More sheet (Search / History / secondary — not on dock).
+    @Published var showDomainMoreSheet = false
+    /// Unsaved Domain draft — confirm before leaving Continuity.
+    @Published var showDomainLeaveConfirm = false
+    @Published var domainLeaveSummary = ""
+    private var pendingDomainLeaveAction: (() -> Void)?
+
+    /// Persist last Domain Continuity for cold restore (NOT used by `kenos://shelf`).
+    /// (`devicectl --terminate-existing` / memory kill). See SwiftUI state restoration patterns.
+    private static let lastDomainURLKey = "kenos.lastDomainContinuityURL"
+
+    enum ShellMode: Equatable {
+        case kenos
+        case domain
+        case focus
+    }
 
     enum SpaceChromeMode: String, Equatable {
         /// Recent resumes + recent Spaces only (Things-style Continue).
@@ -96,28 +120,23 @@ final class KenosAppModel: ObservableObject {
         }
     }
 
-    /// Seven-domain catalog. Daily Beta uses phone-reachable LAN origins for Plan/Training.
+    /// Domain catalog from `KenosDomainRegistry` (SSOT twin of domainIntegration.core.js).
     static var spaceCatalog: [SpaceCatalogEntry] {
-        let planURL: URL
-        let trainingURL: URL
-        if KenosDailyBetaConfig.isEnabled {
-            planURL = KenosDailyBetaConfig.plannerOrigin
-            trainingURL = KenosDailyBetaConfig.fitnessOrigin
-        } else {
-            planURL = URL(string: "https://planner.kenos.space")!
-            trainingURL = URL(string: "https://fitness.kenos.space")!
+        KenosDomainRegistry.shelfDomainDefinitions.compactMap { def in
+            // Paper has no in-repo app origin yet — keep shelf card via hosted fallback path.
+            if def.id == "paper" {
+                let url = KenosDomainRegistry.homeURL(for: "paper")
+                    ?? KenosDailyBetaConfig.pathURL(def.homePath)
+                return .init(id: def.id, title: def.label, subtitle: def.subtitle, kind: .external(url))
+            }
+            guard let url = KenosDomainRegistry.homeURL(for: def.id) else {
+                if def.id == "work" {
+                    return .init(id: def.id, title: def.label, subtitle: def.subtitle, kind: .hosted(.work))
+                }
+                return .init(id: def.id, title: def.label, subtitle: def.subtitle, kind: .comingSoon)
+            }
+            return .init(id: def.id, title: def.label, subtitle: def.subtitle, kind: .external(url))
         }
-        return [
-            .init(id: "work", title: "Work", subtitle: "Projects and decisions", kind: .hosted(.work)),
-            .init(id: "plan", title: "Plan", subtitle: "Tasks and schedule", kind: .external(planURL)),
-            .init(id: "training", title: "Training", subtitle: "Fitness workouts", kind: .external(trainingURL)),
-            .init(id: "money", title: "Money", subtitle: "Finance decisions", kind: .external(URL(string: "https://finance.kenos.space")!)),
-            .init(id: "music", title: "Music", subtitle: "Library and playback", kind: .external(URL(string: "https://music.kenos.space")!)),
-            .init(id: "home", title: "Home", subtitle: "Spaces and items", kind: .external(URL(string: "https://home.kenos.space")!)),
-            .init(id: "library", title: "Library", subtitle: "Knowledge vault", kind: .external(KenosDailyBetaConfig.isEnabled
-                ? KenosDailyBetaConfig.pathURL("/spaces/knowledge")
-                : URL(string: "https://portal.kenos.space")!)),
-        ]
     }
 
     /// Compatibility alias for older call sites / handoff reviews.
@@ -320,19 +339,44 @@ final class KenosAppModel: ObservableObject {
             }
             if KenosDailyBetaConfig.isEnabled {
                 switch host {
+                case "shelf", "spaces":
+                    // Spaces chip SSOT: open Space Shelf in current mode.
+                    // Do NOT restore last Domain — that yanked Kenos Mode back into Continuity.
+                    Task { @MainActor in
+                        try? await Task.sleep(nanoseconds: 80_000_000)
+                        openSpaceShelf()
+                    }
+                    return
+                case "quick-switch", "quickswitch", "search":
+                    openQuickSwitch()
+                    return
+                case "continue":
+                    openContinue()
+                    return
+                case "compose", "add":
+                    requestDomainCompose()
+                    return
+                case "return", "kenos":
+                    if shellMode == .domain {
+                        returnToKenosFromDomain()
+                    } else {
+                        navigateDailyBetaShell(path: "/")
+                    }
+                    return
                 case "today":
+                    if shellMode == .domain { returnToKenosFromDomain() }
                     navigateDailyBetaShell(path: "/")
                     return
                 case "assistant":
+                    if shellMode == .domain { returnToKenosFromDomain() }
                     navigateDailyBetaShell(path: "/assistant")
                     return
-                case "spaces":
-                    navigateDailyBetaShell(path: "/spaces")
-                    return
                 case "inbox":
+                    if shellMode == .domain { returnToKenosFromDomain() }
                     navigateDailyBetaShell(path: "/inbox")
                     return
                 case "settings":
+                    if shellMode == .domain { returnToKenosFromDomain() }
                     navigateDailyBetaShell(path: "/settings")
                     return
                 default:
@@ -540,20 +584,15 @@ final class KenosAppModel: ObservableObject {
     /// Continue / domain launch — single open, resume route when present & not expired.
     func continueSpace(listKey: String) {
         showSpaceSwitcher = false
+        let domainId = KenosDomainRegistry.canonicalize(listKey) ?? listKey
         let home: URL = {
-            switch listKey {
-            case "plan", "hosted:plan": return KenosDailyBetaConfig.isEnabled
-                ? KenosDailyBetaConfig.plannerOrigin
-                : URL(string: "https://planner.kenos.space")!
-            case "training", "hosted:training": return KenosDailyBetaConfig.isEnabled
-                ? KenosDailyBetaConfig.fitnessOrigin
-                : URL(string: "https://fitness.kenos.space")!
-            default:
-                if let entry = Self.spaceCatalog.first(where: { $0.id == listKey || "hosted:\($0.id)" == listKey }) {
-                    if case .external(let url) = entry.kind { return url }
-                }
-                return KenosDailyBetaConfig.kenOsOrigin
+            if let registryHome = KenosDomainRegistry.homeURL(for: domainId) {
+                return registryHome
             }
+            if let entry = Self.spaceCatalog.first(where: { $0.id == domainId || $0.id == listKey || "hosted:\($0.id)" == listKey }) {
+                if case .external(let url) = entry.kind { return url }
+            }
+            return KenosDailyBetaConfig.kenOsOrigin
         }()
         let url = spaceSwitcherStore.resolveOpenURL(listKey: listKey, homeURL: home)
         spaceSwitcherStore.touchRecentSpace(id: listKey)
@@ -567,28 +606,479 @@ final class KenosAppModel: ObservableObject {
         openExternalURL(url)
     }
 
-    /// Dismiss in-app Continuity and return to shell tabs.
+    /// Dismiss Domain Mode and return to Kenos tabs (previous context).
     func dismissContinuity() {
+        // Flip mode before clearing URL so RootView never paints Domain with a nil
+        // canvas (empty ink / white flash between Continuity and Kenos tabs).
+        shellMode = .kenos
+        showSpaceShelf = false
+        domainDockSlot = 0
+        selectedTab = previousKenosTab
         continuityURL = nil
+    }
+
+    func returnToKenosFromDomain() {
+        requestDomainLeave {
+            self.dismissContinuity()
+        }
+    }
+
+    func openSpaceShelf() {
+        showSpaceShelf = true
+        showSpaceSwitcher = false
+        warmDomainOriginsIfNeeded()
+    }
+
+    /// Lightweight TCP/TLS + HTTP cache warm for Plan/Training while shelf is open.
+    /// Does not create WKWebViews; destination still loads in Continuity surface.
+    private func warmDomainOriginsIfNeeded() {
+        #if os(iOS)
+        guard KenosDailyBetaConfig.isEnabled else { return }
+        let currentKey = continuityURL.map(KenosWebSurfaceView.originKey)
+        let candidates = [
+            KenosDailyBetaConfig.plannerOrigin,
+            KenosDailyBetaConfig.fitnessOrigin
+        ]
+        for origin in candidates {
+            if currentKey == KenosWebSurfaceView.originKey(origin) { continue }
+            var req = URLRequest(
+                url: origin,
+                cachePolicy: .returnCacheDataElseLoad,
+                timeoutInterval: 2.5
+            )
+            req.httpMethod = "GET"
+            URLSession.shared.dataTask(with: req) { _, _, _ in }.resume()
+        }
+        #endif
+    }
+
+    func dismissSpaceShelf() {
+        showSpaceShelf = false
+    }
+
+    /// Run `action` after Domain leave-guard passes (discard dirty draft if confirmed).
+    func requestDomainLeave(action: @escaping () -> Void) {
+        #if os(iOS)
+        guard shellMode == .domain else {
+            action()
+            return
+        }
+        KenosDomainWebBridge.probeLeave { probe in
+            if probe.dirty {
+                self.domainLeaveSummary = probe.summary
+                self.pendingDomainLeaveAction = action
+                self.showDomainLeaveConfirm = true
+            } else {
+                action()
+            }
+        }
+        #else
+        action()
+        #endif
+    }
+
+    func confirmDomainLeaveDiscard() {
+        #if os(iOS)
+        KenosDomainWebBridge.discardDraft {
+            let next = self.pendingDomainLeaveAction
+            self.pendingDomainLeaveAction = nil
+            self.showDomainLeaveConfirm = false
+            next?()
+        }
+        #else
+        showDomainLeaveConfirm = false
+        pendingDomainLeaveAction = nil
+        #endif
+    }
+
+    func cancelDomainLeave() {
+        pendingDomainLeaveAction = nil
+        showDomainLeaveConfirm = false
+    }
+
+    func requestDomainCompose() {
+        #if os(iOS)
+        KenosDomainWebBridge.openCompose()
+        #endif
+    }
+
+    /// Re-enter Domain Mode from the last Continuity URL (UserDefaults).
+    func restoreDomainIfNeeded() {
+        guard shellMode != .domain || continuityURL == nil else { return }
+        guard let raw = UserDefaults.standard.string(forKey: Self.lastDomainURLKey),
+              let url = URL(string: raw),
+              isDomainContinuityURL(url)
+        else { return }
+        previousKenosTab = selectedTab
+        continuityURL = url
+        shellMode = .domain
+        domainDockSlot = 0
+        syncDomainDockSlot(for: url)
+        showSpaceSwitcher = false
+        showSpaceShelf = false
+    }
+
+    private func persistDomainContinuity(_ url: URL?) {
+        if let url, isDomainContinuityURL(url) {
+            UserDefaults.standard.set(url.absoluteString, forKey: Self.lastDomainURLKey)
+        }
+    }
+
+    /// Public for Domain WKWebView SPA path sync.
+    func persistDomainContinuityPublic(_ url: URL) {
+        persistDomainContinuity(url)
+    }
+
+    /// Domain Mode display title from Continuity URL.
+    var domainSpaceId: String {
+        KenosDomainRegistry.domainId(fromContinuity: continuityURL)
+    }
+
+    var domainDisplayTitle: String {
+        KenosDomainRegistry.definition(for: domainSpaceId)?.label ?? "Space"
+    }
+
+    /// Brand accent per Space / Kenos Mode — dock selection + Space Shelf icons.
+    /// SSOT: domainIntegration.core.js / domainIdentity.core.js via KenosDomainRegistry.
+    static func accentColor(for spaceId: String) -> Color {
+        KenosDomainRegistry.accentColor(for: spaceId)
+    }
+
+    var domainAccent: Color {
+        Self.accentColor(for: domainSpaceId)
+    }
+
+    /// Dock selected tint — Domain uses active Space accent; Kenos Mode uses Kenos blue.
+    var dockSelectionAccent: Color {
+        shellMode == .domain ? domainAccent : Self.accentColor(for: "kenos")
+    }
+
+    struct DomainDockItem: Equatable {
+        var title: String
+        var systemImage: String
+        /// Relative path on domain origin (Domain Mode capsule).
+        var path: String? = nil
+        /// Kenos Mode capsule tab (nil for Settings action).
+        var kenosTab: Tab? = nil
+        /// Kenos Mode: opens settings sheet instead of a tab.
+        var opensSettings: Bool = false
+        /// Domain Mode: opens More sheet (Search / History / secondary).
+        var opensMore: Bool = false
+    }
+
+    /// Kenos Mode capsule — four items; leading chip is Spaces (opens Space Shelf).
+    var kenosCapsuleDockItems: [DomainDockItem] {
+        [
+            .init(title: "Today", systemImage: "sun.max", kenosTab: .today),
+            .init(title: "Assistant", systemImage: "bubble.left.and.bubble.right", kenosTab: .assistant),
+            .init(title: "Inbox", systemImage: "tray", kenosTab: .inbox),
+            .init(title: "Settings", systemImage: "gearshape", opensSettings: true),
+        ]
+    }
+
+    /// Domain capsule — max 4 slots (leading Kenos/Spaces chip makes 5 total).
+    /// Manifest SSOT: KenosDomainRegistry ← domainIntegration.core.js
+    var domainDockItems: [DomainDockItem] {
+        if let manifest = KenosDomainRegistry.navigationManifest(for: domainSpaceId) {
+            return manifest.slots.map {
+                .init(title: $0.title, systemImage: $0.systemImage, path: $0.path, opensMore: $0.opensMore)
+            }
+        }
+        return [
+            .init(title: "Home", systemImage: "house", path: "/"),
+            .init(title: "Browse", systemImage: "list.bullet", path: "/"),
+            .init(title: "Library", systemImage: "books.vertical", path: "/"),
+            .init(title: "More", systemImage: "ellipsis", opensMore: true),
+        ]
+    }
+
+    /// Secondary destinations for Domain More sheet (not on the dock).
+    var domainMoreDestinations: [(title: String, systemImage: String, path: String)] {
+        if let more = KenosDomainRegistry.navigationManifest(for: domainSpaceId)?.more, !more.isEmpty {
+            return more
+        }
+        return [("Home", "house", "/")]
+    }
+
+    /// Leading Spaces chip — **tap always toggles Space Shelf** (Kenos + Domain).
+    /// Never returns Home / Today; leave Domain via shelf “Back to Kenos” row.
+    func activateSpacesDockButton() {
+        if showSpaceShelf {
+            dismissSpaceShelf()
+        } else {
+            openSpaceShelf()
+        }
+    }
+
+    /// Legacy alias — same as Spaces chip.
+    func activateKenosDockButton() {
+        activateSpacesDockButton()
+    }
+
+    func openSpaceShelfFromDockLongPress() {
+        openSpaceShelf()
+    }
+
+    func openDomainMore() {
+        showDomainMoreSheet = true
+        showSpaceShelf = false
+    }
+
+    func selectDomainMorePath(_ path: String) {
+        showDomainMoreSheet = false
+        guard let base = continuityURL else { return }
+        var c = URLComponents(url: base, resolvingAgainstBaseURL: false) ?? URLComponents()
+        if let relative = URL(string: path, relativeTo: base)?.absoluteURL {
+            continuityURL = relative
+            persistDomainContinuity(relative)
+        } else {
+            let parts = path.split(separator: "?", maxSplits: 1).map(String.init)
+            c.path = parts.first ?? path
+            c.query = parts.count > 1 ? parts[1] : nil
+            c.fragment = nil
+            if let next = c.url {
+                continuityURL = next
+                persistDomainContinuity(next)
+            }
+        }
+        // Secondary paths are not capsule slots — leave More as the active chrome cue.
+        if let moreIdx = domainDockItems.firstIndex(where: \.opensMore) {
+            domainDockSlot = moreIdx
+        }
+    }
+
+    /// Enter Domain Mode with the Continuity URL. Always MainActor — WKWebView
+    /// callbacks can post off-main and leave Kenos dock stuck on screen.
+    @MainActor
+    func enterDomainMode(url: URL) {
+        // Already in Domain (Space↔Space): keep Kenos return tab; only swap URL.
+        if shellMode != .domain {
+            previousKenosTab = selectedTab
+        }
+        // Shelf should already be dismissed optimistically; never wait on web load.
+        showSpaceShelf = false
+        showSpaceSwitcher = false
+        showSettingsSheet = false
+        showDomainMoreSheet = false
+        continuityURL = url
+        persistDomainContinuity(url)
+        shellMode = .domain
+        domainDockSlot = 0
+        syncDomainDockSlot(for: url)
+    }
+
+    func selectKenosDockTab(_ tab: Tab) {
+        showSpaceShelf = false
+        showSettingsSheet = false
+        showDomainMoreSheet = false
+        selectedTab = tab
+    }
+
+    func selectDomainDockSlot(_ index: Int) {
+        guard domainDockItems.indices.contains(index) else { return }
+        let item = domainDockItems[index]
+        showSpaceShelf = false
+        if item.opensMore {
+            openDomainMore()
+            return
+        }
+        domainDockSlot = index
+        showDomainMoreSheet = false
+        guard let path = item.path,
+              let base = continuityURL
+        else { return }
+        var c = URLComponents(url: base, resolvingAgainstBaseURL: false) ?? URLComponents()
+        c.path = path
+        c.query = nil
+        c.fragment = nil
+        if let next = c.url {
+            continuityURL = next
+            persistDomainContinuity(next)
+        }
+    }
+
+    /// Highlight the Domain dock slot that matches the live WebView path.
+    func syncDomainDockSlot(for url: URL) {
+        let path = url.path.lowercased()
+        guard let match = domainDockItems.enumerated().first(where: { _, item in
+            guard let p = item.path?.lowercased() else { return false }
+            if p == "/" { return path == "/" || path.isEmpty }
+            return path == p || path.hasPrefix(p + "/")
+        }) else { return }
+        if domainDockSlot != match.offset {
+            domainDockSlot = match.offset
+        }
+    }
+
+    struct SpaceShelfCard: Identifiable, Equatable {
+        var id: String
+        var title: String
+        var subtitle: String
+        var relativeTime: String?
+        var isCurrent: Bool
+        /// Catalog / resume key — `"kenos"` for Kenos Mode home.
+        var listKey: String
+        var systemImage: String = "app"
+        var isKenos: Bool = false
+    }
+
+    /// Global app switcher: Kenos + full Life OS catalog (not recent-only).
+    var spaceShelfCards: [SpaceShelfCard] {
+        let inDomain = shellMode == .domain
+        let currentId = inDomain ? domainSpaceId : ""
+        let iso = ISO8601DateFormatter()
+
+        func resumeMeta(for spaceId: String) -> (subtitle: String, relative: String?) {
+            let matches = spaceSwitcherStore.resumeByListKey.filter { key, desc in
+                !desc.isExpired
+                    && (key == spaceId
+                        || key == "hosted:\(spaceId)"
+                        || key.contains(spaceId)
+                        || desc.spaceId == spaceId)
+            }
+            let best = matches
+                .map { ($0.key, $0.value) }
+                .sorted {
+                    let a = iso.date(from: $0.1.updatedAt) ?? .distantPast
+                    let b = iso.date(from: $1.1.updatedAt) ?? .distantPast
+                    return a > b
+                }
+                .first
+            guard let best else {
+                if inDomain, spaceId == currentId {
+                    return (Self.shelfSubtitle(for: continuityURL), "Now")
+                }
+                return (Self.spaceCatalog.first(where: { $0.id == spaceId })?.subtitle ?? spaceId, nil)
+            }
+            let when = iso.date(from: best.1.updatedAt)
+            let sub = best.1.displaySubtitle
+                ?? (inDomain && spaceId == currentId ? Self.shelfSubtitle(for: continuityURL) : best.1.displayTitle)
+            return (sub, when.map { relativeTimeString(from: $0) })
+        }
+
+        var cards: [SpaceShelfCard] = []
+
+        // 1) Kenos — first-class system home (current when not in Domain).
+        let kenosCurrent = !inDomain
+        cards.append(
+            SpaceShelfCard(
+                id: "kenos",
+                title: "Kenos",
+                subtitle: kenosCurrent
+                    ? previousKenosTab.title
+                    : "Today · Assistant · Inbox",
+                relativeTime: kenosCurrent ? "Now" : nil,
+                isCurrent: kenosCurrent,
+                listKey: "kenos",
+                systemImage: "circle.grid.2x2.fill",
+                isKenos: true
+            )
+        )
+
+        // 2) Full domain catalog — Plan, Training, Money, Music, Work, Home, Library…
+        for entry in Self.spaceCatalog {
+            let isCurrent = inDomain && (
+                entry.id == currentId
+                    || (currentId == "plan" && entry.id == "plan")
+                    || (currentId == "training" && entry.id == "training")
+            )
+            let meta = resumeMeta(for: entry.id)
+            cards.append(
+                SpaceShelfCard(
+                    id: entry.id,
+                    title: entry.title,
+                    subtitle: isCurrent ? Self.shelfSubtitle(for: continuityURL) : meta.subtitle,
+                    relativeTime: isCurrent ? (meta.relative ?? "Now") : meta.relative,
+                    isCurrent: isCurrent,
+                    listKey: entry.id,
+                    systemImage: Self.shelfSystemImage(for: entry.id),
+                    isKenos: false
+                )
+            )
+        }
+
+        return cards
+    }
+
+    private static func shelfSystemImage(for spaceId: String) -> String {
+        KenosDomainRegistry.definition(for: spaceId)?.systemImage ?? "app"
+    }
+
+    func openShelfCard(_ card: SpaceShelfCard) {
+        if card.isKenos || card.listKey == "kenos" {
+            if shellMode == .domain {
+                // Optimistic: dismiss shelf immediately; leave-guard may still confirm.
+                // Dirty drafts show the alert over Continuity (not a stuck-open shelf).
+                showSpaceShelf = false
+                requestDomainLeave {
+                    self.dismissContinuity()
+                }
+            } else {
+                showSpaceShelf = false
+            }
+            return
+        }
+        if card.isCurrent {
+            showSpaceShelf = false
+            return
+        }
+        // Optimistic dismiss — never wait for leave-guard AND full WK load serially.
+        showSpaceShelf = false
+        requestDomainLeave {
+            if let entry = Self.spaceCatalog.first(where: { $0.id == card.listKey }) {
+                self.openSpace(entry)
+            } else {
+                self.continueSpace(listKey: card.listKey)
+            }
+        }
+    }
+
+    private func relativeTimeString(from date: Date) -> String {
+        let seconds = max(0, Int(Date().timeIntervalSince(date)))
+        if seconds < 60 { return "Just now" }
+        if seconds < 3600 { return "\(seconds / 60)m ago" }
+        if seconds < 86400 { return "\(seconds / 3600)h ago" }
+        return "\(seconds / 86400)d ago"
+    }
+
+    private static func shelfSubtitle(for url: URL?) -> String {
+        guard let url else { return "Home" }
+        let path = url.path
+        if path.isEmpty || path == "/" { return "Home" }
+        let leaf = path.split(separator: "/").last.map(String.init) ?? path
+        switch leaf.lowercased() {
+        case "calendar": return "Calendar"
+        case "projects": return "Projects"
+        case "search": return "Search"
+        case "session": return "Workout"
+        case "library": return "Library"
+        case "records": return "History"
+        case "focus": return "Focus"
+        case "summary": return "Summary"
+        default: return leaf.prefix(1).uppercased() + leaf.dropFirst()
+        }
     }
 
     /// True for Daily Beta Plan/Training LAN (or production) domain Continuity origins.
     func isDomainContinuityURL(_ url: URL) -> Bool {
         let port = url.port
-        if port == 5188 || port == 5190 || port == 5180 || port == 5189 {
+        // Pack ports + adjacent Life OS apps that may join Continuity later.
+        if port == 5188 || port == 5190 || port == 5180 || port == 5189
+            || port == 5196 || port == 5879
+        {
             return true
         }
         let host = (url.host ?? "").lowercased()
         return host.contains("planner.kenos") || host.contains("fitness.kenos")
             || host.contains("music.kenos") || host.contains("finance.kenos")
+            || host.contains("home.kenos") || host.contains("knowledge.kenos")
     }
 
     private func openExternalURL(_ url: URL) {
         #if os(iOS)
-        // Personal Daily Beta: Continuity must stay inside Kenos process (no Safari chrome).
+        // Personal Daily Beta: Domain Mode stays inside Kenos (dock replaces tabs).
         if KenosDailyBetaConfig.isEnabled, isDomainContinuityURL(url) {
-            continuityURL = url
-            showSpaceSwitcher = false
+            enterDomainMode(url: url)
             return
         }
         UIApplication.shared.open(url)
