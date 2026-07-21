@@ -354,7 +354,8 @@ async function main() {
     const data=(rows[0]&&rows[0].data)||{};
     data.title=MUT;
     data.notes=(data.notes||'')+' · phone-mut '+Date.now();
-    data.updatedAt=new Date().toISOString();
+    // Prefer numeric ms for Planner LWW; ISO also accepted after migrate coerce.
+    data.updatedAt=Date.now();
     const r2=await fetch('https://'+REF+'.supabase.co/rest/v1/planner_tasks?id=eq.'+encodeURIComponent(TASK_ID),{
       method:'PATCH',
       headers:{
@@ -365,8 +366,19 @@ async function main() {
       },
       body:JSON.stringify({data, updated_at:new Date().toISOString()})
     });
-    const patched=await r2.json();
-    const title=(patched[0]&&patched[0].data&&patched[0].data.title)||null;
+    let title=null;
+    let patchBody=null;
+    try { patchBody=await r2.json(); } catch(_) { patchBody=null; }
+    if (Array.isArray(patchBody) && patchBody[0] && patchBody[0].data) {
+      title=patchBody[0].data.title||null;
+    }
+    if (title!==MUT) {
+      const r3=await fetch('https://'+REF+'.supabase.co/rest/v1/planner_tasks?id=eq.'+encodeURIComponent(TASK_ID)+'&select=id,data',{
+        headers:{apikey:'${keys.anon}', Authorization:'Bearer '+jwt, Accept:'application/json'}
+      });
+      const rows2=await r3.json();
+      title=(rows2[0]&&rows2[0].data&&rows2[0].data.title)||null;
+    }
     // Seed Continue store
     const resume={
       v:1,
@@ -388,8 +400,8 @@ async function main() {
     };
     localStorage.setItem('kenos.spaceSwitcher.v1', JSON.stringify(store));
     status = title===MUT ? 'ok' : 'mismatch';
-    detail={title, taskId:TASK_ID, http:r2.status};
-  }catch(e){ detail={error:String(e)}; }
+    detail={title, taskId:TASK_ID, http:r2.status, runId:${JSON.stringify(RUN_ID)}, patchErr: patchBody&&patchBody.message?patchBody.message:null};
+  }catch(e){ detail={error:String(e), runId:${JSON.stringify(RUN_ID)}}; }
   await fetch('/__health?kenos_flow_a='+encodeURIComponent(JSON.stringify({status,...detail})),{cache:'no-store'});
   location.replace('/?iosNativeShell=1&openContinue=1');
 })();
@@ -406,6 +418,27 @@ async function main() {
   log('flowA.mutate.beacons', {
     n: flowABeacons.length,
     last: flowABeacons.at(-1)?.slice(0, 200),
+  })
+
+  // Read DB immediately after phone mutate — before Planner Continuity can
+  // push a stale local cache over the cloud row (sync race).
+  const clientAEarly = createClient(url, keys.anon, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${session.access_token}` } },
+  })
+  const { data: earlyRows } = await clientAEarly
+    .from('planner_tasks')
+    .select('id,data,updated_at')
+    .eq('id', TASK_ID)
+  const dbTitleAfterMutate = earlyRows?.[0]?.data?.title || null
+  const { data: adminRows } = await admin
+    .from('planner_tasks')
+    .select('id,data,updated_at')
+    .eq('id', TASK_ID)
+  const adminTitleAfterMutate = adminRows?.[0]?.data?.title || null
+  log('flowA.db.after_mutate', {
+    dbTitleAfterMutate,
+    adminTitleAfterMutate,
   })
 
   // Open Planner deep resume on device
@@ -436,7 +469,7 @@ async function main() {
     title=(rows[0]&&rows[0].data&&rows[0].data.title)||null;
     status = title===MUT ? 'ok' : 'mismatch';
   }catch(e){ status='err'; title=String(e); }
-  await fetch('/__health?kenos_flow_a_verify='+encodeURIComponent(JSON.stringify({status,title,taskId:TASK_ID})),{cache:'no-store'});
+  await fetch('/__health?kenos_flow_a_verify='+encodeURIComponent(JSON.stringify({status,title,taskId:TASK_ID,runId:${JSON.stringify(RUN_ID)}})),{cache:'no-store'});
   location.replace('/?iosNativeShell=1&openContinue=1');
 })();
 </script></body></html>`
@@ -456,7 +489,7 @@ async function main() {
     verifyBeacons.join('\n'),
   )
 
-  // Also confirm DB from Mac with user JWT
+  // Also confirm DB from Mac with user JWT + admin (after Planner open)
   const clientA = createClient(url, keys.anon, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { headers: { Authorization: `Bearer ${session.access_token}` } },
@@ -466,37 +499,72 @@ async function main() {
     .select('id,data')
     .eq('id', TASK_ID)
   const dbTitle = afterRows?.[0]?.data?.title || null
-  const phoneMutOk =
-    /kenos_flow_a=.*ok/.test(flowABeacons.join('\n')) ||
-    flowABeacons.some(
-      (l) =>
-        l.includes('%22status%22%3A%22ok%22') ||
-        l.includes('"status":"ok"') ||
-        decodeURIComponent(l).includes('"status":"ok"'),
-    )
-  const phoneVerifyOk = verifyBeacons.some((l) => {
+  const { data: adminAfterPlanner } = await admin
+    .from('planner_tasks')
+    .select('id,data')
+    .eq('id', TASK_ID)
+  const adminTitleAfterPlanner = adminAfterPlanner?.[0]?.data?.title || null
+  function parseBeacon(line, key) {
     try {
-      const q = l.split('kenos_flow_a_verify=')[1]?.split(' ')[0] || ''
-      const j = JSON.parse(decodeURIComponent(q))
-      return j.status === 'ok' && j.title === TASK_TITLE_MUT
+      const q = line.split(`${key}=`)[1]?.split(/\s+/)[0] || ''
+      return JSON.parse(decodeURIComponent(q))
     } catch {
-      return decodeURIComponent(l).includes('"status":"ok"')
+      return null
     }
-  })
+  }
+  const mutBeacon = [...flowABeacons]
+    .reverse()
+    .map((l) => parseBeacon(l, 'kenos_flow_a'))
+    .find((j) => j && j.runId === RUN_ID)
+  const verifyBeacon = [...verifyBeacons]
+    .reverse()
+    .map((l) => parseBeacon(l, 'kenos_flow_a_verify'))
+    .find((j) => j && j.runId === RUN_ID)
+  const phoneMutOk = mutBeacon?.status === 'ok' && mutBeacon?.title === TASK_TITLE_MUT
+  const phoneVerifyOk =
+    verifyBeacon?.status === 'ok' && verifyBeacon?.title === TASK_TITLE_MUT
+
+  // If phone PATCH claimed ok but Mac read is stale, re-read once more.
+  let dbTitleFinal = dbTitle
+  if (phoneMutOk && dbTitleFinal !== TASK_TITLE_MUT) {
+    sleep(1500)
+    const { data: again } = await clientA
+      .from('planner_tasks')
+      .select('id,data')
+      .eq('id', TASK_ID)
+    dbTitleFinal = again?.[0]?.data?.title || dbTitleFinal
+  }
+
+  const syncClobber =
+    adminTitleAfterMutate === TASK_TITLE_MUT &&
+    adminTitleAfterPlanner === TASK_TITLE &&
+    adminTitleAfterPlanner !== TASK_TITLE_MUT
 
   report.flowA = {
     status:
-      dbTitle === TASK_TITLE_MUT && (phoneMutOk || phoneVerifyOk)
+      (dbTitleFinal === TASK_TITLE_MUT ||
+        adminTitleAfterMutate === TASK_TITLE_MUT) &&
+      (phoneMutOk || phoneVerifyOk) &&
+      !syncClobber
         ? 'PASS_DEVICE_SESSION_MUTATE'
-        : dbTitle === TASK_TITLE_MUT
-          ? 'PARTIAL_DB_ONLY'
-          : 'FAIL',
+        : syncClobber
+          ? 'FAIL_PLANNER_SYNC_CLOBBER'
+          : adminTitleAfterMutate === TASK_TITLE_MUT
+            ? 'PARTIAL_MUTATE_OK_VERIFY_HOLD'
+            : 'FAIL',
     taskId: TASK_ID,
     seedTitle: TASK_TITLE,
     mutatedTitle: TASK_TITLE_MUT,
-    dbTitle,
+    dbTitle: dbTitleFinal,
+    adminTitleAfterMutate,
+    adminTitleAfterPlanner,
+    syncClobber,
     phoneMutOk,
     phoneVerifyOk,
+    mutateHttp: mutBeacon?.http ?? null,
+    mutateDetail: mutBeacon
+      ? { status: mutBeacon.status, http: mutBeacon.http }
+      : null,
     plannerDeepLinkHits: plannerHits.length,
     method:
       'phone WKWebView JWT PATCH + force-quit re-read (not XCUITest DOM edit)',
@@ -537,7 +605,7 @@ async function main() {
         user_id: OWNER.id,
         session_date: TODAY,
         day_id: 'chest',
-        status: 'active',
+        started_at: new Date().toISOString(),
       })
       .select('id')
       .single()
@@ -627,8 +695,21 @@ async function main() {
     join(EVID, 'logs', 'ios-flow-ab-latest.json'),
     JSON.stringify(report, null, 2),
   )
+  // Also mirror into stability evidence (no secrets in report fields above).
+  try {
+    const stab = join(
+      ROOT,
+      'docs/qa/evidence/kenos-ios-stability-2026-07-21/smoke/flow-ab-latest.json',
+    )
+    writeFileSync(stab, JSON.stringify(report, null, 2))
+  } catch {
+    /* ignore */
+  }
   console.log('\n=== REPORT ===')
   console.log(JSON.stringify(report, null, 2))
+  const aOk = String(report.flowA?.status || '').startsWith('PASS')
+  const bOk = String(report.flowB?.status || '').startsWith('PASS')
+  if (!aOk || !bOk) process.exit(2)
 }
 
 main().catch((e) => {

@@ -74,6 +74,12 @@
     "validate:tokens": "node packages/design-tokens/scripts/validate-tokens.mjs",
     "ios:add": "node scripts/ios/add-ios.mjs",
     "ios:device": "node scripts/ios/deploy-device.mjs",
+    "kenos:ios-stability:preflight": "node scripts/kenos-ios-stability/preflight.mjs",
+    "kenos:ios-stability:smoke": "node scripts/kenos-ios-stability/smoke.mjs",
+    "kenos:ios-stability:soak": "node scripts/kenos-ios-stability/soak.mjs",
+    "kenos:ios-stability:doctor": "bash scripts/kenos-ios-stability/doctor.sh",
+    "kenos:ios-stability:log-export": "node scripts/kenos-ios-stability/log-export.mjs",
+    "kenos:ios-stability": "node scripts/kenos-ios-stability/run-closure.mjs",
     "app:knowledge": "bash scripts/knowledge/build-app.sh"
   },
   "devDependencies": {
