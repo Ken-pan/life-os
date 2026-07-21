@@ -635,10 +635,13 @@ final class KenosAppModel: ObservableObject {
         #if os(iOS)
         guard KenosDailyBetaConfig.isEnabled else { return }
         let currentKey = continuityURL.map(KenosWebSurfaceView.originKey)
-        let candidates = [
+        var candidates = [
             KenosDailyBetaConfig.plannerOrigin,
-            KenosDailyBetaConfig.fitnessOrigin
+            KenosDailyBetaConfig.fitnessOrigin,
         ]
+        if let work = KenosDomainRegistry.homeURL(for: "work") {
+            candidates.append(work)
+        }
         for origin in candidates {
             if currentKey == KenosWebSurfaceView.originKey(origin) { continue }
             var req = URLRequest(

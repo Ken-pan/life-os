@@ -219,7 +219,7 @@ export const DOMAIN_REGISTRY = Object.freeze({
     homePath: '/work',
     systemImage: 'briefcase',
     aliases: ['work-focus'],
-    integrationStatus: 'partial',
+    integrationStatus: 'integrated',
     dataOwner: 'aios-work',
     providers: {
       continue: true,

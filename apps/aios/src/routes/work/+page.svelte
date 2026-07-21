@@ -19,7 +19,18 @@
   import { enterWorkAssistantContext } from '$lib/kenos/assistantContext.svelte.js'
   import { launchSpace } from '$lib/kenos/spaceSwitcher.svelte.js'
   import { domainDeepLink } from '$lib/kenos/domainResume.core.js'
+  import {
+    isIosNativeShell,
+    requestNativeSpaceShelf,
+  } from '$lib/kenos/iosNativeShell.js'
+  import {
+    applyWorkResumeFromLocation,
+    installWorkLeaveGuard,
+    persistWorkContinue,
+    suspendWorkSpace,
+  } from '$lib/kenos/workSpaceAdapter.js'
 
+  const nativeShell = $derived(isIosNativeShell())
   const projects = $derived(listWorkProjects())
   const deliverables = $derived(listWorkDeliverables())
   const meetings = $derived(listWorkMeetings())
@@ -48,20 +59,38 @@
   }
 
   onMount(() => {
+    installWorkLeaveGuard()
+    void applyWorkResumeFromLocation()
     refreshWorkSurface({ force: true })
     void refreshControlCenter()
+    persistWorkContinue(
+      suspendWorkSpace({
+        projectTitle: workContextTitle || projects[0]?.title || null,
+        userId: null,
+      }),
+    )
   })
+
+  function openSpacesShelf(event) {
+    if (nativeShell && requestNativeSpaceShelf()) {
+      event?.preventDefault?.()
+    }
+  }
 </script>
 
-<div class="work-page">
+<div class="work-page" class:native-shell={nativeShell} data-domain="work">
   <header class="work-header">
     <div>
-      <p class="kicker"><a href="/spaces">Spaces</a> · Work</p>
+      {#if !nativeShell}
+        <p class="kicker"><a href="/spaces" onclick={openSpacesShelf}>Spaces</a> · Work</p>
+      {/if}
       <h1>Work</h1>
       <p class="intro">当前目标、下一个交付、阻塞、决定，以及需要转为任务的提案。</p>
     </div>
     <div class="header-actions">
-      <a class="quiet" href="/spaces">全部 Spaces</a>
+      {#if !nativeShell}
+        <a class="quiet" href="/spaces" onclick={openSpacesShelf}>全部 Spaces</a>
+      {/if}
       <a
         class="quiet"
         href="/assistant?scope=work"

@@ -35,11 +35,12 @@ export const HOSTED_SPACES = Object.freeze([
   {
     id: 'work',
     label: 'Work',
-    detail: '正在准备中 · 可先用 Plan 管理相关任务',
+    detail: 'Projects · Decisions · Deep Work',
     href: '/work',
+    domainId: 'work',
     accent: domainAccent('work'),
     icon: domainIcon('work'),
-    availability: 'preparing',
+    availability: 'ready',
   },
   {
     id: 'plan',

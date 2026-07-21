@@ -1,6 +1,30 @@
 <script>
+  import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
   import { FOCUS, startDeepWork } from '$lib/kenos/focusStore.svelte.js'
+  import {
+    isIosNativeShell,
+    requestNativeSpaceShelf,
+  } from '$lib/kenos/iosNativeShell.js'
+  import {
+    installWorkLeaveGuard,
+    persistWorkContinue,
+    suspendWorkSpace,
+  } from '$lib/kenos/workSpaceAdapter.js'
+
+  const nativeShell = $derived(isIosNativeShell())
+
+  onMount(() => {
+    installWorkLeaveGuard()
+    persistWorkContinue(
+      suspendWorkSpace({
+        pathname: '/spaces/work',
+        focusActive: true,
+        projectTitle: 'Kenos IA',
+        projectId: 'a1000000-0000-4000-8000-000000000001',
+      }),
+    )
+  })
 
   function begin() {
     if (FOCUS.focus && ['active', 'paused', 'temporarily_left', 'ending'].includes(FOCUS.focus.status)) {
@@ -10,9 +34,15 @@
     startDeepWork({ title: 'Kenos IA', projectId: 'a1000000-0000-4000-8000-000000000001' })
     void goto('/focus')
   }
+
+  function openSpacesShelf(event) {
+    if (nativeShell && requestNativeSpaceShelf()) {
+      event?.preventDefault?.()
+    }
+  }
 </script>
 
-<div class="space-page">
+<div class="space-page" class:native-shell={nativeShell} data-domain="work">
   <h1 class="kenos-page-title">Deep Work</h1>
   <p class="intro">进入当前项目的专注模式。只保留与这次工作相关的上下文。</p>
 
@@ -28,7 +58,9 @@
 
   <div class="links">
     <a href="/work">打开 Work</a>
-    <a href="/spaces">‹ All Spaces</a>
+    {#if !nativeShell}
+      <a href="/spaces" onclick={openSpacesShelf}>‹ All Spaces</a>
+    {/if}
   </div>
 </div>
 
