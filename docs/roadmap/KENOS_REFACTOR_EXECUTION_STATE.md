@@ -17,6 +17,7 @@ status: controlled-production-canary-legacy-cutover-open
 - Owner cohort: Plan create/title/due/schedule/project/complete/reopen/archive、MCP complete、Capture convert 已走 Kenos command/RPC；非 cohort、未覆盖字段和 sync upsert 仍有 legacy fallback。
 - AIOS / Portal: Approval/Capture canary 与 Portal `/today` owner-limited soft redirect 已有生产证据；Portal 未退役。
 - Apple / Phase 5: 多端代码、构建、device install/open 和本地 contextual behavior 已验证；App Group/APNs/分发、ProductionExecutor 与生产主动能力仍关闭。
+- Personal Daily Beta（2026-07-21）：**Mac Web READY**；**iOS NOT READY** on Ken’s 17 Pro — install/cold launch/LAN Continuity/lifecycle PASS，Auth session missing（Owner 登录阻塞）；network **LAN-DEPENDENT**；证据 `docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`。Phase 4 仍 `EXIT_OPEN`。
 - Program verdict: `CONTROLLED_PRODUCTION_CANARY_WITH_OPEN_EXITS`。不能继续使用早期 `phase-2-partial-read-only-integration-no-production-cutover` 作为当前总状态。
 - Verification debt: Phase 2 正式基线 guard 失败；Phase 3 正式 HEAD 通过但当前本地 WIP 破坏既有合同；Phase 6 输出仍含过期 apply 状态；Phase 0 必须在干净 Git checkout 验证。详见 implementation status 第 6 节。
 

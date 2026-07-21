@@ -1,48 +1,19 @@
 {
-  "generatedAt": "2026-07-21T02:36:00Z",
-  "device": "iPhone 17 Pro Simulator (iOS 26.4)",
-  "simulatorUdid": "9C0D270C-86DB-4462-B05A-CFA4F2D358A8",
-  "bundleId": "space.kenos.app.ios",
-  "shellOrigin": "http://127.0.0.1:5219",
-  "domainOrigins": {
-    "planner": "http://10.20.202.15:5188",
-    "fitness": "http://10.20.202.15:5190"
-  },
-  "realDeviceScreenshot": {
-    "iphone17Pro": "BLOCKED_wireless_no_idevice",
-    "iphone15Pro": "BLOCKED_no_app_signing_and_screenshotr"
-  },
-  "canonical": [
-    {
-      "id": "native-today",
-      "path": "screenshots/30-native-today.png",
-      "surface": "Today"
-    },
-    {
-      "id": "native-assistant",
-      "path": "screenshots/30-native-assistant.png",
-      "surface": "Assistant"
-    },
-    {
-      "id": "native-spaces",
-      "path": "screenshots/30-native-spaces.png",
-      "surface": "Spaces"
-    },
-    {
-      "id": "native-inbox",
-      "path": "screenshots/30-native-inbox.png",
-      "surface": "Inbox"
-    },
-    {
-      "id": "planner",
-      "path": "screenshots/06-planner.png",
-      "surface": "Planner"
-    },
-    {
-      "id": "fitness",
-      "path": "screenshots/07-fitness.png",
-      "surface": "Fitness"
-    }
-  ],
-  "report": "SCREENSHOT_TEST_REPORT.md"
+  "generatedAt": "2026-07-21T03:32:00Z",
+  "device": "Ken's 17 Pro",
+  "note": "Wireless CoreDevice cannot capture idevicescreenshot (No device found). Primary evidence is access logs under logs/*-traffic.txt.",
+  "screenshots": [],
+  "logEvidence": [
+    "logs/today-traffic.txt",
+    "logs/spaces-traffic.txt",
+    "logs/inbox-traffic.txt",
+    "logs/settings-traffic.txt",
+    "logs/planner-seq-traffic.txt",
+    "logs/fitness-seq-traffic.txt",
+    "logs/forcequit-traffic.txt",
+    "logs/recovery-seq-traffic.txt",
+    "logs/auth-verdict-redacted.json",
+    "logs/doctor-live.txt",
+    "logs/unlocked-full-smoke.txt"
+  ]
 }

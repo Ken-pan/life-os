@@ -1,14 +1,16 @@
 {
-  "generatedAt": "2026-07-21T02:23:00Z",
+  "generatedAt": "2026-07-21T03:30:00Z",
+  "runId": "unlocked-full-smoke-2026-07-21T03:27Z",
   "verdict": "IOS_NOT_READY",
   "overallPersonalDailyBeta": "HOLD",
   "macWebDailyBeta": "READY",
   "macEntry": "http://127.0.0.1:5219/",
-  "macBuildSha": "aff9303903c10752c0ea6ca657a1da36442d6d12",
+  "networkScope": "LAN-DEPENDENT",
   "ios": {
-    "gitShaAtInstall": "c4aa541d47953c4d24382d9771d623deab6ce29b",
+    "gitShaAtEvidence": "d8ec099ca92055bda74bc0b41bacc5708b303348",
     "appVersion": "1.0.0",
-    "appBuild": "202607210221",
+    "appBuildDeviceReported": "20260721",
+    "appBuildStampFile": "202607210317",
     "bundleId": "space.kenos.app.ios",
     "origin": "http://10.20.202.15:5219",
     "phoneClientIp": "10.20.202.6",
@@ -19,7 +21,8 @@
       "osVersion": "27.0",
       "osBuild": "24A5380h",
       "udid": "00008150-000C38C20AC0401C",
-      "coredeviceId": "8097F071-CAB6-5AF0-8258-BCD985E9D79E"
+      "coredeviceId": "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+      "transport": "localNetwork"
     },
     "signing": {
       "style": "Automatic",
@@ -31,13 +34,17 @@
     "IOS_BUILD": "PASS",
     "REAL_DEVICE_INSTALL": "PASS",
     "COLD_LAUNCH": "PASS",
-    "AUTH_PERSISTENCE": "PARTIAL",
+    "AUTH": "FAIL",
+    "AUTH_DETAIL": "no sb-*-auth-token in WKWebView LocalStorage; SDK literals only",
     "TODAY": "PASS",
-    "CONTINUE": "PARTIAL",
-    "PLANNER": "PASS",
-    "FITNESS": "PASS",
-    "ACCOUNT_ISOLATION": "PARTIAL",
-    "BACKGROUND_FOREGROUND": "PASS",
+    "SPACES": "PASS",
+    "INBOX": "PASS",
+    "SETTINGS": "PASS",
+    "CONTINUE_PLANNER_OPEN": "PASS",
+    "CONTINUE_FITNESS_OPEN": "PASS",
+    "FLOW_A_PLAN_EDIT": "BLOCKED_ON_AUTH",
+    "FLOW_B_TRAINING_RESUME": "BLOCKED_ON_AUTH",
+    "ACCOUNT_ISOLATION": "BLOCKED_ON_AUTH",
     "FORCE_QUIT_REOPEN": "PASS",
     "OFFLINE_RECOVERY": "PASS",
     "WIFI_CELLULAR": "NOT_RUN",
@@ -46,21 +53,11 @@
     "VOICEOVER_BASICS": "NOT_RUN",
     "P0_P1": "NONE"
   },
-  "commands": {
-    "deviceBuildInstall": "scripts/kenos-ios-daily-beta/device-build-install.sh exit 0",
-    "kenosCtlRestart": "scripts/kenos-daily-beta/kenos-ctl.sh restart exit 0",
-    "lifecycleRelaunch": "devicectl launch after SIGKILL exit 0"
+  "blocker": {
+    "type": "product",
+    "failedAssertion": "AUTH session present in WKWebView storage",
+    "ownerAction": "Sign in via Kenos → Settings → 云端同步 on iPhone 17 Pro"
   },
-  "fixInstall": {
-    "device": "Ken's 17 Pro",
-    "build": "202607210241",
-    "origin": "http://10.20.202.15:5219",
-    "phoneIp": "10.20.202.6",
-    "spacesNativeShell": "PASS",
-    "inboxNativeShell": "PASS",
-    "planner": "PASS",
-    "fitness": "PASS",
-    "forceQuitRelaunch": "PASS"
-  },
-  "blocker": "signing_15pro_accounts_empty; interactive_a11y_cellular_accountB"
+  "dataSafety": "SAFE",
+  "macWebFallback": "AVAILABLE"
 }

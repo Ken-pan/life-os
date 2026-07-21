@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-07-21T03:19:13Z",
+  "device": "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+  "origin": "http://10.20.202.15:5219",
+  "build": "202607210317",
+  "hits": {
+    "aios": {
+      "phone_hits": 0,
+      "settings_hits": 0,
+      "spaces_hits": 0,
+      "sample": []
+    },
+    "planner": {
+      "phone_hits": 0,
+      "settings_hits": 0,
+      "spaces_hits": 0,
+      "sample": []
+    },
+    "fitness": {
+      "phone_hits": 0,
+      "settings_hits": 0,
+      "spaces_hits": 0,
+      "sample": []
+    }
+  },
+  "verdict": {
+    "install": true,
+    "settingsDeepLink": false,
+    "spacesDeepLink": false,
+    "planner": false,
+    "fitness": false
+  }
+}

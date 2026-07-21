@@ -1,29 +1,27 @@
-# REAL_DEVICE_SMOKE
+# REAL_DEVICE_SMOKE — Ken’s 17 Pro
 
-Device unlocked · Local Network granted · Mac LAN origin up.
+**run_id:** `unlocked-full-smoke-2026-07-21T03:27Z`
+**HEAD SHA:** `d8ec099ca92055bda74bc0b41bacc5708b303348`
+**app:** `space.kenos.app.ios` `1.0.0` / `20260721` (stamp `202607210317`)
+**origin:** `http://10.20.202.15:5219`
+**phone:** `10.20.202.6`
 
-## Automated / access-log proven
+## Results
 
-| Flow | Expected | Actual |
-| --- | --- | --- |
-| Cold launch | App starts to Today shell | PASS (`devicectl launch`) |
-| Today | GET `/` from phone | PASS `10.20.202.6` |
-| Assistant | GET `/assistant` | PASS |
-| Inbox | GET `/inbox` | PASS |
-| Spaces | Tab / payload to `/spaces` | PARTIAL (tab wired; fewer access lines than Today) |
-| Planner | Open `:5188` | PASS (full SPA asset tree) |
-| Fitness | Open `:5190` | PASS (SPA + `c_bench.jpg`) |
-| Force quit → reopen | Launch after SIGKILL | PASS |
-| Offline → online | Mac stop/start; phone refetch | PASS |
+| Flow | Expected | Actual | Exit | Evidence |
+| --- | --- | --- | --- | --- |
+| Cold launch Today | App opens shell `/` | launch ec=0 + phone GET `/` 200 | **PASS** | `logs/today-launch.txt`, `logs/today-traffic.txt` |
+| Spaces | `/spaces` loads | phone GET `/spaces` 200 | **PASS** | `logs/spaces-traffic.txt` |
+| Inbox | `/inbox` loads | phone GET `/inbox` 200 | **PASS** | `logs/inbox-traffic.txt` |
+| Settings | `/settings` loads | phone GET `/settings` 200 | **PASS** | `logs/settings-traffic.txt` |
+| Planner Continuity | `:5188/schedule` | phone GET `/schedule` 200 | **PASS** | `logs/planner-seq-traffic.txt` |
+| Fitness Continuity | `:5190/` | phone GET `/` + exercise asset 200 | **PASS** | `logs/fitness-seq-traffic.txt` |
+| Auth (Supabase session) | LocalStorage/cookies have session | none — SDK literals only | **FAIL** | `logs/auth-verdict-redacted.json` |
+| FLOW A Plan edit+persist | Owner edits task, relaunch keeps it | not run (blocked on Auth) | **BLOCKED** | — |
+| FLOW B Training set resume | Set 1→Continue Set 2 | not run (blocked on Auth) | **BLOCKED** | — |
+| FLOW C Account B isolation | B hides A recents | not run on device | **BLOCKED** | Mac Continuity unit isolation retained; phone Account B pending |
 
-## Owner interactive (remaining)
+## Notes
 
-- Continue card → correct Planner task / Fitness set
-- Duplicate Continue tap launches once
-- Account B isolation
-- Wi‑Fi → Cellular
-- Dark Mode / Dynamic Type / VoiceOver button names / 44pt targets visual confirm
-
-## Residual API
-
-Planner `POST /api/ai/plan` → **501** on static Python server (no Netlify functions locally). SPA + Supabase client paths still load; AI plan endpoint is residual for LAN static mode.
+- Screenshots via `idevicescreenshot` unavailable over wireless CoreDevice (`No device found`); traffic logs are primary proof.
+- Native shell + LAN Web path is live; Daily Beta claim remains blocked on owner Auth + interactive Plan/Training/Account B.

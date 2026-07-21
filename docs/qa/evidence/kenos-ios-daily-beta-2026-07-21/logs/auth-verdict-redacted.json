@@ -1,0 +1,10 @@
+{
+  "localStorageAuthKeys": [],
+  "cookieHosts": [],
+  "hasSupabaseSessionMaterial": false,
+  "hasOnlySdkStringLiterals": true,
+  "notes": [
+    "network_cache_blob_looks_like_js_sdk"
+  ],
+  "authVerdict": "FAIL_NEED_OWNER_LOGIN"
+}

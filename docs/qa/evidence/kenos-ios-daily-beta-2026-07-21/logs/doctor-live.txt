@@ -1,0 +1,16 @@
+==> Kenos iOS Daily Beta doctor 2026-07-21T03:27:09Z
+device=8097F071-CAB6-5AF0-8258-BCD985E9D79E team=93NJ4CAU8B origin=http://10.20.202.15:5219
+device_line=Ken’s 17 Pro 🤏🏻  🌊 🌲          Kens-17-Pro-.coredevice.local           8097F071-CAB6-5AF0-8258-BCD985E9D79E   available (paired)   iPhone 17 Pro (iPhone18,1)     
+[PASS] device online
+[PASS] LAN origin health http://10.20.202.15:5219
+[PASS] domain :5188
+[PASS] domain :5190
+1.0.0 20260721 Kenos
+[PASS] app installed space.kenos.app.ios
+[PASS] local .app present
+["93NJ4CAU8B"]space.kenos.app.ios
+20260721
+http://10.20.202.15:5219
+[PASS] launch
+TEAM=93NJ4CAU8B BUNDLE=space.kenos.app.ios ORIGIN_OK=1 DEVICE_OK=1 INSTALLED=1
+Doctor done 2026-07-21T03:27:11Z

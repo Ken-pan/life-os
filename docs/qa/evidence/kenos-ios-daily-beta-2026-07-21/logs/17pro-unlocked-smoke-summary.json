@@ -1,0 +1,72 @@
+{
+  "generatedAt": "2026-07-21T03:21:57Z",
+  "device": "Ken's 17 Pro",
+  "coredeviceId": "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+  "origin": "http://10.20.202.15:5219",
+  "build": "202607210317",
+  "gitSha": "d8ec099ca92055bda74bc0b41bacc5708b303348",
+  "hits": {
+    "aios": {
+      "phone_hits": 73,
+      "settings_hits": 2,
+      "spaces_hits": 2,
+      "inbox_hits": 2,
+      "sample": [
+        "10.20.202.6 - \"GET /__health HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /?iosNativeShell=1 HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /manifest.webmanifest HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /_app/version.json HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /__health HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /?iosNativeShell=1 HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /manifest.webmanifest HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /_app/version.json HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /__health HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /?iosNativeShell=1 HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /manifest.webmanifest HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /_app/version.json HTTP/1.1\" 200 -"
+      ]
+    },
+    "planner": {
+      "phone_hits": 8,
+      "settings_hits": 0,
+      "spaces_hits": 0,
+      "inbox_hits": 0,
+      "sample": [
+        "10.20.202.6 - \"GET /schedule HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /schedule HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /manifest.webmanifest HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-light-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-dark-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /manifest.webmanifest HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-light-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-dark-96.png HTTP/1.1\" 200 -"
+      ]
+    },
+    "fitness": {
+      "phone_hits": 10,
+      "settings_hits": 0,
+      "spaces_hits": 0,
+      "inbox_hits": 0,
+      "sample": [
+        "10.20.202.6 - \"GET / HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /manifest.webmanifest HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-light-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-dark-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /assets/images/exercises/c_bench.jpg HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET / HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /manifest.webmanifest HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-light-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-dark-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /assets/images/exercises/c_bench.jpg HTTP/1.1\" 200 -"
+      ]
+    }
+  },
+  "verdict": {
+    "settingsDeepLink": true,
+    "spacesDeepLink": true,
+    "inboxDeepLink": true,
+    "planner": true,
+    "fitness": true,
+    "shellFetch": true
+  }
+}

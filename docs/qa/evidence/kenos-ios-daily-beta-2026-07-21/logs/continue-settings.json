@@ -1,0 +1,59 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "process",
+      "launch",
+      "--device",
+      "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+      "--terminate-existing",
+      "--payload-url",
+      "http://10.20.202.15:5219/settings?iosNativeShell=1",
+      "--json-output",
+      "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/logs/continue-settings.json",
+      "space.kenos.app.ios"
+    ],
+    "commandType" : "devicectl.device.process.launch",
+    "environment" : {
+      "TERM" : "dumb"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "success",
+    "version" : "518.33"
+  },
+  "result" : {
+    "deviceIdentifier" : "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+    "launchOptions" : {
+      "activatedWhenStarted" : true,
+      "arguments" : [
+
+      ],
+      "environmentVariables" : {
+        "TERM" : "dumb"
+      },
+      "platformSpecificOptions" : {
+
+      },
+      "startStopped" : false,
+      "terminateExistingInstances" : true,
+      "user" : {
+        "active" : true
+      }
+    },
+    "process" : {
+      "auditToken" : [
+        4294967295,
+        501,
+        501,
+        501,
+        501,
+        8041,
+        0,
+        21247
+      ],
+      "executable" : "file:///private/var/containers/Bundle/Application/2DFB7278-C8BB-4072-A8F6-1ACA3A61C43B/KenosIOS.app/KenosIOS",
+      "processIdentifier" : 8041
+    }
+  }
+}

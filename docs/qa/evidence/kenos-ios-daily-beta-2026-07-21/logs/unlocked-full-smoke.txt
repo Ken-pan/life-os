@@ -1,0 +1,14 @@
+==> today http://10.20.202.15:5219/?iosNativeShell=1
+launch_ec=0
+PASS today hits=      20
+==> spaces http://10.20.202.15:5219/spaces?iosNativeShell=1
+launch_ec=0
+PASS spaces hits=      15
+==> inbox http://10.20.202.15:5219/inbox?iosNativeShell=1
+launch_ec=0
+PASS inbox hits=      20
+==> settings http://10.20.202.15:5219/settings?iosNativeShell=1
+launch_ec=0
+PASS settings hits=       3
+==> planner http://10.20.202.15:5188/schedule
+launch_ec=1

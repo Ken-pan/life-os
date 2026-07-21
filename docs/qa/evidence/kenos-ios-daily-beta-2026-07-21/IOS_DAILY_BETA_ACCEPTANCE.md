@@ -1,10 +1,10 @@
 # iOS Daily Beta — Acceptance
 
-**Date:** 2026-07-21  
-**Device:** Ken’s 17 Pro (`iPhone18,1`) · iOS 27.0 (24A5380h) · UDID `00008150-000C38C20AC0401C`  
-**Bundle:** `space.kenos.app.ios` · version `1.0.0` · build `202607210221`  
-**Git SHA (install):** `c4aa541d47953c4d24382d9771d623deab6ce29b`  
-**Shell origin:** `http://10.20.202.15:5219` (Mac LAN; phone client `10.20.202.6`)  
+**Date:** 2026-07-21
+**Device:** Ken’s 17 Pro (`iPhone18,1`) · iOS 27.0 (24A5380h) · UDID `00008150-000C38C20AC0401C`
+**Bundle:** `space.kenos.app.ios` · version `1.0.0` · build `202607210221`
+**Git SHA (install):** `c4aa541d47953c4d24382d9771d623deab6ce29b`
+**Shell origin:** `http://10.20.202.15:5219` (Mac LAN; phone client `10.20.202.6`)
 **Install method:** `scripts/kenos-ios-daily-beta/device-build-install.sh` → `xcodebuild` + `devicectl device install/launch`
 
 ## Verdict
@@ -13,44 +13,44 @@
 
 Core daily path on real iPhone is working (native shell + LAN Web surfaces + Planner/Fitness open). Remaining gaps are interactive accessibility / network-transition / multi-account checks that cannot be closed without Ken on-device confirmation.
 
-Mac Web Daily Beta remains **READY** and **must not** be overturned.  
+Mac Web Daily Beta remains **READY** and **must not** be overturned.
 Overall Personal Daily Beta remains **HOLD**.
 
 ## Matrix
 
-| Check | Result | Evidence |
-| --- | --- | --- |
-| IOS BUILD | **PASS** | `logs/device-build.log` BUILD SUCCEEDED |
-| REAL DEVICE INSTALL | **PASS** | `devicectl install` + apps list |
-| COLD LAUNCH | **PASS** | launch after SIGKILL; unlock required once |
-| AUTH PERSISTENCE | **PARTIAL** | SecItem store wired; WKWebView `WebsiteDataStore.default` for web session — owner must confirm logged-in Supabase session survives relaunch |
-| TODAY | **PASS** | phone `GET /` 200 |
-| CONTINUE | **PARTIAL** | Native Continue section + Space Switcher wired; Web Continuity inside WKWebView; duplicate-tap / expired-target not re-automated on device |
-| PLANNER | **PASS** | phone loaded Planner SPA assets from `:5188` |
-| FITNESS | **PASS** | phone loaded Fitness SPA + exercise image from `:5190` |
-| ACCOUNT ISOLATION | **PARTIAL** | inherits Mac Continuity A/B freeze; not re-run Account B on this phone |
-| BACKGROUND / FOREGROUND | **PASS** | relaunch while installed |
-| FORCE QUIT / REOPEN | **PASS** | SIGKILL → launch ec=0 |
-| OFFLINE / RECOVERY | **PASS** | Mac `kenos-ctl stop` → start; phone refetched after recovery |
-| WI-FI / CELLULAR | **NOT RUN** | owner toggle required |
-| DARK MODE | **NOT RUN** | owner toggle required |
-| DYNAMIC TYPE | **NOT RUN** | owner Larger Text required |
-| VOICEOVER BASICS | **NOT RUN** | labels present in code; owner VO sweep required |
-| P0/P1 product blockers | **NONE** known for home-LAN daily path | see `known-residuals.md` |
+| Check                   | Result                                 | Evidence                                                                                                                                    |
+| ----------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| IOS BUILD               | **PASS**                               | `logs/device-build.log` BUILD SUCCEEDED                                                                                                     |
+| REAL DEVICE INSTALL     | **PASS**                               | `devicectl install` + apps list                                                                                                             |
+| COLD LAUNCH             | **PASS**                               | launch after SIGKILL; unlock required once                                                                                                  |
+| AUTH PERSISTENCE        | **PARTIAL**                            | SecItem store wired; WKWebView `WebsiteDataStore.default` for web session — owner must confirm logged-in Supabase session survives relaunch |
+| TODAY                   | **PASS**                               | phone `GET /` 200                                                                                                                           |
+| CONTINUE                | **PARTIAL**                            | Native Continue section + Space Switcher wired; Web Continuity inside WKWebView; duplicate-tap / expired-target not re-automated on device  |
+| PLANNER                 | **PASS**                               | phone loaded Planner SPA assets from `:5188`                                                                                                |
+| FITNESS                 | **PASS**                               | phone loaded Fitness SPA + exercise image from `:5190`                                                                                      |
+| ACCOUNT ISOLATION       | **PARTIAL**                            | inherits Mac Continuity A/B freeze; not re-run Account B on this phone                                                                      |
+| BACKGROUND / FOREGROUND | **PASS**                               | relaunch while installed                                                                                                                    |
+| FORCE QUIT / REOPEN     | **PASS**                               | SIGKILL → launch ec=0                                                                                                                       |
+| OFFLINE / RECOVERY      | **PASS**                               | Mac `kenos-ctl stop` → start; phone refetched after recovery                                                                                |
+| WI-FI / CELLULAR        | **NOT RUN**                            | owner toggle required                                                                                                                       |
+| DARK MODE               | **NOT RUN**                            | owner toggle required                                                                                                                       |
+| DYNAMIC TYPE            | **NOT RUN**                            | owner Larger Text required                                                                                                                  |
+| VOICEOVER BASICS        | **NOT RUN**                            | labels present in code; owner VO sweep required                                                                                             |
+| P0/P1 product blockers  | **NONE** known for home-LAN daily path | see `known-residuals.md`                                                                                                                    |
 
 ## Architecture (audit summary)
 
-| Item | Value |
-| --- | --- | --- |
-| iOS target | `KenosIOS` (reuse only — no second app) |
-| Min OS | iOS 17.0 |
-| Bundle ID | `space.kenos.app.ios` |
-| Signing | Automatic · Team `93NJ4CAU8B` · Apple Development: Pan Juncheng |
-| Native | Tab shell, Space Switcher / Continue, Settings, Focus, Keychain |
-| Web surface | WKWebView Daily Beta for Today / Assistant / Spaces / Inbox |
+| Item                 | Value                                                                      |
+| -------------------- | -------------------------------------------------------------------------- |
+| iOS target           | `KenosIOS` (reuse only — no second app)                                    |
+| Min OS               | iOS 17.0                                                                   |
+| Bundle ID            | `space.kenos.app.ios`                                                      |
+| Signing              | Automatic · Team `93NJ4CAU8B` · Apple Development: Pan Juncheng            |
+| Native               | Tab shell, Space Switcher / Continue, Settings, Focus, Keychain            |
+| Web surface          | WKWebView Daily Beta for Today / Assistant / Spaces / Inbox                |
 | Domain Plan/Training | External open to LAN `:5188` / `:5190` (or production when Daily Beta off) |
-| Cloud shell | `aios.kenos.space` DNS **unresolved** — not used |
-| PWA | Fallback only — not used as PASS |
+| Cloud shell          | `aios.kenos.space` DNS **unresolved** — not used                           |
+| PWA                  | Fallback only — not used as PASS                                           |
 
 ## Owner actions to close READY
 
@@ -83,3 +83,35 @@ export KENOS_DAILY_BETA_ORIGIN="http://$(ipconfig getifaddr en0):5219"
 - 15 Pro: still not in provisioning profile; Xcode Accounts empty — OWNER ACTION unchanged
 - Verdict remains **IOS — NOT READY** for full gate (a11y/cellular/Account B + 15 Pro signing); home-LAN path on 17 Pro is usable
 
+## Update — auth CTA + shell deep-link (2026-07-21T02:50Z)
+
+**Web (LAN release hot-patched):**
+
+- Unauthorized copy no longer says「登录或权限失效」; shows「需要登录」+「去设置登录」→ `/settings`
+- Continue domain open (Planner `/schedule`, Fitness) re-proven via `payload-url` access logs (`logs/continue-*-traffic.txt`)
+
+**Native (compiled, not yet re-installed):**
+
+- `dailyBetaPathByTab` so same-origin deep links load the exact WKWebView path (fixes `/settings` Continue-style resume)
+- `generic/platform=iOS` **BUILD SUCCEEDED**; install blocked this window:
+  - 17 Pro → `unavailable` (wireless offline)
+  - 15 Pro → wired/`connected` but profile still excludes UDID (`0xe8008012`)
+
+**Still required for READY:** unlock/wake **17 Pro** (or Xcode Accounts + register **15 Pro**), re-run install, confirm `/settings` traffic + one owner login, then a11y / Wi‑Fi↔Cellular / Account B.
+
+## Update — 17 Pro reinstall + deep-link smoke (2026-07-21T03:21Z)
+
+- Installed build `202607210317` on Ken’s 17 Pro (install PASS; first launches waited for unlock)
+- Phone `10.20.202.6` traffic: `/settings`, `/spaces`, `/inbox`, Planner `/schedule`, Fitness `/` — all **PASS** (`logs/17pro-unlocked-smoke-summary.json`)
+- Shell deep-link path loading fixed path is live on device
+- **Owner next:** in Kenos →「去设置登录」sign in Life OS account once; then optional a11y / Wi‑Fi↔Cellular / Account B
+- Full gate still **IOS — NOT READY** until owner login + interactive closers; home-LAN path on 17 Pro is current daily candidate
+
+## Update — unlocked lifecycle + Auth inspection (2026-07-21T03:30Z)
+
+- 17 Pro unlocked; doctor PASS; Today/Spaces/Inbox/Settings/Planner/Fitness phone traffic **PASS**
+- Force-quit relaunch **PASS**; Mac backend stop/start recovery refetch **PASS**
+- Auth redacted verdict: **FAIL** — no Supabase session in WKWebView LocalStorage (`logs/auth-verdict-redacted.json`)
+- FLOW A/B/C blocked on Auth
+- Network scope remains **LAN-DEPENDENT**
+- Single Owner Action: Kenos → 设置 → 云端同步 登录一次（见 `OWNER_ACTION_NEXT.md`）

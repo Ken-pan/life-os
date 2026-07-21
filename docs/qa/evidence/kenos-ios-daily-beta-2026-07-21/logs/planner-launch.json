@@ -1,0 +1,34 @@
+{
+  "error" : {
+    "code" : 10004,
+    "domain" : "com.apple.dt.CoreDeviceError",
+    "userInfo" : {
+      "NSLocalizedDescription" : {
+        "string" : "The process identifier of the launched application could not be determined. It may have already terminated."
+      }
+    }
+  },
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "process",
+      "launch",
+      "--device",
+      "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+      "--terminate-existing",
+      "--payload-url",
+      "http://10.20.202.15:5188/schedule",
+      "--json-output",
+      "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/logs/planner-launch.json",
+      "space.kenos.app.ios"
+    ],
+    "commandType" : "devicectl.device.process.launch",
+    "environment" : {
+      "TERM" : "dumb"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "failed",
+    "version" : "518.33"
+  }
+}

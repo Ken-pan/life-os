@@ -1,0 +1,4 @@
+     195 /Users/kenpan/Library/Logs/KenosDailyBeta/planner.stderr.log
+     165 /Users/kenpan/Library/Logs/KenosDailyBeta/fitness.stderr.log
+    1651 /Users/kenpan/Library/Logs/KenosDailyBeta/aios.stderr.log
+    2011 total

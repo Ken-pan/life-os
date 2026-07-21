@@ -1,15 +1,19 @@
 # known-residuals.md
 
-## Not blockers for home-LAN daily use, but block full READY gate
+## Active READY gate
 
-1. **VoiceOver / Dynamic Type / Dark Mode / Wi‑Fi↔Cellular** — not owner-executed on device this slice.
-2. **Account B isolation on phone** — not re-run; Mac Continuity isolation remains FROZEN/valid.
-3. **Continue deep resume** — native UI wired; specific task/set resume not access-log proven (needs UI tap).
-4. **Away-from-home** — requires Mac LAN or restored `aios.kenos.space` DNS; no public tunnel.
-5. **Static LAN API** — `POST /api/ai/plan` → 501 (Python static has no Netlify functions).
-6. **Node LAN serve** — broken by macOS Application Firewall on this host; Python server is the supported LAN path.
-7. **Pixel screenshots** — not captured; evidence is install/launch + phone access logs.
+1. **Owner Auth on 17 Pro** — WKWebView LocalStorage has no `sb-*-auth-token` (2026-07-21T03:29Z). Blocks FLOW A/B/C and AUTH PASS. See `OWNER_ACTION_NEXT.md`.
+
+## Not blockers for home-LAN shell reachability
+
+1. **VoiceOver / Dynamic Type / Dark Mode / Wi‑Fi↔Cellular** — not owner-executed this slice.
+2. **Account B isolation on phone** — blocked until Auth; Mac Continuity isolation remains valid in unit tests.
+3. **Away-from-home** — LAN-DEPENDENT until phone-reachable canary origin exists (no public tunnel).
+4. **Static LAN API** — `POST /api/ai/plan` → 501 (Python static has no Netlify functions).
+5. **Node LAN serve** — broken by macOS Application Firewall; Python `kenos-ctl` is the supported LAN path.
+6. **Pixel screenshots** — wireless CoreDevice cannot `idevicescreenshot`; traffic logs are evidence.
+7. **CFBundleVersion display** — device still shows `20260721` until next install after `$(CURRENT_PROJECT_VERSION)` fix.
 
 ## P0/P1
 
-**NONE** for signed install + Today/Inbox/Planner/Fitness reachability on Ken’s 17 Pro over home LAN.
+**NONE** for signed install + Today/Spaces/Inbox/Settings/Planner/Fitness LAN Continuity + force-quit/offline recovery on Ken’s 17 Pro.

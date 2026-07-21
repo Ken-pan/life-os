@@ -1,0 +1,45 @@
+{
+  "generatedAt": "2026-07-21T02:47:27Z",
+  "device": "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+  "summary": {
+    "aios": {
+      "phone_hits": 95,
+      "sample": [
+        "10.20.202.6 - \"GET /manifest.webmanifest HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /manifest.webmanifest HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /_app/version.json HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /_app/version.json HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /__health HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /?iosNativeShell=1 HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /manifest.webmanifest HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /_app/version.json HTTP/1.1\" 200 -"
+      ]
+    },
+    "planner": {
+      "phone_hits": 18,
+      "sample": [
+        "10.20.202.6 - \"GET /_app/immutable/nodes/11.CXPlrE9T.js HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /_app/immutable/nodes/4.C_IiuIV0.js HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-light-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-dark-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /schedule HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /manifest.webmanifest HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-light-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-dark-96.png HTTP/1.1\" 200 -"
+      ]
+    },
+    "fitness": {
+      "phone_hits": 11,
+      "sample": [
+        "10.20.202.6 - \"GET /brand-circle-dark-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /assets/images/exercises/c_bench.jpg HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET / HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /manifest.webmanifest HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-light-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /brand-circle-dark-96.png HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /assets/images/exercises/c_bench.jpg HTTP/1.1\" 200 -",
+        "10.20.202.6 - \"GET /assets/images/exercises/co_plank.jpg HTTP/1.1\" 200 -"
+      ]
+    }
+  }
+}

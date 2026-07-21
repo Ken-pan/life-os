@@ -1,7 +1,7 @@
 ---
 title: Kenos 重构实施状态审计
 owner: kenpan
-last_verified: 2026-07-20T19:08:01Z
+last_verified: 2026-07-21T03:30:00Z
 doc_role: implementation-status-audit
 status: controlled-production-canary-legacy-cutover-open
 formal_baseline: 502d805c28b29d3d50c0efa2699ab717a301ac45
@@ -31,8 +31,14 @@ CONTROLLED_PRODUCTION_CANARY
 + COMMITTED_MULTI_CLIENT_FOUNDATION
 + LEGACY_FALLBACK_RETAINED
 + EXECUTOR_AND_DISTRIBUTION_GATES_OPEN
+
+MAC WEB DAILY BETA: READY
+IOS PERSONAL DAILY BETA: NOT READY   # 17 Pro install/LAN PASS；Auth Owner Action
+OVERALL PERSONAL DAILY BETA: HOLD
+NETWORK SCOPE (iOS): LAN-DEPENDENT
 ```
 
+iOS 真机证据：`docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`（2026-07-21）。
 ## 2. 状态词汇
 
 | 状态 | 含义 | 可以对外宣称什么 |
@@ -80,7 +86,7 @@ CONTROLLED_PRODUCTION_CANARY
 | Phase 1 契约与 Plan 垂直切片 | Zod/SQL/Swift corpus；Plan create/update/complete/reopen/archive RPC；RLS/idempotency/outbox foundation；Planner writer hosts | `PROD_VERIFIED_CANARY / EXIT_OPEN` | 全 cohort/全字段 cutover、legacy revoke、offline flush ON、持续对账、dead-letter/recovery 演练 |
 | Phase 2 Assistant/Today/Portal | AIOS Today/Assistant/Inbox/Approvals/Activity；read canary；Approval/Capture owner-limited；Portal `/today` soft redirect | `PROD_VERIFIED_CANARY / EXIT_OPEN` | 两个真实使用周期、Portal writes/build/registry/compat 全退役、默认入口全量切换、流量观察 |
 | Phase 3 Work 闭环 | Work contracts、project create/archive RPC、Assistant proposal、Work/Spaces routes、Capture ingest/convert | `FORMAL_COMMITTED + LIMITED_PROD_FOUNDATION / EXIT_OPEN` | 一个真实 Work 项目 + Connector 的完整 capture→Library/Plan→review 闭环与复利数据 |
-| Phase 4 Apple clients | iOS/macOS/watchOS targets、共享 Contracts/Client/Store/Actions/Handoff/Notifications/Design、Simulator/Mac build、iPhone build/install/open | `DEVICE_FOUNDATION_VERIFIED / EXIT_OPEN` | App Group 持久共享、APNs/Focus entitlement、完整真机矩阵、签名/分发、旧 Tauri/Capacitor/companion 逐能力退役 |
+| Phase 4 Apple clients | iOS/macOS/watchOS targets、共享 Contracts/Client/Store/Actions/Handoff/Notifications/Design、Simulator/Mac build、iPhone 17 Pro install/open + LAN Daily Beta Continuity | `DEVICE_FOUNDATION_VERIFIED / EXIT_OPEN`；**iOS Personal Daily Beta NOT READY**（Auth 未登录） | App Group 持久共享、APNs/Focus entitlement、完整真机矩阵、签名/分发、旧 Tauri/Capacitor/companion 逐能力退役；iOS Auth + Plan/Training 真机日常闭环 |
 | Phase 5 Contextual Intelligence | Focus contracts、Web/Apple/Watch 本地行为、interruption policy、建议 explanation/budget、start/end RPC | `LOCAL_VERIFIED + LIMITED_DATA_PATH / EXIT_OPEN` | ProductionExecutor、生产通知、Approval 执行闭环、跨设备 Focus state、真实信任升级与撤销/维护指标 |
 | Phase 6 生产收敛 | Wave migrations、受控 deploy、owner-limited canaries、rollback IDs、build pause、pre-revoke bypass | `CONTROLLED_PRODUCTION_CANARY / EXIT_OPEN` | legacy revoke、outbox worker、final rollback drill、长期观察、旧路径/站点/兼容层删除 |
 

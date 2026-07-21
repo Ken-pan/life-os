@@ -1,0 +1,20 @@
+19:47:05  Acquired tunnel connection to device.
+19:47:05  Enabling developer disk image services.
+19:47:05  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+19:47:09  Acquired tunnel connection to device.
+19:47:09  Enabling developer disk image services.
+19:47:09  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+19:47:14  Acquired tunnel connection to device.
+19:47:14  Enabling developer disk image services.
+19:47:14  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+19:47:18  Acquired tunnel connection to device.
+19:47:18  Enabling developer disk image services.
+19:47:18  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+19:47:23  Acquired tunnel connection to device.
+19:47:23  Enabling developer disk image services.
+19:47:23  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.

@@ -1,0 +1,82 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "apps",
+      "--device",
+      "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+      "--json-output",
+      "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/logs/doctor-apps.json"
+    ],
+    "commandType" : "devicectl.device.info.apps",
+    "environment" : {
+      "TERM" : "dumb"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "success",
+    "version" : "518.33"
+  },
+  "result" : {
+    "apps" : [
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "space.kenos.homescan",
+        "bundleVersion" : "1",
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "HomeScan",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/F51D395F-6913-4AB5-B222-0430494BC27E/HomeScan.app/",
+        "version" : "1.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "space.kenos.app.ios",
+        "bundleVersion" : "20260721",
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "Kenos",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/26CA4810-17A0-4E68-B2E8-BEA584384EBF/KenosIOS.app/",
+        "version" : "1.0.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "os.lifeos.music",
+        "bundleVersion" : "1",
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "MUSIC.OS",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/9E21754B-8C95-41D1-8251-2166AC4DE270/App.app/",
+        "version" : "1.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.example.macremote.client",
+        "bundleVersion" : "1",
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "Mac Remote",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/6389DC9E-E755-4CD3-9515-70B53F98BD8A/Mac%20Remote.app/",
+        "version" : "1.0"
+      }
+    ],
+    "defaultAppsIncluded" : false,
+    "deviceIdentifier" : "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+    "hiddenAppsIncluded" : false,
+    "internalAppsIncluded" : false,
+    "removableAppsIncluded" : true
+  }
+}
