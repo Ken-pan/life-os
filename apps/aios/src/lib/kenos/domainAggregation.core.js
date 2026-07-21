@@ -81,6 +81,7 @@ export function projectSpaceShelf(opts = {}) {
     privacy: {
       money: 'hide_amounts',
       health: 'non_decision',
+      home: 'hide_interior_images',
       paper: 'no_second_knowledge_truth',
     },
   }

@@ -62,15 +62,10 @@ describe('domainIntegration.core — registry', () => {
     const shelf = listShelfDomainDefinitions()
     assert.ok(shelf.every((d) => d.id !== 'kenos'))
     assert.ok(shelf.some((d) => d.id === 'plan'))
-    assert.deepEqual([...INTEGRATION_DOMAIN_ORDER], [
-      'work',
-      'money',
-      'library',
-      'music',
-      'home',
-      'health',
-      'paper',
-    ])
+    assert.deepEqual(
+      [...INTEGRATION_DOMAIN_ORDER],
+      ['work', 'money', 'library', 'music', 'home', 'health', 'paper'],
+    )
   })
 })
 
@@ -84,23 +79,54 @@ describe('domainIntegration.core — navigation manifests', () => {
     }
   })
 
-  it('plan/training reference manifests match Daily Beta dock IA', () => {
+  it('plan/training reference manifests match dock IA', () => {
     const plan = getDomainNavigationManifest('plan')
     assert.equal(plan.slots[0].title, 'Tasks')
+    assert.equal(plan.slots[2].path, '/inbox')
     assert.equal(plan.slots[3].opensMore, true)
     const training = getDomainNavigationManifest('training')
     assert.equal(training.slots[1].path, '/session')
+    assert.equal(training.slots[2].path, '/discover/records')
   })
 
-  it('work manifest includes Focus path', () => {
+  it('work manifest includes Focus + Inbox (no duplicate Today path)', () => {
     const work = getDomainNavigationManifest('work')
     assert.ok(work.slots.some((s) => s.path === '/spaces/work'))
+    assert.ok(work.slots.some((s) => s.path === '/inbox'))
+    const paths = work.slots.filter((s) => s.path).map((s) => s.path)
+    assert.equal(new Set(paths).size, paths.length)
+  })
+
+  it('money/music/home use real app routes', () => {
+    const money = getDomainNavigationManifest('money')
+    assert.equal(money.slots[1].path, '/history/insights')
+    assert.equal(money.slots[2].path, '/accounts')
+    const music = getDomainNavigationManifest('music')
+    assert.equal(music.slots[0].title, 'Home')
+    assert.ok(music.more.some((m) => m.path === '/browse'))
+    const home = getDomainNavigationManifest('home')
+    assert.deepEqual(
+      home.slots.filter((s) => s.path).map((s) => s.path),
+      ['/plan', '/storage', '/tidy'],
+    )
+    assert.deepEqual(
+      home.slots.map((s) => s.title),
+      ['Rooms', 'Items', 'Organize', 'More'],
+    )
+    assert.ok(home.more.some((m) => m.path === 'homescan://scan'))
+    assert.ok(home.more.some((m) => m.path === 'homescan://find'))
+    assert.ok(home.more.some((m) => m.path === 'homescan://container'))
+    assert.equal(DOMAIN_REGISTRY.home.homePath, '/plan')
+    assert.equal(DOMAIN_REGISTRY.home.privacy, 'sensitive')
   })
 })
 
 describe('domainIntegration.core — launch + runtime', () => {
   it('builds embedded_url launch results for Plan/Money', () => {
-    const plan = buildDomainLaunchResult('plan', { localDailyBeta: true, host: '10.0.0.1' })
+    const plan = buildDomainLaunchResult('plan', {
+      localDailyBeta: true,
+      host: '10.0.0.1',
+    })
     assert.equal(plan.kind, 'embedded_url')
     assert.equal(plan.domainId, 'plan')
     assert.match(plan.url, /^http:\/\/10\.0\.0\.1:5188\//)
@@ -130,10 +156,22 @@ describe('domainIntegration.core — launch + runtime', () => {
   })
 
   it('resolves domain id from Continuity URLs', () => {
-    assert.equal(domainIdFromContinuityUrl('http://10.20.202.15:5188/upcoming'), 'plan')
-    assert.equal(domainIdFromContinuityUrl('https://fitness.kenos.space/session'), 'training')
-    assert.equal(domainIdFromContinuityUrl('http://127.0.0.1:5219/work'), 'work')
-    assert.equal(domainIdFromContinuityUrl('https://knowledge.kenos.space/library'), 'library')
+    assert.equal(
+      domainIdFromContinuityUrl('http://10.20.202.15:5188/upcoming'),
+      'plan',
+    )
+    assert.equal(
+      domainIdFromContinuityUrl('https://fitness.kenos.space/session'),
+      'training',
+    )
+    assert.equal(
+      domainIdFromContinuityUrl('http://127.0.0.1:5219/work'),
+      'work',
+    )
+    assert.equal(
+      domainIdFromContinuityUrl('https://knowledge.kenos.space/library'),
+      'library',
+    )
   })
 })
 

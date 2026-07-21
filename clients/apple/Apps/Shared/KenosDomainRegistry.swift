@@ -72,7 +72,7 @@ enum KenosDomainRegistry {
         .init(id: "money", label: "Money", subtitle: "Finance decisions", strategy: .embeddedWeb, appId: "finance", productionOrigin: "https://finance.kenos.space", devPort: 5180, homePath: "/home/today", systemImage: "dollarsign.circle", aliases: ["finance", "financeos", "finance-os"], accentRGB: 0x3D9B6E),
         .init(id: "library", label: "Library", subtitle: "Knowledge vault", strategy: .embeddedWeb, appId: "knowledge", productionOrigin: "https://knowledge.kenos.space", devPort: 5879, homePath: "/", systemImage: "books.vertical", aliases: ["knowledge", "knowledgeos", "knowledge-os"], accentRGB: 0x5B6BBF),
         .init(id: "music", label: "Music", subtitle: "Library and playback", strategy: .embeddedWeb, appId: "music", productionOrigin: "https://music.kenos.space", devPort: 5189, homePath: "/", systemImage: "music.note", aliases: [], accentRGB: 0x8B7EC8),
-        .init(id: "home", label: "Home", subtitle: "Spaces and items", strategy: .embeddedWeb, appId: "home", productionOrigin: "https://home.kenos.space", devPort: 5196, homePath: "/storage", systemImage: "house", aliases: [], accentRGB: 0x7AA0C8),
+        .init(id: "home", label: "Home", subtitle: "Rooms · Items · Organize", strategy: .embeddedWeb, appId: "home", productionOrigin: "https://home.kenos.space", devPort: 5196, homePath: "/plan", systemImage: "house", aliases: [], accentRGB: 0x7AA0C8),
         .init(id: "health", label: "Health", subtitle: "Status · Focus · Trends", strategy: .embeddedWeb, appId: "health", productionOrigin: "https://health.kenos.space", devPort: 5192, homePath: "/", systemImage: "heart.text.square", aliases: ["focus", "status"], accentRGB: 0x5B6CFF),
         .init(id: "paper", label: "Paper", subtitle: "Notebooks and capture", strategy: .legacyFallback, appId: nil, productionOrigin: nil, devPort: nil, homePath: "/spaces/paper", systemImage: "pencil.and.outline", aliases: ["paperos", "paper-os"], accentRGB: 0x8B7355),
     ]
@@ -175,12 +175,17 @@ enum KenosDomainRegistry {
         "home": .init(
             domainId: "home",
             slots: [
-                .init(title: "平面", systemImage: "square.grid.2x2", path: "/plan"),
-                .init(title: "储藏", systemImage: "archivebox", path: "/storage"),
-                .init(title: "整理", systemImage: "checklist", path: "/tidy"),
+                .init(title: "Rooms", systemImage: "square.grid.2x2", path: "/plan"),
+                .init(title: "Items", systemImage: "archivebox", path: "/storage"),
+                .init(title: "Organize", systemImage: "checklist", path: "/tidy"),
                 .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
             more: [
+                // Companion HomeScan (ios/home-scan) — RoomPlan / AR; not embedded WKWebView.
+                .init(title: "Scan", systemImage: "camera.metering.matrix", path: "homescan://scan"),
+                .init(title: "Find", systemImage: "location.magnifyingglass", path: "homescan://find"),
+                .init(title: "Cabinet", systemImage: "shippingbox", path: "homescan://container"),
+                .init(title: "Cloud scans", systemImage: "icloud.and.arrow.down", path: "/settings"),
                 .init(title: "Settings", systemImage: "gearshape", path: "/settings"),
             ]
         ),

@@ -37,6 +37,10 @@ targets:
         UIRequiredDeviceCapabilities: [arkit]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
+        # Kenos Domain Continuity → companion deep links (scan / find / container).
+        CFBundleURLTypes:
+          - CFBundleURLName: space.kenos.homescan
+            CFBundleURLSchemes: [homescan]
         # 全屏启动修复(别再从 Info.plist 手改!):xcodegen 每次 generate 都按这份
         # properties 重写 HomeScan/Info.plist 物理文件,不在这里列的 key 会被冲掉 ——
         # 上一版直接手改物理文件加的 UILaunchScreen,装机一跑 xcodegen generate 就被

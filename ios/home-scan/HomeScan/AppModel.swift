@@ -22,6 +22,13 @@ final class AppModel {
         case uploading
     }
 
+    /// Kenos Continuity / `homescan://` deep-link intent — consumed on Home when signed in.
+    enum DeepLinkAction: Equatable {
+        case scan(scope: String)
+        case find
+        case container
+    }
+
     // ---- 账号与导航 ----
     /// didSet 是全 App 页面流转的单点日志:哪一步→哪一步(含失败弹回),
     /// 拼出用户旅程时间线,不用在每个赋值点各记一笔
@@ -33,6 +40,8 @@ final class AppModel {
             ])
         }
     }
+    /// Pending `homescan://` action from Kenos Domain Mode (or external).
+    var pendingDeepLink: DeepLinkAction?
     /// 冷启动等超过 3 秒 —— 让 .loading 那个纯转圈能说句人话,并给个「跳过」出口
     var bootstrapSlow = false
     var userEmail: String?
@@ -96,6 +105,49 @@ final class AppModel {
     }
 
     // ---- 启动与账号 ----
+
+    /// Handle `homescan://scan|find|container` from Kenos Continuity.
+    /// Queues until signed-in home; scan may start immediately when already home.
+    func handleDeepLink(_ url: URL) {
+        guard url.scheme?.lowercased() == "homescan" else { return }
+        let host = (url.host ?? url.pathComponents.dropFirst().first.map(String.init) ?? "")
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            .lowercased()
+        let action: DeepLinkAction
+        switch host {
+        case "scan", "":
+            let scope = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?
+                .first(where: { $0.name == "scope" })?
+                .value ?? "full"
+            action = .scan(scope: scope == "partial" ? "partial" : "full")
+        case "find", "locate":
+            action = .find
+        case "container", "cabinet":
+            action = .container
+        default:
+            // Unknown host → open home only
+            ScanLog.shared.log("ux", "deeplink_unknown", ["host": .string(host)])
+            return
+        }
+        ScanLog.shared.log("ux", "deeplink", ["host": .string(host)])
+        pendingDeepLink = action
+        consumePendingDeepLinkIfReady()
+    }
+
+    /// Apply queued deep link when route allows (signed-in home).
+    /// Scan starts here; find/container stay pending for HomeView sheets to present.
+    func consumePendingDeepLinkIfReady() {
+        guard route == .home, let action = pendingDeepLink else { return }
+        switch action {
+        case .scan(let scope):
+            pendingDeepLink = nil
+            startScanning(scope: scope)
+        case .find, .container:
+            // HomeView.onChange(pendingDeepLink) presents the sheet and clears.
+            break
+        }
+    }
 
     func bootstrap() async {
         bootstrapSlow = false

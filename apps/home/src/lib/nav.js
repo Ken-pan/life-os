@@ -1,11 +1,10 @@
-/** @typedef {{ tab: string, href: string, label: string, icon: string }} NavItem */
+/** @typedef {{ tab: string, href: string, label: string, icon: string, match?: (p: string) => boolean }} NavItem */
 
 /**
  * @returns {NavItem[]}
  *
- * 「概览」曾经排在第一格。它是一张静态缩略图 + 一句「打开交互平面图 →」——
- * 一个除了跳转别无功能的加载屏,却占着导航的头把交椅。删掉之后平面图就是首页
- * (「/」重定向到 /plan,见 routes/+page.js),少一次点击、少一个要理解的概念。
+ * Rooms · Items · Organize · More — aligned with Kenos Domain Dock
+ * (web Chinese labels kept for standalone PWA chrome).
  */
 export function buildPrimaryNavItems() {
   return [
@@ -17,7 +16,23 @@ export function buildPrimaryNavItems() {
 
 /** @returns {NavItem} */
 export function buildSettingsNavItem() {
-  return { tab: 'settings', href: '/settings', label: '设置', icon: 'settings' }
+  return {
+    tab: 'settings',
+    href: '/settings',
+    label: '设置',
+    icon: 'settings',
+    match: (p) => p.startsWith('/settings') || p.startsWith('/auth'),
+  }
+}
+
+/** @returns {{ label: string, items: NavItem[] }[]} */
+export function buildMoreNavGroups() {
+  return [
+    {
+      label: '账户',
+      items: [buildSettingsNavItem()],
+    },
+  ]
 }
 
 /** @returns {NavItem[]} */
@@ -27,14 +42,18 @@ export function buildNavItems() {
 
 /** @param {string} pathname */
 export function resolveNavTab(pathname) {
-  // 「/」只是通往 /plan 的重定向,高亮跟着目的地走 —— 重定向那一帧不该让整条
-  // 导航都没有选中项
+  // 「/」只是通往 /plan 的重定向,高亮跟着目的地走
   if (pathname === '/') return 'plan'
   if (pathname.startsWith('/plan')) return 'plan'
   if (pathname.startsWith('/storage')) return 'storage'
   if (pathname.startsWith('/tidy')) return 'tidy'
   if (pathname.startsWith('/settings')) return 'settings'
   return ''
+}
+
+/** @param {string} pathname */
+export function isMoreNavActive(pathname) {
+  return pathname.startsWith('/settings') || pathname.startsWith('/auth')
 }
 
 /** @param {string} pathname */

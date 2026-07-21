@@ -22,6 +22,17 @@
 	<string>1</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>space.kenos.homescan</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>homescan</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>扫描房间结构与拍摄机位照片需要使用相机</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

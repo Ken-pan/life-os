@@ -5,15 +5,15 @@ name: Kenos
 options:
   bundleIdPrefix: space.kenos.app
   deploymentTarget:
-    iOS: "17.0"
-    macOS: "14.0"
-    watchOS: "10.0"
+    iOS: '17.0'
+    macOS: '14.0'
+    watchOS: '10.0'
   createIntermediateGroups: true
 settings:
   base:
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: ''
     CODE_SIGN_STYLE: Automatic
-    SWIFT_VERSION: "6.0"
+    SWIFT_VERSION: '6.0'
 packages:
   KenosContracts:
     path: ../Packages/KenosContracts
@@ -35,14 +35,17 @@ targets:
     platform: iOS
     sources:
       - path: iOS/Sources
+      - path: iOS/Assets.xcassets
       - path: Shared
     info:
       path: iOS/Info.plist
       properties:
         CFBundleDisplayName: Kenos
-        CFBundleShortVersionString: "1.0.0"
-        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
-        UILaunchScreen: {}
+        CFBundleShortVersionString: '1.0.0'
+        CFBundleVersion: '$(CURRENT_PROJECT_VERSION)'
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UIUserInterfaceStyle: Dark
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
@@ -51,33 +54,52 @@ targets:
           - CFBundleURLName: space.kenos.app.ios
             CFBundleURLSchemes:
               - kenos
-        KENOS_DAILY_BETA_ORIGIN: "$(KENOS_DAILY_BETA_ORIGIN)"
+        KENOS_DAILY_BETA_ORIGIN: '$(KENOS_DAILY_BETA_ORIGIN)'
+        # Publishable Supabase config for native bug report upload (same as apps/*/.env.example).
+        KENOS_SUPABASE_URL: 'https://iueozzuctstwvzbcxcyh.supabase.co'
+        KENOS_SUPABASE_ANON_KEY: 'sb_publishable_V_BnCiRU9vozOl3VLL8AAg_KsUfDEcL'
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
           NSAllowsArbitraryLoadsInWebContent: true
           NSExceptionDomains:
-            "127.0.0.1":
+            '127.0.0.1':
               NSExceptionAllowsInsecureHTTPLoads: true
             localhost:
               NSExceptionAllowsInsecureHTTPLoads: true
               NSIncludesSubdomains: true
-            "10.0.0.0/8":
+            '10.0.0.0/8':
               NSExceptionAllowsInsecureHTTPLoads: true
-            "192.168.0.0/16":
+            '192.168.0.0/16':
               NSExceptionAllowsInsecureHTTPLoads: true
-            "172.16.0.0/12":
+            '172.16.0.0/12':
               NSExceptionAllowsInsecureHTTPLoads: true
+        LSApplicationQueriesSchemes:
+          - x-apple-health
+          - homescan
         NSLocalNetworkUsageDescription: >-
           Kenos connects to your Mac Daily Beta on the private LAN when the
           cloud shell is unavailable.
+        NSHealthShareUsageDescription: >-
+          Kenos reads Apple Health metrics you enable (sleep, heart, activity,
+          workouts, and more) to power Health status. Data stays on your devices
+          and can optionally sync to your Mac.
+        UIBackgroundModes:
+          - fetch
+          - processing
+        BGTaskSchedulerPermittedIdentifiers:
+          - space.kenos.app.ios.health.sync
+    entitlements:
+      path: iOS/KenosIOS.entitlements
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios
         PRODUCT_NAME: KenosIOS
-        TARGETED_DEVICE_FAMILY: "1,2"
+        TARGETED_DEVICE_FAMILY: '1,2'
         GENERATE_INFOPLIST_FILE: NO
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
-        KENOS_DAILY_BETA_ORIGIN: "http://10.20.202.15:5219"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: iOS/KenosIOS.entitlements
+        KENOS_DAILY_BETA_ORIGIN: 'http://10.20.202.15:5219'
     dependencies:
       - package: KenosContracts
       - package: KenosClient
@@ -98,6 +120,7 @@ targets:
     platform: macOS
     sources:
       - path: macOS/Sources
+      - path: macOS/Assets.xcassets
       - path: Shared
     info:
       path: macOS/Info.plist
@@ -106,7 +129,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.macos
         PRODUCT_NAME: KenosMac
         GENERATE_INFOPLIST_FILE: NO
-        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        LD_RUNPATH_SEARCH_PATHS: '$(inherited) @executable_path/../Frameworks'
     dependencies:
       - package: KenosContracts
       - package: KenosClient
@@ -124,12 +148,13 @@ targets:
     platform: watchOS
     sources:
       - path: watchOS/Sources
+      - path: watchOS/Assets.xcassets
     info:
       path: watchOS/Info.plist
       properties:
         CFBundleDisplayName: Kenos
-        CFBundleShortVersionString: "0.4.1"
-        CFBundleVersion: "1"
+        CFBundleShortVersionString: '0.4.1'
+        CFBundleVersion: '1'
         WKApplication: true
         WKCompanionAppBundleIdentifier: space.kenos.app.ios
         CFBundleURLTypes:
@@ -141,6 +166,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios.watch
         PRODUCT_NAME: KenosWatch
         GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SKIP_INSTALL: YES
     dependencies:
       - package: KenosContracts
@@ -162,8 +188,8 @@ targets:
       path: Extensions/Widget/Info.plist
       properties:
         CFBundleDisplayName: Kenos
-        CFBundleShortVersionString: "0.4.1"
-        CFBundleVersion: "1"
+        CFBundleShortVersionString: '0.4.1'
+        CFBundleVersion: '1'
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
@@ -171,7 +197,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios.widget
         PRODUCT_NAME: KenosWidget
         GENERATE_INFOPLIST_FILE: NO
-        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGNING_ALLOWED: 'NO'
         # App Group placeholder only — production group deferred (KR-P4B-TEMP-005)
         # PRODUCT_APP_GROUP = group.space.kenos.app
     dependencies:
@@ -205,6 +231,10 @@ targets:
         excludes:
           - KenosWatchGlanceTests.swift
           - KenosCrossDeviceConsistencyTests.swift
+          - KenosLogTests.swift
+          - KenosBugReportTests.swift
+          - KenosHealthKitTests.swift
+          - KenosHomeScanBridgeTests.swift
     dependencies:
       - target: KenosMac
       - package: KenosClient

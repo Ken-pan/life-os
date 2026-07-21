@@ -26,6 +26,7 @@ describe('domainAggregation.core', () => {
     assert.ok(shelf.recent.some((c) => c.id === 'plan'))
     assert.ok(shelf.all.length >= 7)
     assert.equal(shelf.privacy.money, 'hide_amounts')
+    assert.equal(shelf.privacy.home, 'hide_interior_images')
   })
 
   it('searches Quick Switch across aliases', () => {

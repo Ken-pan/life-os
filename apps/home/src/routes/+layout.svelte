@@ -55,7 +55,7 @@
   const storageRoute = $derived(page.url.pathname === '/storage')
   // /tidy 现在自己有页内顶栏(HomeTopBar,与 /plan /storage 同一套语言),
   // 全局 AppBar(居中样式)让位,否则标题会出现两遍且视觉不统一。
-  const tidyRoute = $derived(page.url.pathname === '/tidy')
+  const tidyRoute = $derived(page.url.pathname.startsWith('/tidy'))
   const planImmersive = $derived(planRoute && getPlanImmersiveEdit())
   const mainClass = $derived(
     planRoute || storageRoute
@@ -95,6 +95,18 @@
     if (p === '/tidy/go') return { title: '专注模式', subtitle: '' }
     if (p === '/settings') return { title: '设置', subtitle: '' }
     return { title: 'HOME.OS', subtitle: '' }
+  })
+
+  // Continuity resume — refresh on every Home route (room/item/organize context).
+  $effect(() => {
+    if (!nativeShell) return
+    const path = page.url.pathname
+    const search = page.url.search
+    void path
+    void search
+    persistHomeContinue(
+      suspendHomeSpace({ pathname: path, search }),
+    )
   })
 
   onMount(() => {

@@ -14,6 +14,7 @@ struct HomeScanApp: App {
                     ScanLog.shared.beginSession(kind: "app", env: ScanLog.envSnapshot())
                     ScanLog.shared.markLaunch()
                     await model.bootstrap()
+                    model.consumePendingDeepLinkIfReady()
                 }
                 .onChange(of: scenePhase) { _, phase in
                     // 进后台视作善终(iOS 随时可能无声回收后台进程,那不是事故);
@@ -25,9 +26,13 @@ struct HomeScanApp: App {
                     case .active:
                         ScanLog.shared.log("app", "active")
                         ScanLog.shared.markActive()
+                        model.consumePendingDeepLinkIfReady()
                     default:
                         break
                     }
+                }
+                .onOpenURL { url in
+                    model.handleDeepLink(url)
                 }
         }
     }
@@ -61,6 +66,11 @@ struct RootView: View {
         // 恢复落盘扫描→预览是"前进"),滑错方向比不滑更误导。
         .animation(.easeInOut(duration: 0.28), value: model.route)
         .transition(.opacity)
+        .onChange(of: model.route) { _, newRoute in
+            if newRoute == .home {
+                model.consumePendingDeepLinkIfReady()
+            }
+        }
     }
 
     /// 纯 ProgressView 在弱网下就是个「App 卡死了」的画面。等久了要说清楚

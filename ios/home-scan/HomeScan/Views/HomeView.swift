@@ -84,6 +84,10 @@ struct HomeView: View {
                 }
             }
             .refreshable { await model.refreshScans() }
+            .onAppear { model.consumePendingDeepLinkIfReady(); presentPendingDeepLinkSheets() }
+            .onChange(of: model.pendingDeepLink) { _, _ in
+                presentPendingDeepLinkSheets()
+            }
             .sheet(item: $containerTarget) { scan in
                 ContainerPickView(scan: scan)
             }
@@ -128,6 +132,33 @@ struct HomeView: View {
                     }
                 }
                 Button("取消", role: .cancel) {}
+            }
+        }
+    }
+
+    // MARK: - Kenos deep links
+
+    /// Present find / container sheets queued by `homescan://` (scan starts in AppModel).
+    private func presentPendingDeepLinkSheets() {
+        guard let action = model.pendingDeepLink else { return }
+        switch action {
+        case .scan:
+            break
+        case .find:
+            model.pendingDeepLink = nil
+            if model.canonicalHome != nil, containerScanAvailable {
+                showFindItem = true
+            } else {
+                model.lastError = "还没有户型副本，无法 AR 寻物。先完成一次全屋扫描。"
+            }
+        case .container:
+            model.pendingDeepLink = nil
+            if let first = model.scans.first, containerScanAvailable {
+                containerTarget = first
+            } else if !containerScanAvailable {
+                model.lastError = "此设备不支持柜内 AR 测量。"
+            } else {
+                model.lastError = "还没有已上传的扫描，无法打开柜内测量。"
             }
         }
     }

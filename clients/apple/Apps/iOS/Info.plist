@@ -33,6 +33,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>KENOS_DAILY_BETA_ORIGIN</key>
 	<string>$(KENOS_DAILY_BETA_ORIGIN)</string>
+	<key>KENOS_SUPABASE_ANON_KEY</key>
+	<string>sb_publishable_V_BnCiRU9vozOl3VLL8AAg_KsUfDEcL</string>
+	<key>KENOS_SUPABASE_URL</key>
+	<string>https://iueozzuctstwvzbcxcyh.supabase.co</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoadsInWebContent</key>
@@ -70,10 +74,31 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>x-apple-health</string>
+		<string>homescan</string>
+	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Kenos connects to your Mac Daily Beta on the private LAN when the cloud shell is unavailable.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Kenos reads Apple Health metrics you enable (sleep, heart, activity, workouts, and more) to power Health status. Data stays on your devices and can optionally sync to your Mac.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>space.kenos.app.ios.health.sync</string>
+	</array>
 	<key>UILaunchScreen</key>
-	<dict/>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+	</dict>
+	<key>UIUserInterfaceStyle</key>
+	<string>Dark</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -82,3 +107,4 @@
 	</array>
 </dict>
 </plist>
+

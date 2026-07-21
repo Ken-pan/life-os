@@ -76,7 +76,7 @@ export const HOSTED_SPACES = Object.freeze([
     id: 'home',
     label: 'Home',
     detail: '空间与物品',
-    href: domainDeepLink('home', '/storage'),
+    href: domainDeepLink('home', '/plan'),
     domainId: 'home',
     accent: domainAccent('home'),
     icon: domainIcon('home'),

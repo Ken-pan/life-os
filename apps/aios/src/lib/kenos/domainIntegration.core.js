@@ -133,7 +133,8 @@ const PROVIDER_STUB = Object.freeze({
  * @returns {DomainDefinition}
  */
 function defineDomain(partial) {
-  const identity = resolveDomainIdentity(partial.id) || DOMAIN_IDENTITY[partial.id]
+  const identity =
+    resolveDomainIdentity(partial.id) || DOMAIN_IDENTITY[partial.id]
   const accent = identity?.accent || domainAccent(partial.id, '#5B8CFF')
   const icon = identity?.icon || domainIcon(partial.id, 'globe')
   return Object.freeze({
@@ -152,7 +153,10 @@ function defineDomain(partial) {
     icon: partial.icon || icon,
     listKey: partial.listKey || `hosted:${partial.id}`,
     aliases: Object.freeze([...(partial.aliases || [])]),
-    providers: Object.freeze({ ...PROVIDER_STUB, ...(partial.providers || {}) }),
+    providers: Object.freeze({
+      ...PROVIDER_STUB,
+      ...(partial.providers || {}),
+    }),
   })
 }
 
@@ -301,15 +305,17 @@ export const DOMAIN_REGISTRY = Object.freeze({
   home: defineDomain({
     id: 'home',
     label: 'Home',
-    subtitle: 'Spaces and items',
+    subtitle: 'Rooms · Items · Organize',
     strategy: 'embedded_web',
     appId: 'home',
     productionOrigin: 'https://home.kenos.space',
     devPort: 5196,
-    homePath: '/storage',
+    homePath: '/plan',
     systemImage: 'house',
     integrationStatus: 'integrated',
     dataOwner: 'home',
+    /** Interior photos / RoomPlan evidence — never surface image thumbs on Shelf. */
+    privacy: 'sensitive',
     providers: {
       continue: true,
       shelf: true,
@@ -372,16 +378,44 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
     domainId: 'plan',
     slots: Object.freeze([
       Object.freeze({ title: 'Tasks', systemImage: 'checklist', path: '/' }),
-      Object.freeze({ title: 'Calendar', systemImage: 'calendar', path: '/calendar' }),
-      Object.freeze({ title: 'Projects', systemImage: 'folder', path: '/projects' }),
-      Object.freeze({ title: 'More', systemImage: 'ellipsis', opensMore: true }),
+      Object.freeze({
+        title: 'Calendar',
+        systemImage: 'calendar',
+        path: '/calendar',
+      }),
+      Object.freeze({ title: 'Inbox', systemImage: 'tray', path: '/inbox' }),
+      Object.freeze({
+        title: 'More',
+        systemImage: 'ellipsis',
+        opensMore: true,
+      }),
     ]),
     more: Object.freeze([
-      Object.freeze({ title: 'Search', systemImage: 'magnifyingglass', path: '/search' }),
-      Object.freeze({ title: 'Upcoming', systemImage: 'calendar.badge.clock', path: '/upcoming' }),
-      Object.freeze({ title: 'Inbox', systemImage: 'tray', path: '/inbox' }),
-      Object.freeze({ title: 'Completed', systemImage: 'checkmark.circle', path: '/completed' }),
-      Object.freeze({ title: 'Insights', systemImage: 'chart.bar', path: '/insights' }),
+      Object.freeze({
+        title: 'Search',
+        systemImage: 'magnifyingglass',
+        path: '/search',
+      }),
+      Object.freeze({
+        title: 'Upcoming',
+        systemImage: 'calendar.badge.clock',
+        path: '/upcoming',
+      }),
+      Object.freeze({
+        title: 'Projects',
+        systemImage: 'folder',
+        path: '/projects',
+      }),
+      Object.freeze({
+        title: 'Completed',
+        systemImage: 'checkmark.circle',
+        path: '/completed',
+      }),
+      Object.freeze({
+        title: 'Insights',
+        systemImage: 'chart.bar',
+        path: '/insights',
+      }),
     ]),
   }),
   training: Object.freeze({
@@ -393,14 +427,38 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
         systemImage: 'figure.strengthtraining.traditional',
         path: '/session',
       }),
-      Object.freeze({ title: 'Library', systemImage: 'books.vertical', path: '/library' }),
-      Object.freeze({ title: 'More', systemImage: 'ellipsis', opensMore: true }),
+      Object.freeze({
+        title: 'History',
+        systemImage: 'clock',
+        path: '/discover/records',
+      }),
+      Object.freeze({
+        title: 'More',
+        systemImage: 'ellipsis',
+        opensMore: true,
+      }),
     ]),
     more: Object.freeze([
-      Object.freeze({ title: 'History', systemImage: 'clock', path: '/discover/records' }),
-      Object.freeze({ title: 'Program', systemImage: 'list.bullet.rectangle', path: '/program' }),
-      Object.freeze({ title: 'Discover', systemImage: 'sparkles', path: '/discover' }),
-      Object.freeze({ title: 'Stats', systemImage: 'chart.xyaxis.line', path: '/discover/stats' }),
+      Object.freeze({
+        title: 'Program',
+        systemImage: 'list.bullet.rectangle',
+        path: '/program',
+      }),
+      Object.freeze({
+        title: 'Library',
+        systemImage: 'books.vertical',
+        path: '/library',
+      }),
+      Object.freeze({
+        title: 'Discover',
+        systemImage: 'sparkles',
+        path: '/discover',
+      }),
+      Object.freeze({
+        title: 'Stats',
+        systemImage: 'chart.xyaxis.line',
+        path: '/discover/stats',
+      }),
       Object.freeze({
         title: 'Tools',
         systemImage: 'wrench.and.screwdriver',
@@ -412,81 +470,279 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
     domainId: 'work',
     slots: Object.freeze([
       Object.freeze({ title: 'Today', systemImage: 'sun.max', path: '/work' }),
-      Object.freeze({ title: 'Projects', systemImage: 'folder', path: '/work' }),
-      Object.freeze({ title: 'Focus', systemImage: 'target', path: '/spaces/work' }),
-      Object.freeze({ title: 'More', systemImage: 'ellipsis', opensMore: true }),
+      Object.freeze({
+        title: 'Focus',
+        systemImage: 'target',
+        path: '/spaces/work',
+      }),
+      Object.freeze({ title: 'Inbox', systemImage: 'tray', path: '/inbox' }),
+      Object.freeze({
+        title: 'More',
+        systemImage: 'ellipsis',
+        opensMore: true,
+      }),
     ]),
     more: Object.freeze([
-      Object.freeze({ title: 'Assistant', systemImage: 'bubble.left', path: '/assistant?scope=work' }),
-      Object.freeze({ title: 'Inbox', systemImage: 'tray', path: '/inbox' }),
-      Object.freeze({ title: 'Spaces', systemImage: 'square.grid.2x2', path: '/spaces' }),
+      Object.freeze({
+        title: 'Assistant',
+        systemImage: 'bubble.left',
+        path: '/assistant?scope=work',
+      }),
+      Object.freeze({
+        title: 'Spaces',
+        systemImage: 'square.grid.2x2',
+        path: '/spaces',
+      }),
+      Object.freeze({
+        title: 'Settings',
+        systemImage: 'gearshape',
+        path: '/settings',
+      }),
     ]),
   }),
   money: Object.freeze({
     domainId: 'money',
     slots: Object.freeze([
-      Object.freeze({ title: 'Today', systemImage: 'sun.max', path: '/home/today' }),
-      Object.freeze({ title: 'Transactions', systemImage: 'list.bullet', path: '/transactions' }),
-      Object.freeze({ title: 'Plan', systemImage: 'chart.pie', path: '/plan' }),
-      Object.freeze({ title: 'More', systemImage: 'ellipsis', opensMore: true }),
+      Object.freeze({
+        title: 'Today',
+        systemImage: 'sun.max',
+        path: '/home/today',
+      }),
+      Object.freeze({
+        title: 'History',
+        systemImage: 'list.bullet',
+        path: '/history/insights',
+      }),
+      Object.freeze({
+        title: 'Accounts',
+        systemImage: 'building.columns',
+        path: '/accounts',
+      }),
+      Object.freeze({
+        title: 'More',
+        systemImage: 'ellipsis',
+        opensMore: true,
+      }),
     ]),
     more: Object.freeze([
-      Object.freeze({ title: 'Accounts', systemImage: 'building.columns', path: '/accounts' }),
-      Object.freeze({ title: 'Insights', systemImage: 'chart.bar', path: '/insights' }),
-      Object.freeze({ title: 'Settings', systemImage: 'gearshape', path: '/settings' }),
+      Object.freeze({
+        title: 'Forecast',
+        systemImage: 'chart.line.uptrend.xyaxis',
+        path: '/forecast/forecast',
+      }),
+      Object.freeze({
+        title: 'Stocks',
+        systemImage: 'chart.bar',
+        path: '/stocks',
+      }),
+      Object.freeze({
+        title: 'Decision',
+        systemImage: 'arrow.left.arrow.right',
+        path: '/decision/compare',
+      }),
+      Object.freeze({
+        title: 'Review',
+        systemImage: 'checklist',
+        path: '/review/import',
+      }),
+      Object.freeze({
+        title: 'Settings',
+        systemImage: 'gearshape',
+        path: '/settings/assumptions',
+      }),
     ]),
   }),
   library: Object.freeze({
     domainId: 'library',
     slots: Object.freeze([
-      Object.freeze({ title: 'Notes', systemImage: 'note.text', path: '/' }),
-      Object.freeze({ title: 'Library', systemImage: 'books.vertical', path: '/library' }),
-      Object.freeze({ title: 'Capture', systemImage: 'plus.circle', path: '/inbox' }),
-      Object.freeze({ title: 'Search', systemImage: 'magnifyingglass', path: '/recall' }),
+      Object.freeze({ title: 'Inbox', systemImage: 'tray', path: '/' }),
+      Object.freeze({
+        title: 'Library',
+        systemImage: 'books.vertical',
+        path: '/library',
+      }),
+      Object.freeze({
+        title: 'Recall',
+        systemImage: 'magnifyingglass',
+        path: '/recall',
+      }),
+      Object.freeze({
+        title: 'More',
+        systemImage: 'ellipsis',
+        opensMore: true,
+      }),
     ]),
     more: Object.freeze([
-      Object.freeze({ title: 'Projects', systemImage: 'folder', path: '/projects' }),
-      Object.freeze({ title: 'Timeline', systemImage: 'clock', path: '/timeline' }),
-      Object.freeze({ title: 'Settings', systemImage: 'gearshape', path: '/settings' }),
+      Object.freeze({
+        title: 'Projects',
+        systemImage: 'folder',
+        path: '/projects',
+      }),
+      Object.freeze({
+        title: 'Timeline',
+        systemImage: 'clock',
+        path: '/timeline',
+      }),
+      Object.freeze({
+        title: 'Overview',
+        systemImage: 'chart.bar',
+        path: '/overview',
+      }),
+      Object.freeze({
+        title: 'Settings',
+        systemImage: 'gearshape',
+        path: '/settings',
+      }),
     ]),
   }),
   music: Object.freeze({
     domainId: 'music',
     slots: Object.freeze([
-      Object.freeze({ title: 'Now Playing', systemImage: 'play.circle', path: '/' }),
-      Object.freeze({ title: 'Library', systemImage: 'music.note.list', path: '/library' }),
-      Object.freeze({ title: 'Discover', systemImage: 'sparkles', path: '/discover' }),
-      Object.freeze({ title: 'Search', systemImage: 'magnifyingglass', path: '/search' }),
+      Object.freeze({ title: 'Home', systemImage: 'house', path: '/' }),
+      Object.freeze({
+        title: 'Search',
+        systemImage: 'magnifyingglass',
+        path: '/search',
+      }),
+      Object.freeze({
+        title: 'Library',
+        systemImage: 'music.note.list',
+        path: '/library',
+      }),
+      Object.freeze({
+        title: 'More',
+        systemImage: 'ellipsis',
+        opensMore: true,
+      }),
+    ]),
+    more: Object.freeze([
+      Object.freeze({
+        title: 'Playlists',
+        systemImage: 'list.bullet',
+        path: '/playlists',
+      }),
+      Object.freeze({ title: 'Liked', systemImage: 'heart', path: '/liked' }),
+      Object.freeze({
+        title: 'Browse',
+        systemImage: 'sparkles',
+        path: '/browse',
+      }),
+      Object.freeze({
+        title: 'Import',
+        systemImage: 'square.and.arrow.down',
+        path: '/import',
+      }),
+      Object.freeze({
+        title: 'Settings',
+        systemImage: 'gearshape',
+        path: '/settings',
+      }),
     ]),
   }),
   home: Object.freeze({
     domainId: 'home',
     slots: Object.freeze([
-      Object.freeze({ title: 'Home', systemImage: 'house', path: '/' }),
-      Object.freeze({ title: 'Rooms', systemImage: 'square.grid.3x3', path: '/storage' }),
-      Object.freeze({ title: 'Items', systemImage: 'shippingbox', path: '/items' }),
-      Object.freeze({ title: 'Organize', systemImage: 'arrow.triangle.2.circlepath', path: '/organize' }),
+      Object.freeze({
+        title: 'Rooms',
+        systemImage: 'square.grid.2x2',
+        path: '/plan',
+      }),
+      Object.freeze({
+        title: 'Items',
+        systemImage: 'archivebox',
+        path: '/storage',
+      }),
+      Object.freeze({
+        title: 'Organize',
+        systemImage: 'checklist',
+        path: '/tidy',
+      }),
+      Object.freeze({
+        title: 'More',
+        systemImage: 'ellipsis',
+        opensMore: true,
+      }),
+    ]),
+    more: Object.freeze([
+      // Companion ios/home-scan (RoomPlan / AR) — Kenos opens via homescan://
+      Object.freeze({
+        title: 'Scan',
+        systemImage: 'camera.metering.matrix',
+        path: 'homescan://scan',
+      }),
+      Object.freeze({
+        title: 'Find',
+        systemImage: 'location.magnifyingglass',
+        path: 'homescan://find',
+      }),
+      Object.freeze({
+        title: 'Cabinet',
+        systemImage: 'shippingbox',
+        path: 'homescan://container',
+      }),
+      Object.freeze({
+        title: 'Cloud scans',
+        systemImage: 'icloud.and.arrow.down',
+        path: '/settings',
+      }),
+      Object.freeze({
+        title: 'Settings',
+        systemImage: 'gearshape',
+        path: '/settings',
+      }),
     ]),
   }),
   health: Object.freeze({
     domainId: 'health',
     slots: Object.freeze([
-      Object.freeze({ title: 'Status', systemImage: 'heart.text.square', path: '/' }),
+      Object.freeze({
+        title: 'Status',
+        systemImage: 'heart.text.square',
+        path: '/',
+      }),
       Object.freeze({ title: 'Focus', systemImage: 'target', path: '/focus' }),
-      Object.freeze({ title: 'Trends', systemImage: 'chart.line.uptrend.xyaxis', path: '/trends' }),
-      Object.freeze({ title: 'More', systemImage: 'ellipsis', opensMore: true }),
+      Object.freeze({
+        title: 'Trends',
+        systemImage: 'chart.line.uptrend.xyaxis',
+        path: '/trends',
+      }),
+      Object.freeze({
+        title: 'More',
+        systemImage: 'ellipsis',
+        opensMore: true,
+      }),
     ]),
     more: Object.freeze([
-      Object.freeze({ title: 'Settings', systemImage: 'gearshape', path: '/settings' }),
+      Object.freeze({
+        title: 'Settings',
+        systemImage: 'gearshape',
+        path: '/settings',
+      }),
     ]),
   }),
   paper: Object.freeze({
     domainId: 'paper',
     slots: Object.freeze([
-      Object.freeze({ title: 'Recent', systemImage: 'clock', path: '/spaces/paper' }),
-      Object.freeze({ title: 'Notebooks', systemImage: 'books.vertical', path: '/spaces/paper' }),
-      Object.freeze({ title: 'Capture', systemImage: 'plus.circle', path: '/spaces/paper' }),
-      Object.freeze({ title: 'Search', systemImage: 'magnifyingglass', path: '/spaces/paper' }),
+      Object.freeze({
+        title: 'Recent',
+        systemImage: 'clock',
+        path: '/spaces/paper',
+      }),
+      Object.freeze({
+        title: 'Notebooks',
+        systemImage: 'books.vertical',
+        path: '/spaces/paper',
+      }),
+      Object.freeze({
+        title: 'Capture',
+        systemImage: 'plus.circle',
+        path: '/spaces/paper',
+      }),
+      Object.freeze({
+        title: 'Search',
+        systemImage: 'magnifyingglass',
+        path: '/spaces/paper',
+      }),
     ]),
   }),
 })
@@ -544,7 +800,8 @@ export function assertManifestSlotBudget(manifest) {
   if (!manifest) return { ok: false, reason: 'missing' }
   const n = manifest.slots?.length ?? 0
   if (n < 1) return { ok: false, reason: 'empty' }
-  if (n > MAX_DOMAIN_DOCK_SLOTS) return { ok: false, reason: 'too_many', count: n }
+  if (n > MAX_DOMAIN_DOCK_SLOTS)
+    return { ok: false, reason: 'too_many', count: n }
   const totalChrome = n + 1 // + Kenos return chip
   if (totalChrome > MAX_DOCK_CHROME_SLOTS) {
     return { ok: false, reason: 'chrome_overflow', count: totalChrome }
@@ -580,14 +837,20 @@ export function buildDomainLaunchResult(domainId, opts = {}) {
       listKey: 'kenos',
     }
   }
-  if (def.integrationStatus === 'missing' || def.strategy === 'legacy_fallback') {
+  if (
+    def.integrationStatus === 'missing' ||
+    def.strategy === 'legacy_fallback'
+  ) {
     if (!def.productionOrigin && def.homePath.startsWith('/')) {
       return {
         kind: 'hosted_route',
         path: def.homePath,
         domainId: def.id,
         listKey: def.listKey,
-        reason: def.integrationStatus === 'missing' ? 'app_missing' : 'legacy_fallback',
+        reason:
+          def.integrationStatus === 'missing'
+            ? 'app_missing'
+            : 'legacy_fallback',
       }
     }
     return {
@@ -613,7 +876,10 @@ export function buildDomainLaunchResult(domainId, opts = {}) {
     }
   }
   try {
-    const u = new URL(path.startsWith('http') ? path : path, url.endsWith('/') ? url : `${url}/`)
+    const u = new URL(
+      path.startsWith('http') ? path : path,
+      url.endsWith('/') ? url : `${url}/`,
+    )
     // Prefer absolute origin + path
     const abs = path.startsWith('http')
       ? path
@@ -672,7 +938,8 @@ export function domainIdFromContinuityUrl(url) {
       if (def.id === 'kenos') continue
       if (def.devPort && port === def.devPort) {
         if (def.id === 'work' || def.appId === 'aios') {
-          if (path.startsWith('/work') || path.startsWith('/spaces/work')) return 'work'
+          if (path.startsWith('/work') || path.startsWith('/spaces/work'))
+            return 'work'
           continue
         }
         return def.id
@@ -687,7 +954,8 @@ export function domainIdFromContinuityUrl(url) {
         }
       }
     }
-    if (path.startsWith('/work') || path.startsWith('/spaces/work')) return 'work'
+    if (path.startsWith('/work') || path.startsWith('/spaces/work'))
+      return 'work'
     if (host.includes('planner') || port === 5188) return 'plan'
     if (host.includes('fitness') || port === 5190) return 'training'
     if (host.includes('finance') || port === 5180) return 'money'
@@ -795,7 +1063,12 @@ export function searchQuickSwitchStub(query, opts = {}) {
   if (!q) {
     return ids.map((id) => {
       const d = DOMAIN_REGISTRY[id]
-      return { domainId: id, title: d.label, subtitle: d.subtitle, listKey: d.listKey }
+      return {
+        domainId: id,
+        title: d.label,
+        subtitle: d.subtitle,
+        listKey: d.listKey,
+      }
     })
   }
   return ids
