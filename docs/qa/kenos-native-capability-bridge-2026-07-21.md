@@ -31,6 +31,14 @@ See `docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/OWNER_ACTION_NEXT.md`:
 
 1. ~~Publish nav manifest from Training / Money / Health / Music / Home / Work / Library~~ **done**
 2. ~~Money / Work: `ensureNativeUnlock` (Face ID session gate)~~ **done**
+   - Root fix 2026-07-21: single-flight `LAContext`, `cancelAuthenticate` + `invalidate()`,
+     180s auth timeout (not 15s), 10s biometry reuse after device unlock,
+     generation-guarded `createNativeUnlockController` + Cancel on Money/Work gates
+   - Remount fix: process-scoped `KenosUnlockGrantStore` (`storageKey`, default 15m) +
+     `clearUnlockGrant` — survives WK reload / LAN `-1004` without re-prompting Face ID
+     (cleared on cold launch / force / explicit clear; not written to disk)
+   - Loop fix: `dispose()` no longer cancels LA; remount uses `prompt:false` (grant restore
+     only); same `storageKey` coalesces in-flight Face ID; user taps Unlock to present LA
 3. ~~Music: MPNowPlaying via `kenosNowPlaying.js`~~ **done**
 4. ~~App Intents / Shortcuts~~ **done** — `KenosAppIntents` + `kenos://domain/*` deep links
 5. ~~Live Activity upsert hooks~~ **done** (Training / Deep Work / Home tidy) — ActivityKit still Owner-gated

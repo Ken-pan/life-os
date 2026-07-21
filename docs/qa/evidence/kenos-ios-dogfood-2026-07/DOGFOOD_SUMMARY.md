@@ -1,10 +1,10 @@
 # DOGFOOD_SUMMARY
 
-**Opened:** 2026-07-21  
-**Kit status:** READY for Owner  
-**Automated stability:** PASSED  
-**LAN origin:** `STABLE_HOSTNAME` (`Kens-M5-Max-MacBook-Pro.local`) · DHCP IP dependency **CLOSED**  
-**Daily check:** `npm run kenos:ios-dogfood-check` → expect `READY FOR TODAY`  
+**Opened:** 2026-07-21
+**Kit status:** READY for Owner
+**Automated stability:** PASSED
+**LAN origin:** `STABLE_HOSTNAME` (`Kens-M5-Max-MacBook-Pro.local`) · DHCP IP dependency **CLOSED**
+**Daily check:** `npm run kenos:ios-dogfood-check` → expect `READY FOR TODAY`
 
 
 | Day | Date | Core | Fault | Severity | Counted? |

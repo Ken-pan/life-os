@@ -1,7 +1,7 @@
 # Kenos iOS — 3-Day Dogfood Checklist
 
-**Goal:** 5–10 minutes/day on Ken’s iPhone 17 Pro.  
-**Status rule:** Only real calendar days count. Do not invent usage.  
+**Goal:** 5–10 minutes/day on Ken’s iPhone 17 Pro.
+**Status rule:** Only real calendar days count. Do not invent usage.
 **Until Day 3 closes:** `IOS PERSONAL DAILY BETA: READY_LAN_DEPENDENT` (not STABILIZED).
 
 ## Before each day (optional, 30s)
@@ -13,7 +13,7 @@ cd "/Users/kenpan/「Projects」/life-os"
 npm run kenos:ios-dogfood-check
 ```
 
-Expect: `READY FOR TODAY`  
+Expect: `READY FOR TODAY`
 If `ACTION NEEDED: …` — fix that one line first (often unlock phone or `kenos-ctl start`).
 
 ## Daily core (same every day)
