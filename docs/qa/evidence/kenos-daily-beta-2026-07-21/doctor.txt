@@ -1,0 +1,36 @@
+=== kenos-doctor ===
+Kenos Personal Daily Beta
+  release: aff9303903c1 2026-07-21T01:55:26Z
+  aios: UP  http://127.0.0.1:5219
+  planner: UP  http://127.0.0.1:5188
+  fitness: UP  http://127.0.0.1:5190
+--- ports ---
+  :5219 LISTEN
+COMMAND  PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+node    9713 kenpan   12u  IPv4 0x1bfe7b360ec0d409      0t0  TCP 127.0.0.1:5219 (LISTEN)
+  :5188 LISTEN
+COMMAND  PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+node    9718 kenpan   12u  IPv4 0xdc4363483b9d8708      0t0  TCP 127.0.0.1:5188 (LISTEN)
+  :5190 LISTEN
+COMMAND  PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+node    9723 kenpan   12u  IPv4 0x41bccb85fbbfdbf0      0t0  TCP 127.0.0.1:5190 (LISTEN)
+--- release identity ---
+  http://127.0.0.1:5219 → {"app":"aios","environment":"local-daily-beta","port":5219,"root":"/Users/kenpan/.kenos-daily-beta/current/apps/aios/build","sha":"aff9303903c10752c0ea6ca657a1da36442d6d12","shortSha":"aff9303903c1","builtAt":"2026-07-21T01:55:26Z","origins":{"aios":"http://127.0.0.1:5219","planner":"http://127.0.0.1:5188","fitness":"http://127.0.0.1:5190"}}
+  http://127.0.0.1:5188 → {"app":"planner","environment":"local-daily-beta","port":5188,"root":"/Users/kenpan/.kenos-daily-beta/current/apps/planner/build","sha":"aff9303903c10752c0ea6ca657a1da36442d6d12","shortSha":"aff9303903c1","builtAt":"2026-07-21T01:55:26Z","origins":{"aios":"http://127.0.0.1:5219","planner":"http://127.0.0.1:5188","fitness":"http://127.0.0.1:5190"}}
+  http://127.0.0.1:5190 → {"app":"fitness","environment":"local-daily-beta","port":5190,"root":"/Users/kenpan/.kenos-daily-beta/current/apps/fitness/build","sha":"aff9303903c10752c0ea6ca657a1da36442d6d12","shortSha":"aff9303903c1","builtAt":"2026-07-21T01:55:26Z","origins":{"aios":"http://127.0.0.1:5219","planner":"http://127.0.0.1:5188","fitness":"http://127.0.0.1:5190"}}
+--- app identity (HTML data-app) ---
+  aios identity OK
+  planner identity OK
+  fitness identity OK
+--- auth bootstrap (public supabase reachability) ---
+  supabase reachability WARN (network)
+--- rollback target ---
+  previous release present → /Users/kenpan/.kenos-daily-beta/previous
+--- recent logs ---
+total 24
+-rw-r--r--  1 kenpan  staff  1836 Jul 20 18:58 fitness.stdout.log
+-rw-r--r--  1 kenpan  staff  1836 Jul 20 18:58 planner.stdout.log
+-rw-r--r--  1 kenpan  staff  1836 Jul 20 18:58 aios.stdout.log
+-rw-r--r--  1 kenpan  staff     0 Jul 20 18:55 fitness.stderr.log
+-rw-r--r--  1 kenpan  staff     0 Jul 20 18:55 planner.stderr.log
+DOCTOR: PASS

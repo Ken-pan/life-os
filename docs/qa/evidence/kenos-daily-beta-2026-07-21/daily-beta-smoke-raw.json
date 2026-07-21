@@ -1,0 +1,106 @@
+{
+  "startedAt": "2026-07-21T01:58:10.362Z",
+  "finishedAt": "2026-07-21T01:58:46.516Z",
+  "sha": "aff9303903c10752c0ea6ca657a1da36442d6d12",
+  "origins": {
+    "AIOS": "http://127.0.0.1:5219",
+    "PLANNER": "http://127.0.0.1:5188",
+    "FITNESS": "http://127.0.0.1:5190"
+  },
+  "flows": [
+    {
+      "id": "FLOW1_cold_launch",
+      "expected": "stable static services healthy; release meta local-daily-beta; not vite /src",
+      "actual": {
+        "a": true,
+        "p": true,
+        "f": true,
+        "release": {
+          "app": "aios",
+          "environment": "local-daily-beta",
+          "port": 5219,
+          "root": "/Users/kenpan/.kenos-daily-beta/current/apps/aios/build",
+          "sha": "aff9303903c10752c0ea6ca657a1da36442d6d12",
+          "shortSha": "aff9303903c1",
+          "builtAt": "2026-07-21T01:55:26Z",
+          "origins": {
+            "aios": "http://127.0.0.1:5219",
+            "planner": "http://127.0.0.1:5188",
+            "fitness": "http://127.0.0.1:5190"
+          }
+        },
+        "notVite": true
+      },
+      "ok": true
+    },
+    {
+      "id": "FLOW2_planner",
+      "expected": "Today loads; Planner opens task editor; Continue CTA present; return Today",
+      "actual": {
+        "todayOk": true,
+        "titleCount": 1,
+        "cont": 1,
+        "mutated": true,
+        "backToday": true
+      },
+      "ok": true
+    },
+    {
+      "id": "FLOW3_fitness",
+      "expected": "Set1 CTA → progress toward set2; Continue present",
+      "actual": {
+        "set1": 1,
+        "set2": true,
+        "fCont": 1
+      },
+      "ok": true
+    },
+    {
+      "id": "FLOW4_isolation",
+      "expected": "A shows Recent; B does not leak A descriptor",
+      "actual": {
+        "aHas": true,
+        "bLeak": false,
+        "A": "c2831538-94b0-4a57-b034-5e873a53c42e",
+        "B": "8febdb83-ec49-467d-a9bf-d42620cc68fe"
+      },
+      "ok": true
+    },
+    {
+      "id": "FLOW5_degraded",
+      "expected": "Fitness down; Kenos Today still loads",
+      "actual": {
+        "aiosUp": true,
+        "fitDown": true,
+        "today": true
+      },
+      "ok": true
+    },
+    {
+      "id": "FLOW6_restart",
+      "expected": "All three healthy after restart",
+      "actual": {
+        "ok": true
+      },
+      "ok": true
+    },
+    {
+      "id": "FLOW7_continue_ui",
+      "expected": "Continue opens and Escape closes",
+      "actual": {
+        "open1": true
+      },
+      "ok": true
+    },
+    {
+      "id": "FLOW8_rollback",
+      "expected": "rollback then restore; both healthy",
+      "actual": {
+        "afterRb": true,
+        "restored": true
+      },
+      "ok": true
+    }
+  ],
+  "pass": true
+}

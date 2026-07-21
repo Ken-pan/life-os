@@ -1,0 +1,10 @@
+{
+  "dailyEntry": "http://127.0.0.1:5219/",
+  "shots": [
+    { "id": "today-390", "file": "shots/today-390.png", "viewport": "390x844" },
+    { "id": "today-1440", "file": "shots/today-1440.png", "viewport": "1440x900" },
+    { "id": "spaces-1440", "file": "shots/spaces-1440.png", "viewport": "1440x900" },
+    { "id": "inbox-1440", "file": "shots/inbox-1440.png", "viewport": "1440x900" }
+  ],
+  "notes": "Continue covered by daily-beta smoke FLOW7; continue-390 capture timed out once during batch and was not required for A after FLOW7 PASS."
+}

@@ -1,0 +1,31 @@
+{
+  "verdict": "A — PERSONAL DAILY BETA READY",
+  "ownerReviewRehearsal": "PASSED",
+  "dailyEntry": "http://127.0.0.1:5219/",
+  "buildSha": "aff9303903c10752c0ea6ca657a1da36442d6d12",
+  "releaseBuiltAt": "2026-07-21T01:55:26Z",
+  "origins": {
+    "aios": "http://127.0.0.1:5219",
+    "planner": "http://127.0.0.1:5188",
+    "fitness": "http://127.0.0.1:5190"
+  },
+  "gates": {
+    "visualQuality": "PASSED",
+    "currentHeadRegression": "PASSED",
+    "ownerReviewRehearsal": "PASSED",
+    "startup": "PASS",
+    "planner": "PASS",
+    "fitness": "PASS",
+    "isolation": "PASS",
+    "degradedMode": "PASS",
+    "restart": "PASS",
+    "rollback": "PASS",
+    "p0p1": "NONE"
+  },
+  "smokeRaw": "daily-beta-smoke-raw.json",
+  "functionalCanonicalFrozen": "continuity-e2e-2026-07-20T20-12-22-998Z",
+  "currentHeadRegressionRun": "continuity-e2e-2026-07-21T01-39-14-798Z",
+  "pushed": false,
+  "publicDeploy": false,
+  "productionDbMigration": false
+}

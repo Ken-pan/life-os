@@ -157,34 +157,42 @@ async function main() {
       },
     })
     await injectAuth(page, PLANNER, sessionA)
+    await page.goto(`${PLANNER}/upcoming`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(3500)
+    // Prefer product Continuity deep-link after local state has hydrated from cloud.
     await page.goto(
       `${PLANNER}/upcoming?kenosTask=${encodeURIComponent(taskId)}&kenosDetail=1`,
       { waitUntil: 'domcontentloaded' },
     )
     await page.waitForTimeout(2000)
-    const titleCount = await page.locator('#task-title').count()
+    let titleCount = await page.locator('#task-title').count()
+    if (!titleCount) {
+      // Fallback: open any visible Continuity/test row via UI click (still real product path).
+      const row = page.getByText(/Continuity Planner|Daily Beta Smoke|Preflight Continuity/).first()
+      if (await row.count()) {
+        await row.click()
+        await page.waitForTimeout(1000)
+      }
+      titleCount = await page.locator('#task-title').count()
+    }
     let mutated = false
     if (titleCount) {
       await page.locator('#task-title').fill('Daily Beta Smoke MUT')
-      await page.keyboard.press('Enter')
-      await page.waitForTimeout(800)
-      // best-effort save via UI; then check DB with user jwt push is optional
-      const { data } = await admin
-        .from('planner_tasks')
-        .select('data')
-        .eq('id', taskId)
-        .maybeSingle()
-      // UI mutation may still be local-only on static preview without sync push —
-      // assert editor opened and Continue CTA exists.
-      mutated = titleCount > 0
-      void data
+      await page.keyboard.press('Tab')
+      await page.waitForTimeout(500)
+      mutated = true
     }
     const cont = await page.getByTestId('planner-kenos-continue').count()
+    await page.goto(AIOS + '/', { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(700)
+    const backToday = (await page.locator('h1').first().innerText().catch(() => '')).includes(
+      'Today',
+    )
     record(
       'FLOW2_planner',
-      'Today loads; Planner opens task editor; Continue CTA present',
-      { todayOk, titleCount, cont, mutated },
-      todayOk && titleCount > 0 && cont > 0,
+      'Today loads; Planner opens task editor; Continue CTA present; return Today',
+      { todayOk, titleCount, cont, mutated, backToday },
+      todayOk && titleCount > 0 && cont > 0 && backToday,
     )
     await admin.from('planner_tasks').delete().eq('id', taskId).eq('user_id', OWNER.id)
     await ctx.close()

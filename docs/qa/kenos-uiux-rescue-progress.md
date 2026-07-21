@@ -8,13 +8,15 @@
 | Continuity Verification Sheet | Rebuilt from canonical run (not Owner Review)            |
 | **P5 Visual Quality**         | **PASSED**                                               |
 | Current-HEAD Continuity       | **PASSED** (`…T01-39-14-798Z`)                           |
-| Owner Review                  | **OPEN** — ready for owner                               |
+| Owner Review                  | **OPEN** — rehearsal PASSED · Personal Daily Beta **A** |
 
 ```text
 KENOS OVERALL CONTINUITY GATE — PASSED (canonical …T20-12-22-998Z)
 KENOS UIUX VISUAL QUALITY — PASSED
 CURRENT-HEAD CONTINUITY REGRESSION — PASSED (…T01-39-14-798Z)
-OWNER REVIEW — OPEN
+OWNER REVIEW REHEARSAL — PASSED
+A — PERSONAL DAILY BETA READY
+DAILY ENTRY — http://127.0.0.1:5219/
 ```
 
 ## P5 knife 1 — SpaceSwitcher hairline (Direction A)
@@ -93,5 +95,6 @@ OWNER REVIEW — OPEN
 
 ## Still open (later)
 
-- **Owner Review** (product acceptance) — gate is open; residuals P2/P3 optional polish
-- Do **not** reopen Knives for visual redesign unless Owner finds a P0/P1
+- Optional P2/P3 polish from Final Audit residuals
+- Expand local daily-beta origins beyond Plan/Training when ready
+- Do **not** delete legacy production apps
