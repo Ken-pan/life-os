@@ -71,7 +71,7 @@ struct KenosRootView: View {
             NavigationStack {
                 Group {
                     if KenosDailyBetaConfig.isEnabled {
-                        KenosDailyBetaSurface(path: "/")
+                        KenosDailyBetaSurface(path: model.dailyBetaPath(for: .today))
                     } else {
                         TodayView(model: model)
                     }
@@ -84,7 +84,7 @@ struct KenosRootView: View {
             NavigationStack {
                 Group {
                     if KenosDailyBetaConfig.isEnabled {
-                        KenosDailyBetaSurface(path: "/assistant")
+                        KenosDailyBetaSurface(path: model.dailyBetaPath(for: .assistant))
                     } else {
                         AssistantView(model: model)
                     }
@@ -97,7 +97,7 @@ struct KenosRootView: View {
             NavigationStack {
                 Group {
                     if KenosDailyBetaConfig.isEnabled {
-                        KenosDailyBetaSurface(path: "/spaces")
+                        KenosDailyBetaSurface(path: model.dailyBetaPath(for: .spaces))
                     } else {
                         SpacesHubView(model: model)
                     }
@@ -110,7 +110,7 @@ struct KenosRootView: View {
             NavigationStack {
                 Group {
                     if KenosDailyBetaConfig.isEnabled {
-                        KenosDailyBetaSurface(path: "/inbox")
+                        KenosDailyBetaSurface(path: model.dailyBetaPath(for: .inbox))
                     } else {
                         InboxView(model: model)
                     }
@@ -131,16 +131,23 @@ struct KenosRootView: View {
     }
 
     private var spaceSwitcherToolbar: some ToolbarContent {
-        ToolbarItemGroup(placement: .automatic) {
-            Button("Continue", systemImage: "arrow.uturn.forward") {
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            Button {
                 model.openSpaceSwitcher()
+            } label: {
+                // Explicit Label + stable SF Symbols (iOS 26 Liquid Glass can blank some glyphs)
+                Label("Continue", systemImage: "clock.arrow.circlepath")
             }
+            .labelStyle(.iconOnly)
             .accessibilityLabel("Continue")
             .accessibilityHint("Opens recent Spaces and resume targets")
             .accessibilityIdentifier("kenos.continue.trigger")
-            Button("Switch Space", systemImage: "arrow.left.arrow.right") {
+            Button {
                 model.openSpaceSwitcher()
+            } label: {
+                Label("Switch Space", systemImage: "square.grid.2x2")
             }
+            .labelStyle(.iconOnly)
             .accessibilityLabel("Switch Space")
             .accessibilityHint("Opens recent and pinned Spaces without adding a fifth tab")
             .accessibilityIdentifier("kenos.spaceSwitcher.trigger")

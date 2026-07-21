@@ -74,6 +74,13 @@ enum KenosDailyBetaConfig {
 
     static func pathURL(_ path: String) -> URL {
         let trimmed = path.hasPrefix("/") ? path : "/\(path)"
-        return kenOsOrigin.appending(path: trimmed)
+        // Preserve ?query / #fragment for deep resume (appendingPathComponent drops them).
+        if trimmed.contains("?") || trimmed.contains("#"),
+           let absolute = URL(string: trimmed, relativeTo: kenOsOrigin)?.absoluteURL
+        {
+            return absolute
+        }
+        let pathOnly = trimmed.split(separator: "?", maxSplits: 1).first.map(String.init) ?? trimmed
+        return kenOsOrigin.appending(path: pathOnly)
     }
 }

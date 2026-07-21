@@ -22,6 +22,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             window.__KENOS_IOS_NATIVE_SHELL__ = true;
             try {
               document.documentElement.dataset.iosNativeShell = 'true';
+              sessionStorage.setItem('kenos.iosNativeShell', '1');
             } catch (e) {}
             """,
             injectionTime: .atDocumentStart,
@@ -32,7 +33,10 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         let view = WKWebView(frame: .zero, configuration: config)
         view.navigationDelegate = context.coordinator
         view.allowsBackForwardNavigationGestures = true
-        view.scrollView.contentInsetAdjustmentBehavior = .automatic
+        // Own safe-area in CSS (viewport-fit=cover). Automatic insets fight
+        // fixed web chrome and can resurrect a "double bottom" layout flash.
+        // See: Tauri WKWebView insets notes / Apple contentInsetAdjustmentBehavior.
+        view.scrollView.contentInsetAdjustmentBehavior = .never
         view.isOpaque = true
         view.backgroundColor = .systemBackground
         view.load(URLRequest(url: Self.shellURL(url)))
@@ -72,7 +76,13 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             onTitle?(webView.title ?? "")
             webView.evaluateJavaScript(
-                "window.__KENOS_IOS_NATIVE_SHELL__=true;document.documentElement.dataset.iosNativeShell='true';"
+                """
+                window.__KENOS_IOS_NATIVE_SHELL__=true;
+                try {
+                  document.documentElement.dataset.iosNativeShell='true';
+                  sessionStorage.setItem('kenos.iosNativeShell','1');
+                } catch (e) {}
+                """
             )
         }
 

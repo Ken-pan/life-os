@@ -31,6 +31,13 @@ final class KenosAppModel: ObservableObject {
 
     @Published var selectedTab: Tab = .today
     @Published var route: KenosDeepLink = .today
+    /// Daily Beta WKWebView path per tab (supports Continue / payload-url deep resume).
+    @Published var dailyBetaPathByTab: [Tab: String] = [
+        .today: "/",
+        .assistant: "/assistant",
+        .spaces: "/spaces",
+        .inbox: "/inbox",
+    ]
     /// Nested under Inbox (was MoreDestination).
     @Published var inboxDestination: InboxDestination?
     @Published var spacesDestination: SpacesDestination?
@@ -260,7 +267,47 @@ final class KenosAppModel: ObservableObject {
             handleHTTPOpen(url)
             return
         }
+        // kenos://shell?path=/settings — in-app shell deep link (avoids Safari on openurl)
+        if let url = URL(string: trimmed), url.scheme?.lowercased() == "kenos" {
+            let host = (url.host ?? "").lowercased()
+            if host == "shell" || host == "web" {
+                let comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
+                let path = comps?.queryItems?.first(where: { $0.name == "path" })?.value ?? "/"
+                navigateDailyBetaShell(path: path)
+                return
+            }
+            if KenosDailyBetaConfig.isEnabled {
+                switch host {
+                case "today":
+                    navigateDailyBetaShell(path: "/")
+                    return
+                case "assistant":
+                    navigateDailyBetaShell(path: "/assistant")
+                    return
+                case "spaces":
+                    navigateDailyBetaShell(path: "/spaces")
+                    return
+                case "inbox":
+                    navigateDailyBetaShell(path: "/inbox")
+                    return
+                case "settings":
+                    navigateDailyBetaShell(path: "/settings")
+                    return
+                default:
+                    break
+                }
+            }
+        }
         open(KenosDeepLinkRouter.parse(urlString))
+    }
+
+    /// Load a Daily Beta WKWebView path inside the matching native tab.
+    func navigateDailyBetaShell(path: String) {
+        let normalized = path.hasPrefix("/") ? path : "/\(path)"
+        let pathOnly = normalized.split(separator: "?", maxSplits: 1).first.map(String.init) ?? normalized
+        let tab = tabForShellPath(pathOnly)
+        dailyBetaPathByTab[tab] = normalized
+        selectedTab = tab
     }
 
     private func handleHTTPOpen(_ url: URL) {
@@ -272,6 +319,14 @@ final class KenosAppModel: ObservableObject {
         }
         if port == 5190 || path.hasPrefix("/day") || path.hasPrefix("/training") {
             openExternalURL(url)
+            return
+        }
+        // Same-origin shell deep link → load exact path in the matching tab WebView
+        // (not just switch tabs). Required for /settings login CTA and Continue targets.
+        if isDailyBetaShellURL(url) {
+            let tab = tabForShellPath(path)
+            dailyBetaPathByTab[tab] = relativeShellPath(url)
+            selectedTab = tab
             return
         }
         switch path {
@@ -290,6 +345,47 @@ final class KenosAppModel: ObservableObject {
                 selectedTab = .today
             }
         }
+    }
+
+    func dailyBetaPath(for tab: Tab) -> String {
+        dailyBetaPathByTab[tab] ?? {
+            switch tab {
+            case .today: return "/"
+            case .assistant: return "/assistant"
+            case .spaces: return "/spaces"
+            case .inbox: return "/inbox"
+            }
+        }()
+    }
+
+    private func isDailyBetaShellURL(_ url: URL) -> Bool {
+        let origin = KenosDailyBetaConfig.kenOsOrigin
+        let host = url.host ?? ""
+        let originHost = origin.host ?? ""
+        if !host.isEmpty, host == originHost {
+            let urlPort = url.port ?? ((url.scheme == "https") ? 443 : 80)
+            let originPort = origin.port ?? ((origin.scheme == "https") ? 443 : 80)
+            return urlPort == originPort
+        }
+        return url.port == 5219
+    }
+
+    private func relativeShellPath(_ url: URL) -> String {
+        var path = url.path.isEmpty ? "/" : url.path
+        if let query = url.query, !query.isEmpty {
+            path += "?\(query)"
+        }
+        if let fragment = url.fragment, !fragment.isEmpty {
+            path += "#\(fragment)"
+        }
+        return path
+    }
+
+    private func tabForShellPath(_ path: String) -> Tab {
+        if path.hasPrefix("/assistant") || path.hasPrefix("/chat") { return .assistant }
+        if path.hasPrefix("/spaces") { return .spaces }
+        if path.hasPrefix("/inbox") { return .inbox }
+        return .today
     }
 
     func openNotification(_ record: KenosNotificationRecord) {
