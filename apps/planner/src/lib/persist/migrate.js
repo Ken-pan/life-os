@@ -93,9 +93,24 @@ function optionalString(value) {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
+/**
+ * Coerce number ms or ISO/date string → finite ms. Used so REST/external writers
+ * that store ISO `updatedAt` still participate correctly in LWW merges.
+ * @param {unknown} value
+ * @returns {number|null}
+ */
+export function coerceTimestamp(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim()) {
+    const ms = Date.parse(value)
+    if (Number.isFinite(ms)) return ms
+  }
+  return null
+}
+
 /** @param {unknown} value */
 function optionalTimestamp(value) {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null
+  return coerceTimestamp(value)
 }
 
 /** @param {unknown} value */
@@ -181,8 +196,8 @@ export function migrateProject(project) {
     repoRefs: Array.isArray(p.repoRefs)
       ? p.repoRefs.map(migrateRepoRef).filter(Boolean)
       : [],
-    createdAt: typeof p.createdAt === 'number' ? p.createdAt : Date.now(),
-    updatedAt: typeof p.updatedAt === 'number' ? p.updatedAt : 0,
+    createdAt: coerceTimestamp(p.createdAt) ?? Date.now(),
+    updatedAt: coerceTimestamp(p.updatedAt) ?? 0,
     archivedAt: optionalTimestamp(p.archivedAt),
     deletedAt: optionalTimestamp(p.deletedAt),
   }
@@ -222,7 +237,9 @@ export function migrateTask(task) {
     recurrence: normalizeRecurrence(t.recurrence),
     tags: migrateTags(t.tags),
     subtasks: Array.isArray(t.subtasks) ? t.subtasks : [],
-    deletedAt: typeof t.deletedAt === 'number' ? t.deletedAt : null,
+    createdAt: coerceTimestamp(t.createdAt) ?? Date.now(),
+    updatedAt: coerceTimestamp(t.updatedAt) ?? 0,
+    deletedAt: optionalTimestamp(t.deletedAt),
     meta: t.meta && typeof t.meta === 'object'
       ? { kind: 'standard', ...t.meta }
       : { kind: 'standard' },
@@ -243,8 +260,8 @@ export function migrateList(list) {
   return {
     ...l,
     title,
-    updatedAt: typeof l.updatedAt === 'number' ? l.updatedAt : 0,
-    deletedAt: typeof l.deletedAt === 'number' ? l.deletedAt : null,
+    updatedAt: coerceTimestamp(l.updatedAt) ?? 0,
+    deletedAt: optionalTimestamp(l.deletedAt),
   }
 }
 

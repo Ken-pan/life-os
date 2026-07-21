@@ -178,6 +178,23 @@ describe('mergeTasksByUpdatedAt', () => {
     expect(merged[0].title).toBe('new');
   });
 
+  it('coerces ISO updatedAt from external REST writers so LWW does not clobber', () => {
+    const local = [base('a', 1_700_000_000_000, 'seed')];
+    const incomingIso = '2026-07-21T17:22:55.123Z';
+    const incoming = [
+      migrateTask({
+        id: 'a',
+        title: 'mut',
+        listId: 'inbox',
+        updatedAt: incomingIso,
+        completed: false,
+      }),
+    ];
+    const merged = mergeTasksByUpdatedAt(local, incoming);
+    expect(merged[0].title).toBe('mut');
+    expect(merged[0].updatedAt).toBe(Date.parse(incomingIso));
+  });
+
   it('preserves local when local is newer', () => {
     const local = [base('a', 300, 'local')];
     const incoming = [base('a', 100, 'remote')];
