@@ -285,6 +285,11 @@ export const zhCN: MessageTree = {
     language: '语言',
     languageDesc: '切换界面显示语言',
     amountDisplayDesc: '在公共场合或录屏时隐藏金额数字',
+    billReminders: '账单到期提醒',
+    billRemindersDesc:
+      'Kenos Continuity 在账单到期日早晨用系统本地通知提醒（不含金额）',
+    billRemindersOn: '已开启',
+    billRemindersOff: '已关闭',
     assumptionsTitle: '预测参数',
     restoreDefaults: '恢复推荐值',
     restoreDefaultsTitle: '恢复推荐参数',
@@ -1951,6 +1956,11 @@ export const enUS: MessageTree = {
     languageDesc: 'Change the interface language',
     amountDisplayDesc:
       'Hide monetary amounts in public or while screen recording',
+    billReminders: 'Bill due reminders',
+    billRemindersDesc:
+      'On Kenos Continuity, schedule a system local alert on the morning of each bill (no amounts)',
+    billRemindersOn: 'On',
+    billRemindersOff: 'Off',
     assumptionsTitle: 'Forecast assumptions',
     restoreDefaults: 'Restore defaults',
     restoreDefaultsTitle: 'Restore recommended values',

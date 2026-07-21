@@ -6,6 +6,14 @@
   import SettingsView from '$lib/components/SettingsView.svelte'
   import { themePreference, setThemePreference } from '$lib/themePreference.svelte.js'
   import { createGoTab } from '$lib/goTab.js'
+  import {
+    canHostBillReminders,
+    isBillRemindersEnabled,
+    setBillRemindersEnabled,
+    syncBillDueAlerts,
+    clearTrackedBillAlerts,
+  } from '$lib/billLocalAlerts.js'
+  import { getTimelineStore } from '$lib/timeline.svelte.js'
 
   const PWA_SETTINGS_STORAGE_KEY = 'fos-pwa-settings'
 
@@ -24,6 +32,8 @@
   }
 
   let pwaSettings = $state(readPwaSettings())
+  let billRemindersEnabled = $state(isBillRemindersEnabled())
+  const showBillReminders = canHostBillReminders()
   const onGoTab = createGoTab()
 
   const section = $derived(
@@ -42,6 +52,27 @@
     pwaSettings = { ...pwaSettings, lockPortraitOnPhone: enabled }
     writePwaSettings(pwaSettings)
   }
+
+  /** @param {boolean} enabled */
+  function onBillRemindersChange(enabled) {
+    setBillRemindersEnabled(enabled)
+    billRemindersEnabled = enabled
+    void import('@life-os/platform-web/kenos-shell-settings').then(
+      ({ publishNotificationCategoryEnabled }) => {
+        void publishNotificationCategoryEnabled('money_bill_due', enabled)
+      },
+    )
+    if (!enabled) {
+      void clearTrackedBillAlerts()
+      return
+    }
+    try {
+      const timeline = getTimelineStore()
+      void syncBillDueAlerts(timeline.occurrences || [])
+    } catch {
+      /* store not ready */
+    }
+  }
 </script>
 
 <SettingsView
@@ -49,6 +80,9 @@
   onThemePreferenceChange={setThemePreference}
   lockPortraitOnPhone={pwaSettings.lockPortraitOnPhone}
   {onLockPortraitOnPhoneChange}
+  {showBillReminders}
+  {billRemindersEnabled}
+  {onBillRemindersChange}
   {section}
   {onSectionChange}
   {onGoTab}

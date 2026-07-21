@@ -9,6 +9,22 @@ import {
   previewRestCountdown,
 } from './audio.js'
 import { sensory } from '@life-os/platform-web/kenos-sensory'
+import {
+  getNativeCapabilities,
+  hasNativeLocalNotifications,
+  isNativeBridgeAvailable,
+  nativeNotificationsCancel,
+  nativeNotificationsGetStatus,
+  nativeNotificationsRequestPermission,
+  nativeNotificationsSchedule,
+} from '@life-os/platform-web/kenos-native-bridge'
+
+/** Stable UN dedupe — only one Training timer is active at a time. */
+const NATIVE_TIMER_DEDUPE = 'training-timer-active'
+
+/** @type {{ at: number, ready: boolean, status: string } | null} */
+let nativeNotifyCache = null
+const NATIVE_NOTIFY_TTL_MS = 8_000
 
 /* ═══════════════ TIMER WIDGET STATE ═══════════════ */
 export const timer = $state({
@@ -41,6 +57,65 @@ function swController() {
   return navigator.serviceWorker?.controller
 }
 
+/** @returns {Promise<boolean>} */
+async function nativeLocalNotificationsReady() {
+  if (!isNativeBridgeAvailable()) {
+    nativeNotifyCache = null
+    return false
+  }
+  const now = Date.now()
+  if (nativeNotifyCache && now - nativeNotifyCache.at < NATIVE_NOTIFY_TTL_MS) {
+    return nativeNotifyCache.ready
+  }
+  const caps = await getNativeCapabilities()
+  const ready = hasNativeLocalNotifications(caps)
+  const status = String(caps?.status?.localNotifications || '')
+  nativeNotifyCache = { at: now, ready, status }
+  return ready
+}
+
+function dayIdFromContext() {
+  const ctx = timer.context
+  if (ctx && typeof ctx === 'object' && ctx.dayId != null) return String(ctx.dayId)
+  try {
+    const m = String(location?.pathname || '').match(/\/day\/([^/]+)/)
+    return m?.[1] || ''
+  } catch {
+    return ''
+  }
+}
+
+async function scheduleNativeTimer() {
+  if (!(await nativeLocalNotificationsReady())) return false
+  if (!endAt || timer.remain <= 0) return false
+  if (S.settings.notifyRest === false) {
+    await nativeNotificationsCancel({ deduplicationKey: NATIVE_TIMER_DEDUPE })
+    return true
+  }
+  const { title, body } = notificationPayload()
+  const dayId = dayIdFromContext()
+  const encodedDay = dayId ? encodeURIComponent(dayId) : ''
+  await nativeNotificationsSchedule({
+    type: 'training_rest_end',
+    safeTitle: title,
+    safeBody: body,
+    deepLink: encodedDay
+      ? `kenos://training?path=/day/${encodedDay}/focus`
+      : 'kenos://training',
+    deduplicationKey: NATIVE_TIMER_DEDUPE,
+    fireAt: endAt,
+    fireAtMs: endAt,
+    risk: 'R0',
+    classification: 'personal',
+  })
+  return true
+}
+
+async function cancelNativeTimer() {
+  if (!(await nativeLocalNotificationsReady())) return
+  await nativeNotificationsCancel({ deduplicationKey: NATIVE_TIMER_DEDUPE })
+}
+
 function scheduleSwTimer() {
   const ctrl = swController()
   if (!ctrl || timer.remain <= 0 || !endAt) return
@@ -65,6 +140,23 @@ function cancelSwTimer() {
   swTimerId = null
 }
 
+/** Continuity → native UN; PWA/browser → Service Worker. */
+function scheduleBackgroundTimer() {
+  void (async () => {
+    if (await scheduleNativeTimer()) {
+      // Avoid double-fire with SW showNotification in Continuity.
+      cancelSwTimer()
+      return
+    }
+    scheduleSwTimer()
+  })()
+}
+
+function cancelBackgroundTimer() {
+  cancelSwTimer()
+  void cancelNativeTimer()
+}
+
 function finishTimer(fromSw = false) {
   if (timer.status === 'complete') return
 
@@ -72,7 +164,7 @@ function finishTimer(fromSw = false) {
   endAt = 0
   timer.paused = false
   clearTimers()
-  cancelSwTimer()
+  cancelBackgroundTimer()
   cancelScheduledCues()
   timer.status = 'complete'
   doneShowTimeout = setTimeout(() => {
@@ -197,7 +289,7 @@ function refreshStatus() {
 
 export function startTimer(secs, name, context = null, options = {}) {
   clearTimers()
-  cancelSwTimer()
+  cancelBackgroundTimer()
   cancelScheduledCues()
   playedCues = new Set()
   endAt = Date.now() + secs * 1000
@@ -219,7 +311,7 @@ export function startTimer(secs, name, context = null, options = {}) {
   }
 
   ticker = setInterval(tick, TICK_MS)
-  scheduleSwTimer()
+  scheduleBackgroundTimer()
 }
 
 /** 按墙钟重算剩余秒数，后台节流/锁屏恢复后依然准确 */
@@ -256,6 +348,8 @@ async function notifyRestComplete() {
   if (!S.settings.notifyRest) return
   if (typeof document !== 'undefined' && document.visibilityState === 'visible')
     return
+  // Continuity already scheduled a UN local notification for fireAt.
+  if (await nativeLocalNotificationsReady()) return
 
   const { title, body, tag } = notificationPayload()
   const opts = {
@@ -289,6 +383,16 @@ async function notifyRestComplete() {
 }
 
 export async function requestNotifyPermission() {
+  if (await nativeLocalNotificationsReady()) {
+    const result = await nativeNotificationsRequestPermission()
+    const status = String(result?.status || '')
+    nativeNotifyCache = {
+      at: Date.now(),
+      ready: true,
+      status: status || 'denied',
+    }
+    return status === 'authorized' || status === 'granted'
+  }
   if (typeof Notification === 'undefined') return false
   if (Notification.permission === 'granted') return true
   if (Notification.permission === 'denied') return false
@@ -302,9 +406,20 @@ export function notificationStatus() {
 
 /**
  * 区分「真不支持」与「iPhone 未加主屏幕 / 微信内置浏览器」等可恢复场景。
- * @returns {{ kind: 'granted' | 'denied' | 'default' | 'unsupported' | 'ios-browser' | 'in-app' }}
+ * Continuity（Kenos shell）走 native local notifications。
+ * @returns {{ kind: 'granted' | 'denied' | 'default' | 'unsupported' | 'ios-browser' | 'in-app', channel?: 'native' | 'web' }}
  */
 export function notificationCapability() {
+  // Continuity probe first (also lets unit tests mock the bridge without a DOM).
+  if (isNativeBridgeAvailable()) {
+    const status = nativeNotifyCache?.status
+    if (status === 'authorized' || status === 'granted') {
+      return { kind: 'granted', channel: 'native' }
+    }
+    if (status === 'denied') return { kind: 'denied', channel: 'native' }
+    return { kind: 'default', channel: 'native' }
+  }
+
   if (typeof window === 'undefined') return { kind: 'unsupported' }
 
   const ua = navigator.userAgent || ''
@@ -320,20 +435,57 @@ export function notificationCapability() {
   const hasNotification = typeof Notification !== 'undefined'
   const hasSW = 'serviceWorker' in navigator
 
-  if (inApp) return { kind: 'in-app' }
+  if (inApp) return { kind: 'in-app', channel: 'web' }
   if (!hasNotification || !hasSW) {
-    if (isIOS && !isStandalone) return { kind: 'ios-browser' }
-    return { kind: 'unsupported' }
+    if (isIOS && !isStandalone) return { kind: 'ios-browser', channel: 'web' }
+    return { kind: 'unsupported', channel: 'web' }
   }
 
   return {
     kind: /** @type {'granted'|'denied'|'default'} */ (Notification.permission),
+    channel: 'web',
+  }
+}
+
+/** Probe native auth status for Settings UI (safe outside Continuity). */
+export async function refreshNotificationCapability() {
+  if (!isNativeBridgeAvailable()) {
+    nativeNotifyCache = null
+    return notificationCapability()
+  }
+  const caps = await getNativeCapabilities()
+  if (!hasNativeLocalNotifications(caps)) {
+    nativeNotifyCache = { at: Date.now(), ready: false, status: 'unsupported' }
+    return notificationCapability()
+  }
+  let status = String(caps?.status?.localNotifications || '')
+  if (!status || status === 'pending') {
+    const st = await nativeNotificationsGetStatus()
+    status = String(st?.status || 'not_determined')
+  }
+  nativeNotifyCache = { at: Date.now(), ready: true, status }
+  return notificationCapability()
+}
+
+/** @internal */
+export function __resetNativeNotifyCacheForTests() {
+  nativeNotifyCache = null
+}
+
+/** Settings toggle: drop or reschedule background alert for the active timer. */
+export function applyNotifyRestSetting(enabled) {
+  if (!enabled) {
+    cancelBackgroundTimer()
+    return
+  }
+  if (timer.visible && !timer.paused && timer.status !== 'complete' && endAt) {
+    scheduleBackgroundTimer()
   }
 }
 
 export function cancelTimer() {
   clearTimers()
-  cancelSwTimer()
+  cancelBackgroundTimer()
   cancelScheduledCues()
   void closeFitnessAudio()
   playedCues = new Set()
@@ -374,7 +526,7 @@ export function signalReady() {
 export function pauseTimer() {
   if (!timer.visible || timer.paused || timer.status === 'complete') return
   timer.paused = true
-  cancelSwTimer()
+  cancelBackgroundTimer()
   cancelScheduledCues()
 }
 
@@ -387,7 +539,7 @@ export function resumeTimer() {
     finishTimer(false)
     return
   }
-  scheduleSwTimer()
+  scheduleBackgroundTimer()
 }
 
 export function togglePause() {
@@ -410,8 +562,7 @@ export function addTime(delta) {
   handleRemainCue(timer.remain)
   if (timer.paused) return
   reanchorEndAt()
-  cancelSwTimer()
-  scheduleSwTimer()
+  scheduleBackgroundTimer()
 }
 
 export function subTime(delta) {
@@ -425,8 +576,7 @@ export function subTime(delta) {
   handleRemainCue(timer.remain)
   if (timer.paused) return
   reanchorEndAt()
-  cancelSwTimer()
-  scheduleSwTimer()
+  scheduleBackgroundTimer()
 }
 
 /** 初始化 SW 消息监听与前台校准（layout onMount 调用） */

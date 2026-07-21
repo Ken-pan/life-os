@@ -15,6 +15,8 @@
     trainingRecommendation,
     DIMENSION_ORDER,
   } from '$lib/stateEngine.core.js'
+  import { S } from '$lib/state.svelte.js'
+  import { syncHealthLocalAlerts } from '$lib/healthLocalAlerts.js'
 
   let nowMs = $state(Date.now())
 
@@ -121,6 +123,20 @@
       lastPushed = key
       pushPolicy(policy.limitMinutes, desiredReason)
     }
+  })
+
+  // Continuity edge alerts only (no Mac break spam).
+  $effect(() => {
+    const sleepDebtLevel = engine.dims?.sleepDebt?.level
+    const agentPhase = s?.phase ?? 'normal'
+    const now = new Date(nowMs)
+    const enabled = S.settings.localAlerts !== false
+    void syncHealthLocalAlerts({
+      sleepDebtLevel,
+      agentPhase,
+      now,
+      enabled,
+    }).catch(() => {})
   })
 
   const headline = $derived.by(() => {

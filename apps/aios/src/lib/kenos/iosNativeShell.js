@@ -8,6 +8,8 @@ export {
   isIosNativeShell,
   markIosNativeShellDom,
   ensureIosNativeShellChromeCss,
+  preferredShellLocale,
+  syncLocaleFromSystemForNativeShell,
   IOS_NATIVE_SHELL_TOP_PAD_PX,
   IOS_NATIVE_SHELL_BOTTOM_PAD_PX,
 } from '@life-os/platform-web/ios-native-shell'
@@ -29,19 +31,38 @@ export function requestNativeSpaceShelf() {
 export {
   isNativeBridgeAvailable,
   getNativeCapabilities,
+  hasNativeLocalNotifications,
   nativeHaptic,
   nativeShare,
   nativeAuthenticate,
+  nativeCancelAuthenticate,
+  cancelNativeAuthenticate,
   ensureNativeUnlock,
   clearNativeUnlock,
+  createNativeUnlockController,
   nativeNowPlayingUpdate,
   nativeNowPlayingUpdatePosition,
   nativeNowPlayingClear,
   nativeLiveActivityUpsert,
   nativeLiveActivityEnd,
+  nativeNotificationsSchedule,
+  nativeNotificationsCancel,
+  nativeNotificationsRequestPermission,
+  nativeShellSettingsGet,
+  nativeShellSettingsSet,
   publishNavManifest,
   installNavManifestPublisher,
 } from '@life-os/platform-web/kenos-native-bridge'
+
+export {
+  bindKenosShellSettings,
+  publishShellTheme,
+  publishShellLocale,
+  publishNotificationCategoryEnabled,
+  readNotificationCategoryEnabled,
+  pullKenosShellSettings,
+  pushKenosShellSettings,
+} from '@life-os/platform-web/kenos-shell-settings'
 
 export {
   sensory,

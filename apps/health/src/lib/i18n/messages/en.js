@@ -200,5 +200,11 @@ export default {
     agentConfig: 'Config file',
     agentHint:
       'Detection rules (CPU thresholds / process list / windows) live in the agent config.json; restart the agent after editing.',
+    localAlerts: 'System local alerts',
+    localAlertsDesc:
+      'On Kenos Continuity: light system alerts when focus load is high or evening sleep debt is elevated (at most once each per day)',
+    localAlertsEnable: 'Allow notifications',
+    localAlertsDenied:
+      'Notifications blocked — enable in iPhone Settings → Kenos → Notifications',
   },
 }

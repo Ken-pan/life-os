@@ -12,6 +12,8 @@ const persistence = createSettingsPersistence({
     settings: {
       theme: 'auto', // 'light' | 'dark' | 'auto'
       locale: 'zh', // 'zh' | 'en'
+      /** Continuity local UN for focus warn / wind-down (default on). */
+      localAlerts: true,
     },
   },
   serialize: (state) => ({ settings: state.settings }),

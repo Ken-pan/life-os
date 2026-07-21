@@ -194,5 +194,10 @@ export default {
     agentConfig: '配置文件',
     agentHint:
       '检测规则(CPU 阈值 / 进程名单 / 窗口时长)在代理的 config.json 里,改完后重启代理生效。',
+    localAlerts: '系统本地提醒',
+    localAlertsDesc:
+      'Kenos Continuity：专注负荷偏高或夜间睡眠债升高时，用系统本地通知轻提醒（每天各最多一次）',
+    localAlertsEnable: '允许通知',
+    localAlertsDenied: '通知权限已关闭，请在 iPhone「设置 → Kenos → 通知」中开启',
   },
 }

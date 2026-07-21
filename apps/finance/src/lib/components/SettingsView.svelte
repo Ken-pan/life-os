@@ -54,6 +54,9 @@
    *   onThemePreferenceChange: (preference: ThemePreference) => void,
    *   lockPortraitOnPhone?: boolean,
    *   onLockPortraitOnPhoneChange?: (enabled: boolean) => void,
+   *   showBillReminders?: boolean,
+   *   billRemindersEnabled?: boolean,
+   *   onBillRemindersChange?: (enabled: boolean) => void,
    *   section?: SettingsSectionId,
    *   onSectionChange?: (section: SettingsSectionId) => void,
    *   onGoTab?: GoTab,
@@ -63,6 +66,9 @@
     onThemePreferenceChange,
     lockPortraitOnPhone,
     onLockPortraitOnPhoneChange,
+    showBillReminders = false,
+    billRemindersEnabled = true,
+    onBillRemindersChange,
     section,
     onSectionChange,
     onGoTab,
@@ -494,6 +500,23 @@
               : t('settings.hideAmounts')}
           </button>
         </SettingsRow>
+        {#if showBillReminders && onBillRemindersChange}
+          <SettingsRow
+            label={t('settings.billReminders')}
+            desc={t('settings.billRemindersDesc')}
+          >
+            <button
+              class="icon-btn"
+              onclick={() => onBillRemindersChange(!billRemindersEnabled)}
+              aria-pressed={billRemindersEnabled}
+              aria-label={t('settings.billReminders')}
+            >
+              {billRemindersEnabled
+                ? t('settings.billRemindersOn')
+                : t('settings.billRemindersOff')}
+            </button>
+          </SettingsRow>
+        {/if}
       </SettingsSection>
       <SettingsSection title={t('settings.dataTitle')} testId="settings-backup">
         <p class="block-desc">{t('settings.dataIntro', { product })}</p>

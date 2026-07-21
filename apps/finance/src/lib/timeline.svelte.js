@@ -58,6 +58,7 @@ export class TimelineStore {
   #transactions
   #lastPersisted = ''
   #persistTimer = null
+  #billAlertTimer = null
   #autoHealAttempted = false
   #cleanupEffects = () => {}
 
@@ -163,6 +164,18 @@ export class TimelineStore {
           }
         })()
       })
+
+      // Continuity：账单到期 → 系统本地通知（金额永不进 body）。
+      $effect(() => {
+        if (this.loading) return
+        const rows = this.occurrences
+        if (this.#billAlertTimer) clearTimeout(this.#billAlertTimer)
+        this.#billAlertTimer = setTimeout(() => {
+          void import('./billLocalAlerts.js')
+            .then((m) => m.syncBillDueAlerts(rows))
+            .catch(() => {})
+        }, 800)
+      })
     })
   }
 
@@ -170,6 +183,7 @@ export class TimelineStore {
   destroy() {
     this.#cleanupEffects()
     if (this.#persistTimer) clearTimeout(this.#persistTimer)
+    if (this.#billAlertTimer) clearTimeout(this.#billAlertTimer)
   }
 
   #applyLocalOccurrencePatch(id, patch) {
