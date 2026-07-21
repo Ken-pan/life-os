@@ -182,6 +182,163 @@ func appGroupSharedSuitePath() {
     #expect(store.string(forKey: "training.nextSet") == nil)
 }
 
+@Test("Widget glance bridge encodes and loads via App Group store")
+func widgetGlanceBridgeRoundTrip() {
+    let store = KenosAppGroupStore(ownerId: UUID(), suiteFactory: { _ in nil })
+    let glance = TodayGlance(
+        nextPlanTitle: "Plan reminder",
+        nextPlanDeepLink: "kenos://today",
+        pendingApprovalCount: 1,
+        freshness: "local",
+        offlineStatus: "online",
+        state: "ready"
+    )
+    KenosWidgetGlanceBridge.publish(glance, store: store)
+    let loaded = KenosWidgetGlanceBridge.load(store: store)
+    #expect(loaded?.nextPlanTitle == "Plan reminder")
+    #expect(loaded?.pendingApprovalCount == 1)
+    #expect(loaded?.state == "ready")
+    #expect(loaded?.nextPlanDeepLink == "kenos://today")
+}
+
+@Test("Widget snapshot round-trips via shared App Group keys")
+func widgetSnapshotRoundTrip() {
+    let bag = KenosInMemorySharedDefaults()
+    let host = KenosAppGroupStore(ownerId: UUID(), suiteFactory: { _ in bag })
+    let widget = KenosAppGroupStore(ownerId: nil, suiteFactory: { _ in bag })
+    let today = TodayGlance(
+        nextPlanTitle: "Review",
+        nextPlanDeepLink: "kenos://domain/plan",
+        pendingApprovalCount: 2,
+        freshness: "local",
+        offlineStatus: "online",
+        state: "ready"
+    )
+    let plan = DomainWidgetGlance(
+        domainId: "plan",
+        title: "Review",
+        subtitle: "Next up",
+        deepLink: "kenos://domain/plan",
+        accentRGB: 0xC9A227,
+        systemImage: "checklist"
+    )
+    let health = DomainWidgetGlance(
+        domainId: "health",
+        title: "Ready",
+        subtitle: "Focus · high",
+        deepLink: "kenos://domain/health",
+        accentRGB: 0x5B6CFF,
+        systemImage: "heart.text.square",
+        badge: "H"
+    )
+    // Money must never carry amounts — only Open label.
+    let money = DomainWidgetGlance(
+        domainId: "money",
+        title: "Money",
+        subtitle: "Open Money",
+        deepLink: "kenos://domain/money",
+        accentRGB: 0x3D9B6E,
+        systemImage: "dollarsign.circle"
+    )
+    let snapshot = KenosWidgetSnapshot(
+        today: today,
+        domains: ["plan": plan, "health": health, "money": money],
+        recentDomainIds: ["plan", "training"]
+    )
+    KenosWidgetGlanceBridge.publishSnapshot(snapshot, store: host)
+    let loaded = KenosWidgetGlanceBridge.loadSnapshot(store: widget)
+    #expect(loaded?.today.nextPlanTitle == "Review")
+    #expect(loaded?.domain("plan")?.title == "Review")
+    #expect(loaded?.domain("health")?.subtitle == "Focus · high")
+    #expect(loaded?.domain("money")?.subtitle == "Open Money")
+    #expect(loaded?.domain("money")?.subtitle.contains("$") != true)
+    #expect(loaded?.recentDomainIds == ["plan", "training"])
+}
+
+@Test("Widget snapshot falls back to legacy TodayGlance")
+func widgetSnapshotLegacyFallback() {
+    let store = KenosAppGroupStore(ownerId: UUID(), suiteFactory: { _ in nil })
+    let glance = TodayGlance(
+        nextPlanTitle: "Legacy",
+        freshness: "local",
+        offlineStatus: "online",
+        state: "ready"
+    )
+    KenosWidgetGlanceBridge.publish(glance, store: store)
+    let loaded = KenosWidgetGlanceBridge.loadSnapshot(store: store)
+    #expect(loaded?.today.nextPlanTitle == "Legacy")
+    #expect(loaded?.domains.isEmpty == true)
+}
+
+@Test("Widget pending deep link posts and consumes via shared keys")
+func widgetPendingDeepLinkRelay() {
+    let bag = KenosInMemorySharedDefaults()
+    let widget = KenosAppGroupStore(ownerId: nil, suiteFactory: { _ in bag })
+    let host = KenosAppGroupStore(ownerId: UUID(), suiteFactory: { _ in bag })
+    KenosWidgetGlanceBridge.postPendingDeepLink("kenos://training/session", store: widget)
+    #expect(KenosWidgetGlanceBridge.consumePendingDeepLink(store: host) == "kenos://training/session")
+    #expect(KenosWidgetGlanceBridge.consumePendingDeepLink(store: host) == nil)
+}
+
+@Test("Widget snapshot contentEquals ignores publishedAt and updatedAt")
+func widgetSnapshotContentEqualsIgnoresTimestamps() {
+    let today = TodayGlance(
+        nextPlanTitle: "Review",
+        freshness: "local",
+        offlineStatus: "online",
+        state: "ready"
+    )
+    var aPlan = DomainWidgetGlance(
+        domainId: "plan",
+        title: "Review",
+        subtitle: "Next up",
+        deepLink: "kenos://domain/plan",
+        accentRGB: 0xC9A227,
+        systemImage: "checklist",
+        updatedAt: "2026-01-01T00:00:00Z"
+    )
+    var bPlan = aPlan
+    bPlan.updatedAt = "2026-01-02T00:00:00Z"
+    let a = KenosWidgetSnapshot(today: today, domains: ["plan": aPlan], recentDomainIds: ["plan"], publishedAt: "a")
+    let b = KenosWidgetSnapshot(today: today, domains: ["plan": bPlan], recentDomainIds: ["plan"], publishedAt: "b")
+    #expect(a.contentEquals(b))
+    var cPlan = aPlan
+    cPlan.title = "Different"
+    let c = KenosWidgetSnapshot(today: today, domains: ["plan": cPlan], recentDomainIds: ["plan"])
+    #expect(!a.contentEquals(c))
+}
+
+@Test("publishSnapshotIfChanged skips identical content")
+func widgetPublishIfChangedSkipsDuplicate() {
+    let bag = KenosInMemorySharedDefaults()
+    let store = KenosAppGroupStore(ownerId: nil, suiteFactory: { _ in bag })
+    let today = TodayGlance(
+        nextPlanTitle: "Review",
+        freshness: "local",
+        offlineStatus: "online",
+        state: "ready"
+    )
+    let first = KenosWidgetSnapshot(today: today, domains: [:], recentDomainIds: ["plan"])
+    #expect(KenosWidgetGlanceBridge.publishSnapshotIfChanged(first, store: store, previous: nil))
+    let second = KenosWidgetSnapshot(today: today, domains: [:], recentDomainIds: ["plan"], publishedAt: "later")
+    #expect(!KenosWidgetGlanceBridge.publishSnapshotIfChanged(second, store: store, previous: first))
+    var changedToday = today
+    changedToday.nextPlanTitle = "Ship"
+    let third = KenosWidgetSnapshot(today: changedToday, domains: [:], recentDomainIds: ["plan"])
+    #expect(KenosWidgetGlanceBridge.publishSnapshotIfChanged(third, store: store, previous: first))
+}
+
+@Test("App Group shared strings are not owner-scoped")
+func appGroupSharedStringsCrossOwner() {
+    let bag = KenosInMemorySharedDefaults()
+    let a = KenosAppGroupStore(ownerId: UUID(), suiteFactory: { _ in bag })
+    let b = KenosAppGroupStore(ownerId: UUID(), suiteFactory: { _ in bag })
+    a.setSharedString("hello", forKey: "widget.test")
+    #expect(b.sharedString(forKey: "widget.test") == "hello")
+    a.setString("private", forKey: "widget.test")
+    #expect(b.string(forKey: "widget.test") == nil)
+}
+
 @Test("Runtime health snapshot round-trips without secrets")
 func runtimeHealthRoundTrip() {
     let store = KenosAppGroupStore(ownerId: UUID(), suiteFactory: { _ in nil })

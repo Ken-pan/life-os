@@ -14,6 +14,8 @@ settings:
     DEVELOPMENT_TEAM: ''
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: '6.0'
+    CURRENT_PROJECT_VERSION: '1'
+    MARKETING_VERSION: '1.0.0'
 packages:
   KenosContracts:
     path: ../Packages/KenosContracts
@@ -35,8 +37,14 @@ targets:
     platform: iOS
     sources:
       - path: iOS/Sources
+        excludes:
+          - Health/Resources/**
+      - path: iOS/Sources/Health/Resources
+        buildPhase: resources
       - path: iOS/Assets.xcassets
       - path: Shared
+      # Shared with KenosWidget — ActivityAttributes must match byte-for-byte.
+      - path: Extensions/Widget/Sources/KenosLiveActivityAttributes.swift
     info:
       path: iOS/Info.plist
       properties:
@@ -54,6 +62,8 @@ targets:
           - CFBundleURLName: space.kenos.app.ios
             CFBundleURLSchemes:
               - kenos
+        NSUserActivityTypes:
+          - space.kenos.app.continuity
         KENOS_DAILY_BETA_ORIGIN: '$(KENOS_DAILY_BETA_ORIGIN)'
         # Publishable Supabase config for native bug report upload (same as apps/*/.env.example).
         KENOS_SUPABASE_URL: 'https://iueozzuctstwvzbcxcyh.supabase.co'
@@ -83,11 +93,17 @@ targets:
           Kenos reads Apple Health metrics you enable (sleep, heart, activity,
           workouts, and more) to power Health status. Data stays on your devices
           and can optionally sync to your Mac.
+        NSFaceIDUsageDescription: >-
+          Kenos can use Face ID to unlock sensitive Money and Work surfaces
+          inside the Continuity shell.
         UIBackgroundModes:
           - fetch
           - processing
         BGTaskSchedulerPermittedIdentifiers:
           - space.kenos.app.ios.health.sync
+        # Live Activities (Lock Screen + Dynamic Island) — ActivityKit.
+        NSSupportsLiveActivities: true
+        NSSupportsLiveActivitiesFrequentUpdates: true
     entitlements:
       path: iOS/KenosIOS.entitlements
     settings:
@@ -99,6 +115,8 @@ targets:
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_ENTITLEMENTS: iOS/KenosIOS.entitlements
+        CURRENT_PROJECT_VERSION: '1'
+        MARKETING_VERSION: '1.0.0'
         KENOS_DAILY_BETA_ORIGIN: 'http://10.20.202.15:5219'
     dependencies:
       - package: KenosContracts
@@ -110,7 +128,8 @@ targets:
       - package: KenosHandoff
       - target: KenosWatch
         embed: true
-      # KenosWidget builds standalone; App Group/signing gate defers host embedding for simulator install
+      - target: KenosWidget
+        embed: true
     scheme:
       testTargets:
         - KenosIOSTests
@@ -124,6 +143,22 @@ targets:
       - path: Shared
     info:
       path: macOS/Info.plist
+      properties:
+        CFBundleDisplayName: Kenos
+        CFBundleURLTypes:
+          - CFBundleURLName: space.kenos.app.macos
+            CFBundleURLSchemes:
+              - kenos
+        KENOS_DAILY_BETA_ORIGIN: '$(KENOS_DAILY_BETA_ORIGIN)'
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+          NSAllowsArbitraryLoadsInWebContent: true
+          NSExceptionDomains:
+            '127.0.0.1':
+              NSExceptionAllowsInsecureHTTPLoads: true
+            localhost:
+              NSExceptionAllowsInsecureHTTPLoads: true
+              NSIncludesSubdomains: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.macos
@@ -131,6 +166,7 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         LD_RUNPATH_SEARCH_PATHS: '$(inherited) @executable_path/../Frameworks'
+        KENOS_DAILY_BETA_ORIGIN: 'http://127.0.0.1:5219'
     dependencies:
       - package: KenosContracts
       - package: KenosClient
@@ -188,18 +224,24 @@ targets:
       path: Extensions/Widget/Info.plist
       properties:
         CFBundleDisplayName: Kenos
-        CFBundleShortVersionString: '0.4.1'
-        CFBundleVersion: '1'
+        CFBundleShortVersionString: '$(MARKETING_VERSION)'
+        CFBundleVersion: '$(CURRENT_PROJECT_VERSION)'
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        NSSupportsLiveActivities: true
+    entitlements:
+      path: Extensions/Widget/KenosWidget.entitlements
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios.widget
         PRODUCT_NAME: KenosWidget
         GENERATE_INFOPLIST_FILE: NO
-        CODE_SIGNING_ALLOWED: 'NO'
-        # App Group placeholder only — production group deferred (KR-P4B-TEMP-005)
-        # PRODUCT_APP_GROUP = group.space.kenos.app
+        CODE_SIGN_ENTITLEMENTS: Extensions/Widget/KenosWidget.entitlements
+        SKIP_INSTALL: YES
+        CURRENT_PROJECT_VERSION: '1'
+        MARKETING_VERSION: '1.0.0'
+        # App Group dogfood (EXIT_OPEN) — production Team cutover still deferred (KR-P4B-TEMP-005)
+        PRODUCT_APP_GROUP: group.space.kenos.app
     dependencies:
       - package: KenosClient
       - package: KenosNotifications
@@ -211,6 +253,7 @@ targets:
       - path: Tests
         excludes:
           - KenosWatchGlanceTests.swift
+          - KenosMacSidebarTests.swift
     dependencies:
       - target: KenosIOS
       - package: KenosContracts
@@ -235,6 +278,13 @@ targets:
           - KenosBugReportTests.swift
           - KenosHealthKitTests.swift
           - KenosHomeScanBridgeTests.swift
+          - KenosNativeCapabilityBridgeTests.swift
+          - KenosAppIntentsTests.swift
+          - KenosSpotlightHandoffTests.swift
+          - KenosDailyBetaConfigTests.swift
+          - KenosWebWarmupTests.swift
+          - KenosWidgetSnapshotTests.swift
+          - KenosNowPlayingBridgeTests.swift
     dependencies:
       - target: KenosMac
       - package: KenosClient

@@ -1,5 +1,8 @@
 import XCTest
 import KenosClient
+#if canImport(UIKit)
+@testable import KenosIOS
+#endif
 
 final class KenosAppRouteTests: XCTestCase {
     func testDeepLinkCoverageForShell() {
@@ -34,7 +37,20 @@ final class KenosAppRouteTests: XCTestCase {
             "kenos.capture",
             "kenos.system",
             "kenos.approvals.actions.disabled",
+            "kenos.settings.reportBug",
+            "kenos.bug.submit",
         ]
-        XCTAssertEqual(ids.count, 10)
+        XCTAssertEqual(ids.count, 12)
     }
+
+    #if os(iOS)
+    func testSameNavigationTargetIgnoresFragment() {
+        let a = URL(string: "http://10.0.0.1:5291/today?iosNativeShell=1#x")!
+        let b = URL(string: "http://10.0.0.1:5291/today?iosNativeShell=1#y")!
+        XCTAssertTrue(KenosWebSurfaceView.sameNavigationTarget(a, b))
+        let c = URL(string: "http://10.0.0.1:5291/assistant?iosNativeShell=1")!
+        XCTAssertFalse(KenosWebSurfaceView.sameNavigationTarget(a, c))
+        XCTAssertEqual(KenosWebSurfaceView.originKey(a), "10.0.0.1:5291")
+    }
+    #endif
 }

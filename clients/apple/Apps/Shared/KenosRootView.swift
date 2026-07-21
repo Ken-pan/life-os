@@ -4,9 +4,17 @@ import KenosContracts
 import KenosDesign
 import KenosNotifications
 import KenosStore
+#if os(iOS)
+import CoreSpotlight
+import UIKit
+#endif
 
 struct KenosRootView: View {
     @ObservedObject var model: KenosAppModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    #if os(iOS)
+    @Environment(\.scenePhase) private var scenePhase
+    #endif
 
     var body: some View {
         Group {
@@ -15,16 +23,61 @@ struct KenosRootView: View {
                     FocusSummaryView(model: model)
                 }
             } else if model.hideGlobalNavForFocus || model.focusStore.isPaused {
-                // Active hides global nav; paused keeps session chrome so Resume stays reachable.
+                // Focus Mode — immersive; no Kenos/Domain dock.
                 NavigationStack {
                     FocusSessionView(model: model)
                 }
             } else {
                 #if os(iOS)
-                if UIDevice.current.userInterfaceIdiom == .pad {
-                    iPadSplit
-                } else {
-                    iPhoneTabs
+                KenosLaunchVeilHost {
+                    KenosShellWithSpaceShelf(model: model) {
+                        // Dual-layer keep-alive: depth morph + opacity (not remount).
+                        ZStack {
+                            Group {
+                                if UIDevice.current.userInterfaceIdiom == .pad {
+                                    iPadSplit
+                                } else {
+                                    iPhoneTabs
+                                }
+                            }
+                            .scaleEffect(
+                                KenosMotion.shellSurfaceScale(
+                                    reduceMotion: reduceMotion,
+                                    isForeground: model.shellMode != .domain,
+                                    isPresent: true
+                                )
+                            )
+                            .opacity(model.shellMode == .domain ? 0 : 1)
+                            .allowsHitTesting(model.shellMode != .domain)
+                            .accessibilityHidden(model.shellMode == .domain)
+
+                            if model.continuityURL != nil {
+                                KenosDomainModeShell(
+                                    model: model,
+                                    isActive: model.shellMode == .domain
+                                )
+                                .scaleEffect(
+                                    KenosMotion.shellSurfaceScale(
+                                        reduceMotion: reduceMotion,
+                                        isForeground: model.shellMode == .domain,
+                                        isPresent: true
+                                    )
+                                )
+                                .opacity(model.shellMode == .domain ? 1 : 0)
+                                .allowsHitTesting(model.shellMode == .domain)
+                                .accessibilityHidden(model.shellMode != .domain)
+                            }
+                        }
+                        .animation(
+                            KenosMotion.shellMode(reduceMotion: reduceMotion),
+                            value: model.shellMode
+                        )
+                        // One soft impact on Mode flip only — dock already owns selection haptics.
+                        .sensoryFeedback(
+                            .impact(flexibility: .soft, intensity: 0.65),
+                            trigger: model.shellMode
+                        )
+                    }
                 }
                 #else
                 macSidebar
@@ -32,7 +85,8 @@ struct KenosRootView: View {
             }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
-            if model.focusStore.showReturnBanner {
+            // Live Accessory owns Focus return when present — avoid dual chrome.
+            if model.focusStore.showReturnBanner, model.liveAccessory?.kind != .focus {
                 FocusReturnBanner(model: model)
             }
         }
@@ -48,134 +102,199 @@ struct KenosRootView: View {
         }
         .sheet(isPresented: $model.showSpaceSwitcher) {
             SpaceSwitcherSheet(model: model)
+                #if os(macOS)
+                .frame(minWidth: 420, idealWidth: 480, minHeight: 520, idealHeight: 640)
+                #endif
         }
-        .sheet(isPresented: $model.showSettingsSheet) {
-            NavigationStack {
-                DailyBetaSettingsView(model: model)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Close") { model.showSettingsSheet = false }
-                        }
-                    }
+        #if os(iOS)
+        .sheet(isPresented: $model.showBugReportSheet, onDismiss: {
+            model.clearBugReportDraftIfIdle()
+        }) {
+            KenosBugReportSheet(model: model)
+        }
+        .overlay(alignment: .bottom) {
+            if model.showScreenshotBugPrompt {
+                KenosScreenshotBugPrompt(model: model)
+                    .padding(.bottom, model.screenshotBugPromptBottomPadding)
+                    .transition(
+                        .asymmetric(
+                            insertion: reduceMotion
+                                ? .opacity
+                                : .move(edge: .bottom).combined(with: .opacity),
+                            removal: .opacity
+                        )
+                    )
+                    .zIndex(40)
             }
         }
+        .animation(KenosMotion.chrome(reduceMotion: reduceMotion), value: model.showScreenshotBugPrompt)
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.userDidTakeScreenshotNotification)) { _ in
+            guard scenePhase == .active else { return }
+            Task { @MainActor in
+                await model.handleSystemScreenshot()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                KenosWebRuntime.recoverAfterForeground()
+                model.consumeWidgetPendingDeepLink()
+            }
+        }
+        #endif
         .task { await model.bootstrap() }
         .onOpenURL { url in
             model.open(urlString: url.absoluteString)
         }
         #if os(iOS)
-        .onReceive(NotificationCenter.default.publisher(for: .kenosOpenDomainContinuity)) { note in
-            if let url = note.object as? URL {
-                model.continuityURL = url
-                model.showSpaceSwitcher = false
+        .onContinueUserActivity(KenosUserActivityFoundation.activityType) { activity in
+            if let link = KenosUserActivityFoundation.deepLink(from: activity) {
+                model.open(urlString: link)
             }
         }
-        .fullScreenCover(isPresented: Binding(
-            get: { model.continuityURL != nil },
-            set: { if !$0 { model.dismissContinuity() } }
-        )) {
-            NavigationStack {
-                Group {
-                    if let url = model.continuityURL {
-                        KenosWebSurfaceView(url: url, stayInApp: true)
-                            .ignoresSafeArea(edges: .bottom)
-                    } else {
-                        Color.clear
-                    }
-                }
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Done") { model.dismissContinuity() }
-                            .accessibilityIdentifier("kenos.continuity.done")
-                    }
-                }
-                .navigationTitle(continuityTitle)
-                .navigationBarTitleDisplayMode(.inline)
+        .onContinueUserActivity(CSSearchableItemActionType) { activity in
+            if let link = KenosUserActivityFoundation.deepLink(from: activity) {
+                model.open(urlString: link)
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .kenosOpenDomainContinuity)) { note in
+            guard let url = note.object as? URL else { return }
+            Task { @MainActor in
+                model.enterDomainMode(url: url)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .kenosHandleDeepLink)) { note in
+            guard let raw = note.object as? String else { return }
+            model.open(urlString: raw)
         }
         #endif
     }
-
-    #if os(iOS)
-    private var continuityTitle: String {
-        guard let url = model.continuityURL else { return "Continue" }
-        let port = url.port
-        if port == 5188 || (url.host ?? "").contains("planner") { return "Plan" }
-        if port == 5190 || (url.host ?? "").contains("fitness") { return "Training" }
-        return "Continue"
-    }
-    #endif
-
     #if os(iOS)
     private var iPhoneTabs: some View {
-        TabView(selection: $model.selectedTab) {
-            NavigationStack {
-                Group {
-                    if KenosDailyBetaConfig.isEnabled {
-                        KenosDailyBetaSurface(path: model.dailyBetaPath(for: .today))
-                    } else {
-                        TodayView(model: model)
-                    }
+        let ink = Color(red: 0.031, green: 0.035, blue: 0.039)
+        // Custom dock owns IA — no system TabView chrome (avoids ghost labels under Liquid Glass).
+        // Single Daily Beta surface for all tabs — path updates reuse one WKWebView
+        // (switch-per-tab used to remount + re-probe → white flash).
+        return ZStack {
+            ink.ignoresSafeArea()
+            if model.selectedTab == .settings {
+                // Settings is a system tab — native shell page, never a sheet.
+                NavigationStack {
+                    DailyBetaSettingsView(model: model)
                 }
-                .toolbar { spaceSwitcherToolbar }
+            } else if KenosDailyBetaConfig.isEnabled {
+                KenosDailyBetaSurface(
+                    path: model.dailyBetaPath(for: model.selectedTab),
+                    isActive: model.shellMode != .domain,
+                    accessoryBottomPadPx: model.liveAccessoryWebBottomExtraPx
+                )
+            } else {
+                kenosTabSurface(model.selectedTab)
             }
-            .tabItem { Label("Today", systemImage: "sun.max") }
-            .tag(KenosAppModel.Tab.today)
-
-            NavigationStack {
-                Group {
-                    if KenosDailyBetaConfig.isEnabled {
-                        KenosDailyBetaSurface(path: model.dailyBetaPath(for: .assistant))
-                    } else {
-                        AssistantView(model: model)
-                    }
-                }
-                .toolbar { spaceSwitcherToolbar }
-            }
-            .tabItem { Label("Assistant", systemImage: "bubble.left.and.bubble.right") }
-            .tag(KenosAppModel.Tab.assistant)
-
-            NavigationStack {
-                Group {
-                    if KenosDailyBetaConfig.isEnabled {
-                        KenosDailyBetaSurface(path: model.dailyBetaPath(for: .spaces))
-                    } else {
-                        SpacesHubView(model: model)
-                    }
-                }
-                .toolbar { spaceSwitcherToolbar }
-            }
-            .tabItem { Label("Spaces", systemImage: "square.grid.2x2") }
-            .tag(KenosAppModel.Tab.spaces)
-
-            NavigationStack {
-                Group {
-                    if KenosDailyBetaConfig.isEnabled {
-                        KenosDailyBetaSurface(path: model.dailyBetaPath(for: .inbox))
-                    } else {
-                        InboxView(model: model)
-                    }
-                }
-                .toolbar {
-                    spaceSwitcherToolbar
-                    ToolbarItem(placement: .primaryAction) {
-                        Button("Settings", systemImage: "gearshape") {
-                            model.presentSettings()
-                        }
-                    }
-                }
-            }
-            .tabItem { Label("Inbox", systemImage: "tray") }
-            .tag(KenosAppModel.Tab.inbox)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(ink.ignoresSafeArea())
         .accessibilityIdentifier("kenos.tabs")
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if let live = model.liveAccessory {
-                KenosLiveAccessoryBar(accessory: live) {
-                    model.activateLiveAccessory(live)
+            // Shelf owns chrome focus — fade dock (Music / Maps sheet pattern).
+            VStack(spacing: 0) {
+                if let live = model.liveAccessory, !model.showSpaceShelf {
+                    KenosLiveAccessoryBar(
+                        accessory: live,
+                        minimized: model.liveAccessoryMinimized
+                    ) {
+                        model.activateLiveAccessory(live)
+                    }
+                    .padding(.horizontal, KenosGlass.dockHorizontalInset)
+                    .padding(.bottom, model.liveAccessoryMinimized ? 4 : 8)
+                }
+                KenosGlobalDock(model: model)
+                    .padding(.leading, KenosGlass.dockLeadingInset)
+                    .padding(.trailing, KenosGlass.dockTrailingInset)
+                    .padding(.bottom, KenosGlass.dockBottomInset)
+            }
+            .opacity(model.showSpaceShelf ? 0 : 1)
+            .allowsHitTesting(!model.showSpaceShelf)
+            .animation(KenosMotion.shelf(reduceMotion: reduceMotion), value: model.showSpaceShelf)
+            // No layout spring on Live Accessory — safeAreaInset height bounce shakes WK.
+            // Bar owns its own opacity transition; minimize morphs in-place.
+        }
+        .onAppear { model.syncLiveAccessoryMinimizeState() }
+        .onChange(of: model.liveAccessory?.id) { _, _ in
+            model.syncLiveAccessoryMinimizeState()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .kenosLiveAccessoryMinimize)) { note in
+            let minimized = (note.userInfo?["minimized"] as? Bool) ?? false
+            model.setLiveAccessoryMinimized(minimized)
+        }
+    }
+
+    @ViewBuilder
+    private func kenosTabSurface(_ tab: KenosAppModel.Tab) -> some View {
+        switch tab {
+        case .today:
+            kenosTabBody(
+                .today,
+                dailyPath: model.dailyBetaPath(for: .today),
+                showSettings: false
+            ) { TodayView(model: model) }
+        case .assistant:
+            kenosTabBody(
+                .assistant,
+                dailyPath: model.dailyBetaPath(for: .assistant),
+                showSettings: false
+            ) { AssistantView(model: model) }
+        case .spaces:
+            kenosTabBody(
+                .spaces,
+                dailyPath: model.dailyBetaPath(for: .spaces),
+                showSettings: false
+            ) { SpacesHubView(model: model) }
+        case .inbox:
+            kenosTabBody(
+                .inbox,
+                dailyPath: model.dailyBetaPath(for: .inbox),
+                showSettings: false
+            ) { InboxView(model: model) }
+        case .settings:
+            NavigationStack {
+                DailyBetaSettingsView(model: model)
+            }
+        }
+    }
+
+    /// Daily Beta: full-bleed WKWebView. Page title + actions live in web scroll
+    /// content (Apple Music large-title pattern) — not a fixed native overlay.
+    /// Native fallback keeps NavigationStack for non-beta builds.
+    @ViewBuilder
+    private func kenosTabBody<Native: View>(
+        _ tab: KenosAppModel.Tab,
+        dailyPath: String,
+        showSettings: Bool = false,
+        @ViewBuilder native: () -> Native
+    ) -> some View {
+        Group {
+            if KenosDailyBetaConfig.isEnabled {
+                KenosDailyBetaSurface(
+                    path: dailyPath,
+                    accessoryBottomPadPx: model.liveAccessoryWebBottomExtraPx
+                )
+            } else {
+                NavigationStack {
+                    native()
+                        .toolbar {
+                            spaceSwitcherToolbar
+                            if showSettings {
+                                ToolbarItem(placement: .primaryAction) {
+                                    Button("Settings", systemImage: "gearshape") {
+                                        model.presentSettings()
+                                    }
+                                }
+                            }
+                        }
                 }
             }
         }
+        // No .id(tab) — remounting WKWebView on every dock switch flashes white.
     }
 
     private var spaceSwitcherToolbar: some ToolbarContent {
@@ -198,15 +317,7 @@ struct KenosRootView: View {
             .accessibilityLabel("Quick Switch")
             .accessibilityHint("Search and jump to Spaces or recent objects")
             .accessibilityIdentifier("kenos.quickSwitch.trigger")
-            Button {
-                model.openSpaceSwitcher()
-            } label: {
-                Label("Switch Space", systemImage: "square.grid.2x2")
-            }
-            .labelStyle(.iconOnly)
-            .accessibilityLabel("Switch Space")
-            .accessibilityHint("Opens pinned and all Spaces without adding a fifth tab")
-            .accessibilityIdentifier("kenos.spaceSwitcher.trigger")
+            // Space switching: dock Spaces chip → Space Shelf only (no grid duplicate).
         }
     }
 
@@ -222,8 +333,13 @@ struct KenosRootView: View {
             .accessibilityIdentifier("kenos.ipad.sidebar")
             .toolbar {
                 ToolbarItem {
-                    Button("Spaces", systemImage: "square.grid.2x2") { model.openSpaceSwitcher() }
-                        .accessibilityIdentifier("kenos.spaceSwitcher.trigger")
+                    Button("Spaces", systemImage: "square.grid.2x2.fill") {
+                        withAnimation(KenosMotion.shelf(reduceMotion: reduceMotion)) {
+                            model.openSpaceShelf()
+                        }
+                    }
+                        .accessibilityIdentifier("kenos.dock.spaces")
+                        .accessibilityHint("Opens Space Shelf to switch Spaces")
                 }
                 ToolbarItem {
                     Button("Capture", systemImage: "plus") { model.openCapture() }
@@ -239,30 +355,115 @@ struct KenosRootView: View {
     private var macSidebar: some View {
         NavigationSplitView {
             List(selection: Binding(
-                get: { Optional(model.selectedTab) },
-                set: { if let value = $0 { model.selectedTab = value } }
+                get: { Optional(model.macSidebarSelection) },
+                set: { if let value = $0 { model.selectMacSidebar(value) } }
             )) {
-                ForEach(KenosAppModel.Tab.allCases) { tab in
-                    Text(tab.title).tag(tab)
+                Section("Kenos") {
+                    macSidebarRow(.today)
+                    macSidebarRow(.assistant)
+                    macSidebarRow(.inbox)
+                }
+                Section("Spaces") {
+                    ForEach(KenosAppModel.macSidebarDomainOrder, id: \.self) { domainId in
+                        macSidebarRow(.domain(domainId))
+                    }
+                }
+                Section("System") {
+                    macSidebarRow(.settings)
                 }
             }
+            .listStyle(.sidebar)
+            .navigationSplitViewColumnWidth(min: 200, ideal: 240, max: 320)
             .navigationTitle("Kenos")
             .accessibilityIdentifier("kenos.mac.sidebar")
             .toolbar {
                 ToolbarItem {
-                    Button("Spaces") { model.openSpaceSwitcher() }
-                        .keyboardShortcut("s", modifiers: [.command, .shift])
-                        .accessibilityIdentifier("kenos.spaceSwitcher.trigger")
+                    Button("Spaces", systemImage: "square.grid.2x2.fill") {
+                        model.openSpaceSwitcher()
+                    }
+                    .keyboardShortcut("s", modifiers: [.command, .shift])
+                    .accessibilityIdentifier("kenos.dock.spaces")
+                    .accessibilityHint("Opens Switch Space")
                 }
                 ToolbarItem {
-                    Button("Capture") { model.openCapture() }
-                        .keyboardShortcut("k", modifiers: [.command])
+                    Button("Quick Switch", systemImage: "magnifyingglass") {
+                        model.openQuickSwitch()
+                    }
+                    .keyboardShortcut(" ", modifiers: [.command, .shift])
+                    .accessibilityIdentifier("kenos.quickSwitch.trigger")
+                    .accessibilityHint("Command Bar — search Spaces and resumes")
+                }
+                ToolbarItem {
+                    Button("Capture", systemImage: "plus") {
+                        model.openCapture()
+                    }
+                    .keyboardShortcut("n", modifiers: [.command, .shift])
+                    .accessibilityIdentifier("kenos.mac.capture")
                 }
             }
         } detail: {
-            NavigationStack { detailForSelection }
+            NavigationStack {
+                macDetail
+            }
         }
-        .frame(minWidth: 900, minHeight: 600)
+        .navigationSplitViewStyle(.balanced)
+        .frame(minWidth: 960, minHeight: 640)
+        .onReceive(NotificationCenter.default.publisher(for: .kenosOpenDomainContinuity)) { note in
+            guard let url = note.object as? URL else { return }
+            Task { @MainActor in
+                model.enterDomainMode(url: url)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .kenosHandleDeepLink)) { note in
+            guard let raw = note.object as? String else { return }
+            model.open(urlString: raw)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .kenosDailyBetaOriginDidChange)) { _ in
+            model.objectWillChange.send()
+        }
+    }
+
+    private func macSidebarRow(_ item: KenosAppModel.MacSidebarItem) -> some View {
+        Label {
+            Text(item.title)
+        } icon: {
+            Image(systemName: item.systemImage)
+                .foregroundStyle(macSidebarAccent(for: item))
+        }
+        .tag(item)
+        .accessibilityIdentifier("kenos.mac.sidebar.\(item.id)")
+    }
+
+    private func macSidebarAccent(for item: KenosAppModel.MacSidebarItem) -> Color {
+        switch item {
+        case .domain(let domainId):
+            return KenosDomainRegistry.accentColor(for: domainId)
+        case .today, .assistant, .inbox:
+            return Color(red: 0.357, green: 0.549, blue: 1.0) // Kenos accent
+        case .settings:
+            return .secondary
+        }
+    }
+
+    @ViewBuilder
+    private var macDetail: some View {
+        if model.shellMode == .domain, model.continuityURL != nil {
+            KenosMacDomainSurface(model: model)
+        } else if KenosDailyBetaConfig.isEnabled,
+                  let tab = model.macShellTab(for: model.macSidebarSelection)
+        {
+            KenosMacShellSurface(model: model, path: model.dailyBetaPath(for: tab))
+        } else {
+            switch model.macSidebarSelection {
+            case .today: TodayView(model: model)
+            case .assistant: AssistantView(model: model)
+            case .inbox: InboxView(model: model)
+            case .settings: DailyBetaSettingsView(model: model)
+            case .domain:
+                // Selection already triggers enterDomainMode; show hub while URL settles.
+                SpacesHubView(model: model)
+            }
+        }
     }
     #endif
 
@@ -273,42 +474,227 @@ struct KenosRootView: View {
         case .assistant: AssistantView(model: model)
         case .spaces: SpacesHubView(model: model)
         case .inbox: InboxView(model: model)
+        case .settings: DailyBetaSettingsView(model: model)
         }
     }
 }
 
+#if os(iOS)
+/// Hosts Space Shelf over Kenos Mode **and** Domain Mode — single SSOT for space switching.
+private struct KenosShellWithSpaceShelf<Content: View>: View {
+    @ObservedObject var model: KenosAppModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ViewBuilder var content: () -> Content
+    @State private var openDragX: CGFloat = 0
+    @State private var dismissDragX: CGFloat = 0
+    @State private var shelfProgress: CGFloat = 0
+
+    private var openAnimation: Animation {
+        KenosMotion.shelf(reduceMotion: reduceMotion, closing: false)
+    }
+
+    private var closeAnimation: Animation {
+        KenosMotion.shelf(reduceMotion: reduceMotion, closing: true)
+    }
+
+    private var isDraggingShelf: Bool {
+        (!model.showSpaceShelf && openDragX > 0.5)
+            || (model.showSpaceShelf && dismissDragX < -0.5)
+    }
+
+    /// Live Accessory sits above the dock — shift the edge-open band up with it.
+    private var kenosEdgeOpenLiveAccessoryChrome: CGFloat {
+        guard model.liveAccessory != nil, !model.showSpaceShelf else { return 0 }
+        return model.liveAccessoryMinimized ? 52 : 80
+    }
+
+    var body: some View {
+        // Domain Mode owns its own shelf morph + edge gesture inside KenosDomainModeShell.
+        if model.shellMode == .domain {
+            content()
+        } else {
+            ZStack(alignment: .leading) {
+                content()
+                    .scaleEffect(
+                        KenosSpaceShelfChrome.backdropScale(
+                            reduceMotion: reduceMotion,
+                            progress: shelfProgress
+                        ),
+                        anchor: .center
+                    )
+                    .offset(
+                        x: isDraggingShelf && !model.showSpaceShelf
+                            ? KenosShelfGesture.backdropParallax(
+                                translationX: openDragX,
+                                reduceMotion: reduceMotion
+                            )
+                            : KenosSpaceShelfChrome.backdropOffset(
+                                reduceMotion: reduceMotion,
+                                progress: shelfProgress
+                            )
+                    )
+                    .animation(isDraggingShelf ? nil : openAnimation, value: shelfProgress)
+                    .modifier(
+                        DomainShelfClip(
+                            cornerRadius: KenosSpaceShelfChrome.clipRadius(
+                                progress: shelfProgress
+                            )
+                        )
+                    )
+                    .shadow(
+                        color: .black.opacity(0.32 * Double(min(1, shelfProgress))),
+                        radius: 24,
+                        x: 0,
+                        y: 8
+                    )
+                    .allowsHitTesting(!model.showSpaceShelf && shelfProgress < 0.02)
+
+                // Left-edge swipe → Space Shelf only in dock-adjacent band.
+                // Mid/upper leading edge + Spaces tip stay free (Back / tip first).
+                KenosShelfEdgeOpenOverlay(
+                    enabled: !model.showSpaceShelf
+                        && !model.hideGlobalNavForFocus
+                        && !model.focusStore.isPaused,
+                    additionalBottomChrome: kenosEdgeOpenLiveAccessoryChrome,
+                    onChanged: { translation in
+                        openDragX = translation
+                    },
+                    onEnded: { translation, velocity in
+                        let shouldOpen = KenosShelfGesture.shouldCommitOpen(
+                            translationX: translation,
+                            velocityX: velocity
+                        )
+                        if shouldOpen {
+                            withAnimation(openAnimation) {
+                                model.openSpaceShelf()
+                            }
+                        } else {
+                            withAnimation(closeAnimation) {
+                                openDragX = 0
+                                shelfProgress = 0
+                            }
+                        }
+                    }
+                )
+                .zIndex(1)
+
+                KenosSpaceShelfChrome(
+                    model: model,
+                    dimOpacity: KenosMotion.shelfDimOpacityKenos,
+                    openDragX: $openDragX,
+                    dismissDragX: $dismissDragX,
+                    progress: $shelfProgress
+                )
+                .zIndex(2)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .sheet(isPresented: $model.showDomainMoreSheet) {
+                KenosDomainMoreSheet(model: model)
+            }
+        }
+    }
+}
+#endif
+
+#if os(iOS)
+/// Prefer system Liquid Glass tab bar (iOS 26); material fallback on older OS.
+private struct KenosTabBarGlassModifier: ViewModifier {
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            // Do not set custom toolbarBackground — system provides Liquid Glass.
+            content.tabBarMinimizeBehavior(.onScrollDown)
+        } else {
+            content.toolbarBackground(.ultraThinMaterial, for: .tabBar)
+        }
+    }
+}
+#endif
+
 struct KenosLiveAccessoryBar: View {
     let accessory: KenosAppModel.LiveAccessory
+    var minimized: Bool = false
     let onActivate: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var symbolName: String {
+        switch accessory.kind {
+        case .focus: return "target"
+        case .capture: return "tray.and.arrow.down.fill"
+        case .musicNowPlaying: return "music.note"
+        case .liveActivity(let kind):
+            switch kind {
+            case .training: return "figure.strengthtraining.traditional"
+            case .focus: return "target"
+            case .tidy: return "house"
+            }
+        case .continuity: return "play.circle.fill"
+        }
+    }
+
+    /// Compact when scrolled (Music MiniPlayer / tabViewBottomAccessory), expanded at rest.
+    /// Accessibility sizes always stay expanded so two-line context remains readable.
+    private var useCompact: Bool {
+        minimized && !dynamicTypeSize.isAccessibilitySize
+    }
 
     var body: some View {
         Button(action: onActivate) {
-            HStack(spacing: KenosSpacing.sm) {
-                Image(systemName: accessory.kind == .focus ? "target" : "play.circle.fill")
-                    .foregroundStyle(.primary)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(accessory.title)
-                        .font(KenosTypography.caption.weight(.semibold))
-                        .lineLimit(1)
-                    Text(accessory.subtitle)
-                        .font(KenosTypography.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+            Group {
+                if useCompact {
+                    HStack(spacing: KenosSpacing.sm) {
+                        Image(systemName: symbolName)
+                            .foregroundStyle(.primary)
+                            .imageScale(.medium)
+                        Text(accessory.title)
+                            .font(KenosTypography.caption.weight(.semibold))
+                            .lineLimit(1)
+                        Text(accessory.subtitle)
+                            .font(KenosTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.up")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.horizontal, KenosSpacing.md)
+                    .padding(.vertical, 8)
+                } else {
+                    HStack(spacing: KenosSpacing.sm) {
+                        Image(systemName: symbolName)
+                            .foregroundStyle(.primary)
+                            .imageScale(dynamicTypeSize.isAccessibilitySize ? .large : .medium)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(accessory.title)
+                                .font(KenosTypography.caption.weight(.semibold))
+                                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
+                            Text(accessory.subtitle)
+                                .font(KenosTypography.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.up")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, KenosSpacing.md)
+                    .padding(.vertical, KenosSpacing.sm)
                 }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.up")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, KenosSpacing.md)
-            .padding(.vertical, KenosSpacing.sm)
             .frame(maxWidth: .infinity)
-            .background(.ultraThinMaterial)
+            .kenosLiquidGlass(in: KenosGlass.dockShape, interactive: true)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(KenosPressStyle(reduceMotion: reduceMotion))
+        // Opacity only — offset/scale settle on inset chrome shakes the web canvas (HIG accessory).
+        .transition(.opacity)
+        .animation(KenosMotion.chrome(reduceMotion: reduceMotion), value: useCompact)
         .accessibilityIdentifier("kenos.liveAccessory")
         .accessibilityLabel("\(accessory.title), \(accessory.subtitle)")
         .accessibilityHint("Returns to the running activity")
+        .accessibilityValue(useCompact ? "Minimized" : "Expanded")
     }
 }
 
@@ -634,9 +1020,50 @@ struct SpacesHubView: View {
     }
 }
 
+#if os(iOS)
+/// Auto-focus Quick Switch search (iOS 18+ `.searchFocused`). Older OS keeps always-visible drawer only.
+private struct KenosQuickSwitchSearchFocusModifier: ViewModifier {
+    let enabled: Bool
+    var searchFocused: FocusState<Bool>.Binding
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *), enabled {
+            content
+                .searchFocused(searchFocused)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        searchFocused.wrappedValue = true
+                    }
+                }
+        } else {
+            content
+        }
+    }
+}
+#else
+private struct KenosQuickSwitchSearchFocusModifier: ViewModifier {
+    let enabled: Bool
+    var searchFocused: FocusState<Bool>.Binding
+
+    func body(content: Content) -> some View {
+        content.onAppear {
+            guard enabled else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                searchFocused.wrappedValue = true
+            }
+        }
+    }
+}
+#endif
+
 struct SpaceSwitcherSheet: View {
     @ObservedObject var model: KenosAppModel
     @State private var query = ""
+    @FocusState private var searchFocused: Bool
+
+    private var isQuickSwitch: Bool {
+        model.spaceChromeMode == .quickSwitch
+    }
 
     var body: some View {
         NavigationStack {
@@ -651,7 +1078,19 @@ struct SpaceSwitcherSheet: View {
                 }
             }
             .navigationTitle(title)
+            #if os(iOS)
+            .searchable(
+                text: $query,
+                placement: isQuickSwitch ? .navigationBarDrawer(displayMode: .always) : .automatic,
+                prompt: searchPrompt
+            )
+            #else
             .searchable(text: $query, prompt: searchPrompt)
+            #endif
+            .modifier(KenosQuickSwitchSearchFocusModifier(
+                enabled: isQuickSwitch,
+                searchFocused: $searchFocused
+            ))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { model.dismissSpaceChrome() }
@@ -660,7 +1099,13 @@ struct SpaceSwitcherSheet: View {
             .accessibilityIdentifier(accessibilityId)
         }
         #if os(iOS)
-        .presentationDetents(model.spaceChromeMode == .continueRecent ? [.medium, .large] : [.large, .medium])
+        .presentationDetents(
+            isQuickSwitch
+                ? [.medium, .large]
+                : (model.spaceChromeMode == .continueRecent ? [.medium, .large] : [.large, .medium])
+        )
+        .presentationDragIndicator(.visible)
+        .presentationContentInteraction(isQuickSwitch ? .scrolls : .automatic)
         #endif
     }
 
@@ -878,7 +1323,7 @@ struct InboxView: View {
                 Button("Quick Capture") { model.inboxDestination = .capture }
                 Button("Library links") { model.inboxDestination = .library }
                 Button("System status") { model.inboxDestination = .system }
-                Button("Settings") { model.inboxDestination = .settings }
+                Button("Settings") { model.presentSettings() }
             }
             Section("Captured") {
                 ForEach(model.repository.snapshot.inbox) { item in
@@ -1117,6 +1562,7 @@ struct WorkHubView: View {
 
 struct CaptureView: View {
     @ObservedObject var model: KenosAppModel
+    @State private var successPulse = 0
 
     var body: some View {
         Form {
@@ -1126,6 +1572,7 @@ struct CaptureView: View {
                     .accessibilityIdentifier("kenos.capture.input")
                 Button("Save draft") {
                     model.submitCapture()
+                    successPulse += 1
                 }
                 .disabled(model.captureText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 .accessibilityIdentifier("kenos.capture.submit")
@@ -1146,6 +1593,7 @@ struct CaptureView: View {
         }
         .navigationTitle("Capture")
         .accessibilityIdentifier("kenos.capture")
+        .sensoryFeedback(.success, trigger: successPulse)
     }
 }
 
@@ -1184,11 +1632,39 @@ struct SystemStatusView: View {
 struct DailyBetaSettingsView: View {
     @ObservedObject var model: KenosAppModel
     @State private var originDraft = KenosDailyBetaConfig.kenOsOrigin.absoluteString
+    #if os(iOS)
+    @ObservedObject private var healthSyncer = KenosHealthSyncer.shared
+    @State private var webSsoSignedIn = KenosSharedWebAuth.hasSharedTokens
+    @State private var webSsoUserId = KenosSharedWebAuth.loadSharedTokens()?.userId ?? ""
+    #endif
 
     var body: some View {
         Form {
+            #if os(iOS)
+            if KenosDailyBetaConfig.isEnabled {
+                Section {
+                    NavigationLink {
+                        KenosDailyBetaSurface(
+                            path: "/settings",
+                            isActive: true,
+                            accessoryBottomPadPx: model.liveAccessoryWebBottomExtraPx
+                        )
+                            .navigationTitle("App")
+                            .navigationBarTitleDisplayMode(.inline)
+                    } label: {
+                        Label("Cloud, theme & models", systemImage: "slider.horizontal.3")
+                    }
+                    .accessibilityIdentifier("kenos.settings.appPreferences")
+                } header: {
+                    Text("App")
+                } footer: {
+                    Text("Sign-in, theme, tools, and assistant preferences.")
+                        .font(KenosTypography.caption)
+                }
+            }
+            #endif
             Section("Kenos shell origin") {
-                TextField("http://10.x.x.x:5219", text: $originDraft)
+                TextField(originFieldPrompt, text: $originDraft)
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
                     .keyboardType(.URL)
@@ -1196,22 +1672,127 @@ struct DailyBetaSettingsView: View {
                     .autocorrectionDisabled()
                     .accessibilityIdentifier("kenos.settings.origin")
                 Button("Save origin") {
-                    if let url = URL(string: originDraft.trimmingCharacters(in: .whitespacesAndNewlines)),
-                       url.host != "127.0.0.1",
-                       url.host != "localhost"
-                    {
-                        KenosDailyBetaConfig.setUserOrigin(url)
-                    }
+                    let trimmed = originDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard let url = URL(string: trimmed), url.host != nil else { return }
+                    #if os(iOS)
+                    // Phone cannot reach Mac loopback — require a LAN IP.
+                    guard url.host != "127.0.0.1", url.host != "localhost" else { return }
+                    #endif
+                    KenosWebRuntime.invalidateReachability()
+                    KenosDailyBetaConfig.setUserOrigin(url)
+                    originDraft = KenosDailyBetaConfig.kenOsOrigin.absoluteString
                 }
                 .accessibilityIdentifier("kenos.settings.origin.save")
-                Text("Current: \(KenosDailyBetaConfig.kenOsOrigin.absoluteString)")
+                Text("Effective: \(KenosDailyBetaConfig.kenOsOrigin.absoluteString)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                if KenosDailyBetaConfig.useProductionOverride {
+                    Text("Using production (LAN offline or chosen). Configured LAN: \(KenosDailyBetaConfig.configuredLanOrigin.absoluteString)")
+                        .font(KenosTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button("Retry LAN Daily Beta") {
+                        KenosWebRuntime.invalidateReachability()
+                        KenosDailyBetaConfig.retryLanOrigin()
+                        originDraft = KenosDailyBetaConfig.configuredLanOrigin.absoluteString
+                    }
+                    .accessibilityIdentifier("kenos.settings.origin.retryLan")
+                } else if KenosDailyBetaConfig.isLanDependentOrigin {
+                    #if os(macOS)
+                    Text("LAN / local Daily Beta — keep AIOS preview running, or fall back to production.")
+                        .font(KenosTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    #else
+                    Text("LAN-dependent — Mac must be awake on the same Wi‑Fi. Prefer a phone-reachable IP, not 127.0.0.1.")
+                        .font(KenosTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    #endif
+                }
+                Toggle(
+                    "Fallback to production when LAN is offline",
+                    isOn: Binding(
+                        get: { KenosDailyBetaConfig.preferProductionFallback },
+                        set: { KenosDailyBetaConfig.preferProductionFallback = $0 }
+                    )
+                )
+                .accessibilityIdentifier("kenos.settings.origin.productionFallback")
+                Button("Use Production now") {
+                    KenosWebRuntime.invalidateReachability()
+                    _ = KenosDailyBetaConfig.activateProductionFallback(
+                        reason: "settings_manual",
+                        force: true
+                    )
+                    originDraft = KenosDailyBetaConfig.kenOsOrigin.absoluteString
+                }
+                .accessibilityIdentifier("kenos.settings.origin.useProduction")
             }
+            #if os(iOS)
+            KenosAppleHealthSettingsSection(syncer: healthSyncer)
+            #endif
+            #if os(iOS)
+            Section {
+                LabeledContent("Web SSO") {
+                    Text(webSsoSignedIn ? "Signed in" : "Not signed in")
+                        .foregroundStyle(webSsoSignedIn ? .primary : .secondary)
+                }
+                .accessibilityIdentifier("kenos.settings.webSso")
+                if webSsoSignedIn, !webSsoUserId.isEmpty {
+                    Text("User \(webSsoUserId.prefix(8))…")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("kenos.settings.webSso.user")
+                }
+            } header: {
+                Text("Cloud account")
+            } footer: {
+                Text("Sign in once inside any Continuity app (Settings → 云端同步). Tokens sync via Cookie + Keychain so Plan / Training / Money share one login.")
+                    .font(KenosTypography.caption)
+            }
+            #endif
             Section("Safety") {
                 Text("Session tokens stay in Keychain (SecItem). Never paste tokens into this field or URLs.")
                     .font(.caption)
             }
+            #if os(iOS)
+            Section {
+                Toggle("Ask after screenshots", isOn: Binding(
+                    get: { model.askAfterScreenshotEnabled },
+                    set: { model.setAskAfterScreenshotEnabled($0) }
+                ))
+                .accessibilityIdentifier("kenos.settings.askAfterScreenshot")
+                Button {
+                    Task {
+                        await model.beginBugReport(delayCapture: true)
+                    }
+                } label: {
+                    Label("Report a Bug", systemImage: "ladybug")
+                }
+                .accessibilityIdentifier("kenos.settings.reportBug")
+            } header: {
+                Text("Feedback")
+            } footer: {
+                Text("Screenshots prompt a quiet report above the dock. Bug reports attach diagnostics by default.")
+                    .font(KenosTypography.caption)
+            }
+            Section {
+                NavigationLink {
+                    KenosLogViewer()
+                } label: {
+                    Label("Diagnostics & Logs", systemImage: "text.alignleft")
+                }
+                .accessibilityIdentifier("kenos.settings.diagnostics")
+                Text("Session \(KenosLog.shared.sessionId.prefix(8))… · \(KenosLog.shared.stats().memoryCount) in memory")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } header: {
+                Text("Diagnostics")
+            } footer: {
+                Text("Developer tools — ring buffer + JSONL on device. Tokens are redacted. Not part of everyday Settings.")
+                    .font(KenosTypography.caption)
+            }
+            #endif
             Section {
                 Button("Sign out", role: .destructive) {
                     Task { await model.logout() }
@@ -1221,12 +1802,30 @@ struct DailyBetaSettingsView: View {
         }
         .navigationTitle("Settings")
         .accessibilityIdentifier("kenos.settings")
+        #if os(iOS)
+        .onAppear { refreshWebSsoStatus() }
+        .onReceive(NotificationCenter.default.publisher(for: .kenosSharedWebAuthDidChange)) { _ in
+            refreshWebSsoStatus()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .kenosWebAuthDidClear)) { _ in
+            refreshWebSsoStatus()
+        }
+        #endif
     }
-}
 
-extension KenosAppModel {
-    func presentSettings() {
-        showSettingsSheet = true
+    #if os(iOS)
+    private func refreshWebSsoStatus() {
+        webSsoSignedIn = KenosSharedWebAuth.hasSharedTokens
+        webSsoUserId = KenosSharedWebAuth.loadSharedTokens()?.userId ?? ""
+    }
+    #endif
+
+    private var originFieldPrompt: String {
+        #if os(macOS)
+        "http://127.0.0.1:5219"
+        #else
+        "http://10.x.x.x:5219"
+        #endif
     }
 }
 

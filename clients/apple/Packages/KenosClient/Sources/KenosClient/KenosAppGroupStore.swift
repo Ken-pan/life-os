@@ -94,18 +94,39 @@ public final class KenosAppGroupStore: @unchecked Sendable {
         "kenos.appgroup.\(ownerPrefix).\(key)"
     }
 
-    public func setString(_ value: String?, forKey key: String) {
+    public func setString(_ value: String?, forKey key: String, flush: Bool = false) {
         defaults.set(value, forKey: scoped(key))
-        _ = defaults.synchronize()
+        if flush { _ = defaults.synchronize() }
     }
 
     public func string(forKey key: String) -> String? {
         defaults.object(forKey: scoped(key)) as? String
     }
 
-    public func clear(key: String) {
+    public func clear(key: String, flush: Bool = false) {
         defaults.removeObject(forKey: scoped(key))
-        _ = defaults.synchronize()
+        if flush { _ = defaults.synchronize() }
+    }
+
+    /// Cross-process payload (Widget / Watch) — not owner-scoped.
+    /// Host and extensions must use the same key so glance survives owner bind.
+    ///
+    /// `flush: true` only for rare handoff keys (pending deep link). Routine
+    /// Widget snapshot publishes skip synchronize — UserDefaults App Group
+    /// writes are durable without the expensive sync call.
+    public func setSharedString(_ value: String?, forKey key: String, flush: Bool = false) {
+        let shared = "kenos.appgroup.shared.\(key)"
+        defaults.set(value, forKey: shared)
+        if flush { _ = defaults.synchronize() }
+    }
+
+    public func sharedString(forKey key: String) -> String? {
+        defaults.object(forKey: "kenos.appgroup.shared.\(key)") as? String
+    }
+
+    public func clearShared(key: String, flush: Bool = false) {
+        defaults.removeObject(forKey: "kenos.appgroup.shared.\(key)")
+        if flush { _ = defaults.synchronize() }
     }
 
     /// Probe used by Daily Beta / XCTest — never claims production App Group cutover.
