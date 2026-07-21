@@ -19,7 +19,22 @@ BUNDLE_ID="space.kenos.app.ios"
 
 LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
 LOCAL_HOST="$(scutil --get LocalHostName 2>/dev/null || true)"
+TRUST_JSON="${KENOS_DAILY_BETA_HOME:-$HOME/.kenos-daily-beta}/device-trust.json"
 ORIGIN="${KENOS_DAILY_BETA_ORIGIN:-}"
+if [[ -z "$ORIGIN" ]]; then
+  # Prefer Tailscale MagicDNS pair (Mac ↔ this iPhone only) over Bonjour / DHCP.
+  if [[ -f "$TRUST_JSON" ]]; then
+    TS_ORIGIN="$(python3 - "$TRUST_JSON" <<'PY' 2>/dev/null || true
+import json, sys
+d = json.loads(open(sys.argv[1], encoding="utf-8").read())
+print((d.get("shell") or {}).get("origin") or "")
+PY
+)"
+    if [[ -n "$TS_ORIGIN" ]]; then
+      ORIGIN="$TS_ORIGIN"
+    fi
+  fi
+fi
 if [[ -z "$ORIGIN" ]]; then
   if [[ -n "$LOCAL_HOST" ]]; then
     # Stable mDNS — survives DHCP IP churn without rebuilding.
@@ -28,7 +43,7 @@ if [[ -z "$ORIGIN" ]]; then
     echo "WARN: LocalHostName missing — falling back to DHCP IP (P1 residual)" >&2
     ORIGIN="http://${LAN_IP}:5219"
   else
-    echo "ERROR: set KENOS_DAILY_BETA_ORIGIN (prefer http://<LocalHostName>.local:5219)" >&2
+    echo "ERROR: set KENOS_DAILY_BETA_ORIGIN (prefer Tailscale MagicDNS from device-trust.json)" >&2
     exit 1
   fi
 fi

@@ -1,0 +1,133 @@
+{
+  "at": "2026-07-21T22:12:15.318Z",
+  "device": "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+  "gateway": "http://kens-m5-max-macbook-pro.tail04e0e6.ts.net:5219/__localai",
+  "model": "llm-fast",
+  "preflight": {
+    "ok": true,
+    "status": 200,
+    "count": 15
+  },
+  "phoneTraffic": {
+    "models": 0,
+    "chat": 0,
+    "lines": []
+  },
+  "summary": {
+    "pass": 12,
+    "partial": 0,
+    "fail": 0,
+    "avgScore": 9.92,
+    "grade": "A"
+  },
+  "results": [
+    {
+      "id": "C01",
+      "name": "身份介绍与能力边界",
+      "verdict": "pass",
+      "score": 10,
+      "latencyMs": 1640,
+      "note": "身份与本地助手定位清晰",
+      "sample": "我是 AI.OS，运行在你本机上的私人 AI 助手，所有推理、记忆和数据均本地处理，确保隐私安全。\n\n我可以协助你进行逻辑推理、代码编写、文本创作及数据分析，同时严格遵守安全合法与诚实原则。\n\n由于数据完全本地化，我不具备联网能力，因此无法提供实时新闻、天气或最新价格等时效性信息。"
+    },
+    {
+      "id": "C02",
+      "name": "多轮会话记忆",
+      "verdict": "pass",
+      "score": 10,
+      "latencyMs": 314,
+      "note": "准确召回代号与日期",
+      "sample": "北极星，下周五"
+    },
+    {
+      "id": "C03",
+      "name": "硬约束 / 严格格式",
+      "verdict": "pass",
+      "score": 10,
+      "latencyMs": 472,
+      "note": "严格 JSON 无前后缀",
+      "sample": "{\"ok\":true,\"n\":3,\"items\":[\"a\",\"b\",\"c\"]}"
+    },
+    {
+      "id": "C04",
+      "name": "中文写作成稿",
+      "verdict": "pass",
+      "score": 10,
+      "latencyMs": 968,
+      "note": "成稿约 99 字",
+      "sample": "本地 AI 助手将数据处理完全限制在设备内部，无需上传云端。这意味着敏感信息始终由你掌控，彻底杜绝了远程泄露风险。这种架构不仅提升了响应速度，更从根源上保障了你的数字隐私，让科技真正服务于个人安全。"
+    },
+    {
+      "id": "C05",
+      "name": "代码生成（可运行片段）",
+      "verdict": "pass",
+      "score": 10,
+      "latencyMs": 522,
+      "note": "带语言标注代码块",
+      "sample": "```javascript\nfunction sum(a, b) {\n  return a + b;\n}\n```"
+    },
+    {
+      "id": "C06",
+      "name": "工具调用 · calculate",
+      "verdict": "pass",
+      "score": 10,
+      "latencyMs": 1098,
+      "note": "tool args=17*19+3",
+      "sample": "[{\"function\":{\"name\":\"calculate\",\"arguments\":\"{\\\"expression\\\": \\\"17*19+3\\\"}\"},\"type\":\"function\",\"id\":\"f5ca17e7-5deb-49e6-8ba9-4986b0fd4d9f\"}]"
+    },
+    {
+      "id": "C07",
+      "name": "流式输出（SSE）",
+      "verdict": "pass",
+      "score": 10,
+      "latencyMs": 8,
+      "note": "chunks=39 chars=69",
+      "sample": "向量数据库是一种专门用于存储、索引和检索高维向量（即数据特征的数字表示）的数据库，旨在通过计算向量间的相似度来快速实现语义搜索和模式匹配。"
+    },
+    {
+      "id": "C08",
+      "name": "Tiny 辅助标题（llm-tiny）",
+      "verdict": "pass",
+      "score": 10,
+      "latencyMs": 280,
+      "note": "title=催稿邮件写作建议",
+      "sample": "催稿邮件写作建议"
+    },
+    {
+      "id": "C09",
+      "name": "时效问题诚实降级",
+      "verdict": "pass",
+      "score": 10,
+      "latencyMs": 2957,
+      "note": "正确拒绝编造实时行情",
+      "sample": "我无法提供今天的纳斯达克精确收盘点位。\n\n作为运行在本地设备上的 AI 助手，我**没有实时联网能力**，无法获取当前的金融市场数据。我的知识库是静态的，不包含实时股价或指数信息。\n\n要获取精确的纳斯达克综合指数（IXIC）或纳斯达克100指数（NDX）今日收盘点位，请您：\n1. 访问主流财经网站（如 Yahoo Fi"
+    },
+    {
+      "id": "C10",
+      "name": "结构化 Markdown 列表",
+      "verdict": "pass",
+      "score": 10,
+      "latencyMs": 1172,
+      "note": "listItems=3",
+      "sample": "1. 优先处理最重要的一项任务（MIT），在精力最充沛的早晨攻克高难度工作。\n2. 关闭非必要的通知并隔离干扰源，确保至少 60-90 分钟的深度专注时间。\n3. 提前规划好当天的待办事项，避免早晨花费精力决定“接下来做什么”。"
+    },
+    {
+      "id": "C11",
+      "name": "规划且先别写代码",
+      "verdict": "pass",
+      "score": 9,
+      "latencyMs": 6770,
+      "note": "规划到位且无代码",
+      "sample": "这是一个为期两周的个人仪表盘开发计划，专注于“今日任务”的核心功能。假设技术栈为现代 Web 技术（如 React/Vue + LocalStorage/SQLite），若使用其他技术栈，阶段逻辑依然适用。\n\n### 第一阶段：需求定义与数据模型设计（第 1-2 天）\n**目标**：明确“今日任务”的具体行为逻辑，确定"
+    },
+    {
+      "id": "C12",
+      "name": "话题中断后再恢复",
+      "verdict": "pass",
+      "score": 10,
+      "latencyMs": 935,
+      "note": "跑题后回到邮件标题任务",
+      "sample": "1. 🚀 本地助手提速：响应更快，体验更流畅\n2. 更新通知：您的 AI 助手现在运行得更快了\n3. ⚡ 性能升级：本地助手响应速度显著提升"
+    }
+  ]
+}

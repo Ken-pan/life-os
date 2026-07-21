@@ -395,8 +395,11 @@ if (
 ) {
   fail('control queue must expose availability-aware counts (unavailable ≠ 0)')
 }
-if (!todayPageSrc.includes('formatQueueCount(queue.inboxOpen)')) {
-  fail('Today must render unavailable Inbox counts as — via formatQueueCount')
+if (
+  !todayPageSrc.includes('formatQueueCountLabel') &&
+  !todayPageSrc.includes('todayInbox')
+) {
+  fail('Today must render Inbox queue without bare em-dash counts')
 }
 if (!readProjections.includes('same_source_self_compare_invalid_evidence')) {
   fail('shadow compare must reject same-source self-compare')

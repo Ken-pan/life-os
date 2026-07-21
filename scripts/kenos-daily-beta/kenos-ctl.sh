@@ -72,6 +72,7 @@ http_ok() {
 sync_serve_bin() {
   cp "$CTL_DIR/serve-static.py" "$SERVE_BIN"
   cp "$CTL_DIR/serve-static.mjs" "$SERVE_JS"
+  cp "$CTL_DIR/localai-proxy-path.mjs" "$STATE_DIR/bin/localai-proxy-path.mjs"
   chmod +x "$SERVE_BIN"
 }
 
@@ -86,6 +87,11 @@ write_plist() {
   fi
   local log_out="$LOG_DIR/${app}.stdout.log"
   local log_err="$LOG_DIR/${app}.stderr.log"
+  # Only AIOS shell exposes /__localai — Continuity companions stay closed.
+  local proxy_flag="0"
+  if [[ "$app" == "aios" ]]; then
+    proxy_flag="1"
+  fi
   # Resolve symlink so launchd does not depend on live symlink races
   [[ -d "$root_abs" ]] || die "static root missing for $app: $root_abs"
   root_abs="$(cd "$root_abs" && pwd)"
@@ -113,6 +119,14 @@ write_plist() {
     <string>${KENOS_STATIC_BIND:-0.0.0.0}</string>
     <key>KENOS_RELEASE_META</key>
     <string>${META}</string>
+    <key>KENOS_LOCALAI_PROXY</key>
+    <string>${proxy_flag}</string>
+    <key>KENOS_DEVICE_TRUST</key>
+    <string>${STATE_DIR}/device-trust.json</string>
+    <key>KENOS_LOCALAI_ALLOW_LAN</key>
+    <string>${KENOS_LOCALAI_ALLOW_LAN:-0}</string>
+    <key>KENOS_LOCALAI_MAX_INFLIGHT</key>
+    <string>${KENOS_LOCALAI_MAX_INFLIGHT:-2}</string>
     <key>PATH</key>
     <string>/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
   </dict>
@@ -201,6 +215,7 @@ cmd_build() {
       VITE_KENOS_PROD_WRITES=1 \
       VITE_KENOS_PLAN_UPDATE_TASK_TITLE_WRITER=1 \
       VITE_KENOS_PLAN_UPDATE_TASK_TITLE_WRITER_OWNER_EMAILS="${KENOS_DAILY_BETA_OWNER_EMAIL:-334452284ken@gmail.com}" \
+      VITE_KENOS_PLAN_OFFLINE_WRITER_QUEUE=1 \
       VITE_KENOS_COMPAT_CANARY=0 \
       VITE_KENOS_READ_CANARY=0 \
       npm run build -w planner-os
@@ -225,6 +240,11 @@ cmd_build() {
     "aios": "$AIOS_URL",
     "planner": "$PLANNER_URL",
     "fitness": "$FITNESS_URL"
+  },
+  "flags": {
+    "planOfflineWriterQueue": true,
+    "planUpdateTaskTitleWriter": true,
+    "prodWrites": true
   }
 }
 JSON
@@ -270,11 +290,34 @@ cmd_uninstall() {
   echo "✔ LaunchAgents removed (core + Continuity companions)"
 }
 
+ensure_tailnet_pair() {
+  # Mac↔iPhone trust via personal Tailnet MagicDNS (LocalAI stays on loopback).
+  if [[ "${KENOS_SKIP_TAILNET:-0}" == "1" ]]; then
+    echo "  skip Tailscale pair (KENOS_SKIP_TAILNET=1)"
+    return 0
+  fi
+  if ! command -v node >/dev/null 2>&1 && [[ ! -x "$NODE_BIN" && ! -f "$NODE_BIN" ]]; then
+    echo "  WARN: node missing — skip Tailscale pair"
+    return 0
+  fi
+  local out
+  if out="$("$NODE_BIN" "$CTL_DIR/ensure-tailnet-pair.mjs" --json 2>/dev/null)"; then
+    local origin
+    origin="$(printf '%s' "$out" | python3 -c "import sys,json; print(json.load(sys.stdin).get('shellOrigin',''))" 2>/dev/null || true)"
+    echo "  Tailscale pair OK"
+    [[ -n "$origin" ]] && echo "  Phone shell origin: $origin"
+  else
+    echo "  WARN: Tailscale pair incomplete — open Tailscale on Mac + iPhone (same tailnet)"
+  fi
+}
+
 cmd_start() {
   if [[ ! -f "$META" ]]; then
     echo "No release yet — building…"
     cmd_build
   fi
+  echo "→ Tailnet device pair (Mac ↔ iPhone)"
+  ensure_tailnet_pair
   cmd_install
   # wait health (core required; companions best-effort)
   local i core_ok=0
@@ -290,6 +333,11 @@ cmd_start() {
   echo "  Kenos     $AIOS_URL"
   echo "  Plan      $PLANNER_URL"
   echo "  Training  $FITNESS_URL"
+  if http_ok "$AIOS_URL/__localai/v1/models"; then
+    echo "  LocalAI   $AIOS_URL/__localai → 127.0.0.1:18888"
+  else
+    echo "  LocalAI   proxy DOWN (is llama-swap on 127.0.0.1:18888?)"
+  fi
   local spec app label port url
   for spec in "${COMPANION_SPECS[@]}"; do
     IFS=':' read -r app label port url <<<"$spec"
@@ -299,6 +347,9 @@ cmd_start() {
       echo "  $app  DOWN $url (build missing or still starting)"
     fi
   done
+  if [[ -f "$STATE_DIR/device-trust.json" ]]; then
+    echo "  Trust     $STATE_DIR/device-trust.json"
+  fi
 }
 
 cmd_stop() {
@@ -405,6 +456,74 @@ cmd_doctor() {
       echo "  $app DOWN $url"
     fi
   done
+  echo "--- Tailscale device pair (Mac ↔ iPhone) ---"
+  ensure_tailnet_pair
+  if [[ -f "$STATE_DIR/device-trust.json" ]]; then
+    python3 - "$STATE_DIR/device-trust.json" <<'PY' 2>/dev/null || echo "  trust file present"
+import json, sys
+d = json.loads(open(sys.argv[1], encoding="utf-8").read())
+mac = (d.get("mac") or {}).get("dns")
+phone = (d.get("phone") or {})
+print(f"  mac   {mac}")
+print(f"  phone {phone.get('dns')} online={phone.get('online')}")
+print(f"  shell {((d.get('shell') or {}).get('origin'))}")
+PY
+  else
+    echo "  trust file missing"
+    fail=1
+  fi
+  echo "--- LocalAI same-origin proxy ---"
+  echo "  bind=${KENOS_STATIC_BIND:-0.0.0.0} allow_lan=${KENOS_LOCALAI_ALLOW_LAN:-0} max_inflight=${KENOS_LOCALAI_MAX_INFLIGHT:-2}"
+  if [[ "${KENOS_LOCALAI_ALLOW_LAN:-0}" == "1" ]]; then
+    echo "  WARN: KENOS_LOCALAI_ALLOW_LAN=1 — RFC1918/CGNAT peers can hit /__localai"
+  fi
+  if [[ -f "$STATE_DIR/device-trust.json" ]]; then
+    python3 - "$STATE_DIR/device-trust.json" <<'PY' 2>/dev/null || true
+import json, sys
+d = json.loads(open(sys.argv[1], encoding="utf-8").read())
+mac = (d.get("mac") or {}).get("ipv4")
+phone = (d.get("phone") or {}).get("ipv4")
+print(f"  allowlist loopback + mac={mac} phone={phone}")
+PY
+  fi
+  if out="$(curl -sf --max-time 3 "$AIOS_URL/__kenos/release" 2>/dev/null)"; then
+    echo "  aios release localaiProxy=$(printf '%s' "$out" | python3 -c "import sys,json; print(json.load(sys.stdin).get('localaiProxy'))" 2>/dev/null || echo '?')"
+  fi
+  if curl -sf --max-time 2 "$AIOS_URL/__health?deep=1" >/dev/null 2>&1; then
+    echo "  $AIOS_URL/__health?deep=1 OK"
+  else
+    echo "  $AIOS_URL/__health?deep=1 FAIL (LocalAI upstream)"
+    fail=1
+  fi
+  if http_ok "$AIOS_URL/__localai/v1/models"; then
+    echo "  $AIOS_URL/__localai/v1/models OK"
+  else
+    echo "  $AIOS_URL/__localai/v1/models FAIL (start LocalAI gateway + restart Daily Beta)"
+    fail=1
+  fi
+  echo "--- companion LocalAI proxy closed ---"
+  local companion_leaked=0
+  for url in "$PLANNER_URL" "$FITNESS_URL" "$FINANCE_URL" "$MUSIC_URL" "$HOME_URL" "$HEALTH_URL" "$KNOWLEDGE_URL"; do
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 2 "$url/__localai/v1/models" 2>/dev/null || echo 000)"
+    if [[ "$code" == "200" ]]; then
+      echo "  LEAK $url/__localai → $code (expected non-200)"
+      companion_leaked=1
+      fail=1
+    else
+      echo "  closed $url/__localai → $code"
+    fi
+  done
+  if [[ "$companion_leaked" -eq 0 ]]; then
+    echo "  companions OK (no /__localai 200)"
+  fi
+  echo "--- LocalAI phone smoke (MagicDNS /__localai chat) ---"
+  if out="$("$NODE_BIN" "$CTL_DIR/localai-phone-smoke.mjs" --recover --json 2>/dev/null)"; then
+    echo "  phone smoke PASS"
+    printf '%s' "$out" | python3 -c "import sys,json; d=json.load(sys.stdin); print('  origin', d.get('origin')); print('  checks', ', '.join(f\"{c['name']}={'ok' if c['ok'] else 'FAIL'}\" for c in d.get('checks',[])))" 2>/dev/null || true
+  else
+    echo "  phone smoke FAIL (see $STATE_DIR/localai-phone-smoke-latest.json)"
+    fail=1
+  fi
   echo "--- auth bootstrap (public supabase reachability) ---"
   if curl -sf --max-time 5 "https://iueozzuctstwvzbcxcyh.supabase.co/auth/v1/health" >/dev/null 2>&1 \
     || curl -sf --max-time 5 "https://iueozzuctstwvzbcxcyh.supabase.co/" >/dev/null 2>&1; then
