@@ -1,0 +1,15 @@
+{
+  "runId": "flowa-final-2026-07-21T05-19-09-094Z",
+  "flowA": {
+    "status": "FAIL",
+    "taskId": "ios-fa-mru7ehfc",
+    "uidRedacted": "c283…c42e",
+    "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
+    "expected": "FA Mut 9-094Z",
+    "actualDbTitle": "FA Seed 9-094Z",
+    "editorOpenEvidence": false,
+    "uiOk": false,
+    "verifyOk": false,
+    "method": "Open TaskEditor on entity (#task-title); persist via USER JWT PATCH (not service_role). Hosted title writer disabled in Daily Beta build; Svelte draft ignores synthetic input."
+  }
+}

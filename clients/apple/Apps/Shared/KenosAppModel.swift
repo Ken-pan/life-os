@@ -55,6 +55,8 @@ final class KenosAppModel: ObservableObject {
     @Published var showSpaceSwitcher = false
     /// Native settings (origin / auth) — used when Inbox is a Web surface.
     @Published var showSettingsSheet = false
+    /// Daily Beta Continuity: Plan / Training load in-app WKWebView (not Safari).
+    @Published var continuityURL: URL?
     let focusStore: KenosFocusStore
     let spaceSwitcherStore: KenosSpaceSwitcherStore
 
@@ -458,8 +460,30 @@ final class KenosAppModel: ObservableObject {
         openExternalURL(url)
     }
 
+    /// Dismiss in-app Continuity and return to shell tabs.
+    func dismissContinuity() {
+        continuityURL = nil
+    }
+
+    /// True for Daily Beta Plan/Training LAN (or production) domain Continuity origins.
+    func isDomainContinuityURL(_ url: URL) -> Bool {
+        let port = url.port
+        if port == 5188 || port == 5190 || port == 5180 || port == 5189 {
+            return true
+        }
+        let host = (url.host ?? "").lowercased()
+        return host.contains("planner.kenos") || host.contains("fitness.kenos")
+            || host.contains("music.kenos") || host.contains("finance.kenos")
+    }
+
     private func openExternalURL(_ url: URL) {
         #if os(iOS)
+        // Personal Daily Beta: Continuity must stay inside Kenos process (no Safari chrome).
+        if KenosDailyBetaConfig.isEnabled, isDomainContinuityURL(url) {
+            continuityURL = url
+            showSpaceSwitcher = false
+            return
+        }
         UIApplication.shared.open(url)
         #elseif os(macOS)
         NSWorkspace.shared.open(url)

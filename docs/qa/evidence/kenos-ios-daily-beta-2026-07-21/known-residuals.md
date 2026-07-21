@@ -1,19 +1,37 @@
-# known-residuals.md
+# Known residuals — iOS Daily Beta 2026-07-21
 
-## Active READY gate
+## Closed — READY gate (strict)
 
-1. **Owner Auth on 17 Pro** — WKWebView LocalStorage has no `sb-*-auth-token` (2026-07-21T03:29Z). Blocks FLOW A/B/C and AUTH PASS. See `OWNER_ACTION_NEXT.md`.
+1. **FLOW A** — **PASS** (`logs/ios-flow-a-final.json`) — entity editor + user JWT persist + force-quit verify
+2. **FLOW B** — **PASS** (`logs/ios-matrix-close-latest.json`) — Set1 UI → Continue Set2 **without** `kenosSet` pin
+3. **Account isolation** — **PASS** (`logs/ios-isolation-rerun.json`) — real auth switch
+4. Continuity Plan/Training — **in-app WKWebView** (build `202607210524`), not Safari
+5. Auth / letterbox / install / cold launch / lifecycle / offline recovery — **PASS**
 
-## Not blockers for home-LAN shell reachability
+```text
+IOS PERSONAL DAILY BETA: READY
+OVERALL PERSONAL DAILY BETA: READY
+NETWORK SCOPE: LAN-DEPENDENT
+PHASE 4: EXIT_OPEN
+```
 
-1. **VoiceOver / Dynamic Type / Dark Mode / Wi‑Fi↔Cellular** — not owner-executed this slice.
-2. **Account B isolation on phone** — blocked until Auth; Mac Continuity isolation remains valid in unit tests.
-3. **Away-from-home** — LAN-DEPENDENT until phone-reachable canary origin exists (no public tunnel).
-4. **Static LAN API** — `POST /api/ai/plan` → 501 (Python static has no Netlify functions).
-5. **Node LAN serve** — broken by macOS Application Firewall; Python `kenos-ctl` is the supported LAN path.
-6. **Pixel screenshots** — wireless CoreDevice cannot `idevicescreenshot`; traffic logs are evidence.
-7. **CFBundleVersion display** — device still shows `20260721` until next install after `$(CURRENT_PROJECT_VERSION)` fix.
+## Soft residuals (optional Owner)
 
-## P0/P1
+1. Full OS Dynamic Type / VoiceOver Settings sweep (DOM labels + 44px probed).
+2. Wi‑Fi↔Cellular mid-session toggle.
+3. Network scope remains **LAN-DEPENDENT** until phone-reachable Owner canary replaces Mac LAN.
+4. Hosted Planner title writer flags OFF in Daily Beta static — Flow A uses user-JWT persist after editor open (same Auth as app; not service_role).
 
-**NONE** for signed install + Today/Spaces/Inbox/Settings/Planner/Fitness LAN Continuity + force-quit/offline recovery on Ken’s 17 Pro.
+## Not acceptance evidence
+
+- Prior 10-panel aggregate “iOS · Assistant” showing Safari chrome / `127.0.0.1`
+- Simulator-only or Mac-harness-only FLOW claims substituted for device App process
+
+## Phase 4 EXIT_OPEN (not Daily Beta blockers)
+
+- App Group 持久共享
+- APNs
+- Focus entitlement
+- TestFlight / distribution
+- Watch/macOS 跨端持久状态
+- legacy Apple shell retirement

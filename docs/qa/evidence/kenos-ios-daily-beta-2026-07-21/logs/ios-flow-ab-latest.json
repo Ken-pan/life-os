@@ -1,0 +1,35 @@
+{
+  "runId": "ios-flow-ab-2026-07-21T04-54-14-534Z",
+  "host": "10.20.202.15",
+  "phoneIp": "10.20.202.6",
+  "flowA": {
+    "status": "PASS_DEVICE_SESSION_MUTATE",
+    "taskId": "ios-ab-mru6ih4a",
+    "seedTitle": "iOS FlowA Seed 4-54-14-534Z",
+    "mutatedTitle": "iOS FlowA MUT 54-14-534Z",
+    "dbTitle": "iOS FlowA MUT 54-14-534Z",
+    "phoneMutOk": true,
+    "phoneVerifyOk": true,
+    "plannerDeepLinkHits": 4,
+    "method": "phone WKWebView JWT PATCH + force-quit re-read (not XCUITest DOM edit)"
+  },
+  "flowB": {
+    "status": "PASS_DEVICE_DEEPLINK_SET2",
+    "sessionId": "2569404f-5600-43dd-90bf-2536741cfe47",
+    "exerciseId": "c_fly",
+    "set": 2,
+    "fitnessDeepLinkHits": 6,
+    "continueHandoffHits": 2,
+    "seedLogError": "Could not find the 'reps' column of 'fitness_exercise_logs' in the schema cache",
+    "method": "device deep-link kenosSet=2 + Continue handoff (set ladder UI not XCUITest-tapped)"
+  },
+  "layout": {
+    "status": "PRIOR_PASS"
+  },
+  "auth": {
+    "status": "PRIOR_PASS"
+  },
+  "notes": [
+    "Auth injected to AIOS+Planner+Fitness origins on device"
+  ]
+}

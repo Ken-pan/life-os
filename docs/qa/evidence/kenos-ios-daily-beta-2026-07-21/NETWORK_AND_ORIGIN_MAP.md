@@ -1,29 +1,25 @@
-# NETWORK_AND_ORIGIN_MAP
+# NETWORK_ORIGIN_MAP — Kenos iOS Daily Beta
 
-## Priority decision
-
-1. Cloud private origin `https://aios.kenos.space` — **DNS fail** (not used).
-2. Existing private network — N/A beyond LAN.
-3. **Secure LAN + private bind** — **SELECTED** for iOS Daily Beta.
-4. PWA — emergency fallback only (not PASS).
+**Updated:** 2026-07-21T05:45Z
+**network scope:** **LAN-DEPENDENT**
 
 ## Origins
 
-| Surface | Origin | Bind | Phone reachable |
-| --- | --- | --- | --- |
-| Kenos shell (AIOS) | `http://10.20.202.15:5219` | `0.0.0.0` via Python static | YES (`10.20.202.6`) |
-| Planner | `http://10.20.202.15:5188` | same | YES |
-| Fitness | `http://10.20.202.15:5190` | same | YES |
-| Mac loopback | `http://127.0.0.1:5219` | health OK | **NO on iPhone** |
+| Surface | Origin | Process context |
+| --- | --- | --- |
+| Today / Assistant / Spaces / Inbox | `http://10.20.202.15:5219` | in-app WKWebView (`space.kenos.app.ios`) |
+| Plan Continuity | `http://10.20.202.15:5188` | in-app Continuity WKWebView cover (`stayInApp`) |
+| Training Continuity | `http://10.20.202.15:5190` | in-app Continuity WKWebView cover |
+| Mac loopback | `http://127.0.0.1:*` | **forbidden** as iPhone origin |
+| Cloud shell DNS | `aios.kenos.space` | unresolved — unused |
+| Phone client IP | `10.20.202.6` | observed in Daily Beta access logs |
 
-## Server note
+## Policy
 
-Node `serve-static.mjs` accepts TCP on LAN IP but returns empty HTTP on this Mac (Application Firewall interaction). Daily Beta control plane now serves with `serve-static.py` (Python) for LAN + loopback.
+- No public tunnel; no tokens in URL
+- Continuity must not open external Safari for Daily Beta Plan/Training
+- Leaving LAN → degraded / offline UI; recovery verified via `kenos-ctl` stop/start
 
-## Constraints honored
+## Honesty
 
-- No insecure public tunnel
-- No random ephemeral ports for daily entry (fixed 5219/5188/5190)
-- No requirement to start Vite daily (`kenos-ctl` LaunchAgents)
-- Mac must be on + `kenos-start` healthy for iPhone home use
-- Away-from-home without Mac LAN / without aios DNS → honest degraded UI in app
+Final claim: **NETWORK SCOPE: LAN-DEPENDENT** until a phone-reachable Owner canary replaces Mac LAN.

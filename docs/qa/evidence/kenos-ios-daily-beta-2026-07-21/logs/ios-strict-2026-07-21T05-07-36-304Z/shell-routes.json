@@ -1,0 +1,18 @@
+[
+  {
+    "path": "/",
+    "hits": 5
+  },
+  {
+    "path": "/assistant",
+    "hits": 5
+  },
+  {
+    "path": "/spaces",
+    "hits": 5
+  },
+  {
+    "path": "/inbox",
+    "hits": 5
+  }
+]

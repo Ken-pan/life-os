@@ -1,28 +1,25 @@
 # NETWORK_ORIGIN_MAP — Kenos iOS Daily Beta
 
-**run_id:** `ios-daily-beta-2026-07-21T03:27Z`
-**HEAD SHA:** `d8ec099ca92055bda74bc0b41bacc5708b303348`
-**network scope:** **LAN-DEPENDENT** (not anywhere daily driver)
+**Updated:** 2026-07-21T05:45Z
+**network scope:** **LAN-DEPENDENT**
 
 ## Origins
 
-| Surface | Origin | Notes |
+| Surface | Origin | Process context |
 | --- | --- | --- |
-| Kenos shell (Today / Spaces / Inbox / Settings) | `http://10.20.202.15:5219` | Mac Daily Beta Python static (`KENOS_STATIC_BIND=0.0.0.0`) via `kenos-ctl` |
-| Plan / Planner | `http://10.20.202.15:5188` | opened from Continuity / payload-url |
-| Training / Fitness | `http://10.20.202.15:5190` | opened from Continuity / payload-url |
-| Mac loopback (Mac only) | `http://127.0.0.1:5219` | **forbidden** as iPhone origin |
-| Cloud shell DNS | `aios.kenos.space` | unresolved — not used this slice |
-| Phone client IP observed | `10.20.202.6` | same private LAN |
+| Today / Assistant / Spaces / Inbox | `http://10.20.202.15:5219` | in-app WKWebView (`space.kenos.app.ios`) |
+| Plan Continuity | `http://10.20.202.15:5188` | in-app Continuity WKWebView cover (`stayInApp`) |
+| Training Continuity | `http://10.20.202.15:5190` | in-app Continuity WKWebView cover |
+| Mac loopback | `http://127.0.0.1:*` | **forbidden** as iPhone origin |
+| Cloud shell DNS | `aios.kenos.space` | unresolved — unused |
+| Phone client IP | `10.20.202.6` | observed in Daily Beta access logs |
 
 ## Policy
 
-- No public tunnel
-- No unauthenticated `0.0.0.0` beyond trusted private LAN already used by Mac Daily Beta
-- No tokens in URL
-- Fixed LAN address (en0) + launchd/`kenos-ctl` stable serve
-- Leaving LAN → honest degraded / offline UI required (verified stop/start recovery)
+- No public tunnel; no tokens in URL
+- Continuity must not open external Safari for Daily Beta Plan/Training
+- Leaving LAN → degraded / offline UI; recovery verified via `kenos-ctl` stop/start
 
 ## Honesty
 
-Final Daily Beta claim for iOS must read **LAN-DEPENDENT** until a phone-reachable Owner canary origin replaces Mac LAN.
+Final claim: **NETWORK SCOPE: LAN-DEPENDENT** until a phone-reachable Owner canary replaces Mac LAN.

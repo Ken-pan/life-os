@@ -1,27 +1,15 @@
-# AUTH_AND_DATA_SAFETY
+# AUTH_AND_DATA_SAFETY — Kenos iOS Daily Beta
 
-## Session storage
+**Updated:** 2026-07-21T05:45Z
 
-| Layer | Store | Notes |
-| --- | --- | --- |
-| Native shell | `SecItemSecureStore` → Keychain (`kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`) | Replaces `InMemorySecureStore` on iOS |
-| Web surfaces | `WKWebsiteDataStore.default()` | Cookies / localStorage for AIOS SPA; survives relaunch on same device |
-| Settings origin | `UserDefaults` URL only | **Never** tokens |
+| Check | Result |
+| --- | --- |
+| Owner Auth on device | PASS — session in WKWebView origin storage; UID `c283…c42e` |
+| Flow A persist role | PASS — **user JWT** REST PATCH (not service_role / admin代写) |
+| Flow B progress | PASS — device UI Set1 complete; Continue Set2 |
+| Account isolation | PASS — Account B real password sign-in; A planner task not readable |
+| Auth restore after B | PASS — Owner session re-injected |
+| Secrets in URL | none observed |
+| DATA SAFETY | **SAFE** |
 
-## Guards
-
-- Origin field rejects `127.0.0.1` / `localhost`
-- No token in URL / plist / logs by design
-- No production DB migration
-- No long-lived dual-write added
-- Logout clears Keychain session + space switcher resume cache
-
-## Isolation
-
-- Mac Continuity A/B evidence remains frozen/valid for account scoping
-- Device Account B isolation not re-executed this slice → **PARTIAL**
-- RLS / account isolation not weakened
-
-## DATA SAFETY
-
-**SAFE** — no production schema change; local Keychain + WK data only; Mac Web fallback retained.
+Account B: `kenos-daily-beta-b@life-os.local` (fixture). Evidence: `logs/ios-isolation-rerun.json`.

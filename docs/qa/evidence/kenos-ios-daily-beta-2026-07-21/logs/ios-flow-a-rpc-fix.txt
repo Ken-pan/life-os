@@ -1,0 +1,19 @@
+{"ts":"2026-07-21T05:15:39.768Z","step":"seed","TASK_ID":"ios-rpc-mru79xqc","MUT":"RPC Mut 6-788Z"}
+{"ts":"2026-07-21T05:15:47.856Z","step":"launch","i":1,"url":"http://10.20.202.15:5188/__ios_a_boot.html"}
+{"ts":"2026-07-21T05:16:03.861Z","step":"beacons","n":1,"last":"10.20.202.6 - \"GET /__health?kenos_flow_a_ui=%7B%22status%22%3A%22mismatch%22%2C%22title%22%3A%22UI%20Seed%20-49-585Z%22%2C%22taskId%22%3A%22ios-uia-mru76cnf%22%2C%22method%22%3A%22ui_save%22%2C%22http%22%3A200%7D HTTP/1.1\" 200 -"}
+{"ts":"2026-07-21T05:16:04.927Z","step":"launch","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:16:06.698Z","step":"launch","i":1,"url":"http://10.20.202.15:5219/__v.html"}
+{
+  "runId": "flowa-rpc-2026-07-21T05-15-36-788Z",
+  "flowA": {
+    "status": "FAIL",
+    "taskId": "ios-rpc-mru79xqc",
+    "expected": "RPC Mut 6-788Z",
+    "actualDbTitle": "RPC Seed 6-788Z",
+    "uiOk": false,
+    "verifyOk": false,
+    "method": "editor_open + Save click + hosted title RPC user JWT",
+    "uidRedacted": "c283…c42e"
+  },
+  "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c"
+}

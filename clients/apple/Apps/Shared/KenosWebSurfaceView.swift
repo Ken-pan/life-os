@@ -2,13 +2,20 @@ import SwiftUI
 import WebKit
 
 #if os(iOS)
+extension Notification.Name {
+    /// Posted when shell WKWebView wants domain Continuity in-app (not Safari).
+    static let kenosOpenDomainContinuity = Notification.Name("kenosOpenDomainContinuity")
+}
+
 /// Native shell surface that loads Kenos Web Daily Beta (phone-reachable origin).
 struct KenosWebSurfaceView: UIViewRepresentable {
     let url: URL
     var onTitle: ((String) -> Void)? = nil
+    /// When true (Continuity cover), keep all http navigations inside this WKWebView.
+    var stayInApp: Bool = false
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onTitle: onTitle)
+        Coordinator(onTitle: onTitle, stayInApp: stayInApp)
     }
 
     func makeUIView(context: Context) -> WKWebView {
@@ -17,6 +24,8 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         config.defaultWebpagePreferences.allowsContentJavaScript = true
 
         // Hide web BottomNav / SystemBar — native TabView owns IA.
+        // Also collapse PWA chrome padding (safe-top / tabbar) so content fills the
+        // WKWebView instead of floating in a middle band with empty top+bottom.
         let shellScript = WKUserScript(
             source: """
             window.__KENOS_IOS_NATIVE_SHELL__ = true;
@@ -24,6 +33,30 @@ struct KenosWebSurfaceView: UIViewRepresentable {
               document.documentElement.dataset.iosNativeShell = 'true';
               sessionStorage.setItem('kenos.iosNativeShell', '1');
             } catch (e) {}
+            (function () {
+              if (document.getElementById('kenos-ios-native-shell-css')) return;
+              var s = document.createElement('style');
+              s.id = 'kenos-ios-native-shell-css';
+              s.textContent = [
+                "html[data-ios-native-shell='true']{",
+                "--kenos-system-bar-h:0px!important;",
+                "--kenos-mobile-bottom-pad:12px!important;",
+                "--mobile-tabbar-total-h:0px!important;",
+                "--mobile-content-inset:0px!important;",
+                "--mobile-content-inset-tabbar:0px!important;",
+                "--bottom-chrome-h:0px!important;",
+                "--safe-top-effective:0px!important;",
+                "--safe-top:0px!important;",
+                "}",
+                "html[data-ios-native-shell='true'] .bottom-nav-host,",
+                "html[data-ios-native-shell='true'] nav.bottom-nav,",
+                "html[data-ios-native-shell='true'] [data-testid='aios-shell-bottom-nav'],",
+                "html[data-ios-native-shell='true'] .kenos-system-bar{",
+                "display:none!important;height:0!important;overflow:hidden!important;",
+                "}"
+              ].join('');
+              (document.head || document.documentElement).appendChild(s);
+            })();
             """,
             injectionTime: .atDocumentStart,
             forMainFrameOnly: true
@@ -46,6 +79,8 @@ struct KenosWebSurfaceView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {
+        context.coordinator.stayInApp = stayInApp
+        context.coordinator.onTitle = onTitle
         let next = Self.shellURL(url)
         if context.coordinator.loadedURL?.absoluteString != next.absoluteString {
             context.coordinator.loadedURL = next
@@ -66,11 +101,13 @@ struct KenosWebSurfaceView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKNavigationDelegate {
         var onTitle: ((String) -> Void)?
+        var stayInApp: Bool
         weak var webView: WKWebView?
         var loadedURL: URL?
 
-        init(onTitle: ((String) -> Void)?) {
+        init(onTitle: ((String) -> Void)?, stayInApp: Bool) {
             self.onTitle = onTitle
+            self.stayInApp = stayInApp
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
@@ -82,6 +119,13 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                   document.documentElement.dataset.iosNativeShell='true';
                   sessionStorage.setItem('kenos.iosNativeShell','1');
                 } catch (e) {}
+                (function(){
+                  if(document.getElementById('kenos-ios-native-shell-css')) return;
+                  var s=document.createElement('style');
+                  s.id='kenos-ios-native-shell-css';
+                  s.textContent="html[data-ios-native-shell='true']{--kenos-system-bar-h:0px!important;--kenos-mobile-bottom-pad:12px!important;--mobile-tabbar-total-h:0px!important;--mobile-content-inset:0px!important;--mobile-content-inset-tabbar:0px!important;--bottom-chrome-h:0px!important;--safe-top-effective:0px!important;--safe-top:0px!important;}html[data-ios-native-shell='true'] .bottom-nav-host,html[data-ios-native-shell='true'] nav.bottom-nav,html[data-ios-native-shell='true'] [data-testid='aios-shell-bottom-nav'],html[data-ios-native-shell='true'] .kenos-system-bar{display:none!important;height:0!important;overflow:hidden!important;}";
+                  (document.head||document.documentElement).appendChild(s);
+                })();
                 """
             )
         }
@@ -127,6 +171,11 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                 decisionHandler(.allow)
                 return
             }
+            // Continuity cover (Plan/Training): never hand off to Safari.
+            if stayInApp {
+                decisionHandler(.allow)
+                return
+            }
             let host = dest.host ?? ""
             let isLocal =
                 host == "127.0.0.1" || host == "localhost" || host.hasPrefix("10.")
@@ -134,13 +183,28 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             let isKenosShell = host.contains("aios") || host.contains("kenos") || isLocal
             let port = dest.port
             let isDomainPort = port == 5188 || port == 5190 || port == 5180 || port == 5189
+            let currentHost = webView.url?.host ?? loadedURL?.host
+            // Same-host navigations stay in this WKWebView (SPA routes).
+            if let currentHost, currentHost == host {
+                decisionHandler(.allow)
+                return
+            }
             if navigationAction.navigationType == .linkActivated,
                (!isKenosShell || isDomainPort),
                dest.scheme?.hasPrefix("http") == true
             {
-                // Rewrite loopback → current shell host before opening domain apps.
+                // Rewrite loopback → current shell host; open domain Continuity in-app.
                 let openURL = Self.rewriteLoopback(dest, shellHost: loadedURL?.host)
-                UIApplication.shared.open(openURL)
+                if isDomainPort || openURL.host?.contains("planner.kenos") == true
+                    || openURL.host?.contains("fitness.kenos") == true
+                {
+                    NotificationCenter.default.post(
+                        name: .kenosOpenDomainContinuity,
+                        object: openURL
+                    )
+                } else {
+                    UIApplication.shared.open(openURL)
+                }
                 decisionHandler(.cancel)
                 return
             }
@@ -185,8 +249,10 @@ struct KenosDailyBetaSurface: View {
                     }
                 }
             } else {
+                // Stay inside TabView content bounds — do not extend under the tab bar.
+                // Web CSS previously reserved PWA bottom-nav height; that is cleared when
+                // data-ios-native-shell=true. Extending under tabs recreates empty bands.
                 KenosWebSurfaceView(url: url)
-                    .ignoresSafeArea(edges: .bottom)
             }
         }
         .navigationBarTitleDisplayMode(.inline)

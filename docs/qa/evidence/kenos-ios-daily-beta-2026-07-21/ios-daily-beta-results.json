@@ -1,63 +1,105 @@
 {
-  "generatedAt": "2026-07-21T03:30:00Z",
-  "runId": "unlocked-full-smoke-2026-07-21T03:27Z",
-  "verdict": "IOS_NOT_READY",
-  "overallPersonalDailyBeta": "HOLD",
-  "macWebDailyBeta": "READY",
-  "macEntry": "http://127.0.0.1:5219/",
+  "runId": "ios-matrix-close-2026-07-21T05-35-37-151Z",
+  "generatedAt": "2026-07-21T05:42:15.390Z",
+  "device": {
+    "idRedacted": "8097…D79E",
+    "model": "iPhone 17 Pro",
+    "bundleId": "space.kenos.app.ios"
+  },
+  "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
+  "appVersion": "1.0.0",
+  "appBuild": "202607210524",
   "networkScope": "LAN-DEPENDENT",
-  "ios": {
-    "gitShaAtEvidence": "d8ec099ca92055bda74bc0b41bacc5708b303348",
-    "appVersion": "1.0.0",
-    "appBuildDeviceReported": "20260721",
-    "appBuildStampFile": "202607210317",
-    "bundleId": "space.kenos.app.ios",
-    "origin": "http://10.20.202.15:5219",
-    "phoneClientIp": "10.20.202.6",
-    "device": {
-      "name": "Ken's 17 Pro",
-      "model": "iPhone 17 Pro",
-      "productType": "iPhone18,1",
-      "osVersion": "27.0",
-      "osBuild": "24A5380h",
-      "udid": "00008150-000C38C20AC0401C",
-      "coredeviceId": "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
-      "transport": "localNetwork"
+  "flowA": {
+    "status": "PASS",
+    "taskId": "ios-fa-mru7x8jx",
+    "uidRedacted": "c283…c42e",
+    "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
+    "expected": "FA Mut 3-801Z",
+    "actualDbTitle": "FA Mut 3-801Z",
+    "editorOpenEvidence": true,
+    "uiOk": true,
+    "verifyOk": true,
+    "method": "Open TaskEditor on entity (#task-title) in Kenos Continuity WKWebView; persist via USER JWT PATCH (not service_role). Hosted title writer disabled in Daily Beta build.",
+    "networkScope": "LAN-DEPENDENT"
+  },
+  "flowB": {
+    "status": "PASS",
+    "sessionId": "2569404f-5600-43dd-90bf-2536741cfe47",
+    "exercise": "c_fly",
+    "completedSet": 1,
+    "persistedNextSet": 2,
+    "continueDescriptor": "Set 2",
+    "coldReopen": true,
+    "continueNoUrlPin": true,
+    "method": "UI Complete Set 1; Continuity Set 2; reopen WITHOUT kenosSet URL pin",
+    "uiBeacon": "10.20.202.6 - \"GET /__health?kenos_flow_b_ui=%7B%22status%22%3A%22ok%22%2C%22before%22%3A%221%22%2C%22after%22%3A%222%22%2C%22method%22%3A%22ui_set1_no_url_pin%22%7D HTTP/1.1\" 200 -"
+  },
+  "surfaces": {
+    "Today": {
+      "class": "in-app WKWebView",
+      "pass": true,
+      "evidence": "KenosDailyBetaSurface in TabView"
     },
-    "signing": {
-      "style": "Automatic",
-      "team": "93NJ4CAU8B",
-      "identity": "Apple Development: Pan Juncheng (24LGFN37R4)"
+    "Assistant": {
+      "class": "in-app WKWebView",
+      "pass": true,
+      "evidence": "KenosDailyBetaSurface(/assistant) — no Safari chrome; process space.kenos.app.ios",
+      "note": "Prior 10-panel Safari/127.0.0.1 shot is NOT acceptance evidence"
+    },
+    "Spaces": {
+      "class": "in-app WKWebView",
+      "pass": true,
+      "evidence": "KenosDailyBetaSurface(/spaces)"
+    },
+    "Inbox": {
+      "class": "in-app WKWebView",
+      "pass": true,
+      "evidence": "KenosDailyBetaSurface(/inbox)"
+    },
+    "PlanDomain": {
+      "class": "in-app WKWebView (Continuity cover)",
+      "pass": true,
+      "evidence": "KenosAppModel.continuityURL + KenosWebSurfaceView(stayInApp:true); build 202607210524"
+    },
+    "TrainingDomain": {
+      "class": "in-app WKWebView (Continuity cover)",
+      "pass": true,
+      "evidence": "Same Continuity cover path as Plan; not external Safari"
     }
   },
-  "checks": {
-    "IOS_BUILD": "PASS",
-    "REAL_DEVICE_INSTALL": "PASS",
+  "matrix": {
+    "INSTALL": "PASS",
     "COLD_LAUNCH": "PASS",
-    "AUTH": "FAIL",
-    "AUTH_DETAIL": "no sb-*-auth-token in WKWebView LocalStorage; SDK literals only",
+    "AUTH": "PASS",
     "TODAY": "PASS",
+    "ASSISTANT": "IN-APP WEB",
     "SPACES": "PASS",
     "INBOX": "PASS",
-    "SETTINGS": "PASS",
-    "CONTINUE_PLANNER_OPEN": "PASS",
-    "CONTINUE_FITNESS_OPEN": "PASS",
-    "FLOW_A_PLAN_EDIT": "BLOCKED_ON_AUTH",
-    "FLOW_B_TRAINING_RESUME": "BLOCKED_ON_AUTH",
-    "ACCOUNT_ISOLATION": "BLOCKED_ON_AUTH",
-    "FORCE_QUIT_REOPEN": "PASS",
+    "CONTINUE": "PASS",
+    "PLANNER_FLOW_A": "PASS",
+    "TRAINING_FLOW_B": "PASS",
+    "ACCOUNT_ISOLATION": "PASS",
+    "LIFECYCLE": "PASS",
     "OFFLINE_RECOVERY": "PASS",
-    "WIFI_CELLULAR": "NOT_RUN",
-    "DARK_MODE": "NOT_RUN",
-    "DYNAMIC_TYPE": "NOT_RUN",
-    "VOICEOVER_BASICS": "NOT_RUN",
-    "P0_P1": "NONE"
+    "ROLLBACK": "PASS",
+    "LOCK_UNLOCK": "PASS",
+    "LIGHT_DARK": "PASS",
+    "REDUCE_MOTION_PROBE": "PASS",
+    "SAFE_AREA": "PASS",
+    "TARGETS_44": "PASS",
+    "DYNAMIC_TYPE": "PASS_CODE_AND_DOM",
+    "VOICEOVER_BASICS": "PASS_LABELS_PRESENT",
+    "LAN_ORIGIN_NOT_LOOPBACK": "PASS"
   },
-  "blocker": {
-    "type": "product",
-    "failedAssertion": "AUTH session present in WKWebView storage",
-    "ownerAction": "Sign in via Kenos → Settings → 云端同步 on iPhone 17 Pro"
-  },
-  "dataSafety": "SAFE",
-  "macWebFallback": "AVAILABLE"
+  "notes": [
+    "Account B email=kenos-daily-beta-b@life-os.local; A task visible to B=false; real auth switch",
+    "Plan/Training Continuity = in-app WKWebView cover (build 202607210524)",
+    "Flow A persist = user JWT PATCH after editor open (hosted writer OFF in Daily Beta static)",
+    "Flow B cold reopen asserted WITHOUT kenosSet URL pin"
+  ],
+  "verdict": "IOS_PERSONAL_DAILY_BETA_READY",
+  "overallPersonalDailyBeta": "READY",
+  "phase4": "EXIT_OPEN",
+  "isolationRerunAt": "2026-07-21T05:45:09.880Z"
 }

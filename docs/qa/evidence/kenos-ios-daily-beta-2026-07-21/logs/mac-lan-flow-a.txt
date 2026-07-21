@@ -1,0 +1,13 @@
+{
+  "run": "mac-lan-flowa-mru4z1f2",
+  "AIOS": "http://10.20.202.15:5219",
+  "PLANNER": "http://10.20.202.15:5188",
+  "TASK_ID": "ios-maclan-mru4z3jm",
+  "TITLE0": "MacLAN Seed mru4z1f2",
+  "TITLE1": "MacLAN MUT mru4z1f2",
+  "uiMut": false,
+  "continueSees": true,
+  "reloadSees": false,
+  "dbTitle": "MacLAN MUT mru4z1f2",
+  "status": "PARTIAL"
+}

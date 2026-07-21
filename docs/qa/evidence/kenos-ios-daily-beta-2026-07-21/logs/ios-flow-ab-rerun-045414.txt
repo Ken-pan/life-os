@@ -1,0 +1,44 @@
+{"ts":"2026-07-21T04:54:15.904Z","step":"device.unlocked","i":1}
+{"ts":"2026-07-21T04:54:18.154Z","step":"auth.session","email":"334452284ken@gmail.com"}
+{"ts":"2026-07-21T04:54:18.312Z","step":"db.seed.task","TASK_ID":"ios-ab-mru6ih4a","TASK_TITLE":"iOS FlowA Seed 4-54-14-534Z"}
+{"ts":"2026-07-21T04:54:35.585Z","step":"flowA.mutate.beacons","n":2,"last":"10.20.202.6 - \"GET /__health?kenos_flow_a=%7B%22status%22%3A%22ok%22%2C%22title%22%3A%22iOS%20FlowA%20MUT%2054-14-534Z%22%2C%22taskId%22%3A%22ios-ab-mru6ih4a%22%2C%22http%22%3A200%7D HTTP/1.1\" 200 -"}
+{"ts":"2026-07-21T04:54:46.253Z","step":"flowA.done","status":"PASS_DEVICE_SESSION_MUTATE","taskId":"ios-ab-mru6ih4a","seedTitle":"iOS FlowA Seed 4-54-14-534Z","mutatedTitle":"iOS FlowA MUT 54-14-534Z","dbTitle":"iOS FlowA MUT 54-14-534Z","phoneMutOk":true,"phoneVerifyOk":true,"plannerDeepLinkHits":4,"method":"phone WKWebView JWT PATCH + force-quit re-read (not XCUITest DOM edit)"}
+{"ts":"2026-07-21T04:54:46.640Z","step":"flowB.seed.set1","sessionId":"2569404f-5600-43dd-90bf-2536741cfe47","error":"Could not find the 'reps' column of 'fitness_exercise_logs' in the schema cache"}
+{"ts":"2026-07-21T04:54:59.042Z","step":"flowB.done","status":"PASS_DEVICE_DEEPLINK_SET2","sessionId":"2569404f-5600-43dd-90bf-2536741cfe47","exerciseId":"c_fly","set":2,"fitnessDeepLinkHits":6,"continueHandoffHits":2,"seedLogError":"Could not find the 'reps' column of 'fitness_exercise_logs' in the schema cache","method":"device deep-link kenosSet=2 + Continue handoff (set ladder UI not XCUITest-tapped)"}
+
+=== REPORT ===
+{
+  "runId": "ios-flow-ab-2026-07-21T04-54-14-534Z",
+  "host": "10.20.202.15",
+  "phoneIp": "10.20.202.6",
+  "flowA": {
+    "status": "PASS_DEVICE_SESSION_MUTATE",
+    "taskId": "ios-ab-mru6ih4a",
+    "seedTitle": "iOS FlowA Seed 4-54-14-534Z",
+    "mutatedTitle": "iOS FlowA MUT 54-14-534Z",
+    "dbTitle": "iOS FlowA MUT 54-14-534Z",
+    "phoneMutOk": true,
+    "phoneVerifyOk": true,
+    "plannerDeepLinkHits": 4,
+    "method": "phone WKWebView JWT PATCH + force-quit re-read (not XCUITest DOM edit)"
+  },
+  "flowB": {
+    "status": "PASS_DEVICE_DEEPLINK_SET2",
+    "sessionId": "2569404f-5600-43dd-90bf-2536741cfe47",
+    "exerciseId": "c_fly",
+    "set": 2,
+    "fitnessDeepLinkHits": 6,
+    "continueHandoffHits": 2,
+    "seedLogError": "Could not find the 'reps' column of 'fitness_exercise_logs' in the schema cache",
+    "method": "device deep-link kenosSet=2 + Continue handoff (set ladder UI not XCUITest-tapped)"
+  },
+  "layout": {
+    "status": "PRIOR_PASS"
+  },
+  "auth": {
+    "status": "PRIOR_PASS"
+  },
+  "notes": [
+    "Auth injected to AIOS+Planner+Fitness origins on device"
+  ]
+}

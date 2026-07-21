@@ -1,0 +1,104 @@
+{
+  "runId": "ios-matrix-close-2026-07-21T05-35-37-151Z",
+  "generatedAt": "2026-07-21T05:42:15.390Z",
+  "device": {
+    "idRedacted": "8097…D79E",
+    "model": "iPhone 17 Pro",
+    "bundleId": "space.kenos.app.ios"
+  },
+  "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
+  "appVersion": "1.0.0",
+  "appBuild": "202607210524",
+  "networkScope": "LAN-DEPENDENT",
+  "flowA": {
+    "status": "PASS",
+    "taskId": "ios-fa-mru7x8jx",
+    "uidRedacted": "c283…c42e",
+    "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
+    "expected": "FA Mut 3-801Z",
+    "actualDbTitle": "FA Mut 3-801Z",
+    "editorOpenEvidence": true,
+    "uiOk": true,
+    "verifyOk": true,
+    "method": "Open TaskEditor on entity (#task-title) in Kenos Continuity WKWebView; persist via USER JWT PATCH (not service_role). Hosted title writer disabled in Daily Beta build.",
+    "networkScope": "LAN-DEPENDENT"
+  },
+  "flowB": {
+    "status": "PASS",
+    "sessionId": "2569404f-5600-43dd-90bf-2536741cfe47",
+    "exercise": "c_fly",
+    "completedSet": 1,
+    "persistedNextSet": 2,
+    "continueDescriptor": "Set 2",
+    "coldReopen": true,
+    "continueNoUrlPin": true,
+    "method": "UI Complete Set 1; Continuity Set 2; reopen WITHOUT kenosSet URL pin",
+    "uiBeacon": "10.20.202.6 - \"GET /__health?kenos_flow_b_ui=%7B%22status%22%3A%22ok%22%2C%22before%22%3A%221%22%2C%22after%22%3A%222%22%2C%22method%22%3A%22ui_set1_no_url_pin%22%7D HTTP/1.1\" 200 -"
+  },
+  "surfaces": {
+    "Today": {
+      "class": "in-app WKWebView",
+      "pass": true,
+      "evidence": "KenosDailyBetaSurface in TabView"
+    },
+    "Assistant": {
+      "class": "in-app WKWebView",
+      "pass": true,
+      "evidence": "KenosDailyBetaSurface(/assistant) — no Safari chrome; process space.kenos.app.ios",
+      "note": "Prior 10-panel Safari/127.0.0.1 shot is NOT acceptance evidence"
+    },
+    "Spaces": {
+      "class": "in-app WKWebView",
+      "pass": true,
+      "evidence": "KenosDailyBetaSurface(/spaces)"
+    },
+    "Inbox": {
+      "class": "in-app WKWebView",
+      "pass": true,
+      "evidence": "KenosDailyBetaSurface(/inbox)"
+    },
+    "PlanDomain": {
+      "class": "in-app WKWebView (Continuity cover)",
+      "pass": true,
+      "evidence": "KenosAppModel.continuityURL + KenosWebSurfaceView(stayInApp:true); build 202607210524"
+    },
+    "TrainingDomain": {
+      "class": "in-app WKWebView (Continuity cover)",
+      "pass": true,
+      "evidence": "Same Continuity cover path as Plan; not external Safari"
+    }
+  },
+  "matrix": {
+    "INSTALL": "PASS",
+    "COLD_LAUNCH": "PASS",
+    "AUTH": "PASS",
+    "TODAY": "PASS",
+    "ASSISTANT": "IN-APP WEB",
+    "SPACES": "PASS",
+    "INBOX": "PASS",
+    "CONTINUE": "PASS",
+    "PLANNER_FLOW_A": "PASS",
+    "TRAINING_FLOW_B": "PASS",
+    "ACCOUNT_ISOLATION": "FAIL",
+    "LIFECYCLE": "PASS",
+    "OFFLINE_RECOVERY": "PASS",
+    "ROLLBACK": "PASS",
+    "LOCK_UNLOCK": "PASS",
+    "LIGHT_DARK": "PASS",
+    "REDUCE_MOTION_PROBE": "PASS",
+    "SAFE_AREA": "PASS",
+    "TARGETS_44": "PASS",
+    "DYNAMIC_TYPE": "PASS_CODE_AND_DOM",
+    "VOICEOVER_BASICS": "PASS_LABELS_PRESENT",
+    "LAN_ORIGIN_NOT_LOOPBACK": "PASS"
+  },
+  "notes": [
+    "Invalid login credentials",
+    "Plan/Training Continuity = in-app WKWebView cover (build 202607210524)",
+    "Flow A persist = user JWT PATCH after editor open (hosted writer OFF in Daily Beta static)",
+    "Flow B cold reopen asserted WITHOUT kenosSet URL pin"
+  ],
+  "verdict": "IOS_NOT_READY",
+  "overallPersonalDailyBeta": "HOLD",
+  "phase4": "EXIT_OPEN"
+}

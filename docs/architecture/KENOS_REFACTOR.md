@@ -1,7 +1,7 @@
 ---
 title: Kenos 平台重构计划 - 导航与执行边界
 owner: kenpan
-last_verified: 2026-07-20
+last_verified: 2026-07-21
 doc_role: refactor-program-hub
 status: controlled-production-canary-legacy-cutover-open
 review_cadence: every-migration-slice
@@ -11,7 +11,7 @@ review_cadence: every-migration-slice
 
 > 这是本次 Life OS → Kenos 重构的专用导航页。它把最新平台审核中的产品、数据、AI、原生客户端和治理决策转成可执行文档。
 >
-> **当前诚实状态（2026-07-21）：** 正式基线已经包含 Phase 1–6 的多项实现，生产 migration 到 `20260720230000`，Owner cohort 的 Plan command、Capture/Approval 与 Portal `/today` soft redirect 已进入受控生产 canary；Apple 多端与 Phase 5 Contextual Intelligence 仍主要是 foundation/local verification。**Mac Web Daily Beta：READY**（`http://127.0.0.1:5219/`）。**iOS Personal Daily Beta：NOT READY** — Ken’s 17 Pro 已安装/冷启动/LAN Continuity PASS，但 WKWebView 尚无 Supabase 会话（Owner 需在设置登录）；网络范围 **LAN-DEPENDENT**。全量 writer cutover、legacy revoke、outbox delivery、ProductionExecutor、离线队列、Portal retirement、完整 Spaces 和 Apple 分发仍未完成。详见 [`kenos-implementation-status.md`](./kenos-implementation-status.md)。当前生产事实与 Now/Next 仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 和 production baseline 报告为准。
+> **当前诚实状态（2026-07-21）：** 正式基线已经包含 Phase 1–6 的多项实现，生产 migration 到 `20260720230000`，Owner cohort 的 Plan command、Capture/Approval 与 Portal `/today` soft redirect 已进入受控生产 canary；Apple 多端与 Phase 5 Contextual Intelligence 仍主要是 foundation/local verification。**Mac Web Daily Beta：READY**（`http://127.0.0.1:5219/`）。**iOS Personal Daily Beta：READY**（LAN-DEPENDENT；Continuity Plan/Training=in-app WKWebView；Assistant=IN-APP WEB；Flow A/B + isolation PASS；Phase 4 仍 `EXIT_OPEN`）。证据 `docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`。全量 writer cutover、legacy revoke、outbox delivery、ProductionExecutor、离线队列、Portal retirement、完整 Spaces 和 Apple 分发仍未完成。详见 [`kenos-implementation-status.md`](./kenos-implementation-status.md) 与证据目录 `docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`。当前生产事实与 Now/Next 仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 和 production baseline 报告为准。
 >
 > **阶段标签保留：** Phase 4A 指 Apple native daily-loop foundation；Phase 4B 指 watchOS / handoff / notifications 等 cross-device daily-loop foundation。两者已有正式实现与本地/设备证据，但仍是 `EXIT_OPEN`，不得解释为分发、跨端持久状态或旧壳退役完成。
 

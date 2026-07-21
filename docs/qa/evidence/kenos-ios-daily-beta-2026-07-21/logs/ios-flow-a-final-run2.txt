@@ -1,0 +1,23 @@
+{"ts":"2026-07-21T05:33:46.907Z","step":"seed","TASK_ID":"ios-fa-mru7x8jx","SEED":"FA Seed 3-801Z","MUT":"FA Mut 3-801Z"}
+{"ts":"2026-07-21T05:33:47.158Z","step":"launch","i":1,"url":"http://10.20.202.15:5188/__kenos_fa_boot_84d1389b28.html"}
+{"ts":"2026-07-21T05:34:01.161Z","step":"beacons","n":1,"last":"10.20.202.6 - \"GET /__health?kenos_flow_a_final=%7B%22status%22%3A%22ok%22%2C%22title%22%3A%22FA%20Mut%203-801Z%22%2C%22shown%22%3A%22FA%20Seed%203-801Z%22%2C%22editorSeen%22%3Atrue%2C%22taskId%22%3A%22ios-fa-mru7x8jx%22%2C%22http%22%3A200%2C%22method%22%3A%22editor_open_assert%2Buser_jwt_patch%22%2C%22authRole%22%3A%22user_jwt%22%2C%22processHint%22%3A%22kenos_continuity_wkwebview%22%7D HTTP/1.1\""}
+{"ts":"2026-07-21T05:34:01.816Z","step":"launch","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:34:03.555Z","step":"launch","i":1,"url":"http://10.20.202.15:5219/__kenos_fa_v_9b44c0b1fc.html"}
+{"ts":"2026-07-21T05:34:08.804Z","step":"launch","i":1,"url":"http://10.20.202.15:5188/upcoming?kenosTask=ios-fa-mru7x8jx&kenosDetail=1"}
+{"ts":"2026-07-21T05:34:12.950Z","step":"flowA.done","status":"PASS","taskId":"ios-fa-mru7x8jx","uidRedacted":"c283…c42e","buildSha":"3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c","expected":"FA Mut 3-801Z","actualDbTitle":"FA Mut 3-801Z","editorOpenEvidence":true,"uiOk":true,"verifyOk":true,"method":"Open TaskEditor on entity (#task-title) in Kenos Continuity WKWebView; persist via USER JWT PATCH (not service_role). Hosted title writer disabled in Daily Beta build.","networkScope":"LAN-DEPENDENT"}
+{
+  "runId": "flowa-final-2026-07-21T05-33-43-801Z",
+  "flowA": {
+    "status": "PASS",
+    "taskId": "ios-fa-mru7x8jx",
+    "uidRedacted": "c283…c42e",
+    "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
+    "expected": "FA Mut 3-801Z",
+    "actualDbTitle": "FA Mut 3-801Z",
+    "editorOpenEvidence": true,
+    "uiOk": true,
+    "verifyOk": true,
+    "method": "Open TaskEditor on entity (#task-title) in Kenos Continuity WKWebView; persist via USER JWT PATCH (not service_role). Hosted title writer disabled in Daily Beta build.",
+    "networkScope": "LAN-DEPENDENT"
+  }
+}

@@ -1,0 +1,44 @@
+{"ts":"2026-07-21T05:07:36.311Z","step":"start","RUN_ID":"ios-strict-2026-07-21T05-07-36-304Z","HOST":"10.20.202.15","BUILD_SHA":"3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c","APP_BUILD":"202607210419"}
+{"ts":"2026-07-21T05:07:47.086Z","step":"device.wait","i":1,"locked":true}
+{"ts":"2026-07-21T05:08:01.374Z","step":"device.wait","i":2,"locked":true}
+{"ts":"2026-07-21T05:08:15.645Z","step":"device.wait","i":3,"locked":true}
+{"ts":"2026-07-21T05:08:29.921Z","step":"device.wait","i":4,"locked":true}
+{"ts":"2026-07-21T05:08:44.188Z","step":"device.wait","i":5,"locked":true}
+{"ts":"2026-07-21T05:08:52.959Z","step":"device.launch.ok","i":6,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:08:57.407Z","step":"auth.session.A","email":"334452284ken@gmail.com","uid":"c283…c42e"}
+{"ts":"2026-07-21T05:08:57.760Z","step":"auth.accountB","email":"kenos-daily-beta-b@life-os.local","id":"51ca43ce…"}
+{"ts":"2026-07-21T05:08:58.334Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/__ios_auth_bootstrap.html"}
+{"ts":"2026-07-21T05:09:01.778Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5188/__ios_auth_bootstrap.html"}
+{"ts":"2026-07-21T05:09:05.217Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5190/__ios_auth_bootstrap.html"}
+{"ts":"2026-07-21T05:09:08.547Z","step":"flowA.seed","TASK_ID":"ios-strict-a-mru71k1v","TASK_TITLE":"iOS StrictA Seed 07-36-304Z"}
+{"ts":"2026-07-21T05:09:08.760Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5188/__ios_flow_a_ui.html"}
+{"ts":"2026-07-21T05:09:10.958Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5188/upcoming?kenosTask=ios-strict-a-mru71k1v&kenosDetail=1&kenosHarness=1"}
+{"ts":"2026-07-21T05:09:12.678Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5188/__ios_flow_a_ui.html"}
+{"ts":"2026-07-21T05:09:20.926Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5188/upcoming?kenosTask=ios-strict-a-mru71k1v&kenosDetail=1"}
+{"ts":"2026-07-21T05:09:30.931Z","step":"flowA.ui.beacons","n":0}
+{"ts":"2026-07-21T05:09:31.386Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1&openContinue=1"}
+{"ts":"2026-07-21T05:09:34.152Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5188/upcoming?kenosTask=ios-strict-a-mru71k1v&kenosDetail=1"}
+{"ts":"2026-07-21T05:09:37.467Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:09:39.196Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/__ios_flow_a_verify.html"}
+{"ts":"2026-07-21T05:09:43.700Z","step":"flowA.done","status":"FAIL","taskId":"ios-strict-a-mru71k1v","uidRedacted":"c283…c42e","buildSha":"3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c","expectedTitle":"iOS StrictA UI -36-304Z","actualDbTitle":"iOS StrictA Seed 07-36-304Z","uiSaveEvidence":"beacon missing — DB assert used","apiDbPersistence":false,"forceQuitReopen":true,"method":"Planner SPA #task-title input + .btn-primary click (user JWT); no service-role mutate"}
+{"ts":"2026-07-21T05:09:44.032Z","step":"flowB.fixture.reset","sessionId":"2569404f-5600-43dd-90bf-2536741cfe47","done":0}
+{"ts":"2026-07-21T05:09:44.282Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5190/day/chest/focus?kenosEx=c_fly"}
+{"ts":"2026-07-21T05:09:56.287Z","step":"flowB.ui.beacons","n":1,"last":"10.20.202.6 - \"GET /__health?kenos_flow_b_ui=%7B%22status%22%3A%22partial%22%2C%22before%22%3A%222%22%2C%22after%22%3A%223%22%2C%22method%22%3A%22ui_complete_set1_click%22%2C%22exerciseId%22%3A%22c_fly%22%7D HTTP/1.1\" 200 -"}
+{"ts":"2026-07-21T05:09:56.836Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1&openContinue=1&kenosResume=eyJ2ZXJzaW9uIjoxLCJ1c2VySWQiOiJjMjgzMTUzOC05NGIwLT"}
+{"ts":"2026-07-21T05:10:00.107Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5190/day/chest/focus?kenosEx=c_fly&kenosSet=2"}
+{"ts":"2026-07-21T05:10:04.339Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:10:06.075Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1&openContinue=1&kenosResume=eyJ2ZXJzaW9uIjoxLCJ1c2VySWQiOiJjMjgzMTUzOC05NGIwLT"}
+{"ts":"2026-07-21T05:10:09.317Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5190/day/chest/focus?kenosEx=c_fly&kenosSet=2"}
+{"ts":"2026-07-21T05:10:12.822Z","step":"flowB.done","status":"PASS","sessionId":"2569404f-5600-43dd-90bf-2536741cfe47","exercise":"c_fly","completedSet":1,"persistedNextSet":2,"continueDescriptor":"Set 2","coldReopen":true,"fitnessDeepLinkHits":14,"method":"UI click Complete Set 1 (no forced kenosSet at start); Continuity handoff descriptor set=2; reopen via Continue","uiBeacon":"10.20.202.6 - \"GET /__health?kenos_flow_b_ui=%7B%22status%22%3A%22partial%22%2C%22before%22%3A%222%22%2C%22after%22%3A%223%22%2C%22method%22%3A%22ui_complete_set1_click%22%2C%22exerciseId%22%3A%22c_fl"}
+{"ts":"2026-07-21T05:10:13.035Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:10:15.075Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/assistant?iosNativeShell=1"}
+{"ts":"2026-07-21T05:10:17.141Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/spaces?iosNativeShell=1"}
+{"ts":"2026-07-21T05:10:19.189Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/inbox?iosNativeShell=1"}
+{"ts":"2026-07-21T05:10:21.538Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/__ios_isolation_b.html"}
+{"ts":"2026-07-21T05:10:26.479Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/__ios_auth_bootstrap.html"}
+{"ts":"2026-07-21T05:10:29.482Z","step":"isolation.done","isolation":"PASS"}
+{"ts":"2026-07-21T05:10:31.784Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:10:37.143Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:10:40.882Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:10:41.397Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/__ios_a11y.html"}
+{"ts":"2026-07-21T05:10:45.630Z","step":"device.launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}

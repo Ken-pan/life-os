@@ -1,0 +1,16 @@
+{
+  "run": "mac-lan-ab-mru4zvvc",
+  "TASK_ID": "ios-maclan-mru4zxhj",
+  "TITLE0": "MacLAN Seed mru4zvvc",
+  "TITLE1": "MacLAN MUT mru4zvvc",
+  "dbTitle": "MacLAN MUT mru4zvvc",
+  "openSees": false,
+  "reloadSees": false,
+  "flowA": "FAIL",
+  "flowB": {
+    "url": "http://10.20.202.15:5190/day/chest/focus",
+    "set2Hint": true,
+    "status": "FAIL"
+  },
+  "note": "Mac Playwright against Daily Beta LAN origins (same stack as iPhone). Does not replace 17 Pro device gate."
+}

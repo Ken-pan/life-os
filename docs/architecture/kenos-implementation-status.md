@@ -1,7 +1,7 @@
 ---
 title: Kenos 重构实施状态审计
 owner: kenpan
-last_verified: 2026-07-21T03:30:00Z
+last_verified: 2026-07-21T04:20:00Z
 doc_role: implementation-status-audit
 status: controlled-production-canary-legacy-cutover-open
 formal_baseline: 502d805c28b29d3d50c0efa2699ab717a301ac45
@@ -33,62 +33,64 @@ CONTROLLED_PRODUCTION_CANARY
 + EXECUTOR_AND_DISTRIBUTION_GATES_OPEN
 
 MAC WEB DAILY BETA: READY
-IOS PERSONAL DAILY BETA: NOT READY   # 17 Pro install/LAN PASS；Auth Owner Action
-OVERALL PERSONAL DAILY BETA: HOLD
+IOS PERSONAL DAILY BETA: READY (LAN-DEPENDENT)  # strict close 2026-07-21T05:45Z — Flow A user-JWT + Flow B no-URL-pin + isolation PASS; Assistant=IN-APP WEB; Continuity=in-app WKWebView; build 202607210524
+OVERALL PERSONAL DAILY BETA: READY_LAN_DEPENDENT
 NETWORK SCOPE (iOS): LAN-DEPENDENT
 ```
 
-iOS 真机证据：`docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`（2026-07-21）。
+iOS 真机证据：`docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`（含 `logs/ios-flow-ab-latest.json`）。  
+Phase 4 仍 `EXIT_OPEN`（App Group / APNs / 分发）；无硬 Owner Action — 见 `OWNER_ACTION_NEXT.md`。
+
 ## 2. 状态词汇
 
-| 状态 | 含义 | 可以对外宣称什么 |
-| --- | --- | --- |
-| `FORMAL_COMMITTED` | 已进入 `origin/master` | 正式基线存在实现与测试 |
-| `PROD_VERIFIED_CANARY` | 有生产 deploy / migration / owner smoke 证据 | 限定 cohort、flag 和路径已验证 |
-| `LOCAL_VERIFIED` | 本地测试、preview、Simulator 或 fixture 通过 | 只代表本地能力，不代表生产 |
-| `LOCAL_WIP` | 工作树中存在但未提交 | 不能当正式实现、不能写入 Shipped |
-| `EXIT_OPEN` | 阶段已有实现，但阶段出口条件未全部满足 | 继续迁移，不得宣布阶段完成 |
-| `RETIRED` | 旧 writer/app/route/build/deploy 已删除并有观察证据 | 才能宣称 cutover 完成 |
+| 状态                   | 含义                                                | 可以对外宣称什么                 |
+| ---------------------- | --------------------------------------------------- | -------------------------------- |
+| `FORMAL_COMMITTED`     | 已进入 `origin/master`                              | 正式基线存在实现与测试           |
+| `PROD_VERIFIED_CANARY` | 有生产 deploy / migration / owner smoke 证据        | 限定 cohort、flag 和路径已验证   |
+| `LOCAL_VERIFIED`       | 本地测试、preview、Simulator 或 fixture 通过        | 只代表本地能力，不代表生产       |
+| `LOCAL_WIP`            | 工作树中存在但未提交                                | 不能当正式实现、不能写入 Shipped |
+| `EXIT_OPEN`            | 阶段已有实现，但阶段出口条件未全部满足              | 继续迁移，不得宣布阶段完成       |
+| `RETIRED`              | 旧 writer/app/route/build/deploy 已删除并有观察证据 | 才能宣称 cutover 完成            |
 
 ## 3. 正式基线与生产事实
 
 ### 3.1 Git 基线
 
-| 项目 | 结果 |
-| --- | --- |
-| `master` vs `origin/master` | `0 / 0`，审计时同步 |
-| 正式 SHA | `502d805c28b29d3d50c0efa2699ab717a301ac45` |
-| 最近实现范围 | Contracts、Plan writers、AIOS、Portal strangler、Apple clients、Focus/Work/Capture、UIUX compounding |
-| 工作树 | 有大量并行未提交 WIP；不属于正式基线，见第 9 节 |
+| 项目                        | 结果                                                                                                 |
+| --------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `master` vs `origin/master` | `0 / 0`，审计时同步                                                                                  |
+| 正式 SHA                    | `502d805c28b29d3d50c0efa2699ab717a301ac45`                                                           |
+| 最近实现范围                | Contracts、Plan writers、AIOS、Portal strangler、Apple clients、Focus/Work/Capture、UIUX compounding |
+| 工作树                      | 有大量并行未提交 WIP；不属于正式基线，见第 9 节                                                      |
 
 ### 3.2 已记录的生产基线
 
 以下数值来自 2026-07-20 `LIVE_REVALIDATED` 报告；再次部署或迁移后必须回到生产报告更新，不能只改本文。
 
-| 项目 | 已验证值 | 当前含义 |
-| --- | --- | --- |
-| Migration tip | `20260720230000` | Wave 1 + Plan/Approval/Outbox/Focus/Work/Capture/Assistant proposal 已在生产历史中 |
-| Planner production bake | code SHA `9bc298c28a546f9e09dfbc27bfaeef457c3b5fd0` | Owner cohort 的 Plan 写路径已上线，但不是全量 cutover |
-| AIOS published deploy | `6a5e3298a269f920f5314a01` | AIOS read/Capture/Approval canary 基线 |
-| Portal published deploy | `6a5e347265864128941f0777` | 仅 Owner-limited `/today` soft redirect |
-| Plan writer routing | create/title/due/schedule/project/complete/reopen/archive → Kenos RPC | 非 cohort、未覆盖字段与 sync upsert 仍保留 legacy |
-| Outbox / Activity / Approval / Capture | `44 / 49 / 0 / 2` | 数据面存在；数量是时间点快照 |
-| Outbox delivered/published | `0` | 不能宣称事件投递闭环完成 |
-| ProductionExecutor | Off | 不能宣称主动执行已生产化 |
-| Offline queue | Off | 只有 foundation / contract，未正式启用 |
-| Seven sites `stop_builds` | `true` | 生产变更仍受控，不代表站点退役 |
+| 项目                                   | 已验证值                                                              | 当前含义                                                                           |
+| -------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Migration tip                          | `20260720230000`                                                      | Wave 1 + Plan/Approval/Outbox/Focus/Work/Capture/Assistant proposal 已在生产历史中 |
+| Planner production bake                | code SHA `9bc298c28a546f9e09dfbc27bfaeef457c3b5fd0`                   | Owner cohort 的 Plan 写路径已上线，但不是全量 cutover                              |
+| AIOS published deploy                  | `6a5e3298a269f920f5314a01`                                            | AIOS read/Capture/Approval canary 基线                                             |
+| Portal published deploy                | `6a5e347265864128941f0777`                                            | 仅 Owner-limited `/today` soft redirect                                            |
+| Plan writer routing                    | create/title/due/schedule/project/complete/reopen/archive → Kenos RPC | 非 cohort、未覆盖字段与 sync upsert 仍保留 legacy                                  |
+| Outbox / Activity / Approval / Capture | `44 / 49 / 0 / 2`                                                     | 数据面存在；数量是时间点快照                                                       |
+| Outbox delivered/published             | `0`                                                                   | 不能宣称事件投递闭环完成                                                           |
+| ProductionExecutor                     | Off                                                                   | 不能宣称主动执行已生产化                                                           |
+| Offline queue                          | Off                                                                   | 只有 foundation / contract，未正式启用                                             |
+| Seven sites `stop_builds`              | `true`                                                                | 生产变更仍受控，不代表站点退役                                                     |
 
 ## 4. 按阶段的真实实施状态
 
-| 阶段 | 已落地 | 当前状态 | 仍缺少的出口证据 |
-| --- | --- | --- | --- |
-| Phase 0 治理与边界 | Constitution、ownership/policy inventory、decision register、migration ledger、Phase guards | `FORMAL_COMMITTED / EXIT_OPEN` | 部分 owner 决策、ledger retirement 日期；Phase 0 worktree allowlist 需在干净 checkout/CI 运行 |
-| Phase 1 契约与 Plan 垂直切片 | Zod/SQL/Swift corpus；Plan create/update/complete/reopen/archive RPC；RLS/idempotency/outbox foundation；Planner writer hosts | `PROD_VERIFIED_CANARY / EXIT_OPEN` | 全 cohort/全字段 cutover、legacy revoke、offline flush ON、持续对账、dead-letter/recovery 演练 |
-| Phase 2 Assistant/Today/Portal | AIOS Today/Assistant/Inbox/Approvals/Activity；read canary；Approval/Capture owner-limited；Portal `/today` soft redirect | `PROD_VERIFIED_CANARY / EXIT_OPEN` | 两个真实使用周期、Portal writes/build/registry/compat 全退役、默认入口全量切换、流量观察 |
-| Phase 3 Work 闭环 | Work contracts、project create/archive RPC、Assistant proposal、Work/Spaces routes、Capture ingest/convert | `FORMAL_COMMITTED + LIMITED_PROD_FOUNDATION / EXIT_OPEN` | 一个真实 Work 项目 + Connector 的完整 capture→Library/Plan→review 闭环与复利数据 |
-| Phase 4 Apple clients | iOS/macOS/watchOS targets、共享 Contracts/Client/Store/Actions/Handoff/Notifications/Design、Simulator/Mac build、iPhone 17 Pro install/open + LAN Daily Beta Continuity | `DEVICE_FOUNDATION_VERIFIED / EXIT_OPEN`；**iOS Personal Daily Beta NOT READY**（Auth 未登录） | App Group 持久共享、APNs/Focus entitlement、完整真机矩阵、签名/分发、旧 Tauri/Capacitor/companion 逐能力退役；iOS Auth + Plan/Training 真机日常闭环 |
-| Phase 5 Contextual Intelligence | Focus contracts、Web/Apple/Watch 本地行为、interruption policy、建议 explanation/budget、start/end RPC | `LOCAL_VERIFIED + LIMITED_DATA_PATH / EXIT_OPEN` | ProductionExecutor、生产通知、Approval 执行闭环、跨设备 Focus state、真实信任升级与撤销/维护指标 |
-| Phase 6 生产收敛 | Wave migrations、受控 deploy、owner-limited canaries、rollback IDs、build pause、pre-revoke bypass | `CONTROLLED_PRODUCTION_CANARY / EXIT_OPEN` | legacy revoke、outbox worker、final rollback drill、长期观察、旧路径/站点/兼容层删除 |
+| 阶段                            | 已落地                                                                                                                                                                   | 当前状态                                                                                       | 仍缺少的出口证据                                                                                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 0 治理与边界              | Constitution、ownership/policy inventory、decision register、migration ledger、Phase guards                                                                              | `FORMAL_COMMITTED / EXIT_OPEN`                                                                 | 部分 owner 决策、ledger retirement 日期；Phase 0 worktree allowlist 需在干净 checkout/CI 运行                                                       |
+| Phase 1 契约与 Plan 垂直切片    | Zod/SQL/Swift corpus；Plan create/update/complete/reopen/archive RPC；RLS/idempotency/outbox foundation；Planner writer hosts                                            | `PROD_VERIFIED_CANARY / EXIT_OPEN`                                                             | 全 cohort/全字段 cutover、legacy revoke、offline flush ON、持续对账、dead-letter/recovery 演练                                                      |
+| Phase 2 Assistant/Today/Portal  | AIOS Today/Assistant/Inbox/Approvals/Activity；read canary；Approval/Capture owner-limited；Portal `/today` soft redirect                                                | `PROD_VERIFIED_CANARY / EXIT_OPEN`                                                             | 两个真实使用周期、Portal writes/build/registry/compat 全退役、默认入口全量切换、流量观察                                                            |
+| Phase 3 Work 闭环               | Work contracts、project create/archive RPC、Assistant proposal、Work/Spaces routes、Capture ingest/convert                                                               | `FORMAL_COMMITTED + LIMITED_PROD_FOUNDATION / EXIT_OPEN`                                       | 一个真实 Work 项目 + Connector 的完整 capture→Library/Plan→review 闭环与复利数据                                                                    |
+| Phase 4 Apple clients           | iOS/macOS/watchOS targets、共享 Contracts/Client/Store/Actions/Handoff/Notifications/Design、Simulator/Mac build、iPhone 17 Pro install/open + LAN Daily Beta Continuity + FLOW A/B device PASS | `DEVICE_FOUNDATION_VERIFIED / EXIT_OPEN`；**iOS Personal Daily Beta READY (LAN-DEPENDENT)** | App Group 持久共享、APNs/Focus entitlement、完整真机矩阵、签名/分发、旧 Tauri/Capacitor/companion 逐能力退役；非 LAN 公网入口 |
+| Phase 5 Contextual Intelligence | Focus contracts、Web/Apple/Watch 本地行为、interruption policy、建议 explanation/budget、start/end RPC                                                                   | `LOCAL_VERIFIED + LIMITED_DATA_PATH / EXIT_OPEN`                                               | ProductionExecutor、生产通知、Approval 执行闭环、跨设备 Focus state、真实信任升级与撤销/维护指标                                                    |
+| Phase 6 生产收敛                | Wave migrations、受控 deploy、owner-limited canaries、rollback IDs、build pause、pre-revoke bypass                                                                       | `CONTROLLED_PRODUCTION_CANARY / EXIT_OPEN`                                                     | legacy revoke、outbox worker、final rollback drill、长期观察、旧路径/站点/兼容层删除                                                                |
 
 ### 4.1 为什么不能按最高 Phase 数字判断完成度
 
@@ -150,32 +152,32 @@ Work project create/archive、Assistant proposal、Capture ingest、Capture→Pl
 
 本次在 `git archive HEAD` 的隔离副本中复核正式 SHA，避免本地 WIP 污染结果。Phase 0 guard 例外：它主动调用 `git diff` / `git ls-files` 验证 Cloud 任务工作树 allowlist，纯归档没有 Git metadata，因此不能用同一方式运行。
 
-| 守卫 | 结果 | 解释 |
-| --- | --- | --- |
-| `check-kenos-phase0.mjs` | CONTEXT_BLOCKED | 当前共享工作树有大量非本审计 WIP，worktree allowlist 会按设计失败；纯 HEAD 归档缺少 Git metadata。不能把该结果记成正式代码回归，也不能宣称本次通过 |
-| `check-kenos-phase1.mjs` | PASS | 包含 Swift parity、writer cutover simulation、policy/MCP 检查 |
-| `check-kenos-phase2.mjs` | FAIL | 仍要求 Approvals UI 出现旧的 `Executor` token；需按当前 fail-closed 行为重写断言 |
-| `check-kenos-phase3.mjs` | PASS_FORMAL / FAIL_LOCAL_WIP | 正式 HEAD 通过；当前未提交 Today 改动缺少既有 Work projection/owner/deep-link 合同，提交前必须恢复合同或经评审更新 guard |
-| `check-kenos-phase4.mjs` | PASS | Apple foundation guard 通过 |
-| `check-kenos-phase4b.mjs` | PASS | Cross-device foundation guard 通过 |
-| `check-kenos-phase5.mjs` | PASS | Contextual intelligence 本地 guard 通过 |
-| `check-kenos-phase6.mjs` | PASS_WITH_STALE_MESSAGE | 脚本通过，但输出仍写 `apply still blocked`，与生产 migration tip 证据冲突 |
+| 守卫                      | 结果                         | 解释                                                                                                                                               |
+| ------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `check-kenos-phase0.mjs`  | CONTEXT_BLOCKED              | 当前共享工作树有大量非本审计 WIP，worktree allowlist 会按设计失败；纯 HEAD 归档缺少 Git metadata。不能把该结果记成正式代码回归，也不能宣称本次通过 |
+| `check-kenos-phase1.mjs`  | PASS                         | 包含 Swift parity、writer cutover simulation、policy/MCP 检查                                                                                      |
+| `check-kenos-phase2.mjs`  | FAIL                         | 仍要求 Approvals UI 出现旧的 `Executor` token；需按当前 fail-closed 行为重写断言                                                                   |
+| `check-kenos-phase3.mjs`  | PASS_FORMAL / FAIL_LOCAL_WIP | 正式 HEAD 通过；当前未提交 Today 改动缺少既有 Work projection/owner/deep-link 合同，提交前必须恢复合同或经评审更新 guard                           |
+| `check-kenos-phase4.mjs`  | PASS                         | Apple foundation guard 通过                                                                                                                        |
+| `check-kenos-phase4b.mjs` | PASS                         | Cross-device foundation guard 通过                                                                                                                 |
+| `check-kenos-phase5.mjs`  | PASS                         | Contextual intelligence 本地 guard 通过                                                                                                            |
+| `check-kenos-phase6.mjs`  | PASS_WITH_STALE_MESSAGE      | 脚本通过，但输出仍写 `apply still blocked`，与生产 migration tip 证据冲突                                                                          |
 
 结论：当前不能宣称 `verify-kenos-refactor` 全绿。Phase 2 正式基线 failure、Phase 3 本地 WIP regression/合同变化、Phase 6 stale message 和 Phase 0 的 clean-checkout 运行条件都需要显式处理；修复时必须保留安全与行为断言，不能为了变绿删除 gate。
 
 ## 7. 尚未完成的关键收口项
 
-| 优先级 | 收口项 | 完成标准 | 主要回滚/停止条件 |
-| --- | --- | --- | --- |
-| P0 | 修复事实真源与守卫漂移 | phase guard 只验证本阶段稳定合同；Phase 6 不再显示过期 apply 状态 | 如果新 guard 掩盖权限、writer 或 fail-closed 语义，停止 |
-| P0 | Plan 单一 writer cutover | 全目标 cohort/字段经 Kenos command；legacy revoke matrix 归零并完成观察 | mismatch、auth/RLS、重复写、rollback SLO 超阈值立即回 legacy route |
-| P0 | Outbox delivery 与 Executor 分离上线 | 先只读/投递 worker，再低风险 executor；Activity/Approval/Undo/kill switch 全有证据 | 未授权执行、重复投递、dead-letter 激增、无法撤销立即关闭 |
-| P1 | Offline queue 生产启用 | 飞行模式创建/重连/幂等/冲突/登出清理真机通过 | 重放重复、跨用户泄漏、队列丢失立即关 flag |
-| P1 | Assistant 默认入口与 Portal 退役 | 两个稳定周期后，Portal 写入、build、registry、route compatibility 全删除 | deep link/登录/Today 数据口径回归则恢复 redirect target |
-| P1 | Work 真实闭环 | 一个真实项目从 Capture/Connector 到 Plan/Library/Assistant review，测得少复制/少准备时间 | Work body 越域、第二任务真源、Connector 权限不清时停止 |
-| P1 | Domain Spaces 分批迁移 | 每域有 owner、read/write policy、错误/离线/恢复和 retirement evidence | 禁止一次全域 writer cutover |
-| P1 | Apple 分发与跨端状态 | App Group/APNs/entitlement/签名/TestFlight/真机矩阵完成 | 通知、账号、共享状态或隐私边界不可靠时保持本地 foundation |
-| P2 | Phase 5 主动能力 | Observe→Suggest→Draft→Confirm 分 capability 放量，撤销率/维护成本可测 | ProductionExecutor 默认保持 Off；任何未解释写入即停止 |
+| 优先级 | 收口项                               | 完成标准                                                                                 | 主要回滚/停止条件                                                  |
+| ------ | ------------------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| P0     | 修复事实真源与守卫漂移               | phase guard 只验证本阶段稳定合同；Phase 6 不再显示过期 apply 状态                        | 如果新 guard 掩盖权限、writer 或 fail-closed 语义，停止            |
+| P0     | Plan 单一 writer cutover             | 全目标 cohort/字段经 Kenos command；legacy revoke matrix 归零并完成观察                  | mismatch、auth/RLS、重复写、rollback SLO 超阈值立即回 legacy route |
+| P0     | Outbox delivery 与 Executor 分离上线 | 先只读/投递 worker，再低风险 executor；Activity/Approval/Undo/kill switch 全有证据       | 未授权执行、重复投递、dead-letter 激增、无法撤销立即关闭           |
+| P1     | Offline queue 生产启用               | 飞行模式创建/重连/幂等/冲突/登出清理真机通过                                             | 重放重复、跨用户泄漏、队列丢失立即关 flag                          |
+| P1     | Assistant 默认入口与 Portal 退役     | 两个稳定周期后，Portal 写入、build、registry、route compatibility 全删除                 | deep link/登录/Today 数据口径回归则恢复 redirect target            |
+| P1     | Work 真实闭环                        | 一个真实项目从 Capture/Connector 到 Plan/Library/Assistant review，测得少复制/少准备时间 | Work body 越域、第二任务真源、Connector 权限不清时停止             |
+| P1     | Domain Spaces 分批迁移               | 每域有 owner、read/write policy、错误/离线/恢复和 retirement evidence                    | 禁止一次全域 writer cutover                                        |
+| P1     | Apple 分发与跨端状态                 | App Group/APNs/entitlement/签名/TestFlight/真机矩阵完成                                  | 通知、账号、共享状态或隐私边界不可靠时保持本地 foundation          |
+| P2     | Phase 5 主动能力                     | Observe→Suggest→Draft→Confirm 分 capability 放量，撤销率/维护成本可测                    | ProductionExecutor 默认保持 Off；任何未解释写入即停止              |
 
 ## 8. 建议操作顺序
 
@@ -240,17 +242,17 @@ Work project create/archive、Assistant proposal、Capture ingest、Capture→Pl
 
 ## 10. 文档新旧关系
 
-| 文档 | 角色 | 当前解释 |
-| --- | --- | --- |
-| 本文 | 当前实施审计 | “现在做到哪里”的入口 |
-| [`KENOS_REFACTOR.md`](./KENOS_REFACTOR.md) | 计划导航 | 目标、边界、文档地图 |
-| [`../roadmap/KENOS_REFACTOR_PLAN.md`](../roadmap/KENOS_REFACTOR_PLAN.md) | 阶段设计 | 出口定义，不代表线性完成度 |
-| [`../roadmap/KENOS_REFACTOR_EXECUTION_STATE.md`](../roadmap/KENOS_REFACTOR_EXECUTION_STATE.md) | 执行历史 | 保留 Phase 0 Cloud 和后续阶段追踪；顶部快照指向本文 |
-| [`../qa/kenos-current-production-baseline-live-revalidated.md`](../qa/kenos-current-production-baseline-live-revalidated.md) | 生产事实 | deploy/migration/flag/row count 的实时真源 |
-| `kenos-completion-inventory-2026-07-20.md` | 历史起点盘点 | 不代表当前最新状态 |
-| `kenos-production-wave1-apply-report.md` | 历史停止报告 | 已被后续 live baseline 的 migration tip 证据取代 |
-| `kenos-production-wave1-final-approval-packet.md` | apply 前审批包 | 不能替代 apply 后生产证据 |
-| `kenos-uiux-compounding-optimization-report.md` | 本地视觉/体验证据 | `91/100`，明确未生产部署 |
+| 文档                                                                                                                         | 角色              | 当前解释                                            |
+| ---------------------------------------------------------------------------------------------------------------------------- | ----------------- | --------------------------------------------------- |
+| 本文                                                                                                                         | 当前实施审计      | “现在做到哪里”的入口                                |
+| [`KENOS_REFACTOR.md`](./KENOS_REFACTOR.md)                                                                                   | 计划导航          | 目标、边界、文档地图                                |
+| [`../roadmap/KENOS_REFACTOR_PLAN.md`](../roadmap/KENOS_REFACTOR_PLAN.md)                                                     | 阶段设计          | 出口定义，不代表线性完成度                          |
+| [`../roadmap/KENOS_REFACTOR_EXECUTION_STATE.md`](../roadmap/KENOS_REFACTOR_EXECUTION_STATE.md)                               | 执行历史          | 保留 Phase 0 Cloud 和后续阶段追踪；顶部快照指向本文 |
+| [`../qa/kenos-current-production-baseline-live-revalidated.md`](../qa/kenos-current-production-baseline-live-revalidated.md) | 生产事实          | deploy/migration/flag/row count 的实时真源          |
+| `kenos-completion-inventory-2026-07-20.md`                                                                                   | 历史起点盘点      | 不代表当前最新状态                                  |
+| `kenos-production-wave1-apply-report.md`                                                                                     | 历史停止报告      | 已被后续 live baseline 的 migration tip 证据取代    |
+| `kenos-production-wave1-final-approval-packet.md`                                                                            | apply 前审批包    | 不能替代 apply 后生产证据                           |
+| `kenos-uiux-compounding-optimization-report.md`                                                                              | 本地视觉/体验证据 | `91/100`，明确未生产部署                            |
 
 ## 11. 何时才可以宣布“重构完成”
 

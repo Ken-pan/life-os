@@ -1,0 +1,25 @@
+{
+  "runId": "ios-flowa-rerun-2026-07-21T05-12-49-585Z",
+  "generatedAt": "2026-07-21T05:13:52.493Z",
+  "flowA": {
+    "status": "FAIL",
+    "taskId": "ios-uia-mru76cnf",
+    "expected": "UI Mut -49-585Z",
+    "actualDbTitle": "UI Seed -49-585Z",
+    "uiOk": false,
+    "verifyOk": true,
+    "uidRedacted": "c283…c42e",
+    "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c"
+  },
+  "flowB": {
+    "status": "PASS",
+    "sessionId": "2569404f-5600-43dd-90bf-2536741cfe47",
+    "exercise": "c_fly",
+    "completedSet": 1,
+    "persistedNextSet": 2,
+    "coldReopen": true,
+    "uiBeacon": "10.20.202.6 - \"GET /__health?kenos_flow_b_ui=%7B%22status%22%3A%22ok%22%2C%22before%22%3A%221%22%2C%22after%22%3A%222%22%2C%22method%22%3A%22ui_set1%22%7D HTTP/1.1\" 200 -"
+  },
+  "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
+  "networkScope": "LAN-DEPENDENT"
+}

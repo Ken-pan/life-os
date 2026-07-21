@@ -1,0 +1,14 @@
+{
+  "runId": "flowa-rpc-2026-07-21T05-15-36-788Z",
+  "flowA": {
+    "status": "FAIL",
+    "taskId": "ios-rpc-mru79xqc",
+    "expected": "RPC Mut 6-788Z",
+    "actualDbTitle": "RPC Seed 6-788Z",
+    "uiOk": false,
+    "verifyOk": false,
+    "method": "editor_open + Save click + hosted title RPC user JWT",
+    "uidRedacted": "c283…c42e"
+  },
+  "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c"
+}

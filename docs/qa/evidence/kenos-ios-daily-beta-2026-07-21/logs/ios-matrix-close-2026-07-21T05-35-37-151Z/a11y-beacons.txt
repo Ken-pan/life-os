@@ -1,0 +1,2 @@
+10.20.202.6 - "GET /__health?kenos_a11y=%7B%22theme%22%3A%22unknown%22%2C%22prefersDark%22%3Atrue%2C%22reduceMotion%22%3Afalse%2C%22iosNativeShell%22%3A%22true%22%2C%22tabbarHidden%22%3A%220px%22%2C%22targets%22%3A%5B%5D%2C%22labeledNav%22%3A%5B%5D%2C%22targets44%22%3A0%2C%22targetsTotal%22%3A0%7D HTTP/1.1" 200 -
+10.20.202.6 - "GET /__health?kenos_a11y=%7B%22iosNativeShell%22%3A%22true%22%2C%22reduceMotion%22%3Afalse%2C%22prefersDark%22%3Atrue%2C%22safeTop%22%3A%220px%22%2C%22targets%22%3A%5B%5D%2C%22targets44%22%3A0%7D HTTP/1.1" 200 -

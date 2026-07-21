@@ -1,0 +1,15 @@
+10.20.202.6 - "GET /__health HTTP/1.1" 200 -
+10.20.202.6 - "GET /assistant?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /_app/version.json HTTP/1.1" 200 -
+10.20.202.6 - "GET /__health HTTP/1.1" 200 -
+10.20.202.6 - "GET /spaces?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /_app/version.json HTTP/1.1" 200 -
+10.20.202.6 - "GET /__health HTTP/1.1" 200 -
+10.20.202.6 - "GET /__health HTTP/1.1" 200 -
+10.20.202.6 - "GET /__ios_auth_bootstrap.html?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /__ios_auth_bootstrap.html?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /settings?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /_app/version.json HTTP/1.1" 200 -

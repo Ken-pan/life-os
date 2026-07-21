@@ -79,7 +79,14 @@ APP="$DERIVED/Build/Products/Debug-iphoneos/KenosIOS.app"
 echo "==> CFBundleVersion=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist" 2>/dev/null || echo unknown)"
 
 echo "==> Installing $APP"
+set +e
 xcrun devicectl device install app --device "$DEVICE" "$APP"
+INSTALL_EC=$?
+set -e
+if [[ "$INSTALL_EC" -ne 0 ]]; then
+  echo "ERROR: install failed ec=$INSTALL_EC (check provisioning / device UDID in Team profile)" >&2
+  exit "$INSTALL_EC"
+fi
 
 echo "==> Launching $BUNDLE_ID (unlock phone if needed)"
 set +e
@@ -90,4 +97,5 @@ LAUNCH_EC=$?
 set -e
 
 echo "INSTALL_OK origin=$ORIGIN sha=$SHA build=$BUILD_NUM launch_ec=$LAUNCH_EC"
+# Launch may fail if Locked — install already succeeded
 exit 0

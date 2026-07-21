@@ -63,7 +63,48 @@ struct KenosRootView: View {
         .onOpenURL { url in
             model.open(urlString: url.absoluteString)
         }
+        #if os(iOS)
+        .onReceive(NotificationCenter.default.publisher(for: .kenosOpenDomainContinuity)) { note in
+            if let url = note.object as? URL {
+                model.continuityURL = url
+                model.showSpaceSwitcher = false
+            }
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { model.continuityURL != nil },
+            set: { if !$0 { model.dismissContinuity() } }
+        )) {
+            NavigationStack {
+                Group {
+                    if let url = model.continuityURL {
+                        KenosWebSurfaceView(url: url, stayInApp: true)
+                            .ignoresSafeArea(edges: .bottom)
+                    } else {
+                        Color.clear
+                    }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Done") { model.dismissContinuity() }
+                            .accessibilityIdentifier("kenos.continuity.done")
+                    }
+                }
+                .navigationTitle(continuityTitle)
+                .navigationBarTitleDisplayMode(.inline)
+            }
+        }
+        #endif
     }
+
+    #if os(iOS)
+    private var continuityTitle: String {
+        guard let url = model.continuityURL else { return "Continue" }
+        let port = url.port
+        if port == 5188 || (url.host ?? "").contains("planner") { return "Plan" }
+        if port == 5190 || (url.host ?? "").contains("fitness") { return "Training" }
+        return "Continue"
+    }
+    #endif
 
     #if os(iOS)
     private var iPhoneTabs: some View {

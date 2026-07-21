@@ -1,0 +1,2 @@
+10.20.202.6 - "GET /__health?kenos_layout=%7B%22safeTopEff%22%3A%220px%22%2C%22bottomPad%22%3A%2212px%22%2C%22tabbarH%22%3A%220px%22%2C%22vh%22%3A675%2C%22vw%22%3A402%2C%22dpr%22%3A3%2C%22shell%22%3A%22true%22%7D HTTP/1.1" 200 -
+10.20.202.6 - "GET /__health?kenos_layout=%7B%22safeTopEff%22%3A%220px%22%2C%22bottomPad%22%3A%2212px%22%2C%22tabbarH%22%3A%220px%22%2C%22vh%22%3A675%2C%22vw%22%3A402%2C%22dpr%22%3A3%2C%22shell%22%3A%22true%22%7D HTTP/1.1" 200 -

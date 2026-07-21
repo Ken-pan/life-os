@@ -1,0 +1,159 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project Kenos.xcodeproj -scheme KenosIOS -configuration Debug -destination platform=iOS,id=00008130-0008045E0843401C -derivedDataPath ./build-device-15pro -allowProvisioningUpdates DEVELOPMENT_TEAM=93NJ4CAU8B CODE_SIGN_STYLE=Automatic "KENOS_DAILY_BETA_ORIGIN=http://10.20.202.15:5219" CURRENT_PROJECT_VERSION=202607210427 MARKETING_VERSION=1.0.0 build
+
+Build settings from command line:
+    CODE_SIGN_STYLE = Automatic
+    CURRENT_PROJECT_VERSION = 202607210427
+    DEVELOPMENT_TEAM = 93NJ4CAU8B
+    KENOS_DAILY_BETA_ORIGIN = http://10.20.202.15:5219
+    MARKETING_VERSION = 1.0.0
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  KenosContracts: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosContracts
+  KenosHandoff: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosHandoff
+  KenosStore: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore
+  KenosNotifications: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosNotifications
+  KenosClient: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient
+  KenosActions: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions
+  KenosDesign: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosDesign
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (30 targets)
+    Target 'KenosIOS' in project 'Kenos'
+        ➜ Explicit dependency on target 'KenosWatch' in project 'Kenos'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosDesign' in project 'KenosDesign'
+        ➜ Explicit dependency on target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosHandoff' in project 'KenosHandoff'
+    Target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+    Target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+    Target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosDesign' in project 'KenosDesign'
+        ➜ Explicit dependency on target 'KenosDesign' in project 'KenosDesign'
+    Target 'KenosDesign' in project 'KenosDesign' (no dependencies)
+    Target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient_KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient_KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosClient_KenosClient' in project 'KenosClient' (no dependencies)
+    Target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosContracts' in project 'KenosContracts' (no dependencies)
+    Target 'KenosWatch' in project 'Kenos'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosHandoff' in project 'KenosHandoff'
+    Target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+    Target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+    Target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient_KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient_KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosClient_KenosClient' in project 'KenosClient' (no dependencies)
+    Target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosContracts' in project 'KenosContracts' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 740ba6091f09f2deef276bd1f88c540e
+Build description path: /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device-15pro/Build/Intermediates.noindex/XCBuildData/740ba6091f09f2deef276bd1f88c540e.xcbuilddata
+/Users/kenpan/「Projects」/life-os/clients/apple/Apps/Kenos.xcodeproj: error: No Accounts: Add a new account in Accounts settings. (in target 'KenosIOS' from project 'Kenos')
+/Users/kenpan/「Projects」/life-os/clients/apple/Apps/Kenos.xcodeproj: error: Provisioning profile "iOS Team Provisioning Profile: *" doesn't include the currently selected device "Ken’s iPhone 15 Pro 🤏🏻  🌊 🌲" (identifier 00008130-0008045E0843401C). (in target 'KenosIOS' from project 'Kenos')
+** BUILD FAILED **
+
+
+The following build commands failed:
+	Building project Kenos with scheme KenosIOS and configuration Debug
+(1 failure)

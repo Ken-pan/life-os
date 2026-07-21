@@ -1,7 +1,7 @@
 ---
 title: Kenos 重构执行状态
 owner: kenpan
-last_verified: 2026-07-20
+last_verified: 2026-07-21
 doc_role: execution-history-and-current-state
 status: controlled-production-canary-legacy-cutover-open
 ---
@@ -10,14 +10,14 @@ status: controlled-production-canary-legacy-cutover-open
 
 > 本文保留 Phase 0 Cloud 起点与后续阶段的执行历史；不是 Roadmap Now 或已发货真源。当前实施审计见 [`../architecture/kenos-implementation-status.md`](../architecture/kenos-implementation-status.md)，正式状态仍只更新 `LIFEOS_ROADMAP.md`、Migration Ledger 和 Shipped。
 
-## 当前快照（2026-07-20）
+## 当前快照（2026-07-21）
 
 - Formal baseline: `502d805c28b29d3d50c0efa2699ab717a301ac45`，审计时与 `origin/master` 同步。
 - Production migration tip: `20260720230000`。
 - Owner cohort: Plan create/title/due/schedule/project/complete/reopen/archive、MCP complete、Capture convert 已走 Kenos command/RPC；非 cohort、未覆盖字段和 sync upsert 仍有 legacy fallback。
 - AIOS / Portal: Approval/Capture canary 与 Portal `/today` owner-limited soft redirect 已有生产证据；Portal 未退役。
 - Apple / Phase 5: 多端代码、构建、device install/open 和本地 contextual behavior 已验证；App Group/APNs/分发、ProductionExecutor 与生产主动能力仍关闭。
-- Personal Daily Beta（2026-07-21）：**Mac Web READY**；**iOS NOT READY** on Ken’s 17 Pro — install/cold launch/LAN Continuity/lifecycle PASS，Auth session missing（Owner 登录阻塞）；network **LAN-DEPENDENT**；证据 `docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`。Phase 4 仍 `EXIT_OPEN`。
+- Personal Daily Beta（2026-07-21）：**Mac Web READY**；**iOS READY (LAN-DEPENDENT)** on Ken’s 17 Pro — Flow A PASS (`ios-fa-mru7x8jx` user JWT) + Flow B PASS (Set1→Set2 no URL pin) + isolation PASS；Assistant=IN-APP WEB；Continuity=in-app WKWebView；Phase 4 仍 `EXIT_OPEN`。证据 `docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`。
 - Program verdict: `CONTROLLED_PRODUCTION_CANARY_WITH_OPEN_EXITS`。不能继续使用早期 `phase-2-partial-read-only-integration-no-production-cutover` 作为当前总状态。
 - Verification debt: Phase 2 正式基线 guard 失败；Phase 3 正式 HEAD 通过但当前本地 WIP 破坏既有合同；Phase 6 输出仍含过期 apply 状态；Phase 0 必须在干净 Git checkout 验证。详见 implementation status 第 6 节。
 

@@ -1,0 +1,42 @@
+{"ts":"2026-07-21T05:35:39.596Z","step":"flowA.reuse","status":"PASS","taskId":"ios-fa-mru7x8jx"}
+{"ts":"2026-07-21T05:35:40.263Z","step":"flowB.seed","sessionId":"2569404f-5600-43dd-90bf-2536741cfe47","exercise":"c_fly"}
+{"ts":"2026-07-21T05:35:50.902Z","step":"wait.unlock","i":1}
+{"ts":"2026-07-21T05:36:05.199Z","step":"wait.unlock","i":2}
+{"ts":"2026-07-21T05:36:19.456Z","step":"wait.unlock","i":3}
+{"ts":"2026-07-21T05:36:33.763Z","step":"wait.unlock","i":4}
+{"ts":"2026-07-21T05:36:48.187Z","step":"wait.unlock","i":5}
+{"ts":"2026-07-21T05:37:02.504Z","step":"wait.unlock","i":6}
+{"ts":"2026-07-21T05:37:16.760Z","step":"wait.unlock","i":7}
+{"ts":"2026-07-21T05:37:31.055Z","step":"wait.unlock","i":8}
+{"ts":"2026-07-21T05:37:45.339Z","step":"wait.unlock","i":9}
+{"ts":"2026-07-21T05:37:59.625Z","step":"wait.unlock","i":10}
+{"ts":"2026-07-21T05:38:13.935Z","step":"wait.unlock","i":11}
+{"ts":"2026-07-21T05:38:28.223Z","step":"wait.unlock","i":12}
+{"ts":"2026-07-21T05:38:42.549Z","step":"wait.unlock","i":13}
+{"ts":"2026-07-21T05:38:56.838Z","step":"wait.unlock","i":14}
+{"ts":"2026-07-21T05:39:11.147Z","step":"wait.unlock","i":15}
+{"ts":"2026-07-21T05:39:25.429Z","step":"wait.unlock","i":16}
+{"ts":"2026-07-21T05:39:39.755Z","step":"wait.unlock","i":17}
+{"ts":"2026-07-21T05:39:54.050Z","step":"wait.unlock","i":18}
+{"ts":"2026-07-21T05:40:08.364Z","step":"wait.unlock","i":19}
+{"ts":"2026-07-21T05:40:22.652Z","step":"wait.unlock","i":20}
+{"ts":"2026-07-21T05:40:36.956Z","step":"wait.unlock","i":21}
+{"ts":"2026-07-21T05:40:51.246Z","step":"wait.unlock","i":22}
+{"ts":"2026-07-21T05:41:05.555Z","step":"wait.unlock","i":23}
+{"ts":"2026-07-21T05:41:14.250Z","step":"launch.ok","i":24,"url":"http://10.20.202.15:5190/__ios_b_clear.html"}
+{"ts":"2026-07-21T05:41:29.253Z","step":"flowB.beacons","n":4,"last":"10.20.202.6 - \"GET /__health?kenos_flow_b_ui=%7B%22status%22%3A%22ok%22%2C%22before%22%3A%221%22%2C%22after%22%3A%222%22%2C%22method%22%3A%22ui_set1_no_url_pin%22%7D HTTP/1.1\" 200 -"}
+{"ts":"2026-07-21T05:41:29.964Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1&openContinue=1&kenosResume=eyJ2ZXJzaW9uIjoxLCJ1c2VySWQiOiJjMjgzMTUz"}
+{"ts":"2026-07-21T05:41:32.738Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5190/day/chest/focus?kenosEx=c_fly"}
+{"ts":"2026-07-21T05:41:41.002Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:41:42.470Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1&openContinue=1&kenosResume=eyJ2ZXJzaW9uIjoxLCJ1c2VySWQiOiJjMjgzMTUz"}
+{"ts":"2026-07-21T05:41:44.784Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5190/day/chest/focus?kenosEx=c_fly"}
+{"ts":"2026-07-21T05:41:52.791Z","step":"flowB.done","status":"PASS","sessionId":"2569404f-5600-43dd-90bf-2536741cfe47","exercise":"c_fly","completedSet":1,"persistedNextSet":2,"continueDescriptor":"Set 2","coldReopen":true,"continueNoUrlPin":true,"method":"UI Complete Set 1; Continuity Set 2; reopen WITHOUT kenosSet URL pin","uiBeacon":"10.20.202.6 - \"GET /__health?kenos_flow_b_ui=%7B%22status%22%3A%22ok%22%2C%22before%22%3A%221%22%2C%22after%22%3A%222%22%2C%22method%22%3A%22ui_set1_no_url_pin%22%7D HTTP/1.1\" 200 -"}
+{"ts":"2026-07-21T05:41:53.043Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:41:54.886Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/assistant?iosNativeShell=1"}
+{"ts":"2026-07-21T05:41:56.732Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/spaces?iosNativeShell=1"}
+{"ts":"2026-07-21T05:41:58.579Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/inbox?iosNativeShell=1"}
+{"ts":"2026-07-21T05:42:00.976Z","step":"isolation.done","isolation":"FAIL","isolationNote":"Invalid login credentials"}
+{"ts":"2026-07-21T05:42:03.266Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:42:08.645Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:42:11.150Z","step":"offline.done","offline":"PASS"}
+{"ts":"2026-07-21T05:42:11.383Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/__ios_a11y.html"}

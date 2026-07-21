@@ -1,0 +1,13 @@
+{
+  "generatedAt": "2026-07-21T03:48:00Z",
+  "auth": "PASS",
+  "email": "334452284ken@gmail.com",
+  "method": "admin_generate_link+verify -> WKWebView localStorage inject (LAN one-shot)",
+  "verifyBeacon": "GET /__health?kenos_auth_verify=334452284ken%40gmail.com from phone 10.20.202.6",
+  "evidence": [
+    "logs/auth-verify-beacon.txt",
+    "logs/auth-inject-traffic-proof.txt"
+  ],
+  "secretsScrubbed": true,
+  "bootstrapArtifactsRemoved": true
+}

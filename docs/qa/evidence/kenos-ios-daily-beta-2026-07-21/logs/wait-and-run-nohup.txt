@@ -1,0 +1,4 @@
+2026-07-21T04:29:08Z wait start max_min=25 device=8097F071-CAB6-5AF0-8258-BCD985E9D79E
+2026-07-21T04:29:08Z Ken’s 17 Pro 🤏🏻  🌊 🌲          Kens-17-Pro-.coredevice.local           8097F071-CAB6-5AF0-8258-BCD985E9D79E   unavailable          iPhone 17 Pro (iPhone18,1)     
+2026-07-21T04:31:33Z wait start max_min=120 device=8097F071-CAB6-5AF0-8258-BCD985E9D79E pid=86307
+2026-07-21T04:31:33Z poll=1 state=iPhone 17 Pro (iPhone18,1)

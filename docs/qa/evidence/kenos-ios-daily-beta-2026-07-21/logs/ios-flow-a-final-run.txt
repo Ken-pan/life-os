@@ -1,0 +1,23 @@
+{"ts":"2026-07-21T05:19:11.870Z","step":"seed","TASK_ID":"ios-fa-mru7ehfc","SEED":"FA Seed 9-094Z","MUT":"FA Mut 9-094Z"}
+{"ts":"2026-07-21T05:20:47.119Z","step":"launch","i":7,"url":"http://10.20.202.15:5188/__kenos_fa_d328d9f541.html"}
+{"ts":"2026-07-21T05:20:52.364Z","step":"launch","i":1,"url":"http://10.20.202.15:5188/upcoming?kenosTask=ios-fa-mru7ehfc&kenosDetail=1"}
+{"ts":"2026-07-21T05:20:56.593Z","step":"launch","i":1,"url":"http://10.20.202.15:5188/__kenos_fa_mut_37f87c20e9.html"}
+{"ts":"2026-07-21T05:21:04.595Z","step":"beacons","n":0}
+{"ts":"2026-07-21T05:21:04.821Z","step":"launch","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:21:06.295Z","step":"launch","i":1,"url":"http://10.20.202.15:5219/__kenos_fa_v_247d2a79d0.html"}
+{"ts":"2026-07-21T05:21:11.053Z","step":"flowA.done","status":"FAIL","taskId":"ios-fa-mru7ehfc","uidRedacted":"c283…c42e","buildSha":"3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c","expected":"FA Mut 9-094Z","actualDbTitle":"FA Seed 9-094Z","editorOpenEvidence":false,"uiOk":false,"verifyOk":false,"method":"Open TaskEditor on entity (#task-title); persist via USER JWT PATCH (not service_role). Hosted title writer disabled in Daily Beta build; Svelte draft ignores synthetic input."}
+{
+  "runId": "flowa-final-2026-07-21T05-19-09-094Z",
+  "flowA": {
+    "status": "FAIL",
+    "taskId": "ios-fa-mru7ehfc",
+    "uidRedacted": "c283…c42e",
+    "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
+    "expected": "FA Mut 9-094Z",
+    "actualDbTitle": "FA Seed 9-094Z",
+    "editorOpenEvidence": false,
+    "uiOk": false,
+    "verifyOk": false,
+    "method": "Open TaskEditor on entity (#task-title); persist via USER JWT PATCH (not service_role). Hosted title writer disabled in Daily Beta build; Svelte draft ignores synthetic input."
+  }
+}

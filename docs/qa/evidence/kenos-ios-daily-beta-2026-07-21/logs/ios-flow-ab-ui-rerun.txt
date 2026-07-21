@@ -1,0 +1,41 @@
+{"ts":"2026-07-21T05:12:52.529Z","step":"seed","TASK_ID":"ios-uia-mru76cnf","SEED":"UI Seed -49-585Z","MUT":"UI Mut -49-585Z"}
+{"ts":"2026-07-21T05:13:04.654Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5188/__ios_a_boot.html"}
+{"ts":"2026-07-21T05:13:16.659Z","step":"flowA.beacons","n":1,"last":"10.20.202.6 - \"GET /__health?kenos_flow_a_ui=%7B%22status%22%3A%22mismatch%22%2C%22title%22%3A%22UI%20Seed%20-49-585Z%22%2C%22taskId%22%3A%22ios-uia-mru76cnf%22%2C%22method%22%3A%22ui_save%22%2C%22http%22%3A200%7D HTTP/1"}
+{"ts":"2026-07-21T05:13:17.357Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:13:19.135Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/__ios_a_verify.html"}
+{"ts":"2026-07-21T05:13:23.142Z","step":"flowA.done","status":"FAIL","taskId":"ios-uia-mru76cnf","expected":"UI Mut -49-585Z","actualDbTitle":"UI Seed -49-585Z","uiOk":false,"verifyOk":true,"uidRedacted":"c283…c42e","buildSha":"3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c"}
+{"ts":"2026-07-21T05:13:23.895Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5190/__ios_b_clear.html"}
+{"ts":"2026-07-21T05:13:37.898Z","step":"flowB.beacons","n":3,"last":"10.20.202.6 - \"GET /__health?kenos_flow_b_ui=%7B%22status%22%3A%22ok%22%2C%22before%22%3A%221%22%2C%22after%22%3A%222%22%2C%22method%22%3A%22ui_set1%22%7D HTTP/1.1\" 200 -"}
+{"ts":"2026-07-21T05:13:38.731Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1&openContinue=1&kenosResume=eyJ2ZXJzaW9uIjoxLCJ1c2VySWQiOi"}
+{"ts":"2026-07-21T05:13:41.487Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5190/day/chest/focus?kenosEx=c_fly&kenosSet=2"}
+{"ts":"2026-07-21T05:13:45.241Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:13:46.748Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1&openContinue=1&kenosResume=eyJ2ZXJzaW9uIjoxLCJ1c2VySWQiOi"}
+{"ts":"2026-07-21T05:13:49.491Z","step":"launch.ok","i":1,"url":"http://10.20.202.15:5190/day/chest/focus?kenosEx=c_fly&kenosSet=2"}
+{"ts":"2026-07-21T05:13:52.492Z","step":"flowB.done","status":"PASS","sessionId":"2569404f-5600-43dd-90bf-2536741cfe47","exercise":"c_fly","completedSet":1,"persistedNextSet":2,"coldReopen":true,"uiBeacon":"10.20.202.6 - \"GET /__health?kenos_flow_b_ui=%7B%22status%22%3A%22ok%22%2C%22before%22%3A%221%22%2C%22after%22%3A%222%22%2C%22method%22%3A%22ui_set1%22%7D HTTP/1.1\" 200 -"}
+
+=== RERUN REPORT ===
+{
+  "runId": "ios-flowa-rerun-2026-07-21T05-12-49-585Z",
+  "generatedAt": "2026-07-21T05:13:52.493Z",
+  "flowA": {
+    "status": "FAIL",
+    "taskId": "ios-uia-mru76cnf",
+    "expected": "UI Mut -49-585Z",
+    "actualDbTitle": "UI Seed -49-585Z",
+    "uiOk": false,
+    "verifyOk": true,
+    "uidRedacted": "c283…c42e",
+    "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c"
+  },
+  "flowB": {
+    "status": "PASS",
+    "sessionId": "2569404f-5600-43dd-90bf-2536741cfe47",
+    "exercise": "c_fly",
+    "completedSet": 1,
+    "persistedNextSet": 2,
+    "coldReopen": true,
+    "uiBeacon": "10.20.202.6 - \"GET /__health?kenos_flow_b_ui=%7B%22status%22%3A%22ok%22%2C%22before%22%3A%221%22%2C%22after%22%3A%222%22%2C%22method%22%3A%22ui_set1%22%7D HTTP/1.1\" 200 -"
+  },
+  "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
+  "networkScope": "LAN-DEPENDENT"
+}

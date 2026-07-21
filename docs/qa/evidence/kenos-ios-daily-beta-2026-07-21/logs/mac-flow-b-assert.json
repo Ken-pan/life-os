@@ -1,0 +1,9 @@
+{
+  "nextSet": "2",
+  "done": "1",
+  "ctaSet": "2",
+  "progressText": "1/3 组 · 还剩 2 组",
+  "ctaText": "完成第 2 组",
+  "pass": true,
+  "semantics": "data-done=completed sets; data-next-set=current set to perform (kenosSet target)"
+}

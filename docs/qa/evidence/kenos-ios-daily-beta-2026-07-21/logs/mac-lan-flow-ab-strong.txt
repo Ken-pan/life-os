@@ -1,0 +1,22 @@
+{
+  "run": "mac-strong-mru5b84s",
+  "release": "3e49cf6c7da7",
+  "TASK_ID": "ios-mac-mru5baaf",
+  "TITLE0": "Strong Seed mru5b84s",
+  "TITLE1": "Strong MUT mru5b84s",
+  "dbTitle": "Strong MUT mru5b84s",
+  "flowA": {
+    "status": "PASS_MAC_STACK",
+    "continueSeesMut": true,
+    "method": "JWT mutate + Continue store + fresh context (same as device harness; not XCUITest)"
+  },
+  "flowB": {
+    "status": "PASS_MAC_STACK",
+    "progress": "1/3 组 · 还剩 2 组",
+    "set2Ui": true,
+    "urlAfter": "http://127.0.0.1:5190/day/chest/focus",
+    "pendingSetPresent": false,
+    "note": "URL may strip kenosSet after successful pin (by design)"
+  },
+  "note": "Does not replace 17 Pro device gate; strengthens Mac Daily Beta stack after rebuild."
+}

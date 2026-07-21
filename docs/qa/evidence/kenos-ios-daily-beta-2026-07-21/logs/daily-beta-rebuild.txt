@@ -1,0 +1,1602 @@
+→ Building Personal Daily Beta @ 3e49cf6c7da7
+  building aios-os (local daily beta origins)…
+
+> aios-os@0.1.0 build
+> vite build
+
+vite v8.1.3 building ssr environment for production...
+[2Ktransforming...9:16:59 PM [vite-plugin-svelte] src/routes/+page.svelte:937:2 Unused CSS selector ".shadow-section p"
+https://svelte.dev/e/css_unused_selector
+935:     font-size: var(--text-sm);
+936:   }
+937:   .shadow-section p {
+                        ^
+938:     margin: 0;
+939:     font-variant-numeric: tabular-nums;
+9:16:59 PM [vite-plugin-svelte] src/routes/+page.svelte:941:2 Unused CSS selector ".shadow-section details"
+https://svelte.dev/e/css_unused_selector
+939:     font-variant-numeric: tabular-nums;
+940:   }
+941:   .shadow-section details {
+                              ^
+942:     margin-top: 12px;
+943:   }
+9:16:59 PM [vite-plugin-svelte] src/routes/+page.svelte:944:2 Unused CSS selector ".shadow-section summary"
+https://svelte.dev/e/css_unused_selector
+942:     margin-top: 12px;
+943:   }
+944:   .shadow-section summary {
+                              ^
+945:     cursor: pointer;
+946:     color: var(--t2);
+9:16:59 PM [vite-plugin-svelte] src/routes/+page.svelte:948:2 Unused CSS selector ".shadow-section ul"
+https://svelte.dev/e/css_unused_selector
+946:     color: var(--t2);
+947:   }
+948:   .shadow-section ul {
+                         ^
+949:     margin: 10px 0 0;
+950:     padding-left: 18px;
+9:16:59 PM [vite-plugin-svelte] src/routes/work/+page.svelte:298:2 Unused CSS selector ".work-badge"
+https://svelte.dev/e/css_unused_selector
+296:     align-items: center;
+297:   }
+298:   .work-badge {
+                  ^
+299:     border: 1px solid var(--border);
+300:     border-radius: 999px;
+9:16:59 PM [vite-plugin-svelte] src/routes/work/+page.svelte:304:2 Unused CSS selector ".work-badge--warn"
+https://svelte.dev/e/css_unused_selector
+302:     font-size: 0.75rem;
+303:   }
+304:   .work-badge--warn {
+                        ^
+305:     border-color: var(--warning);
+306:   }
+9:16:59 PM [vite-plugin-svelte] src/routes/uiux-states/+page.svelte:125:2 Unused CSS selector ".quiet"
+https://svelte.dev/e/css_unused_selector
+123:     max-width: 36rem;
+124:   }
+125:   .quiet {
+             ^
+126:     appearance: none;
+127:     display: none;
+9:16:59 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/overlay/LifeOsSheet.svelte:91:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+89: {#if open}
+90:   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+91:   <div
+          ^
+92:     class={['sheet-bg', bgClass].filter(Boolean).join(' ')}
+93:     data-placement={placement === 'auto' ? 'auto' : undefined}
+9:16:59 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/overlay/LifeOsDialog.svelte:95:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+93: {#if open}
+94:   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+95:   <div class="modal-bg" class:show={shown} onclick={onBackdrop}>
+            ^
+96:     <div
+97:       bind:this={dialogEl}
+✓ 449 modules transformed.
+[lightningcss minify] 'highlight' is not recognized as a valid pseudo-element. Did you mean ':highlight' (pseudo-class) or is this a typo?
+1209 |    }
+1210 |    /* 逐句跟读高亮(CSS Custom Highlight API,不改 DOM) */
+1211 |    .svelte-1uqoiy7::highlight(tts) {
+     |                               ^
+1212 |      background-color: color-mix(in srgb, var(--accent, #4a9eff) 26%, transparent);
+1213 |      color: var(--t1);
+rendering chunks...
+vite v8.1.3 building client environment for production...
+[2Ktransforming...9:17:00 PM [vite-plugin-svelte] src/routes/uiux-states/+page.svelte:125:2 Unused CSS selector ".quiet"
+https://svelte.dev/e/css_unused_selector
+123:     max-width: 36rem;
+124:   }
+125:   .quiet {
+             ^
+126:     appearance: none;
+127:     display: none;
+9:17:00 PM [vite-plugin-svelte] src/routes/work/+page.svelte:298:2 Unused CSS selector ".work-badge"
+https://svelte.dev/e/css_unused_selector
+296:     align-items: center;
+297:   }
+298:   .work-badge {
+                  ^
+299:     border: 1px solid var(--border);
+300:     border-radius: 999px;
+9:17:00 PM [vite-plugin-svelte] src/routes/work/+page.svelte:304:2 Unused CSS selector ".work-badge--warn"
+https://svelte.dev/e/css_unused_selector
+302:     font-size: 0.75rem;
+303:   }
+304:   .work-badge--warn {
+                        ^
+305:     border-color: var(--warning);
+306:   }
+9:17:00 PM [vite-plugin-svelte] src/routes/+page.svelte:937:2 Unused CSS selector ".shadow-section p"
+https://svelte.dev/e/css_unused_selector
+935:     font-size: var(--text-sm);
+936:   }
+937:   .shadow-section p {
+                        ^
+938:     margin: 0;
+939:     font-variant-numeric: tabular-nums;
+9:17:00 PM [vite-plugin-svelte] src/routes/+page.svelte:941:2 Unused CSS selector ".shadow-section details"
+https://svelte.dev/e/css_unused_selector
+939:     font-variant-numeric: tabular-nums;
+940:   }
+941:   .shadow-section details {
+                              ^
+942:     margin-top: 12px;
+943:   }
+9:17:00 PM [vite-plugin-svelte] src/routes/+page.svelte:944:2 Unused CSS selector ".shadow-section summary"
+https://svelte.dev/e/css_unused_selector
+942:     margin-top: 12px;
+943:   }
+944:   .shadow-section summary {
+                              ^
+945:     cursor: pointer;
+946:     color: var(--t2);
+9:17:00 PM [vite-plugin-svelte] src/routes/+page.svelte:948:2 Unused CSS selector ".shadow-section ul"
+https://svelte.dev/e/css_unused_selector
+946:     color: var(--t2);
+947:   }
+948:   .shadow-section ul {
+                         ^
+949:     margin: 10px 0 0;
+950:     padding-left: 18px;
+9:17:00 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/overlay/LifeOsSheet.svelte:91:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+89: {#if open}
+90:   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+91:   <div
+          ^
+92:     class={['sheet-bg', bgClass].filter(Boolean).join(' ')}
+93:     data-placement={placement === 'auto' ? 'auto' : undefined}
+9:17:00 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/overlay/LifeOsDialog.svelte:95:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+93: {#if open}
+94:   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+95:   <div class="modal-bg" class:show={shown} onclick={onBackdrop}>
+            ^
+96:     <div
+97:       bind:this={dialogEl}
+✓ 529 modules transformed.
+[lightningcss minify] 'highlight' is not recognized as a valid pseudo-element. Did you mean ':highlight' (pseudo-class) or is this a typo?
+1209 |    }
+1210 |    /* 逐句跟读高亮(CSS Custom Highlight API,不改 DOM) */
+1211 |    .svelte-1uqoiy7::highlight(tts) {
+     |                               ^
+1212 |      background-color: color-mix(in srgb, var(--accent, #4a9eff) 26%, transparent);
+1213 |      color: var(--t1);
+rendering chunks...
+computing gzip size...
+.svelte-kit/output/client/_app/version.json                                                   0.02 kB │ gzip:   0.04 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Size3-Regular.CTq5MqoE.woff             4.42 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Size4-Regular.Dl5lxZxV.woff2            4.92 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Size2-Regular.Dy4dx90m.woff2            5.20 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Size1-Regular.mCD8mA8B.woff2            5.46 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Size4-Regular.BF-4gkZK.woff             5.98 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Size2-Regular.oD1tc_U0.woff             6.18 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Size1-Regular.C195tn64.woff             6.49 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Caligraphic-Regular.Di6jR-x-.woff2      6.90 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Caligraphic-Bold.Dq_IR9rO.woff2         6.91 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Size3-Regular.DgpXs0kz.ttf              7.58 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Caligraphic-Regular.CTRA-rTL.woff       7.65 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Caligraphic-Bold.BEiXGLvX.woff          7.71 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Script-Regular.D3wIWfF6.woff2           9.64 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_SansSerif-Regular.DDBCnlJ7.woff2       10.34 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Size4-Regular.DWFBv043.ttf             10.36 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Script-Regular.D5yQViql.woff           10.58 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Fraktur-Regular.CTYiF6lA.woff2         11.31 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Fraktur-Bold.CL6g_b3V.woff2            11.34 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Size2-Regular.B7gKUWhC.ttf             11.50 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_SansSerif-Italic.C3H0VqGB.woff2        12.02 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_SansSerif-Bold.D1sUS0GD.woff2          12.21 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Size1-Regular.Dbsnue_I.ttf             12.22 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_SansSerif-Regular.CS6fqUqJ.woff        12.31 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Caligraphic-Regular.wX97UBjC.ttf       12.34 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Caligraphic-Bold.ATXxdsX0.ttf          12.36 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Fraktur-Regular.Dxdc4cR9.woff          13.20 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Fraktur-Bold.BsDP51OF.woff             13.29 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Typewriter-Regular.CO6r4hn1.woff2      13.56 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_SansSerif-Italic.DN2j7dab.woff         14.11 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_SansSerif-Bold.DbIhKOiC.woff           14.40 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Typewriter-Regular.C0xS9mPB.woff       16.02 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Math-BoldItalic.CZnvNsCZ.woff2         16.40 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Math-Italic.t53AETM-.woff2             16.44 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Script-Regular.C5JkGWo-.ttf            16.64 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Main-BoldItalic.DxDJ3AOS.woff2         16.78 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Main-Italic.NWA7e6Wa.woff2             16.98 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Math-BoldItalic.iY-2wyZ7.woff          18.66 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Math-Italic.DA0__PXp.woff              18.74 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Main-BoldItalic.SpSLRI95.woff          19.41 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_SansSerif-Regular.BNo7hRIc.ttf         19.43 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Fraktur-Regular.CB_wures.ttf           19.57 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Fraktur-Bold.BdnERNNW.ttf              19.58 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Main-Italic.BMLOBm91.woff              19.67 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_SansSerif-Italic.YYjJ1zSn.ttf          22.36 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_SansSerif-Bold.CFMepnvq.ttf            24.50 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Main-Bold.Cx986IdX.woff2               25.32 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Main-Regular.B22Nviop.woff2            26.27 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Typewriter-Regular.D3Ib7_Hf.ttf        27.55 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_AMS-Regular.BQhdFMY1.woff2             28.07 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Main-Bold.Jm3AIy58.woff                29.91 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Main-Regular.Dr94JaBh.woff             30.77 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Math-BoldItalic.B3XSjfu4.ttf           31.19 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Math-Italic.flOr_0UB.ttf               31.30 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Main-BoldItalic.DzxPMmG6.ttf           32.96 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_AMS-Regular.DMm9YOAa.woff              33.51 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Main-Italic.3WenGoN9.ttf               33.58 kB
+.svelte-kit/output/client/.vite/manifest.json                                                35.85 kB │ gzip:   3.64 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Main-Bold.waoOVXN0.ttf                 51.33 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_Main-Regular.ypZvNtVU.ttf              53.58 kB
+.svelte-kit/output/client/_app/immutable/assets/KaTeX_AMS-Regular.DRggAlZN.ttf               63.63 kB
+.svelte-kit/output/client/_app/immutable/assets/pdf.worker.min.DEtVeC4l.mjs               1,255.06 kB
+.svelte-kit/output/client/_app/immutable/assets/3.C1PAv76l.css                                0.13 kB │ gzip:   0.12 kB
+.svelte-kit/output/client/_app/immutable/assets/5.pQvuL-0_.css                                0.23 kB │ gzip:   0.17 kB
+.svelte-kit/output/client/_app/immutable/assets/8.DCNuK4Ph.css                                0.26 kB │ gzip:   0.18 kB
+.svelte-kit/output/client/_app/immutable/assets/DomainLaunch.D6elR2D2.css                     0.32 kB │ gzip:   0.22 kB
+.svelte-kit/output/client/_app/immutable/assets/1.CU4H_PFR.css                                0.48 kB │ gzip:   0.28 kB
+.svelte-kit/output/client/_app/immutable/assets/19.C_dbr5rY.css                               1.08 kB │ gzip:   0.45 kB
+.svelte-kit/output/client/_app/immutable/assets/10.hL6Au7ED.css                               1.15 kB │ gzip:   0.46 kB
+.svelte-kit/output/client/_app/immutable/assets/ReadSourceState.B5WOkYPw.css                  1.38 kB │ gzip:   0.48 kB
+.svelte-kit/output/client/_app/immutable/assets/9.DcBIUxgI.css                                1.57 kB │ gzip:   0.53 kB
+.svelte-kit/output/client/_app/immutable/assets/21.n3WabbF1.css                               1.75 kB │ gzip:   0.64 kB
+.svelte-kit/output/client/_app/immutable/assets/12.CyBWs9yL.css                               2.05 kB │ gzip:   0.77 kB
+.svelte-kit/output/client/_app/immutable/assets/FocusSessionShell.CDZU-V5C.css                2.18 kB │ gzip:   0.80 kB
+.svelte-kit/output/client/_app/immutable/assets/22.brokHEeD.css                               2.26 kB │ gzip:   0.75 kB
+.svelte-kit/output/client/_app/immutable/assets/11.CzEGau_N.css                               5.86 kB │ gzip:   1.39 kB
+.svelte-kit/output/client/_app/immutable/assets/20.Bh3Mpt0t.css                               8.53 kB │ gzip:   1.85 kB
+.svelte-kit/output/client/_app/immutable/assets/2.xyD-ln7r.css                               12.30 kB │ gzip:   2.55 kB
+.svelte-kit/output/client/_app/immutable/assets/6.WxnNyF2T.css                               35.90 kB │ gzip:   6.47 kB
+.svelte-kit/output/client/_app/immutable/assets/0.B91A2wkN.css                              177.15 kB │ gzip:  34.73 kB
+.svelte-kit/output/client/_app/immutable/chunks/asaEc5hx.js                                   0.02 kB │ gzip:   0.04 kB
+.svelte-kit/output/client/_app/immutable/chunks/DnMG8DRs.js                                   0.03 kB │ gzip:   0.05 kB
+.svelte-kit/output/client/_app/immutable/chunks/xihTtKlq.js                                   0.06 kB │ gzip:   0.08 kB
+.svelte-kit/output/client/_app/immutable/entry/start.uk2WDb10.js                              0.08 kB │ gzip:   0.09 kB
+.svelte-kit/output/client/_app/immutable/chunks/Dy38s_bl2.js                                  0.10 kB │ gzip:   0.11 kB
+.svelte-kit/output/client/_app/immutable/chunks/Crox84Z6.js                                   0.10 kB │ gzip:   0.11 kB
+.svelte-kit/output/client/_app/immutable/nodes/16.B2-mDWvF.js                                 0.25 kB │ gzip:   0.18 kB
+.svelte-kit/output/client/_app/immutable/nodes/13.Ju1fceZK.js                                 0.26 kB │ gzip:   0.18 kB
+.svelte-kit/output/client/_app/immutable/nodes/14.DmfH2E1D.js                                 0.26 kB │ gzip:   0.18 kB
+.svelte-kit/output/client/_app/immutable/nodes/17.G82ctBoc.js                                 0.27 kB │ gzip:   0.21 kB
+.svelte-kit/output/client/_app/immutable/nodes/15.DViTpsuS.js                                 0.27 kB │ gzip:   0.20 kB
+.svelte-kit/output/client/_app/immutable/nodes/18.C7ElppgM.js                                 0.28 kB │ gzip:   0.22 kB
+.svelte-kit/output/client/_app/immutable/chunks/DKhqzWX8.js                                   0.33 kB │ gzip:   0.18 kB
+.svelte-kit/output/client/_app/immutable/chunks/0n0xCt9k.js                                   0.59 kB │ gzip:   0.38 kB
+.svelte-kit/output/client/_app/immutable/nodes/7.B8azaGfd.js                                  0.72 kB │ gzip:   0.47 kB
+.svelte-kit/output/client/_app/immutable/chunks/D9_VFIh6.js                                   0.72 kB │ gzip:   0.52 kB
+.svelte-kit/output/client/_app/immutable/chunks/DavzEHvo.js                                   0.77 kB │ gzip:   0.39 kB
+.svelte-kit/output/client/_app/immutable/nodes/3.BjpZaEaZ.js                                  0.97 kB │ gzip:   0.60 kB
+.svelte-kit/output/client/_app/immutable/chunks/BUcG-xWO.js                                   1.15 kB │ gzip:   0.67 kB
+.svelte-kit/output/client/_app/immutable/nodes/1.DAnx2ZnG.js                                  1.18 kB │ gzip:   0.76 kB
+.svelte-kit/output/client/_app/immutable/chunks/DYl5dUZ5.js                                   1.27 kB │ gzip:   0.70 kB
+.svelte-kit/output/client/_app/immutable/nodes/19.BBueALAq.js                                 1.33 kB │ gzip:   0.79 kB
+.svelte-kit/output/client/_app/immutable/chunks/BPWIWEtG.js                                   1.35 kB │ gzip:   0.75 kB
+.svelte-kit/output/client/_app/immutable/chunks/Bjy-W4x2.js                                   1.36 kB │ gzip:   0.65 kB
+.svelte-kit/output/client/_app/immutable/chunks/zVwroAJz.js                                   1.67 kB │ gzip:   0.71 kB
+.svelte-kit/output/client/_app/immutable/chunks/BlhmKDjl.js                                   1.79 kB │ gzip:   1.06 kB
+.svelte-kit/output/client/_app/immutable/chunks/LCsZpieL.js                                   1.89 kB │ gzip:   0.98 kB
+.svelte-kit/output/client/_app/immutable/nodes/8.W-zhgUqt.js                                  2.03 kB │ gzip:   1.10 kB
+.svelte-kit/output/client/_app/immutable/chunks/CQDLoRht2.js                                  2.07 kB │ gzip:   0.50 kB
+.svelte-kit/output/client/_app/immutable/chunks/eZLAj9OY.js                                   2.18 kB │ gzip:   0.82 kB
+.svelte-kit/output/client/_app/immutable/nodes/9.v_9feK_L.js                                  2.24 kB │ gzip:   1.04 kB
+.svelte-kit/output/client/_app/immutable/chunks/DlDf6ZU2.js                                   2.90 kB │ gzip:   1.44 kB
+.svelte-kit/output/client/_app/immutable/nodes/4.CG62lZSu.js                                  3.43 kB │ gzip:   1.81 kB
+.svelte-kit/output/client/_app/immutable/nodes/12.BKjCtLaG.js                                 3.58 kB │ gzip:   1.42 kB
+.svelte-kit/output/client/_app/immutable/chunks/C3yRKDwx.js                                   4.03 kB │ gzip:   1.69 kB
+.svelte-kit/output/client/_app/immutable/nodes/21.D4TUPneu.js                                 4.20 kB │ gzip:   1.78 kB
+.svelte-kit/output/client/_app/immutable/chunks/D30LR7_m.js                                   4.22 kB │ gzip:   1.88 kB
+.svelte-kit/output/client/_app/immutable/chunks/gNs4Adlk2.js                                  5.41 kB │ gzip:   2.74 kB
+.svelte-kit/output/client/_app/immutable/chunks/y3M9Z2SN.js                                   6.03 kB │ gzip:   2.46 kB
+.svelte-kit/output/client/_app/immutable/entry/app.DW3rin6e.js                                6.86 kB │ gzip:   2.42 kB
+.svelte-kit/output/client/_app/immutable/nodes/20.D2kwNKRp.js                                 8.25 kB │ gzip:   2.80 kB
+.svelte-kit/output/client/_app/immutable/chunks/Bkl2qw58.js                                   8.86 kB │ gzip:   4.15 kB
+.svelte-kit/output/client/_app/immutable/nodes/22.DHO7yykO.js                                 9.03 kB │ gzip:   3.45 kB
+.svelte-kit/output/client/_app/immutable/nodes/5.CeN1vDb7.js                                 10.09 kB │ gzip:   4.26 kB
+.svelte-kit/output/client/_app/immutable/nodes/10.DRwGQYYI.js                                11.83 kB │ gzip:   4.60 kB
+.svelte-kit/output/client/_app/immutable/nodes/2.xdIfFPyR.js                                 15.02 kB │ gzip:   5.04 kB
+.svelte-kit/output/client/_app/immutable/chunks/6lZXIabr.js                                  17.95 kB │ gzip:   5.72 kB
+.svelte-kit/output/client/_app/immutable/nodes/11.CfxktbSd.js                                23.88 kB │ gzip:   6.98 kB
+.svelte-kit/output/client/_app/immutable/chunks/ek2PMuPT.js                                  29.38 kB │ gzip:  11.37 kB
+.svelte-kit/output/client/_app/immutable/chunks/CNBND_k8.js                                  56.60 kB │ gzip:  21.42 kB
+.svelte-kit/output/client/_app/immutable/nodes/0.CerbbylY.js                                 60.76 kB │ gzip:  18.63 kB
+.svelte-kit/output/client/_app/immutable/chunks/CdIJjFr-.js                                  79.07 kB │ gzip:  22.06 kB
+.svelte-kit/output/client/_app/immutable/nodes/6.BPctpe6n.js                                324.69 kB │ gzip: 100.53 kB
+.svelte-kit/output/client/_app/immutable/chunks/DRxk5rPm.js                                 401.99 kB │ gzip: 131.14 kB
+.svelte-kit/output/client/_app/immutable/chunks/RbSQBnVF2.js                                425.25 kB │ gzip: 126.74 kB
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/lib/memory.svelte.js is dynamically imported by src/lib/cloud.svelte.js but also statically imported by src/lib/chat.svelte.js, src/lib/cloud.svelte.js, src/lib/tools.js, src/routes/+layout.svelte, src/routes/settings/+page.svelte, dynamic import will not move module into another chunk.
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/lib/native.js is dynamically imported by src/lib/tools.js but also statically imported by src/lib/agents.svelte.js, src/lib/chat.svelte.js, src/lib/permissions.svelte.js, src/lib/proactive.svelte.js, src/lib/tools.js, ..., dynamic import will not move module into another chunk.
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/lib/mcp.js is dynamically imported by src/lib/cloud.svelte.js, src/routes/+layout.svelte but also statically imported by src/lib/tools.js, src/routes/settings/+page.svelte, dynamic import will not move module into another chunk.
+
+✓ built in 473ms
+vite v8.1.3 building client environment for production...
+[2Ktransforming...✓ 3 modules transformed.
+rendering chunks...
+computing gzip size...
+.svelte-kit/output/client/service-worker.js  8.44 kB │ gzip: 2.28 kB
+
+✓ built in 6ms
+computing gzip size...
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Size3-Regular.CTq5MqoE.woff             4.42 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Size4-Regular.Dl5lxZxV.woff2            4.92 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Size2-Regular.Dy4dx90m.woff2            5.20 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Size1-Regular.mCD8mA8B.woff2            5.46 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Size4-Regular.BF-4gkZK.woff             5.98 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Size2-Regular.oD1tc_U0.woff             6.18 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Size1-Regular.C195tn64.woff             6.49 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Caligraphic-Regular.Di6jR-x-.woff2      6.90 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Caligraphic-Bold.Dq_IR9rO.woff2         6.91 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Size3-Regular.DgpXs0kz.ttf              7.58 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Caligraphic-Regular.CTRA-rTL.woff       7.65 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Caligraphic-Bold.BEiXGLvX.woff          7.71 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Script-Regular.D3wIWfF6.woff2           9.64 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_SansSerif-Regular.DDBCnlJ7.woff2       10.34 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Size4-Regular.DWFBv043.ttf             10.36 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Script-Regular.D5yQViql.woff           10.58 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Fraktur-Regular.CTYiF6lA.woff2         11.31 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Fraktur-Bold.CL6g_b3V.woff2            11.34 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Size2-Regular.B7gKUWhC.ttf             11.50 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_SansSerif-Italic.C3H0VqGB.woff2        12.02 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_SansSerif-Bold.D1sUS0GD.woff2          12.21 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Size1-Regular.Dbsnue_I.ttf             12.22 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_SansSerif-Regular.CS6fqUqJ.woff        12.31 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Caligraphic-Regular.wX97UBjC.ttf       12.34 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Caligraphic-Bold.ATXxdsX0.ttf          12.36 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Fraktur-Regular.Dxdc4cR9.woff          13.20 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Fraktur-Bold.BsDP51OF.woff             13.29 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Typewriter-Regular.CO6r4hn1.woff2      13.56 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_SansSerif-Italic.DN2j7dab.woff         14.11 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_SansSerif-Bold.DbIhKOiC.woff           14.40 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Typewriter-Regular.C0xS9mPB.woff       16.02 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Math-BoldItalic.CZnvNsCZ.woff2         16.40 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Math-Italic.t53AETM-.woff2             16.44 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Script-Regular.C5JkGWo-.ttf            16.64 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Main-BoldItalic.DxDJ3AOS.woff2         16.78 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Main-Italic.NWA7e6Wa.woff2             16.98 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Math-BoldItalic.iY-2wyZ7.woff          18.66 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Math-Italic.DA0__PXp.woff              18.74 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Main-BoldItalic.SpSLRI95.woff          19.41 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_SansSerif-Regular.BNo7hRIc.ttf         19.43 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Fraktur-Regular.CB_wures.ttf           19.57 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Fraktur-Bold.BdnERNNW.ttf              19.58 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Main-Italic.BMLOBm91.woff              19.67 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_SansSerif-Italic.YYjJ1zSn.ttf          22.36 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_SansSerif-Bold.CFMepnvq.ttf            24.50 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Main-Bold.Cx986IdX.woff2               25.32 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Main-Regular.B22Nviop.woff2            26.27 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Typewriter-Regular.D3Ib7_Hf.ttf        27.55 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_AMS-Regular.BQhdFMY1.woff2             28.07 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Main-Bold.Jm3AIy58.woff                29.91 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Main-Regular.Dr94JaBh.woff             30.77 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Math-BoldItalic.B3XSjfu4.ttf           31.19 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Math-Italic.flOr_0UB.ttf               31.30 kB
+.svelte-kit/output/server/.vite/manifest.json                                                32.86 kB │ gzip:  3.26 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Main-BoldItalic.DzxPMmG6.ttf           32.96 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_AMS-Regular.DMm9YOAa.woff              33.51 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Main-Italic.3WenGoN9.ttf               33.58 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Main-Bold.waoOVXN0.ttf                 51.33 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_Main-Regular.ypZvNtVU.ttf              53.58 kB
+.svelte-kit/output/server/_app/immutable/assets/KaTeX_AMS-Regular.DRggAlZN.ttf               63.63 kB
+.svelte-kit/output/server/_app/immutable/assets/pdf.worker.min.DEtVeC4l.mjs               1,255.06 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.C1PAv76l.css                            0.13 kB │ gzip:  0.12 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.pQvuL-0_.css                            0.23 kB │ gzip:  0.17 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DCNuK4Ph.css                            0.26 kB │ gzip:  0.18 kB
+.svelte-kit/output/server/_app/immutable/assets/DomainLaunch.D6elR2D2.css                     0.32 kB │ gzip:  0.22 kB
+.svelte-kit/output/server/_app/immutable/assets/_error.CU4H_PFR.css                           0.48 kB │ gzip:  0.28 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.C_dbr5rY.css                            1.08 kB │ gzip:  0.45 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.hL6Au7ED.css                            1.15 kB │ gzip:  0.46 kB
+.svelte-kit/output/server/_app/immutable/assets/ReadSourceState.B5WOkYPw.css                  1.38 kB │ gzip:  0.48 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DcBIUxgI.css                            1.57 kB │ gzip:  0.53 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.n3WabbF1.css                            1.75 kB │ gzip:  0.64 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.CyBWs9yL.css                            2.05 kB │ gzip:  0.77 kB
+.svelte-kit/output/server/_app/immutable/assets/FocusSessionShell.CDZU-V5C.css                2.18 kB │ gzip:  0.80 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.brokHEeD.css                            2.26 kB │ gzip:  0.75 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.CzEGau_N.css                            5.86 kB │ gzip:  1.39 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.BJGIUbi5.css                            8.49 kB │ gzip:  1.84 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.xyD-ln7r.css                           12.30 kB │ gzip:  2.55 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.JQMH75Zo.css                           35.76 kB │ gzip:  6.44 kB
+.svelte-kit/output/server/_app/immutable/assets/_layout.BQYOZ-cK.css                        175.66 kB │ gzip: 34.59 kB
+.svelte-kit/output/server/chunks/navigation.js                                                0.03 kB │ gzip:  0.05 kB
+.svelte-kit/output/server/entries/pages/_layout.js                                            0.11 kB │ gzip:  0.10 kB
+.svelte-kit/output/server/chunks/spaceSwitcher.svelte.js                                      0.11 kB │ gzip:  0.09 kB
+.svelte-kit/output/server/chunks/mcp2.js                                                      0.18 kB │ gzip:  0.13 kB
+.svelte-kit/output/server/env.js                                                              0.22 kB │ gzip:  0.14 kB
+.svelte-kit/output/server/chunks/env.js                                                       0.28 kB │ gzip:  0.17 kB
+.svelte-kit/output/server/entries/pages/uiux-direction/_id_/_page.js                          0.29 kB │ gzip:  0.22 kB
+.svelte-kit/output/server/entries/pages/spaces/music/_page.svelte.js                          0.36 kB │ gzip:  0.24 kB
+.svelte-kit/output/server/entries/pages/spaces/home/_page.svelte.js                           0.36 kB │ gzip:  0.23 kB
+.svelte-kit/output/server/entries/pages/spaces/knowledge/_page.svelte.js                      0.37 kB │ gzip:  0.24 kB
+.svelte-kit/output/server/entries/pages/spaces/plan/_page.svelte.js                           0.37 kB │ gzip:  0.26 kB
+.svelte-kit/output/server/entries/pages/spaces/money/_page.svelte.js                          0.38 kB │ gzip:  0.25 kB
+.svelte-kit/output/server/entries/pages/spaces/training/_page.svelte.js                       0.39 kB │ gzip:  0.27 kB
+.svelte-kit/output/server/internal.js                                                         0.40 kB │ gzip:  0.19 kB
+.svelte-kit/output/server/chunks/agents.svelte.js                                             0.66 kB │ gzip:  0.50 kB
+.svelte-kit/output/server/chunks/captureWriters.core.js                                       0.68 kB │ gzip:  0.44 kB
+.svelte-kit/output/server/entries/pages/chat/_page.svelte.js                                  0.70 kB │ gzip:  0.43 kB
+.svelte-kit/output/server/entries/pages/_...missing_/_page.svelte.js                          0.90 kB │ gzip:  0.55 kB
+.svelte-kit/output/server/entries/pages/spaces/work/_page.svelte.js                           1.01 kB │ gzip:  0.59 kB
+.svelte-kit/output/server/chunks/DomainLaunch.js                                              1.14 kB │ gzip:  0.68 kB
+.svelte-kit/output/server/chunks/Icon.js                                                      1.24 kB │ gzip:  0.57 kB
+.svelte-kit/output/server/entries/pages/_error.svelte.js                                      1.32 kB │ gzip:  0.72 kB
+.svelte-kit/output/server/chunks/internal.js                                                  1.41 kB │ gzip:  0.58 kB
+.svelte-kit/output/server/chunks/assistantScopeLabel.core.js                                  1.81 kB │ gzip:  0.71 kB
+.svelte-kit/output/server/chunks/ReadSourceState.js                                           2.23 kB │ gzip:  1.03 kB
+.svelte-kit/output/server/entries/pages/focus/_page.svelte.js                                 2.46 kB │ gzip:  1.00 kB
+.svelte-kit/output/server/entries/pages/history/_page.svelte.js                               2.48 kB │ gzip:  0.94 kB
+.svelte-kit/output/server/chunks/state.js                                                     2.48 kB │ gzip:  1.05 kB
+.svelte-kit/output/server/chunks/focusStore.svelte.js                                         2.78 kB │ gzip:  1.19 kB
+.svelte-kit/output/server/entries/pages/uiux-direction/_id_/_page.svelte.js                   4.13 kB │ gzip:  1.58 kB
+.svelte-kit/output/server/entries/pages/activity/_page.svelte.js                              4.13 kB │ gzip:  1.72 kB
+.svelte-kit/output/server/entries/pages/spaces/_page.svelte.js                                4.18 kB │ gzip:  1.21 kB
+.svelte-kit/output/server/chunks/mcp.js                                                       4.42 kB │ gzip:  1.89 kB
+.svelte-kit/output/server/chunks/index-server.js                                              4.57 kB │ gzip:  1.69 kB
+.svelte-kit/output/server/entries/pages/uiux-states/_page.svelte.js                           4.76 kB │ gzip:  1.79 kB
+.svelte-kit/output/server/chunks/workStore.svelte.js                                          5.25 kB │ gzip:  1.79 kB
+.svelte-kit/output/server/chunks/FocusSessionShell.js                                         6.33 kB │ gzip:  1.91 kB
+.svelte-kit/output/server/chunks/spaceSwitcher2.svelte.js                                     6.62 kB │ gzip:  2.23 kB
+.svelte-kit/output/server/entries/pages/approvals/_page.svelte.js                             8.92 kB │ gzip:  2.83 kB
+.svelte-kit/output/server/chunks/shared.js                                                   10.62 kB │ gzip:  3.39 kB
+.svelte-kit/output/server/entries/pages/inbox/_page.svelte.js                                10.96 kB │ gzip:  3.07 kB
+.svelte-kit/output/server/entries/pages/work/_page.svelte.js                                 11.18 kB │ gzip:  2.94 kB
+.svelte-kit/output/server/chunks/exports.js                                                  13.07 kB │ gzip:  4.18 kB
+.svelte-kit/output/server/entries/pages/_page.svelte.js                                      18.07 kB │ gzip:  4.33 kB
+.svelte-kit/output/server/entries/pages/settings/_page.svelte.js                             20.80 kB │ gzip:  4.11 kB
+.svelte-kit/output/server/chunks/internal2.js                                                24.94 kB │ gzip:  7.78 kB
+.svelte-kit/output/server/chunks/utils.js                                                    31.90 kB │ gzip:  9.38 kB
+.svelte-kit/output/server/chunks/client.js                                                   51.38 kB │ gzip: 15.06 kB
+.svelte-kit/output/server/remote-entry.js                                                    54.51 kB │ gzip: 12.02 kB
+.svelte-kit/output/server/entries/pages/assistant/_page.svelte.js                            55.95 kB │ gzip: 14.41 kB
+.svelte-kit/output/server/chunks/controlCenter.svelte.js                                     60.97 kB │ gzip: 14.37 kB
+.svelte-kit/output/server/entries/pages/_layout.svelte.js                                    78.35 kB │ gzip: 16.77 kB
+.svelte-kit/output/server/index.js                                                          123.91 kB │ gzip: 31.42 kB
+.svelte-kit/output/server/chunks/server.js                                                  133.37 kB │ gzip: 34.75 kB
+.svelte-kit/output/server/chunks/chat.svelte.js                                             148.05 kB │ gzip: 49.48 kB
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/lib/memory.svelte.js is dynamically imported by src/lib/cloud.svelte.js but also statically imported by src/lib/chat.svelte.js, src/lib/cloud.svelte.js, src/lib/tools.js, src/routes/+layout.svelte, src/routes/settings/+page.svelte, dynamic import will not move module into another chunk.
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/lib/native.js is dynamically imported by src/lib/tools.js but also statically imported by src/lib/agents.svelte.js, src/lib/chat.svelte.js, src/lib/permissions.svelte.js, src/lib/proactive.svelte.js, src/lib/tools.js, ..., dynamic import will not move module into another chunk.
+
+✓ built in 1.78s
+
+Run npm run preview to preview your production build locally.
+
+> Using @sveltejs/adapter-static
+  Wrote site to "build"
+  ✔ done
+  building planner-os…
+
+> planner-os@0.1.0 build
+> vite build && node scripts/patch-sw-cache-hash.mjs
+
+vite v8.1.3 building ssr environment for production...
+[2Ktransforming...9:17:01 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:181:4 noninteractive element cannot have nonnegative tabIndex value
+https://svelte.dev/e/a11y_no_noninteractive_tabindex
+179: 
+180:   <div class="bar-chart__plot" bind:clientWidth={wrapW}>
+181:     <svg
+             ^
+182:       width={chartW}
+183:       height={chartH}
+9:17:01 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:181:4 Non-interactive element `<svg>` should not be assigned mouse or keyboard event listeners
+https://svelte.dev/e/a11y_no_noninteractive_element_interactions
+179: 
+180:   <div class="bar-chart__plot" bind:clientWidth={wrapW}>
+181:     <svg
+             ^
+182:       width={chartW}
+183:       height={chartH}
+9:17:01 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:223:12 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+221:               </text>
+222:             {/if}
+223:             <rect
+                   ^
+224:               class="bar-chart__hit"
+225:               x={0}
+9:17:01 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:305:12 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+303:               {/if}
+304:             {/if}
+305:             <rect
+                   ^
+306:               class="bar-chart__hit"
+307:               x={padL + j * bandW}
+9:17:01 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/DonutChart.svelte:100:8 `<path>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+ 98:         {@const lifted = hover === arc.index}
+ 99:         {@const dim = hover != null && !lifted}
+100:         <path
+               ^
+101:           class="donut-chart__slice"
+102:           class:donut-chart__slice--dim={dim}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/LineChart.svelte:205:4 noninteractive element cannot have nonnegative tabIndex value
+https://svelte.dev/e/a11y_no_noninteractive_tabindex
+203: 
+204:   <div class="line-chart__plot" bind:clientWidth={wrapW}>
+205:     <svg
+             ^
+206:       width={chartW}
+207:       height={height}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/LineChart.svelte:205:4 Non-interactive element `<svg>` should not be assigned mouse or keyboard event listeners
+https://svelte.dev/e/a11y_no_noninteractive_element_interactions
+203: 
+204:   <div class="line-chart__plot" bind:clientWidth={wrapW}>
+205:     <svg
+             ^
+206:       width={chartW}
+207:       height={height}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/TimelineChart.svelte:229:8 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+227:           {/if}
+228:         {/each}
+229:         <rect
+               ^
+230:           class="timeline-chart__hit"
+231:           x={0}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/MindMap.svelte:268:0 Elements with the 'tree' interactive role must have a tabindex value
+https://svelte.dev/e/a11y_interactive_supports_focus
+266: </script>
+267: 
+268: <div
+         ^
+269:   class="mindmap"
+270:   class:mindmap--grabbing={panning}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/MindMap.svelte:278:2 `<svg>` with a pointerdown, pointermove, pointerup or pointercancel handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+276:   onpointerleave={() => (hover = null)}
+277: >
+278:   <svg
+           ^
+279:     bind:this={svgEl}
+280:     width={vw}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/Treemap.svelte:163:8 noninteractive element cannot have nonnegative tabIndex value
+https://svelte.dev/e/a11y_no_noninteractive_tabindex
+161:       {@const dim = hover != null && !lifted}
+162:       {#if r.w > 1 && r.h > 1}
+163:         <g
+               ^
+164:           class="treemap__tile"
+165:           class:treemap__tile--dim={dim}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/Heatmap.svelte:93:8 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+91:         {@const t = intensity(v)}
+92:         {@const active = hover && hover.r === r && hover.c === c}
+93:         <rect
+              ^
+94:           class="heatmap__cell"
+95:           class:heatmap__cell--empty={t === 0}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/feedback/ReportBugButton.svelte:303:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+301: {#if isOpen}
+302:   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+303:   <div
+           ^
+304:     use:portal
+305:     class="bug-report-backdrop"
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/form/SliderField.svelte:46:4 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+44: <div class="field">
+45:   {#if label}
+46:     <label class="slider-label">
+                ^
+47:       <span>{label}</span>
+48:       <span class="slider-value">{format ? format(safe) : safe}</span>
+✓ 467 modules transformed.
+rendering chunks...
+vite v8.1.3 building client environment for production...
+[2Ktransforming...9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/LineChart.svelte:205:4 noninteractive element cannot have nonnegative tabIndex value
+https://svelte.dev/e/a11y_no_noninteractive_tabindex
+203: 
+204:   <div class="line-chart__plot" bind:clientWidth={wrapW}>
+205:     <svg
+             ^
+206:       width={chartW}
+207:       height={height}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/LineChart.svelte:205:4 Non-interactive element `<svg>` should not be assigned mouse or keyboard event listeners
+https://svelte.dev/e/a11y_no_noninteractive_element_interactions
+203: 
+204:   <div class="line-chart__plot" bind:clientWidth={wrapW}>
+205:     <svg
+             ^
+206:       width={chartW}
+207:       height={height}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/MindMap.svelte:268:0 Elements with the 'tree' interactive role must have a tabindex value
+https://svelte.dev/e/a11y_interactive_supports_focus
+266: </script>
+267: 
+268: <div
+         ^
+269:   class="mindmap"
+270:   class:mindmap--grabbing={panning}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/MindMap.svelte:278:2 `<svg>` with a pointerdown, pointermove, pointerup or pointercancel handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+276:   onpointerleave={() => (hover = null)}
+277: >
+278:   <svg
+           ^
+279:     bind:this={svgEl}
+280:     width={vw}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/DonutChart.svelte:100:8 `<path>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+ 98:         {@const lifted = hover === arc.index}
+ 99:         {@const dim = hover != null && !lifted}
+100:         <path
+               ^
+101:           class="donut-chart__slice"
+102:           class:donut-chart__slice--dim={dim}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/TimelineChart.svelte:229:8 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+227:           {/if}
+228:         {/each}
+229:         <rect
+               ^
+230:           class="timeline-chart__hit"
+231:           x={0}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:181:4 noninteractive element cannot have nonnegative tabIndex value
+https://svelte.dev/e/a11y_no_noninteractive_tabindex
+179: 
+180:   <div class="bar-chart__plot" bind:clientWidth={wrapW}>
+181:     <svg
+             ^
+182:       width={chartW}
+183:       height={chartH}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:181:4 Non-interactive element `<svg>` should not be assigned mouse or keyboard event listeners
+https://svelte.dev/e/a11y_no_noninteractive_element_interactions
+179: 
+180:   <div class="bar-chart__plot" bind:clientWidth={wrapW}>
+181:     <svg
+             ^
+182:       width={chartW}
+183:       height={chartH}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:223:12 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+221:               </text>
+222:             {/if}
+223:             <rect
+                   ^
+224:               class="bar-chart__hit"
+225:               x={0}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:305:12 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+303:               {/if}
+304:             {/if}
+305:             <rect
+                   ^
+306:               class="bar-chart__hit"
+307:               x={padL + j * bandW}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/Treemap.svelte:163:8 noninteractive element cannot have nonnegative tabIndex value
+https://svelte.dev/e/a11y_no_noninteractive_tabindex
+161:       {@const dim = hover != null && !lifted}
+162:       {#if r.w > 1 && r.h > 1}
+163:         <g
+               ^
+164:           class="treemap__tile"
+165:           class:treemap__tile--dim={dim}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/Heatmap.svelte:93:8 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+91:         {@const t = intensity(v)}
+92:         {@const active = hover && hover.r === r && hover.c === c}
+93:         <rect
+              ^
+94:           class="heatmap__cell"
+95:           class:heatmap__cell--empty={t === 0}
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/feedback/ReportBugButton.svelte:303:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+301: {#if isOpen}
+302:   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+303:   <div
+           ^
+304:     use:portal
+305:     class="bug-report-backdrop"
+9:17:02 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/form/SliderField.svelte:46:4 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+44: <div class="field">
+45:   {#if label}
+46:     <label class="slider-label">
+                ^
+47:       <span>{label}</span>
+48:       <span class="slider-value">{format ? format(safe) : safe}</span>
+✓ 552 modules transformed.
+rendering chunks...
+computing gzip size...
+.svelte-kit/output/client/_app/version.json                                        0.02 kB │ gzip:  0.04 kB
+.svelte-kit/output/client/.vite/manifest.json                                     16.54 kB │ gzip:  2.08 kB
+.svelte-kit/output/client/_app/immutable/assets/6.DZimCCEP.css                     0.07 kB │ gzip:  0.09 kB
+.svelte-kit/output/client/_app/immutable/assets/taskUi.BBvplEG9.css                0.11 kB │ gzip:  0.11 kB
+.svelte-kit/output/client/_app/immutable/assets/15.Cs97vEz2.css                    0.13 kB │ gzip:  0.13 kB
+.svelte-kit/output/client/_app/immutable/assets/3.C1hSUDZ1.css                     0.14 kB │ gzip:  0.13 kB
+.svelte-kit/output/client/_app/immutable/assets/5.CMn61_E8.css                     0.16 kB │ gzip:  0.13 kB
+.svelte-kit/output/client/_app/immutable/assets/13.BlRW0Jp2.css                    0.33 kB │ gzip:  0.20 kB
+.svelte-kit/output/client/_app/immutable/assets/7.64CzjtnO.css                     0.68 kB │ gzip:  0.30 kB
+.svelte-kit/output/client/_app/immutable/assets/QuickAddBar.CDjBNDa3.css           1.53 kB │ gzip:  0.55 kB
+.svelte-kit/output/client/_app/immutable/assets/AttachmentUploader.B2Gy2osP.css    3.04 kB │ gzip:  0.91 kB
+.svelte-kit/output/client/_app/immutable/assets/9.CxVySMAB.css                     3.29 kB │ gzip:  0.88 kB
+.svelte-kit/output/client/_app/immutable/assets/AppBar.9NVwfbtA.css                3.85 kB │ gzip:  1.18 kB
+.svelte-kit/output/client/_app/immutable/assets/10.chI5Jy6T.css                    6.09 kB │ gzip:  1.28 kB
+.svelte-kit/output/client/_app/immutable/assets/14.BD46jJjn.css                    7.41 kB │ gzip:  1.67 kB
+.svelte-kit/output/client/_app/immutable/assets/charts.CpZck1Ae.css                7.78 kB │ gzip:  1.86 kB
+.svelte-kit/output/client/_app/immutable/assets/0.ajc8Sp1-.css                   181.79 kB │ gzip: 30.55 kB
+.svelte-kit/output/client/_app/immutable/chunks/xihTtKlq.js                        0.06 kB │ gzip:  0.08 kB
+.svelte-kit/output/client/_app/immutable/entry/start.BHY_tVFU.js                   0.08 kB │ gzip:  0.09 kB
+.svelte-kit/output/client/_app/immutable/chunks/DK3Fl9T5.js                        0.15 kB │ gzip:  0.15 kB
+.svelte-kit/output/client/_app/immutable/chunks/D1ehKrQm.js                        0.33 kB │ gzip:  0.18 kB
+.svelte-kit/output/client/_app/immutable/nodes/11.CXPlrE9T.js                      0.35 kB │ gzip:  0.26 kB
+.svelte-kit/output/client/_app/immutable/nodes/1.C8b5apZa.js                       0.37 kB │ gzip:  0.26 kB
+.svelte-kit/output/client/_app/immutable/chunks/BuFlayix.js                        0.64 kB │ gzip:  0.38 kB
+.svelte-kit/output/client/_app/immutable/chunks/2XKYdJzt.js                        0.66 kB │ gzip:  0.40 kB
+.svelte-kit/output/client/_app/immutable/chunks/CS9bULWs.js                        0.68 kB │ gzip:  0.29 kB
+.svelte-kit/output/client/_app/immutable/chunks/DI__6bXD2.js                       0.71 kB │ gzip:  0.49 kB
+.svelte-kit/output/client/_app/immutable/chunks/BzRdZ08o.js                        0.90 kB │ gzip:  0.40 kB
+.svelte-kit/output/client/_app/immutable/chunks/CD2meR10.js                        1.13 kB │ gzip:  0.60 kB
+.svelte-kit/output/client/_app/immutable/nodes/8.KeNSWEAp.js                       1.17 kB │ gzip:  0.59 kB
+.svelte-kit/output/client/_app/immutable/chunks/D9yo_pwk.js                        1.26 kB │ gzip:  0.55 kB
+.svelte-kit/output/client/_app/immutable/chunks/iWIZio_R.js                        1.32 kB │ gzip:  0.88 kB
+.svelte-kit/output/client/_app/immutable/chunks/Bjy-W4x22.js                       1.36 kB │ gzip:  0.65 kB
+.svelte-kit/output/client/_app/immutable/chunks/CK61fncW.js                        1.43 kB │ gzip:  0.86 kB
+.svelte-kit/output/client/_app/immutable/chunks/0r1PdvhN2.js                       1.47 kB │ gzip:  0.72 kB
+.svelte-kit/output/client/_app/immutable/chunks/jiR6KpOy.js                        1.73 kB │ gzip:  0.90 kB
+.svelte-kit/output/client/_app/immutable/nodes/6.Msi6wXPV.js                       1.77 kB │ gzip:  0.82 kB
+.svelte-kit/output/client/_app/immutable/chunks/BzFZm3M1.js                        2.07 kB │ gzip:  1.14 kB
+.svelte-kit/output/client/_app/immutable/nodes/15.B33f1bQa.js                      2.22 kB │ gzip:  0.86 kB
+.svelte-kit/output/client/_app/immutable/chunks/DE_Wj-Vw.js                        2.66 kB │ gzip:  1.04 kB
+.svelte-kit/output/client/_app/immutable/nodes/3.BmmYaErT.js                       2.72 kB │ gzip:  1.30 kB
+.svelte-kit/output/client/_app/immutable/chunks/BeN2L3KB2.js                       2.73 kB │ gzip:  1.22 kB
+.svelte-kit/output/client/_app/immutable/chunks/C5wix4C8.js                        3.27 kB │ gzip:  1.19 kB
+.svelte-kit/output/client/_app/immutable/nodes/12.BWcbH_Rt.js                      3.27 kB │ gzip:  1.37 kB
+.svelte-kit/output/client/_app/immutable/chunks/CWv_X3FG.js                        3.44 kB │ gzip:  1.33 kB
+.svelte-kit/output/client/_app/immutable/chunks/X8eA2UcT.js                        3.50 kB │ gzip:  1.70 kB
+.svelte-kit/output/client/_app/immutable/nodes/5.CwIZSStz.js                       3.82 kB │ gzip:  1.59 kB
+.svelte-kit/output/client/_app/immutable/nodes/7.Dyh-0-4k.js                       5.36 kB │ gzip:  2.05 kB
+.svelte-kit/output/client/_app/immutable/entry/app.D5SLou6I.js                     6.26 kB │ gzip:  2.31 kB
+.svelte-kit/output/client/_app/immutable/nodes/9.E7maIJ1Y.js                       6.82 kB │ gzip:  2.91 kB
+.svelte-kit/output/client/_app/immutable/chunks/DJFUhZv8.js                        7.00 kB │ gzip:  2.85 kB
+.svelte-kit/output/client/_app/immutable/nodes/14.DlTBRbng.js                      9.37 kB │ gzip:  3.27 kB
+.svelte-kit/output/client/_app/immutable/chunks/CeHJGUdH.js                       10.95 kB │ gzip:  4.15 kB
+.svelte-kit/output/client/_app/immutable/chunks/B6ORjRfm.js                       13.31 kB │ gzip:  4.92 kB
+.svelte-kit/output/client/_app/immutable/nodes/10.xAjOMIIo.js                     13.44 kB │ gzip:  4.65 kB
+.svelte-kit/output/client/_app/immutable/chunks/Cecjb69v.js                       14.10 kB │ gzip:  5.56 kB
+.svelte-kit/output/client/_app/immutable/nodes/2.DaNzfrcN.js                      18.37 kB │ gzip:  5.75 kB
+.svelte-kit/output/client/_app/immutable/nodes/13.DInmw4cC.js                     18.91 kB │ gzip:  5.86 kB
+.svelte-kit/output/client/_app/immutable/nodes/4.sZQh_3Wu.js                      23.37 kB │ gzip:  7.89 kB
+.svelte-kit/output/client/_app/immutable/chunks/4zr8M2xe.js                       28.07 kB │ gzip: 10.89 kB
+.svelte-kit/output/client/_app/immutable/chunks/D9VA05UD2.js                      36.64 kB │ gzip: 12.69 kB
+.svelte-kit/output/client/_app/immutable/chunks/DXo1dgum.js                       37.69 kB │ gzip: 14.30 kB
+.svelte-kit/output/client/_app/immutable/chunks/CNI7fGQc.js                       56.89 kB │ gzip: 21.54 kB
+.svelte-kit/output/client/_app/immutable/chunks/wfiDpWZS.js                       71.82 kB │ gzip: 20.74 kB
+.svelte-kit/output/client/_app/immutable/nodes/0.DEhXkP3F.js                     136.37 kB │ gzip: 37.06 kB
+.svelte-kit/output/client/_app/immutable/chunks/Cq4cbNVk.js                      240.31 kB │ gzip: 64.30 kB
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/lib/sync.js is dynamically imported by src/lib/kenos/plannerSpaceAdapter.js but also statically imported by src/lib/auth.svelte.js, src/routes/+layout.svelte, src/routes/auth/+page.svelte, src/routes/settings/+page.svelte, dynamic import will not move module into another chunk.
+
+✓ built in 500ms
+computing gzip size...
+.svelte-kit/output/server/.vite/manifest.json                                     14.99 kB │ gzip:  1.82 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DZimCCEP.css                 0.07 kB │ gzip:  0.09 kB
+.svelte-kit/output/server/_app/immutable/assets/taskUi.BBvplEG9.css                0.11 kB │ gzip:  0.11 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.Cs97vEz2.css                 0.13 kB │ gzip:  0.13 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.C1hSUDZ1.css                 0.14 kB │ gzip:  0.13 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.CMn61_E8.css                 0.16 kB │ gzip:  0.13 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.BlRW0Jp2.css                 0.33 kB │ gzip:  0.20 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.64CzjtnO.css                 0.68 kB │ gzip:  0.30 kB
+.svelte-kit/output/server/_app/immutable/assets/QuickAddBar.CDjBNDa3.css           1.53 kB │ gzip:  0.55 kB
+.svelte-kit/output/server/_app/immutable/assets/AttachmentUploader.B2Gy2osP.css    3.04 kB │ gzip:  0.91 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.CxVySMAB.css                 3.29 kB │ gzip:  0.88 kB
+.svelte-kit/output/server/_app/immutable/assets/AppBar.9NVwfbtA.css                3.85 kB │ gzip:  1.18 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.chI5Jy6T.css                 6.09 kB │ gzip:  1.28 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DLI6u-lA.css                 7.39 kB │ gzip:  1.66 kB
+.svelte-kit/output/server/_app/immutable/assets/charts.fBUMF8Er.css                7.72 kB │ gzip:  1.85 kB
+.svelte-kit/output/server/_app/immutable/assets/_layout.FbUaGs3w.css             180.28 kB │ gzip: 30.41 kB
+.svelte-kit/output/server/chunks/aiClient.js                                       0.01 kB │ gzip:  0.03 kB
+.svelte-kit/output/server/chunks/sync2.js                                          0.06 kB │ gzip:  0.06 kB
+.svelte-kit/output/server/entries/pages/_layout.js                                 0.11 kB │ gzip:  0.10 kB
+.svelte-kit/output/server/chunks/pushSubscription.js                               0.12 kB │ gzip:  0.10 kB
+.svelte-kit/output/server/env.js                                                   0.22 kB │ gzip:  0.14 kB
+.svelte-kit/output/server/chunks/env.js                                            0.28 kB │ gzip:  0.17 kB
+.svelte-kit/output/server/internal.js                                              0.40 kB │ gzip:  0.19 kB
+.svelte-kit/output/server/entries/pages/schedule/_page.js                          0.42 kB │ gzip:  0.29 kB
+.svelte-kit/output/server/entries/fallbacks/error.svelte.js                        0.42 kB │ gzip:  0.26 kB
+.svelte-kit/output/server/chunks/pushSubscription2.js                              0.66 kB │ gzip:  0.34 kB
+.svelte-kit/output/server/chunks/taskCapture.js                                    0.67 kB │ gzip:  0.39 kB
+.svelte-kit/output/server/chunks/dateFormat.js                                     1.23 kB │ gzip:  0.44 kB
+.svelte-kit/output/server/chunks/internal2.js                                      1.26 kB │ gzip:  0.51 kB
+.svelte-kit/output/server/chunks/projectCategory.js                                1.42 kB │ gzip:  0.87 kB
+.svelte-kit/output/server/chunks/paperLinks.js                                     1.54 kB │ gzip:  0.66 kB
+.svelte-kit/output/server/chunks/prioritizer.js                                    1.67 kB │ gzip:  0.63 kB
+.svelte-kit/output/server/entries/pages/lists/_id_/_page.svelte.js                 1.69 kB │ gzip:  0.64 kB
+.svelte-kit/output/server/entries/pages/inbox/_page.svelte.js                      2.06 kB │ gzip:  0.80 kB
+.svelte-kit/output/server/entries/pages/auth/_page.svelte.js                       2.17 kB │ gzip:  0.82 kB
+.svelte-kit/output/server/chunks/PageShell.js                                      2.46 kB │ gzip:  1.22 kB
+.svelte-kit/output/server/chunks/projects.js                                       2.88 kB │ gzip:  0.95 kB
+.svelte-kit/output/server/chunks/taskMetaLine.js                                   3.09 kB │ gzip:  1.28 kB
+.svelte-kit/output/server/chunks/QuickAddBar.js                                    3.09 kB │ gzip:  1.13 kB
+.svelte-kit/output/server/chunks/taskUi.js                                         3.27 kB │ gzip:  1.26 kB
+.svelte-kit/output/server/entries/pages/upcoming/_page.svelte.js                   3.46 kB │ gzip:  0.93 kB
+.svelte-kit/output/server/chunks/RhythmSummaryCard.js                              4.62 kB │ gzip:  1.27 kB
+.svelte-kit/output/server/entries/pages/search/_page.svelte.js                     5.09 kB │ gzip:  1.85 kB
+.svelte-kit/output/server/entries/pages/completed/_page.svelte.js                  5.65 kB │ gzip:  1.81 kB
+.svelte-kit/output/server/chunks/AttachmentUploader.js                             5.93 kB │ gzip:  1.56 kB
+.svelte-kit/output/server/entries/pages/insights/_page.svelte.js                   7.39 kB │ gzip:  2.17 kB
+.svelte-kit/output/server/chunks/rhythm.js                                         7.75 kB │ gzip:  1.88 kB
+.svelte-kit/output/server/chunks/taskIndex.svelte.js                               7.95 kB │ gzip:  2.17 kB
+.svelte-kit/output/server/entries/pages/triage/_page.svelte.js                     8.65 kB │ gzip:  2.18 kB
+.svelte-kit/output/server/entries/pages/projects/_page.svelte.js                   9.58 kB │ gzip:  2.88 kB
+.svelte-kit/output/server/chunks/AppBar.js                                         9.89 kB │ gzip:  2.82 kB
+.svelte-kit/output/server/chunks/shared.js                                        10.62 kB │ gzip:  3.39 kB
+.svelte-kit/output/server/chunks/exports.js                                       11.39 kB │ gzip:  3.54 kB
+.svelte-kit/output/server/entries/pages/projects/_id_/_page.svelte.js             14.27 kB │ gzip:  3.33 kB
+.svelte-kit/output/server/chunks/TaskGroup.js                                     15.08 kB │ gzip:  3.78 kB
+.svelte-kit/output/server/entries/pages/_page.svelte.js                           19.56 kB │ gzip:  3.91 kB
+.svelte-kit/output/server/entries/pages/calendar/_page.svelte.js                  21.50 kB │ gzip:  4.87 kB
+.svelte-kit/output/server/chunks/plannerSpaceAdapter.js                           23.09 kB │ gzip:  7.16 kB
+.svelte-kit/output/server/entries/pages/settings/_page.svelte.js                  26.22 kB │ gzip:  5.69 kB
+.svelte-kit/output/server/chunks/internal.js                                      28.89 kB │ gzip:  8.97 kB
+.svelte-kit/output/server/chunks/utils.js                                         31.90 kB │ gzip:  9.38 kB
+.svelte-kit/output/server/chunks/state.js                                         52.85 kB │ gzip: 15.58 kB
+.svelte-kit/output/server/chunks/charts.js                                        53.25 kB │ gzip: 14.40 kB
+.svelte-kit/output/server/remote-entry.js                                         54.51 kB │ gzip: 12.02 kB
+.svelte-kit/output/server/entries/pages/_layout.svelte.js                         69.53 kB │ gzip: 15.37 kB
+.svelte-kit/output/server/chunks/sync.js                                          71.98 kB │ gzip: 19.38 kB
+.svelte-kit/output/server/chunks/repo.js                                         119.40 kB │ gzip: 37.18 kB
+.svelte-kit/output/server/index.js                                               123.91 kB │ gzip: 31.42 kB
+.svelte-kit/output/server/chunks/server.js                                       130.46 kB │ gzip: 33.92 kB
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/lib/kenos/planCreateTaskWriter.host.js is dynamically imported by src/lib/sync.js but also statically imported by src/lib/domain/tasks.js, dynamic import will not move module into another chunk.
+
+✓ built in 1.71s
+
+Run npm run preview to preview your production build locally.
+
+> Using @sveltejs/adapter-static
+  Wrote site to "build"
+  ✔ done
+  building fitness-os…
+
+> fitness-os@3.0.0 build
+> vite build
+
+vite v8.1.3 building ssr environment for production...
+[2Ktransforming...9:17:04 PM [vite-plugin-svelte] src/routes/discover/tools/+page.svelte:276:2 Unused CSS selector ".tool-result b"
+https://svelte.dev/e/css_unused_selector
+274:     color: var(--t2);
+275:   }
+276:   .tool-result b {
+                     ^
+277:     color: var(--t1);
+278:     font-family: var(--disp);
+9:17:04 PM [vite-plugin-svelte] src/lib/components/PlateToolPanel.svelte:306:2 Unused CSS selector ".ptp-focus-footer"
+https://svelte.dev/e/css_unused_selector
+304:     );
+305:   }
+306:   .ptp-focus-footer {
+                        ^
+307:     flex-shrink: 0;
+308:     padding-top: 8px;
+9:17:04 PM [vite-plugin-svelte] src/lib/components/PlateToolPanel.svelte:312:2 Unused CSS selector ".ptp-more"
+https://svelte.dev/e/css_unused_selector
+310:     background: var(--card);
+311:   }
+312:   .ptp-more {
+                ^
+313:     display: flex;
+314:     align-items: center;
+9:17:04 PM [vite-plugin-svelte] src/lib/components/PlateToolPanel.svelte:328:2 Unused CSS selector ".ptp-more:hover"
+https://svelte.dev/e/css_unused_selector
+326:     cursor: pointer;
+327:   }
+328:   .ptp-more:hover {
+                      ^
+329:     border-color: color-mix(in srgb, var(--accent) 35%, var(--border-l));
+330:     color: var(--accent);
+9:17:04 PM [vite-plugin-svelte] src/lib/components/WeightModal.svelte:228:2 Elements with the 'dialog' interactive role must have a tabindex value
+https://svelte.dev/e/a11y_interactive_supports_focus
+226:   role="presentation"
+227: >
+228:   <div class="modal wtm" role="dialog" aria-label={t('weight.aria')} aria-modal="true" onclick={onModalClick}>
+             ^
+229:     <div class="wtm-head">
+230:       <div class="wtm-head-main">
+9:17:04 PM [vite-plugin-svelte] src/lib/components/WeightModal.svelte:228:2 Visible, non-interactive element `<div>` with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+226:   role="presentation"
+227: >
+228:   <div class="modal wtm" role="dialog" aria-label={t('weight.aria')} aria-modal="true" onclick={onModalClick}>
+             ^
+229:     <div class="wtm-head">
+230:       <div class="wtm-head-main">
+9:17:04 PM [vite-plugin-svelte] src/lib/components/WeightModal.svelte:422:2 Unused CSS selector ".wtm-equip-chev"
+https://svelte.dev/e/css_unused_selector
+420:     white-space: nowrap;
+421:   }
+422:   .wtm-equip-chev {
+                      ^
+423:     flex-shrink: 0;
+424:     opacity: 0.7;
+9:17:04 PM [vite-plugin-svelte] src/lib/components/WeightModal.svelte:427:2 Unused CSS selector ".wtm-equip-chev.open"
+https://svelte.dev/e/css_unused_selector
+425:     transition: transform var(--dur-fast) var(--ease-standard);
+426:   }
+427:   .wtm-equip-chev.open {
+                           ^
+428:     transform: rotate(180deg);
+429:   }
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/DonutChart.svelte:100:8 `<path>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+ 98:         {@const lifted = hover === arc.index}
+ 99:         {@const dim = hover != null && !lifted}
+100:         <path
+               ^
+101:           class="donut-chart__slice"
+102:           class:donut-chart__slice--dim={dim}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/TimelineChart.svelte:229:8 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+227:           {/if}
+228:         {/each}
+229:         <rect
+               ^
+230:           class="timeline-chart__hit"
+231:           x={0}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/MindMap.svelte:268:0 Elements with the 'tree' interactive role must have a tabindex value
+https://svelte.dev/e/a11y_interactive_supports_focus
+266: </script>
+267: 
+268: <div
+         ^
+269:   class="mindmap"
+270:   class:mindmap--grabbing={panning}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/MindMap.svelte:278:2 `<svg>` with a pointerdown, pointermove, pointerup or pointercancel handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+276:   onpointerleave={() => (hover = null)}
+277: >
+278:   <svg
+           ^
+279:     bind:this={svgEl}
+280:     width={vw}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/LineChart.svelte:205:4 noninteractive element cannot have nonnegative tabIndex value
+https://svelte.dev/e/a11y_no_noninteractive_tabindex
+203: 
+204:   <div class="line-chart__plot" bind:clientWidth={wrapW}>
+205:     <svg
+             ^
+206:       width={chartW}
+207:       height={height}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/LineChart.svelte:205:4 Non-interactive element `<svg>` should not be assigned mouse or keyboard event listeners
+https://svelte.dev/e/a11y_no_noninteractive_element_interactions
+203: 
+204:   <div class="line-chart__plot" bind:clientWidth={wrapW}>
+205:     <svg
+             ^
+206:       width={chartW}
+207:       height={height}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/Heatmap.svelte:93:8 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+91:         {@const t = intensity(v)}
+92:         {@const active = hover && hover.r === r && hover.c === c}
+93:         <rect
+              ^
+94:           class="heatmap__cell"
+95:           class:heatmap__cell--empty={t === 0}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/Treemap.svelte:163:8 noninteractive element cannot have nonnegative tabIndex value
+https://svelte.dev/e/a11y_no_noninteractive_tabindex
+161:       {@const dim = hover != null && !lifted}
+162:       {#if r.w > 1 && r.h > 1}
+163:         <g
+               ^
+164:           class="treemap__tile"
+165:           class:treemap__tile--dim={dim}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:181:4 noninteractive element cannot have nonnegative tabIndex value
+https://svelte.dev/e/a11y_no_noninteractive_tabindex
+179: 
+180:   <div class="bar-chart__plot" bind:clientWidth={wrapW}>
+181:     <svg
+             ^
+182:       width={chartW}
+183:       height={chartH}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:181:4 Non-interactive element `<svg>` should not be assigned mouse or keyboard event listeners
+https://svelte.dev/e/a11y_no_noninteractive_element_interactions
+179: 
+180:   <div class="bar-chart__plot" bind:clientWidth={wrapW}>
+181:     <svg
+             ^
+182:       width={chartW}
+183:       height={chartH}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:223:12 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+221:               </text>
+222:             {/if}
+223:             <rect
+                   ^
+224:               class="bar-chart__hit"
+225:               x={0}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:305:12 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+303:               {/if}
+304:             {/if}
+305:             <rect
+                   ^
+306:               class="bar-chart__hit"
+307:               x={padL + j * bandW}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/feedback/ReportBugButton.svelte:303:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+301: {#if isOpen}
+302:   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+303:   <div
+           ^
+304:     use:portal
+305:     class="bug-report-backdrop"
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/overlay/LifeOsDialog.svelte:95:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+93: {#if open}
+94:   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+95:   <div class="modal-bg" class:show={shown} onclick={onBackdrop}>
+            ^
+96:     <div
+97:       bind:this={dialogEl}
+9:17:04 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/overlay/LifeOsSheet.svelte:91:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+89: {#if open}
+90:   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+91:   <div
+          ^
+92:     class={['sheet-bg', bgClass].filter(Boolean).join(' ')}
+93:     data-placement={placement === 'auto' ? 'auto' : undefined}
+✓ 405 modules transformed.
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+6336 |  }
+6337 |  .hero-media img,
+6338 |  .hero-media :global(.cover-ph),
+     |                      ^
+6339 |  .tc-photo img,
+6340 |  .pd-media img,
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+6339 |  .tc-photo img,
+6340 |  .pd-media img,
+6341 |  .pd-media :global(.cover-ph),
+     |                    ^
+6342 |  .day-visual img,
+6343 |  .day-visual :global(.cover-ph),
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+6341 |  .pd-media :global(.cover-ph),
+6342 |  .day-visual img,
+6343 |  .day-visual :global(.cover-ph),
+     |                      ^
+6344 |  .ex-thumb img,
+6345 |  .lib-shot img {
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+7266 |  }
+7267 |  .ex-thumb img,
+7268 |  .ex-thumb :global(.cover-ph img) {
+     |                    ^
+7269 |    width: 100%;
+7270 |    height: 100%;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+7839 |    transform: scale(.96);
+7840 |  }
+7841 |  .lib-top-fab :global(.lib-top-fab-icon) {
+     |                       ^
+7842 |    transform: rotate(90deg);
+7843 |  }
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+8267 |    border-radius: 9px;
+8268 |  }
+8269 |  .tw-btn :global(.icon) {
+     |                  ^
+8270 |    margin: 0;
+8271 |    vertical-align: 0;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+9868 |      opacity var(--dur-fast) var(--ease-standard);
+9869 |  }
+9870 |  .focus-icon-btn :global(.icon),
+     |                          ^
+9871 |  .focus-icon-btn svg {
+9872 |    width: 17px;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+10173 |    overflow: visible;
+10174 |  }
+10175 |  .focus-cue-icon :global(.icon),
+      |                          ^
+10176 |  .focus-cue-icon :global(svg) {
+10177 |    display: block;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+10174 |  }
+10175 |  .focus-cue-icon :global(.icon),
+10176 |  .focus-cue-icon :global(svg) {
+      |                          ^
+10177 |    display: block;
+10178 |    overflow: visible;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+10826 |    text-underline-offset: 2px;
+10827 |  }
+10828 |  .knowledge-trigger :global(.knowledge-trigger-icon) {
+      |                             ^
+10829 |    flex-shrink: 0;
+10830 |    opacity: .85;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+11075 |    overflow: hidden;
+11076 |  }
+11077 |  .knowledge-card :global(.knowledge-card-chevron) {
+      |                          ^
+11078 |    flex-shrink: 0;
+11079 |    color: var(--t3);
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+11080 |    opacity: .7;
+11081 |  }
+11082 |  .knowledge-card:hover :global(.knowledge-card-chevron),
+      |                                ^
+11083 |  .knowledge-card:focus-visible :global(.knowledge-card-chevron) {
+11084 |    color: var(--accent);
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+11081 |  }
+11082 |  .knowledge-card:hover :global(.knowledge-card-chevron),
+11083 |  .knowledge-card:focus-visible :global(.knowledge-card-chevron) {
+      |                                        ^
+11084 |    color: var(--accent);
+11085 |    opacity: 1;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+11435 |    color: var(--accent-2);
+11436 |  }
+11437 |  .btn-link :global(.icon) {
+      |                    ^
+11438 |    flex-shrink: 0;
+11439 |    color: currentColor;
+rendering chunks...
+vite v8.1.3 building client environment for production...
+[2Ktransforming...9:17:04 PM [vite-plugin-svelte] src/routes/discover/tools/+page.svelte:276:2 Unused CSS selector ".tool-result b"
+https://svelte.dev/e/css_unused_selector
+274:     color: var(--t2);
+275:   }
+276:   .tool-result b {
+                     ^
+277:     color: var(--t1);
+278:     font-family: var(--disp);
+9:17:05 PM [vite-plugin-svelte] src/lib/components/WeightModal.svelte:228:2 Elements with the 'dialog' interactive role must have a tabindex value
+https://svelte.dev/e/a11y_interactive_supports_focus
+226:   role="presentation"
+227: >
+228:   <div class="modal wtm" role="dialog" aria-label={t('weight.aria')} aria-modal="true" onclick={onModalClick}>
+             ^
+229:     <div class="wtm-head">
+230:       <div class="wtm-head-main">
+9:17:05 PM [vite-plugin-svelte] src/lib/components/WeightModal.svelte:228:2 Visible, non-interactive element `<div>` with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+226:   role="presentation"
+227: >
+228:   <div class="modal wtm" role="dialog" aria-label={t('weight.aria')} aria-modal="true" onclick={onModalClick}>
+             ^
+229:     <div class="wtm-head">
+230:       <div class="wtm-head-main">
+9:17:05 PM [vite-plugin-svelte] src/lib/components/WeightModal.svelte:422:2 Unused CSS selector ".wtm-equip-chev"
+https://svelte.dev/e/css_unused_selector
+420:     white-space: nowrap;
+421:   }
+422:   .wtm-equip-chev {
+                      ^
+423:     flex-shrink: 0;
+424:     opacity: 0.7;
+9:17:05 PM [vite-plugin-svelte] src/lib/components/WeightModal.svelte:427:2 Unused CSS selector ".wtm-equip-chev.open"
+https://svelte.dev/e/css_unused_selector
+425:     transition: transform var(--dur-fast) var(--ease-standard);
+426:   }
+427:   .wtm-equip-chev.open {
+                           ^
+428:     transform: rotate(180deg);
+429:   }
+9:17:05 PM [vite-plugin-svelte] src/lib/components/PlateToolPanel.svelte:306:2 Unused CSS selector ".ptp-focus-footer"
+https://svelte.dev/e/css_unused_selector
+304:     );
+305:   }
+306:   .ptp-focus-footer {
+                        ^
+307:     flex-shrink: 0;
+308:     padding-top: 8px;
+9:17:05 PM [vite-plugin-svelte] src/lib/components/PlateToolPanel.svelte:312:2 Unused CSS selector ".ptp-more"
+https://svelte.dev/e/css_unused_selector
+310:     background: var(--card);
+311:   }
+312:   .ptp-more {
+                ^
+313:     display: flex;
+314:     align-items: center;
+9:17:05 PM [vite-plugin-svelte] src/lib/components/PlateToolPanel.svelte:328:2 Unused CSS selector ".ptp-more:hover"
+https://svelte.dev/e/css_unused_selector
+326:     cursor: pointer;
+327:   }
+328:   .ptp-more:hover {
+                      ^
+329:     border-color: color-mix(in srgb, var(--accent) 35%, var(--border-l));
+330:     color: var(--accent);
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/LineChart.svelte:205:4 noninteractive element cannot have nonnegative tabIndex value
+https://svelte.dev/e/a11y_no_noninteractive_tabindex
+203: 
+204:   <div class="line-chart__plot" bind:clientWidth={wrapW}>
+205:     <svg
+             ^
+206:       width={chartW}
+207:       height={height}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/LineChart.svelte:205:4 Non-interactive element `<svg>` should not be assigned mouse or keyboard event listeners
+https://svelte.dev/e/a11y_no_noninteractive_element_interactions
+203: 
+204:   <div class="line-chart__plot" bind:clientWidth={wrapW}>
+205:     <svg
+             ^
+206:       width={chartW}
+207:       height={height}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/DonutChart.svelte:100:8 `<path>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+ 98:         {@const lifted = hover === arc.index}
+ 99:         {@const dim = hover != null && !lifted}
+100:         <path
+               ^
+101:           class="donut-chart__slice"
+102:           class:donut-chart__slice--dim={dim}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/TimelineChart.svelte:229:8 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+227:           {/if}
+228:         {/each}
+229:         <rect
+               ^
+230:           class="timeline-chart__hit"
+231:           x={0}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/MindMap.svelte:268:0 Elements with the 'tree' interactive role must have a tabindex value
+https://svelte.dev/e/a11y_interactive_supports_focus
+266: </script>
+267: 
+268: <div
+         ^
+269:   class="mindmap"
+270:   class:mindmap--grabbing={panning}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/MindMap.svelte:278:2 `<svg>` with a pointerdown, pointermove, pointerup or pointercancel handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+276:   onpointerleave={() => (hover = null)}
+277: >
+278:   <svg
+           ^
+279:     bind:this={svgEl}
+280:     width={vw}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/Treemap.svelte:163:8 noninteractive element cannot have nonnegative tabIndex value
+https://svelte.dev/e/a11y_no_noninteractive_tabindex
+161:       {@const dim = hover != null && !lifted}
+162:       {#if r.w > 1 && r.h > 1}
+163:         <g
+               ^
+164:           class="treemap__tile"
+165:           class:treemap__tile--dim={dim}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:181:4 noninteractive element cannot have nonnegative tabIndex value
+https://svelte.dev/e/a11y_no_noninteractive_tabindex
+179: 
+180:   <div class="bar-chart__plot" bind:clientWidth={wrapW}>
+181:     <svg
+             ^
+182:       width={chartW}
+183:       height={chartH}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:181:4 Non-interactive element `<svg>` should not be assigned mouse or keyboard event listeners
+https://svelte.dev/e/a11y_no_noninteractive_element_interactions
+179: 
+180:   <div class="bar-chart__plot" bind:clientWidth={wrapW}>
+181:     <svg
+             ^
+182:       width={chartW}
+183:       height={chartH}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:223:12 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+221:               </text>
+222:             {/if}
+223:             <rect
+                   ^
+224:               class="bar-chart__hit"
+225:               x={0}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/BarChart.svelte:305:12 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+303:               {/if}
+304:             {/if}
+305:             <rect
+                   ^
+306:               class="bar-chart__hit"
+307:               x={padL + j * bandW}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/charts/Heatmap.svelte:93:8 `<rect>` with a pointermove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+91:         {@const t = intensity(v)}
+92:         {@const active = hover && hover.r === r && hover.c === c}
+93:         <rect
+              ^
+94:           class="heatmap__cell"
+95:           class:heatmap__cell--empty={t === 0}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/feedback/ReportBugButton.svelte:303:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+301: {#if isOpen}
+302:   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+303:   <div
+           ^
+304:     use:portal
+305:     class="bug-report-backdrop"
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/overlay/LifeOsDialog.svelte:95:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+93: {#if open}
+94:   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+95:   <div class="modal-bg" class:show={shown} onclick={onBackdrop}>
+            ^
+96:     <div
+97:       bind:this={dialogEl}
+9:17:05 PM [vite-plugin-svelte] /Users/kenpan/「Projects」/life-os/packages/platform-web/src/svelte/overlay/LifeOsSheet.svelte:91:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+89: {#if open}
+90:   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+91:   <div
+          ^
+92:     class={['sheet-bg', bgClass].filter(Boolean).join(' ')}
+93:     data-placement={placement === 'auto' ? 'auto' : undefined}
+✓ 472 modules transformed.
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+6336 |  }
+6337 |  .hero-media img,
+6338 |  .hero-media :global(.cover-ph),
+     |                      ^
+6339 |  .tc-photo img,
+6340 |  .pd-media img,
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+6339 |  .tc-photo img,
+6340 |  .pd-media img,
+6341 |  .pd-media :global(.cover-ph),
+     |                    ^
+6342 |  .day-visual img,
+6343 |  .day-visual :global(.cover-ph),
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+6341 |  .pd-media :global(.cover-ph),
+6342 |  .day-visual img,
+6343 |  .day-visual :global(.cover-ph),
+     |                      ^
+6344 |  .ex-thumb img,
+6345 |  .lib-shot img {
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+7266 |  }
+7267 |  .ex-thumb img,
+7268 |  .ex-thumb :global(.cover-ph img) {
+     |                    ^
+7269 |    width: 100%;
+7270 |    height: 100%;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+7839 |    transform: scale(.96);
+7840 |  }
+7841 |  .lib-top-fab :global(.lib-top-fab-icon) {
+     |                       ^
+7842 |    transform: rotate(90deg);
+7843 |  }
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+8267 |    border-radius: 9px;
+8268 |  }
+8269 |  .tw-btn :global(.icon) {
+     |                  ^
+8270 |    margin: 0;
+8271 |    vertical-align: 0;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+9868 |      opacity var(--dur-fast) var(--ease-standard);
+9869 |  }
+9870 |  .focus-icon-btn :global(.icon),
+     |                          ^
+9871 |  .focus-icon-btn svg {
+9872 |    width: 17px;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+10173 |    overflow: visible;
+10174 |  }
+10175 |  .focus-cue-icon :global(.icon),
+      |                          ^
+10176 |  .focus-cue-icon :global(svg) {
+10177 |    display: block;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+10174 |  }
+10175 |  .focus-cue-icon :global(.icon),
+10176 |  .focus-cue-icon :global(svg) {
+      |                          ^
+10177 |    display: block;
+10178 |    overflow: visible;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+10826 |    text-underline-offset: 2px;
+10827 |  }
+10828 |  .knowledge-trigger :global(.knowledge-trigger-icon) {
+      |                             ^
+10829 |    flex-shrink: 0;
+10830 |    opacity: .85;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+11075 |    overflow: hidden;
+11076 |  }
+11077 |  .knowledge-card :global(.knowledge-card-chevron) {
+      |                          ^
+11078 |    flex-shrink: 0;
+11079 |    color: var(--t3);
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+11080 |    opacity: .7;
+11081 |  }
+11082 |  .knowledge-card:hover :global(.knowledge-card-chevron),
+      |                                ^
+11083 |  .knowledge-card:focus-visible :global(.knowledge-card-chevron) {
+11084 |    color: var(--accent);
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+11081 |  }
+11082 |  .knowledge-card:hover :global(.knowledge-card-chevron),
+11083 |  .knowledge-card:focus-visible :global(.knowledge-card-chevron) {
+      |                                        ^
+11084 |    color: var(--accent);
+11085 |    opacity: 1;
+[lightningcss minify] 'global' is not recognized as a valid pseudo-class. Did you mean '::global' (pseudo-element) or is this a typo?
+11435 |    color: var(--accent-2);
+11436 |  }
+11437 |  .btn-link :global(.icon) {
+      |                    ^
+11438 |    flex-shrink: 0;
+11439 |    color: currentColor;
+rendering chunks...
+computing gzip size...
+.svelte-kit/output/client/_app/version.json                                    0.02 kB │ gzip:   0.04 kB
+.svelte-kit/output/client/.vite/manifest.json                                 14.52 kB │ gzip:   1.79 kB
+.svelte-kit/output/client/_app/immutable/assets/14.STeMPd3f.css                0.10 kB │ gzip:   0.09 kB
+.svelte-kit/output/client/_app/immutable/assets/8.DbtwCoLt.css                 0.58 kB │ gzip:   0.30 kB
+.svelte-kit/output/client/_app/immutable/assets/BackButton.DoKH9ak3.css        0.85 kB │ gzip:   0.39 kB
+.svelte-kit/output/client/_app/immutable/assets/3.D_YIMKHd.css                 1.11 kB │ gzip:   0.43 kB
+.svelte-kit/output/client/_app/immutable/assets/10.C8n2QFSX.css                2.03 kB │ gzip:   0.65 kB
+.svelte-kit/output/client/_app/immutable/assets/9.DVM3Do1d.css                 4.17 kB │ gzip:   1.22 kB
+.svelte-kit/output/client/_app/immutable/assets/PlateToolPanel.DMJt1FcK.css   17.06 kB │ gzip:   3.60 kB
+.svelte-kit/output/client/_app/immutable/assets/0.C7met302.css               232.13 kB │ gzip:  39.41 kB
+.svelte-kit/output/client/_app/immutable/chunks/Bkg7LV2i.js                    0.02 kB │ gzip:   0.04 kB
+.svelte-kit/output/client/_app/immutable/chunks/xihTtKlq.js                    0.06 kB │ gzip:   0.08 kB
+.svelte-kit/output/client/_app/immutable/entry/start.BFzxtFz9.js               0.08 kB │ gzip:   0.09 kB
+.svelte-kit/output/client/_app/immutable/chunks/DK3Fl9T5.js                    0.15 kB │ gzip:   0.15 kB
+.svelte-kit/output/client/_app/immutable/nodes/15.C7rt6NxA.js                  0.21 kB │ gzip:   0.17 kB
+.svelte-kit/output/client/_app/immutable/chunks/D2TWjIx6.js                    0.33 kB │ gzip:   0.18 kB
+.svelte-kit/output/client/_app/immutable/chunks/DoLHZHtk.js                    0.35 kB │ gzip:   0.26 kB
+.svelte-kit/output/client/_app/immutable/nodes/1.BI_QVWAr.js                   0.37 kB │ gzip:   0.26 kB
+.svelte-kit/output/client/_app/immutable/chunks/B24HBzif.js                    0.58 kB │ gzip:   0.38 kB
+.svelte-kit/output/client/_app/immutable/chunks/BuFlayix.js                    0.64 kB │ gzip:   0.38 kB
+.svelte-kit/output/client/_app/immutable/chunks/_59xxR6-.js                    0.72 kB │ gzip:   0.47 kB
+.svelte-kit/output/client/_app/immutable/chunks/fWrX9p6Y.js                    0.74 kB │ gzip:   0.44 kB
+.svelte-kit/output/client/_app/immutable/chunks/DqznxAxQ.js                    0.79 kB │ gzip:   0.50 kB
+.svelte-kit/output/client/_app/immutable/chunks/98XWRpdR2.js                   0.97 kB │ gzip:   0.45 kB
+.svelte-kit/output/client/_app/immutable/chunks/DZ5-jvdU.js                    1.25 kB │ gzip:   0.70 kB
+.svelte-kit/output/client/_app/immutable/chunks/DYl5dUZ5.js                    1.27 kB │ gzip:   0.70 kB
+.svelte-kit/output/client/_app/immutable/chunks/Bjy-W4x22.js                   1.36 kB │ gzip:   0.65 kB
+.svelte-kit/output/client/_app/immutable/nodes/7.B4z1dl9b.js                   1.51 kB │ gzip:   0.72 kB
+.svelte-kit/output/client/_app/immutable/chunks/BJwvncOK.js                    3.10 kB │ gzip:   1.33 kB
+.svelte-kit/output/client/_app/immutable/nodes/12.C4WmpyOQ.js                  4.15 kB │ gzip:   1.74 kB
+.svelte-kit/output/client/_app/immutable/chunks/DfjIu-TZ.js                    4.34 kB │ gzip:   1.52 kB
+.svelte-kit/output/client/_app/immutable/nodes/3.BfGjIc1R.js                   4.43 kB │ gzip:   1.70 kB
+.svelte-kit/output/client/_app/immutable/chunks/BJJX93Ey.js                    4.66 kB │ gzip:   2.17 kB
+.svelte-kit/output/client/_app/immutable/nodes/8.Cl4CZNB-.js                   5.69 kB │ gzip:   2.49 kB
+.svelte-kit/output/client/_app/immutable/entry/app.DwmeBBNX.js                 5.74 kB │ gzip:   2.13 kB
+.svelte-kit/output/client/_app/immutable/chunks/lLjtz0am.js                    6.59 kB │ gzip:   2.38 kB
+.svelte-kit/output/client/_app/immutable/chunks/lnDI5tKx.js                    6.67 kB │ gzip:   2.72 kB
+.svelte-kit/output/client/_app/immutable/nodes/11.Dh-GFrBO.js                  7.32 kB │ gzip:   3.01 kB
+.svelte-kit/output/client/_app/immutable/chunks/Cywc9qOV.js                    7.62 kB │ gzip:   3.23 kB
+.svelte-kit/output/client/_app/immutable/nodes/4.BU1ay9U8.js                   7.76 kB │ gzip:   3.20 kB
+.svelte-kit/output/client/_app/immutable/nodes/10.DIjq5AQB.js                  7.81 kB │ gzip:   2.55 kB
+.svelte-kit/output/client/_app/immutable/nodes/6.4floPLCy.js                   9.04 kB │ gzip:   3.48 kB
+.svelte-kit/output/client/_app/immutable/chunks/D-k3ffrc.js                    9.29 kB │ gzip:   3.77 kB
+.svelte-kit/output/client/_app/immutable/nodes/13.DR9IuC6J.js                 13.66 kB │ gzip:   4.98 kB
+.svelte-kit/output/client/_app/immutable/nodes/2.CCWbmxEI.js                  14.98 kB │ gzip:   5.40 kB
+.svelte-kit/output/client/_app/immutable/nodes/14.BPUYRUvb.js                 16.87 kB │ gzip:   5.17 kB
+.svelte-kit/output/client/_app/immutable/nodes/5.BthWkPBe.js                  19.84 kB │ gzip:   7.01 kB
+.svelte-kit/output/client/_app/immutable/chunks/Bq0h-qj-.js                   29.09 kB │ gzip:  11.31 kB
+.svelte-kit/output/client/_app/immutable/nodes/9.C_xolj0g.js                  33.06 kB │ gzip:  11.50 kB
+.svelte-kit/output/client/_app/immutable/chunks/B-OdYUEB.js                   41.71 kB │ gzip:  14.07 kB
+.svelte-kit/output/client/_app/immutable/chunks/Chvu7wVz.js                   55.66 kB │ gzip:  21.07 kB
+.svelte-kit/output/client/_app/immutable/nodes/0.tDt4N_Bw.js                  70.25 kB │ gzip:  22.80 kB
+.svelte-kit/output/client/_app/immutable/chunks/D2BEUSqP.js                   76.46 kB │ gzip:  28.92 kB
+.svelte-kit/output/client/_app/immutable/chunks/IFFDJejS.js                  139.30 kB │ gzip:  48.61 kB
+.svelte-kit/output/client/_app/immutable/chunks/DdKL7IHK.js                  213.58 kB │ gzip:  55.90 kB
+.svelte-kit/output/client/_app/immutable/chunks/9LHZ14my.js                  336.89 kB │ gzip: 234.73 kB
+
+✓ built in 549ms
+computing gzip size...
+.svelte-kit/output/server/.vite/manifest.json                                 13.59 kB │ gzip:  1.63 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.STeMPd3f.css             0.10 kB │ gzip:  0.09 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DbtwCoLt.css             0.58 kB │ gzip:  0.30 kB
+.svelte-kit/output/server/_app/immutable/assets/BackButton.DoKH9ak3.css        0.85 kB │ gzip:  0.39 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.D_YIMKHd.css             1.11 kB │ gzip:  0.43 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.C8n2QFSX.css             2.03 kB │ gzip:  0.65 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.BkPz864T.css             4.13 kB │ gzip:  1.21 kB
+.svelte-kit/output/server/_app/immutable/assets/PlateToolPanel.UHqmRh7k.css   16.95 kB │ gzip:  3.59 kB
+.svelte-kit/output/server/_app/immutable/assets/_layout.DEZ2XjXI.css         229.68 kB │ gzip: 39.20 kB
+.svelte-kit/output/server/chunks/navigation.js                                 0.03 kB │ gzip:  0.05 kB
+.svelte-kit/output/server/chunks/ui2.svelte.js                                 0.06 kB │ gzip:  0.07 kB
+.svelte-kit/output/server/chunks/state.svelte.js                               0.06 kB │ gzip:  0.07 kB
+.svelte-kit/output/server/entries/pages/_layout.js                             0.11 kB │ gzip:  0.10 kB
+.svelte-kit/output/server/entries/pages/stats/_page.js                         0.20 kB │ gzip:  0.17 kB
+.svelte-kit/output/server/env.js                                               0.22 kB │ gzip:  0.14 kB
+.svelte-kit/output/server/chunks/env.js                                        0.28 kB │ gzip:  0.17 kB
+.svelte-kit/output/server/internal.js                                          0.40 kB │ gzip:  0.19 kB
+.svelte-kit/output/server/entries/fallbacks/error.svelte.js                    0.42 kB │ gzip:  0.26 kB
+.svelte-kit/output/server/chunks/ExerciseThumb.js                              0.52 kB │ gzip:  0.30 kB
+.svelte-kit/output/server/chunks/CoverMedia.js                                 1.00 kB │ gzip:  0.53 kB
+.svelte-kit/output/server/chunks/BackButton.js                                 1.21 kB │ gzip:  0.57 kB
+.svelte-kit/output/server/chunks/Icon.js                                       1.24 kB │ gzip:  0.58 kB
+.svelte-kit/output/server/chunks/internal.js                                   1.41 kB │ gzip:  0.58 kB
+.svelte-kit/output/server/entries/pages/discover/_page.svelte.js               1.82 kB │ gzip:  0.70 kB
+.svelte-kit/output/server/chunks/KnowledgeTrigger.js                           1.89 kB │ gzip:  0.74 kB
+.svelte-kit/output/server/chunks/setSchemes.js                                 2.06 kB │ gzip:  0.79 kB
+.svelte-kit/output/server/entries/pages/auth/_page.svelte.js                   2.41 kB │ gzip:  0.81 kB
+.svelte-kit/output/server/chunks/state.js                                      2.48 kB │ gzip:  1.05 kB
+.svelte-kit/output/server/chunks/TimerWidget.js                                3.39 kB │ gzip:  1.28 kB
+.svelte-kit/output/server/chunks/ui.svelte.js                                  4.48 kB │ gzip:  1.81 kB
+.svelte-kit/output/server/chunks/client.js                                     4.55 kB │ gzip:  1.76 kB
+.svelte-kit/output/server/chunks/index-server.js                               4.57 kB │ gzip:  1.69 kB
+.svelte-kit/output/server/entries/pages/discover/tools/_page.svelte.js         4.83 kB │ gzip:  1.36 kB
+.svelte-kit/output/server/entries/pages/program/_page.svelte.js                5.18 kB │ gzip:  1.52 kB
+.svelte-kit/output/server/entries/pages/discover/records/_page.svelte.js       7.48 kB │ gzip:  2.44 kB
+.svelte-kit/output/server/chunks/coach.js                                      7.81 kB │ gzip:  2.79 kB
+.svelte-kit/output/server/entries/pages/day/_id_/_page.svelte.js               8.15 kB │ gzip:  2.31 kB
+.svelte-kit/output/server/entries/pages/library/_page.svelte.js                8.25 kB │ gzip:  2.30 kB
+.svelte-kit/output/server/chunks/auth.svelte.js                               10.44 kB │ gzip:  3.87 kB
+.svelte-kit/output/server/chunks/shared.js                                    10.60 kB │ gzip:  3.39 kB
+.svelte-kit/output/server/entries/pages/day/_id_/summary/_page.svelte.js      11.03 kB │ gzip:  2.81 kB
+.svelte-kit/output/server/chunks/timer.svelte.js                              12.66 kB │ gzip:  4.22 kB
+.svelte-kit/output/server/chunks/progression.js                               12.93 kB │ gzip:  4.25 kB
+.svelte-kit/output/server/chunks/exports.js                                   13.05 kB │ gzip:  4.17 kB
+.svelte-kit/output/server/entries/pages/program/edit/_page.svelte.js          14.61 kB │ gzip:  3.58 kB
+.svelte-kit/output/server/entries/pages/_page.svelte.js                       17.25 kB │ gzip:  4.33 kB
+.svelte-kit/output/server/chunks/coachMetrics.js                              17.66 kB │ gzip:  6.48 kB
+.svelte-kit/output/server/entries/pages/settings/_page.svelte.js              19.64 kB │ gzip:  3.87 kB
+.svelte-kit/output/server/entries/pages/day/_id_/focus/_page.svelte.js        21.68 kB │ gzip:  5.45 kB
+.svelte-kit/output/server/chunks/sync.js                                      21.84 kB │ gzip:  7.56 kB
+.svelte-kit/output/server/chunks/internal2.js                                 24.44 kB │ gzip:  7.60 kB
+.svelte-kit/output/server/chunks/utils.js                                     31.90 kB │ gzip:  9.38 kB
+.svelte-kit/output/server/chunks/PlateToolPanel.js                            34.96 kB │ gzip:  7.99 kB
+.svelte-kit/output/server/entries/pages/discover/stats/_page.svelte.js        46.11 kB │ gzip: 11.92 kB
+.svelte-kit/output/server/remote-entry.js                                     54.51 kB │ gzip: 12.02 kB
+.svelte-kit/output/server/chunks/session.js                                   56.93 kB │ gzip: 17.23 kB
+.svelte-kit/output/server/entries/pages/_layout.svelte.js                     79.84 kB │ gzip: 17.33 kB
+.svelte-kit/output/server/chunks/libraryHelpers.js                            84.87 kB │ gzip: 30.55 kB
+.svelte-kit/output/server/index.js                                           123.91 kB │ gzip: 31.42 kB
+.svelte-kit/output/server/chunks/server.js                                   130.48 kB │ gzip: 33.93 kB
+.svelte-kit/output/server/chunks/i18n.js                                     187.75 kB │ gzip: 58.25 kB
+
+✓ built in 1.84s
+
+Run npm run preview to preview your production build locally.
+
+> Using @sveltejs/adapter-static
+  Wrote site to "build"
+  ✔ done
+✔ Release staged → /Users/kenpan/.kenos-daily-beta/current
+  SHA 3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c
+✔ Daily Beta stopped (data retained)
+✔ LaunchAgents installed (RunAtLoad + KeepAlive + kickstart)
+✔ Daily Beta up
+  Kenos  http://127.0.0.1:5219
+  Plan   http://127.0.0.1:5188
+  Fit    http://127.0.0.1:5190
+=== kenos-doctor ===
+Kenos Personal Daily Beta
+  release: 3e49cf6c7da7 2026-07-21T04:16:57Z
+  aios: UP  http://127.0.0.1:5219
+  planner: UP  http://127.0.0.1:5188
+  fitness: UP  http://127.0.0.1:5190
+--- ports ---
+  :5219 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  21585 kenpan    3u  IPv4 0x8476509c8b8bc03c      0t0  TCP *:5219 (LISTEN)
+  :5188 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  21620 kenpan    3u  IPv4 0x956e74819f55ee65      0t0  TCP *:5188 (LISTEN)
+  :5190 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  21650 kenpan    3u  IPv4 0x720629bc67863025      0t0  TCP *:5190 (LISTEN)
+--- release identity ---
+  http://127.0.0.1:5219 → {"app": "aios", "environment": "local-daily-beta", "port": 5219, "root": "/Users/kenpan/.kenos-daily-beta/releases/3e49cf6c7da7/apps/aios/build", "server": "python-static", "sha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c", "shortSha": "3e49cf6c7da7", "builtAt": "2026-07-21T04:16:57Z", "origins": {"aios": "http://127.0.0.1:5219", "planner": "http://127.0.0.1:5188", "fitness": "http://127.0.0.1:5190"}}
+  http://127.0.0.1:5188 → {"app": "planner", "environment": "local-daily-beta", "port": 5188, "root": "/Users/kenpan/.kenos-daily-beta/releases/3e49cf6c7da7/apps/planner/build", "server": "python-static", "sha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c", "shortSha": "3e49cf6c7da7", "builtAt": "2026-07-21T04:16:57Z", "origins": {"aios": "http://127.0.0.1:5219", "planner": "http://127.0.0.1:5188", "fitness": "http://127.0.0.1:5190"}}
+  http://127.0.0.1:5190 → {"app": "fitness", "environment": "local-daily-beta", "port": 5190, "root": "/Users/kenpan/.kenos-daily-beta/releases/3e49cf6c7da7/apps/fitness/build", "server": "python-static", "sha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c", "shortSha": "3e49cf6c7da7", "builtAt": "2026-07-21T04:16:57Z", "origins": {"aios": "http://127.0.0.1:5219", "planner": "http://127.0.0.1:5188", "fitness": "http://127.0.0.1:5190"}}
+--- app identity (HTML data-app) ---
+  aios identity OK
+  planner identity OK
+  fitness identity OK
+--- auth bootstrap (public supabase reachability) ---
+  supabase reachability WARN (network)
+--- rollback target ---
+  previous release present → /Users/kenpan/.kenos-daily-beta/previous
+--- recent logs ---
+total 584
+-rw-r--r--  1 kenpan  staff   32144 Jul 20 21:17 fitness.stderr.log
+-rw-r--r--  1 kenpan  staff   39765 Jul 20 21:17 planner.stderr.log
+-rw-r--r--  1 kenpan  staff  157648 Jul 20 21:17 aios.stderr.log
+-rw-r--r--  1 kenpan  staff    4596 Jul 20 21:17 fitness.stdout.log
+-rw-r--r--  1 kenpan  staff    4596 Jul 20 21:17 planner.stdout.log
+DOCTOR: PASS

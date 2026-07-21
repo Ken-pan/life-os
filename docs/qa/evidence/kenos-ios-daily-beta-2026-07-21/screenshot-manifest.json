@@ -1,19 +1,29 @@
 {
-  "generatedAt": "2026-07-21T03:32:00Z",
-  "device": "Ken's 17 Pro",
-  "note": "Wireless CoreDevice cannot capture idevicescreenshot (No device found). Primary evidence is access logs under logs/*-traffic.txt.",
-  "screenshots": [],
-  "logEvidence": [
-    "logs/today-traffic.txt",
-    "logs/spaces-traffic.txt",
-    "logs/inbox-traffic.txt",
-    "logs/settings-traffic.txt",
-    "logs/planner-seq-traffic.txt",
-    "logs/fitness-seq-traffic.txt",
-    "logs/forcequit-traffic.txt",
-    "logs/recovery-seq-traffic.txt",
-    "logs/auth-verdict-redacted.json",
-    "logs/doctor-live.txt",
-    "logs/unlocked-full-smoke.txt"
-  ]
+  "updatedAt": "2026-07-21T05:46:27.112503Z",
+  "note": "Do not regenerate 10-panel UIUX aggregate. Native PASS uses Continuity WKWebView + shell routes.",
+  "acceptanceDevice": "iPhone 17 Pro",
+  "bundleId": "space.kenos.app.ios",
+  "appBuild": "202607210524",
+  "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
+  "networkScope": "LAN-DEPENDENT",
+  "verdict": "IOS_PERSONAL_DAILY_BETA_READY",
+  "phase4": "EXIT_OPEN",
+  "canonicalReports": [
+    "IOS_DAILY_BETA_ACCEPTANCE.md",
+    "ios-daily-beta-results.json",
+    "logs/ios-flow-a-final.json",
+    "logs/ios-matrix-close-latest.json",
+    "logs/ios-isolation-rerun.json"
+  ],
+  "notAcceptanceEvidence": [
+    "screenshots/uiux-status-2026-07-21/uiux-current-10panel.png (Safari chrome / 127.0.0.1 panels)"
+  ],
+  "surfaceClasses": {
+    "Today": "in-app WKWebView",
+    "Assistant": "in-app WKWebView",
+    "Spaces": "in-app WKWebView",
+    "Inbox": "in-app WKWebView",
+    "Plan": "in-app Continuity WKWebView",
+    "Training": "in-app Continuity WKWebView"
+  }
 }

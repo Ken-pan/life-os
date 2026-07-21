@@ -38,8 +38,8 @@ Evidence: `logs/continue-deep-resume-summary.json`
 
 ## Residual / install gate (this slice)
 
-- Auth copy + CTA are live on Mac LAN Web shell (hot-patched release).
-- Native deep-link fix: **BUILD SUCCEEDED** (`generic/platform=iOS`, build number in `~/.kenos-daily-beta/ios-build-number.txt`) but:
-  - **17 Pro** went `unavailable` (wireless) during install window
-  - **15 Pro** wired/`connected` but still **not in provisioning profile** (Xcode Accounts empty)
-- Owner signs in once inside Web `/settings` for cloud reads (honest empty until then).
+- Auth copy + CTA are live on Mac LAN Web shell; **Auth session on 17 Pro is PASS** (beacon).
+- Native deep-link + letterbox fixes installed on 17 Pro earlier this day.
+- **Current blocker:** 17 Pro CoreDevice `unavailable` / LAN `.6` down — FLOW A/B harness waiting (`OWNER_ACTION_NEXT.md`).
+- Fitness Continuity: strip `kenosSet` only after set pin lands (source fix in `fitnessSpaceAdapter.js` / `FocusSession.svelte`; needs Daily Beta rebuild before phone sees it).
+- 15 Pro still **not in provisioning profile**.

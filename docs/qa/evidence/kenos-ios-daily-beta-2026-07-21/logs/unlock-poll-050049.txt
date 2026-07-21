@@ -1,0 +1,56 @@
+poll start 2026-07-21T05:00:49Z LAN=10.20.202.15
+05:00:49 i=1 Ken’s 17 Pro 🤏🏻  🌊 🌲          Kens-17-Pro-.coredevice.local           8097F071-CAB6-5AF0-8258-BCD985E9D79E   available (paired)   iPhone 17 Pro (iPhone18,1)     
+22:00:50  Acquired tunnel connection to device.
+22:00:50  Enabling developer disk image services.
+22:00:51  Acquired usage assertion.
+ERROR: The application failed to launch. (com.apple.dt.CoreDeviceError error 10002 (0x2712))
+       BundleIdentifier = space.kenos.app.ios
+       ----------------------------------------
+           The request to open "space.kenos.app.ios" failed. (FBSOpenApplicationServiceErrorDomain error 1 (0x01))
+           FBSOpenApplicationRequestID = 0xe8b2
+           NSLocalizedFailureReason = The request was denied by service delegate (SBMainWorkspace) for reason: Locked ("Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked").
+           BSErrorCodeDescription = RequestDenied
+       ----------------------------------------
+               The operation couldn’t be completed. Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked. (FBSOpenApplicationErrorDomain error 7 (0x07))
+               NSLocalizedFailureReason = Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked.
+               BSErrorCodeDescription = Locked
+05:01:06 i=2 Ken’s 17 Pro 🤏🏻  🌊 🌲          Kens-17-Pro-.coredevice.local           8097F071-CAB6-5AF0-8258-BCD985E9D79E   connected            iPhone 17 Pro (iPhone18,1)     
+22:01:06  Acquired tunnel connection to device.
+22:01:06  Enabling developer disk image services.
+22:01:06  Acquired usage assertion.
+ERROR: The application failed to launch. (com.apple.dt.CoreDeviceError error 10002 (0x2712))
+       BundleIdentifier = space.kenos.app.ios
+       ----------------------------------------
+           The request to open "space.kenos.app.ios" failed. (FBSOpenApplicationServiceErrorDomain error 1 (0x01))
+           FBSOpenApplicationRequestID = 0xeb5a
+           NSLocalizedFailureReason = The request was denied by service delegate (SBMainWorkspace) for reason: Locked ("Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked").
+           BSErrorCodeDescription = RequestDenied
+       ----------------------------------------
+               The operation couldn’t be completed. Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked. (FBSOpenApplicationErrorDomain error 7 (0x07))
+               BSErrorCodeDescription = Locked
+               NSLocalizedFailureReason = Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked.
+05:01:22 i=3 Ken’s 17 Pro 🤏🏻  🌊 🌲          Kens-17-Pro-.coredevice.local           8097F071-CAB6-5AF0-8258-BCD985E9D79E   connected            iPhone 17 Pro (iPhone18,1)     
+22:01:22  Acquired tunnel connection to device.
+22:01:22  Enabling developer disk image services.
+22:01:22  Acquired usage assertion.
+ERROR: The application failed to launch. (com.apple.dt.CoreDeviceError error 10002 (0x2712))
+       BundleIdentifier = space.kenos.app.ios
+       ----------------------------------------
+           The request to open "space.kenos.app.ios" failed. (FBSOpenApplicationServiceErrorDomain error 1 (0x01))
+           NSLocalizedFailureReason = The request was denied by service delegate (SBMainWorkspace) for reason: Locked ("Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked").
+           FBSOpenApplicationRequestID = 0x9136
+           BSErrorCodeDescription = RequestDenied
+       ----------------------------------------
+               The operation couldn’t be completed. Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked. (FBSOpenApplicationErrorDomain error 7 (0x07))
+               NSLocalizedFailureReason = Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked.
+               BSErrorCodeDescription = Locked
+05:01:37 i=4 Ken’s 17 Pro 🤏🏻  🌊 🌲          Kens-17-Pro-.coredevice.local           8097F071-CAB6-5AF0-8258-BCD985E9D79E   connected            iPhone 17 Pro (iPhone18,1)     
+22:01:38  Acquired tunnel connection to device.
+22:01:38  Enabling developer disk image services.
+22:01:38  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+UNLOCKED_LAUNCH_OK i=4
+22:01:38  Acquired tunnel connection to device.
+22:01:38  Enabling developer disk image services.
+22:01:38  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.

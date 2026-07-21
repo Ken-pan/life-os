@@ -1,0 +1,47 @@
+{"ts":"2026-07-21T04:50:40.298Z","step":"device.wait","i":1,"locked":true,"conn":true,"status":1}
+{"ts":"2026-07-21T04:50:55.936Z","step":"device.wait","i":2,"locked":true,"conn":true,"status":1}
+{"ts":"2026-07-21T04:51:11.671Z","step":"device.wait","i":3,"locked":true,"conn":true,"status":1}
+{"ts":"2026-07-21T04:51:27.400Z","step":"device.wait","i":4,"locked":true,"conn":true,"status":1}
+{"ts":"2026-07-21T04:51:43.049Z","step":"device.wait","i":5,"locked":true,"conn":true,"status":1}
+{"ts":"2026-07-21T04:51:58.863Z","step":"device.wait","i":6,"locked":true,"conn":true,"status":1}
+{"ts":"2026-07-21T04:52:14.492Z","step":"device.wait","i":7,"locked":true,"conn":true,"status":1}
+{"ts":"2026-07-21T04:52:30.113Z","step":"device.wait","i":8,"locked":true,"conn":true,"status":1}
+{"ts":"2026-07-21T04:52:45.844Z","step":"device.wait","i":9,"locked":true,"conn":true,"status":1}
+{"ts":"2026-07-21T04:53:01.505Z","step":"device.wait","i":10,"locked":true,"conn":true,"status":1}
+{"ts":"2026-07-21T04:53:07.744Z","step":"device.unlocked","i":11}
+{"ts":"2026-07-21T04:53:13.104Z","step":"auth.session","email":"334452284ken@gmail.com"}
+{"ts":"2026-07-21T04:53:13.830Z","step":"db.seed.task","TASK_ID":"ios-ab-mru6h2xc","TASK_TITLE":"iOS FlowA Seed 4-50-27-685Z"}
+{"ts":"2026-07-21T04:53:31.941Z","step":"flowA.mutate.beacons","n":1,"last":"10.20.202.6 - \"GET /__health?kenos_flow_a=%7B%22status%22%3A%22ok%22%2C%22title%22%3A%22iOS%20FlowA%20MUT%2050-27-685Z%22%2C%22taskId%22%3A%22ios-ab-mru6h2xc%22%2C%22http%22%3A200%7D HTTP/1.1\" 200 -"}
+{"ts":"2026-07-21T04:53:42.662Z","step":"flowA.done","status":"PASS_DEVICE_SESSION_MUTATE","taskId":"ios-ab-mru6h2xc","seedTitle":"iOS FlowA Seed 4-50-27-685Z","mutatedTitle":"iOS FlowA MUT 50-27-685Z","dbTitle":"iOS FlowA MUT 50-27-685Z","phoneMutOk":true,"phoneVerifyOk":true,"plannerDeepLinkHits":2,"method":"phone WKWebView JWT PATCH + force-quit re-read (not XCUITest DOM edit)"}
+{"ts":"2026-07-21T04:53:42.916Z","step":"flowB.session.create.fail","code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.kenos_work_decisions'","message":"Could not find the table 'public.fitness_workout_sessions' in the schema cache"}
+
+=== REPORT ===
+{
+  "runId": "ios-flow-ab-2026-07-21T04-50-27-685Z",
+  "host": "10.20.202.15",
+  "phoneIp": "10.20.202.6",
+  "flowA": {
+    "status": "PASS_DEVICE_SESSION_MUTATE",
+    "taskId": "ios-ab-mru6h2xc",
+    "seedTitle": "iOS FlowA Seed 4-50-27-685Z",
+    "mutatedTitle": "iOS FlowA MUT 50-27-685Z",
+    "dbTitle": "iOS FlowA MUT 50-27-685Z",
+    "phoneMutOk": true,
+    "phoneVerifyOk": true,
+    "plannerDeepLinkHits": 2,
+    "method": "phone WKWebView JWT PATCH + force-quit re-read (not XCUITest DOM edit)"
+  },
+  "flowB": {
+    "status": "FAIL",
+    "error": "Could not find the table 'public.fitness_workout_sessions' in the schema cache"
+  },
+  "layout": {
+    "status": "PRIOR_PASS"
+  },
+  "auth": {
+    "status": "PRIOR_PASS"
+  },
+  "notes": [
+    "Auth injected to AIOS+Planner+Fitness origins on device"
+  ]
+}
