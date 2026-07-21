@@ -26,7 +26,10 @@
   let { children } = $props()
 
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
-  const nativeShell = $derived(isIosNativeShell())
+  /** URL param is reactive; session/flag covers SPA navigations that drop ?iosNativeShell=1. */
+  const nativeShell = $derived(
+    page.url.searchParams.get('iosNativeShell') === '1' || isIosNativeShell(),
+  )
 
   const pageTitle = $derived.by(() => {
     const p = page.url.pathname
@@ -84,14 +87,15 @@
   {/snippet}
 
   {#snippet header()}
-    {#if nativeShell}
-      <DomainMusicHeader title={pageTitle} domainLabel="Health" />
-    {:else}
+    {#if !nativeShell}
       <AppBar title={pageTitle} />
     {/if}
   {/snippet}
 
   {#snippet main()}
+    {#if nativeShell}
+      <DomainMusicHeader title={pageTitle} domainLabel="Health" />
+    {/if}
     {@render children()}
   {/snippet}
 
@@ -103,3 +107,39 @@
     - scrollMode="locked"：画布 / 编辑器类有界工作区
   -->
 </LifeOsAppShell>
+
+<style>
+  /* Kenos Domain Mode — native dock is the only bottom bar */
+  :global(html[data-ios-native-shell='true'] nav.bottom-nav),
+  :global(
+      html[data-ios-native-shell='true'] [data-testid='health-shell-bottom-nav']
+    ) {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+  :global(html[data-ios-native-shell='true']) {
+    --mobile-tabbar-total-h: 0px;
+    --bottom-chrome-h: 0px;
+    --mobile-content-inset-tabbar: 0px;
+    --safe-top-effective: 0px;
+  }
+  :global(html[data-ios-native-shell='true'] .life-os-app-shell__main),
+  :global(html[data-ios-native-shell='true'] #main-content) {
+    padding-top: 54px !important;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
+  }
+  :global(html[data-ios-native-shell='true'] .domain-music-header) {
+    padding-top: 2px;
+    padding-bottom: 12px;
+    padding-inline: 16px;
+  }
+  :global(html[data-ios-native-shell='true'] .page-header),
+  :global(html[data-ios-native-shell='true'] .topbar),
+  :global(html[data-ios-native-shell='true'] header.app-header) {
+    display: none !important;
+  }
+</style>

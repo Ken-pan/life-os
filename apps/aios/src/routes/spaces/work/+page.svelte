@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
+  import { page } from '$app/state'
   import { FOCUS, startDeepWork } from '$lib/kenos/focusStore.svelte.js'
   import {
     isIosNativeShell,
@@ -12,7 +13,9 @@
     suspendWorkSpace,
   } from '$lib/kenos/workSpaceAdapter.js'
 
-  const nativeShell = $derived(isIosNativeShell())
+  const nativeShell = $derived(
+    page.url.searchParams.get('iosNativeShell') === '1' || isIosNativeShell(),
+  )
 
   onMount(() => {
     installWorkLeaveGuard()

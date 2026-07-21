@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
+  import { page } from '$app/state'
   import Icon from '@life-os/platform-web/svelte/icon'
   import ReadSourceState from '$lib/components/ReadSourceState.svelte'
   import { CONTROL, refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
@@ -30,7 +31,9 @@
     suspendWorkSpace,
   } from '$lib/kenos/workSpaceAdapter.js'
 
-  const nativeShell = $derived(isIosNativeShell())
+  const nativeShell = $derived(
+    page.url.searchParams.get('iosNativeShell') === '1' || isIosNativeShell(),
+  )
   const projects = $derived(listWorkProjects())
   const deliverables = $derived(listWorkDeliverables())
   const meetings = $derived(listWorkMeetings())

@@ -33,10 +33,16 @@ enum KenosDomainRegistry {
         var opensMore: Bool = false
     }
 
+    struct MoreItem: Equatable {
+        var title: String
+        var systemImage: String
+        var path: String
+    }
+
     struct NavManifest: Equatable {
         var domainId: String
         var slots: [DockSlot]
-        var more: [(title: String, systemImage: String, path: String)]
+        var more: [MoreItem]
     }
 
     /// Legacy product names → frozen domain id (finance→money, knowledge→library).
@@ -82,11 +88,11 @@ enum KenosDomainRegistry {
                 .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
             more: [
-                ("Search", "magnifyingglass", "/search"),
-                ("Upcoming", "calendar.badge.clock", "/upcoming"),
-                ("Inbox", "tray", "/inbox"),
-                ("Completed", "checkmark.circle", "/completed"),
-                ("Insights", "chart.bar", "/insights"),
+                .init(title: "Search", systemImage: "magnifyingglass", path: "/search"),
+                .init(title: "Upcoming", systemImage: "calendar.badge.clock", path: "/upcoming"),
+                .init(title: "Inbox", systemImage: "tray", path: "/inbox"),
+                .init(title: "Completed", systemImage: "checkmark.circle", path: "/completed"),
+                .init(title: "Insights", systemImage: "chart.bar", path: "/insights"),
             ]
         ),
         "training": .init(
@@ -98,11 +104,11 @@ enum KenosDomainRegistry {
                 .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
             more: [
-                ("History", "clock", "/discover/records"),
-                ("Program", "list.bullet.rectangle", "/program"),
-                ("Discover", "sparkles", "/discover"),
-                ("Stats", "chart.xyaxis.line", "/discover/stats"),
-                ("Tools", "wrench.and.screwdriver", "/discover/tools"),
+                .init(title: "History", systemImage: "clock", path: "/discover/records"),
+                .init(title: "Program", systemImage: "list.bullet.rectangle", path: "/program"),
+                .init(title: "Discover", systemImage: "sparkles", path: "/discover"),
+                .init(title: "Stats", systemImage: "chart.xyaxis.line", path: "/discover/stats"),
+                .init(title: "Tools", systemImage: "wrench.and.screwdriver", path: "/discover/tools"),
             ]
         ),
         "work": .init(
@@ -114,9 +120,9 @@ enum KenosDomainRegistry {
                 .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
             more: [
-                ("Assistant", "bubble.left", "/assistant?scope=work"),
-                ("Inbox", "tray", "/inbox"),
-                ("Spaces", "square.grid.2x2", "/spaces"),
+                .init(title: "Assistant", systemImage: "bubble.left", path: "/assistant?scope=work"),
+                .init(title: "Inbox", systemImage: "tray", path: "/inbox"),
+                .init(title: "Spaces", systemImage: "square.grid.2x2", path: "/spaces"),
             ]
         ),
         "money": .init(
@@ -128,9 +134,9 @@ enum KenosDomainRegistry {
                 .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
             more: [
-                ("Accounts", "building.columns", "/accounts"),
-                ("Insights", "chart.bar", "/insights"),
-                ("Settings", "gearshape", "/settings"),
+                .init(title: "Accounts", systemImage: "building.columns", path: "/accounts"),
+                .init(title: "Insights", systemImage: "chart.bar", path: "/insights"),
+                .init(title: "Settings", systemImage: "gearshape", path: "/settings"),
             ]
         ),
         "library": .init(
@@ -142,9 +148,9 @@ enum KenosDomainRegistry {
                 .init(title: "Search", systemImage: "magnifyingglass", path: "/recall"),
             ],
             more: [
-                ("Projects", "folder", "/projects"),
-                ("Timeline", "clock", "/timeline"),
-                ("Settings", "gearshape", "/settings"),
+                .init(title: "Projects", systemImage: "folder", path: "/projects"),
+                .init(title: "Timeline", systemImage: "clock", path: "/timeline"),
+                .init(title: "Settings", systemImage: "gearshape", path: "/settings"),
             ]
         ),
         "music": .init(
@@ -176,7 +182,7 @@ enum KenosDomainRegistry {
                 .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
             more: [
-                ("Settings", "gearshape", "/settings"),
+                .init(title: "Settings", systemImage: "gearshape", path: "/settings"),
             ]
         ),
         "paper": .init(
@@ -217,6 +223,44 @@ enum KenosDomainRegistry {
     /// Space catalog domains (excludes Kenos system home).
     static var shelfDomainDefinitions: [Definition] {
         definitions.filter { $0.id != "kenos" }
+    }
+
+    /// Continuity WKWebView Daily Beta ports (embedded_web apps only; excludes aios/work).
+    static var embeddedWebDevPorts: Set<Int> {
+        Set(
+            definitions.compactMap { def -> Int? in
+                guard def.strategy == .embeddedWeb, def.appId != "aios", let port = def.devPort else {
+                    return nil
+                }
+                return port
+            }
+        )
+    }
+
+    /// True when URL is an embedded domain Continuity origin (LAN port or *.kenos.space).
+    static func isEmbeddedWebContinuityURL(_ url: URL) -> Bool {
+        let path = url.path
+        // Work shares AIOS origin but owns Domain Mode dock (not Kenos tabs).
+        if path.hasPrefix("/work") || path.hasPrefix("/spaces/work") {
+            return true
+        }
+        if let port = url.port, embeddedWebDevPorts.contains(port) {
+            return true
+        }
+        let host = (url.host ?? "").lowercased()
+        for def in definitions where def.strategy == .embeddedWeb && def.appId != "aios" {
+            if let origin = def.productionOrigin,
+               let originHost = URL(string: origin)?.host?.lowercased(),
+               host == originHost || host.contains(originHost)
+            {
+                return true
+            }
+            if host.contains("\(def.id).kenos") { return true }
+            if def.aliases.contains(where: { host.contains("\($0).kenos") || host.contains($0) }) {
+                return true
+            }
+        }
+        return false
     }
 
     static func accentColor(for spaceId: String) -> Color {

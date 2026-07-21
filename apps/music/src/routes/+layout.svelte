@@ -105,7 +105,10 @@
   const wideContent = $derived(isWideContentRoute(page.url.pathname))
   const onNowPlaying = $derived(page.url.pathname.startsWith('/now-playing'))
   const utilityOpen = $derived(utilityPane.open && !onNowPlaying)
-  const nativeShell = $derived(isIosNativeShell())
+  /** URL param is reactive; session/flag covers SPA navigations that drop ?iosNativeShell=1. */
+  const nativeShell = $derived(
+    page.url.searchParams.get('iosNativeShell') === '1' || isIosNativeShell(),
+  )
 
   const shellDataset = $derived({
     'page-route': pageRoute,
@@ -296,9 +299,7 @@
   {/snippet}
 
   {#snippet header()}
-    {#if nativeShell && !appBarHidden}
-      <DomainMusicHeader title={pageTitle || 'Music'} domainLabel="Music" />
-    {:else}
+    {#if !nativeShell}
       <AppBar
         hidden={appBarHidden}
         title={appBarHidden ? undefined : pageTitle}
@@ -311,6 +312,9 @@
   {/snippet}
 
   {#snippet main()}
+    {#if nativeShell && !appBarHidden}
+      <DomainMusicHeader title={pageTitle || 'Music'} domainLabel="Music" />
+    {/if}
     {@render children()}
   {/snippet}
 
@@ -332,3 +336,43 @@
 </LifeOsAppShell>
 
 <NowPlayingOverlay />
+
+<style>
+  /* Kenos Domain Mode — native dock is the only bottom bar */
+  :global(html[data-ios-native-shell='true'] nav.bottom-nav),
+  :global(
+      html[data-ios-native-shell='true'] [data-testid='music-shell-bottom-nav']
+    ) {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+  :global(html[data-ios-native-shell='true']) {
+    --mobile-tabbar-total-h: 0px;
+    --bottom-chrome-h: 0px;
+    --mobile-content-inset-tabbar: 0px;
+    --safe-top-effective: 0px;
+  }
+  :global(html[data-ios-native-shell='true'] .life-os-app-shell__main),
+  :global(html[data-ios-native-shell='true'] #main-content) {
+    padding-top: 54px !important;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
+  }
+  :global(html[data-ios-native-shell='true'] .domain-music-header) {
+    padding-top: 2px;
+    padding-bottom: 12px;
+    padding-inline: 16px;
+  }
+  :global(html[data-ios-native-shell='true'] .page-header),
+  :global(html[data-ios-native-shell='true'] .topbar),
+  :global(html[data-ios-native-shell='true'] header.app-header) {
+    display: none !important;
+  }
+  /* MiniPlayer sits above Domain Dock (not a second tab bar) */
+  :global(html[data-ios-native-shell='true'] .mini-player) {
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+</style>

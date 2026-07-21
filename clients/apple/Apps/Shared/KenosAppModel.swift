@@ -57,6 +57,19 @@ final class KenosAppModel: ObservableObject {
     @Published var spaceChromeMode: SpaceChromeMode = .switchSpace
     /// Native settings (origin / auth) — used when Inbox is a Web surface.
     @Published var showSettingsSheet = false
+    #if os(iOS)
+    /// Quiet confirm after system screenshot — not the full report sheet.
+    @Published var showScreenshotBugPrompt = false
+    /// Full report sheet (after user confirms, or explicit Settings entry).
+    @Published var showBugReportSheet = false
+    @Published var bugReportDraft: KenosBugReportDraft?
+    /// Opt-out for “ask after screenshot” (default on).
+    @Published var askAfterScreenshotEnabled: Bool = UserDefaults.standard.object(forKey: "kenos.bug.askAfterScreenshot") == nil
+        ? true
+        : UserDefaults.standard.bool(forKey: "kenos.bug.askAfterScreenshot")
+    private var lastScreenshotPromptAt: Date?
+    private var screenshotPromptAutoDismissTask: Task<Void, Never>?
+    #endif
     /// Daily Beta Continuity: Plan / Training load in-app WKWebView (not Safari).
     @Published var continuityURL: URL?
     /// Shell Navigation v2 — Kenos hall vs Domain dock vs Focus (Focus still uses root branch).
@@ -379,6 +392,11 @@ final class KenosAppModel: ObservableObject {
                     if shellMode == .domain { returnToKenosFromDomain() }
                     navigateDailyBetaShell(path: "/settings")
                     return
+                #if os(iOS)
+                case "bug", "report-bug", "feedback":
+                    Task { await beginBugReport() }
+                    return
+                #endif
                 default:
                     break
                 }
@@ -386,6 +404,151 @@ final class KenosAppModel: ObservableObject {
         }
         open(KenosDeepLinkRouter.parse(urlString))
     }
+
+    #if os(iOS)
+    /// Last redacted error class from runtime health (bug-report autofill only).
+    var runtimeHealthLastErrorClass: String {
+        KenosRuntimeHealth.load(store: runtimeHealthStore)?.lastErrorClass ?? ""
+    }
+
+    func setAskAfterScreenshotEnabled(_ enabled: Bool) {
+        askAfterScreenshotEnabled = enabled
+        UserDefaults.standard.set(enabled, forKey: "kenos.bug.askAfterScreenshot")
+    }
+
+    /// Other chrome that should suppress the quiet screenshot offer.
+    private var blocksScreenshotBugPrompt: Bool {
+        showBugReportSheet
+            || showScreenshotBugPrompt
+            || showSettingsSheet
+            || showSpaceSwitcher
+            || showCaptureSheet
+            || showDomainMoreSheet
+            || showSpaceShelf
+            || showDomainLeaveConfirm
+    }
+
+    /// Bottom padding so the prompt sits above Kenos/Domain dock (or flush in Focus).
+    var screenshotBugPromptBottomPadding: CGFloat {
+        if hideGlobalNavForFocus || focusStore.isPaused || focusStore.showCompletedSummary {
+            return 28
+        }
+        // Dock (~54 content) + bottom inset + home-indicator clearance.
+        return KenosGlass.dockBottomInset + 84
+    }
+
+    /// System screenshot path (best practice):
+    /// 1) capture window snapshot immediately (notification has no image payload)
+    /// 2) quiet confirm — most screenshots are not bug reports
+    /// 3) only then open the full report sheet
+    func handleSystemScreenshot() async {
+        guard askAfterScreenshotEnabled else { return }
+        // Foreground gate lives in KenosRootView (`scenePhase == .active`).
+        guard !blocksScreenshotBugPrompt else { return }
+        if let last = lastScreenshotPromptAt, Date().timeIntervalSince(last) < 2.5 {
+            return
+        }
+        // Capture BEFORE any prompt UI so the attachment is the host screen, not our dialog.
+        let jpeg = KenosBugReportCapture.captureKeyWindowJPEG()
+        let draft = await makeBugReportDraft(jpeg: jpeg)
+        bugReportDraft = draft
+        lastScreenshotPromptAt = Date()
+        showScreenshotBugPrompt = true
+        scheduleScreenshotPromptAutoDismiss(for: draft.id)
+    }
+
+    /// Explicit entry (Settings / deep link) — skip confirm, open review sheet.
+    func beginBugReport(delayCapture: Bool = false) async {
+        cancelScreenshotPromptAutoDismiss()
+        showScreenshotBugPrompt = false
+        if delayCapture {
+            // Let Settings sheet dismiss before capturing.
+            try? await Task.sleep(nanoseconds: 360_000_000)
+        }
+        let jpeg = KenosBugReportCapture.captureKeyWindowJPEG()
+        bugReportDraft = await makeBugReportDraft(jpeg: jpeg)
+        showBugReportSheet = true
+    }
+
+    func confirmScreenshotBugReport() {
+        cancelScreenshotPromptAutoDismiss()
+        guard bugReportDraft != nil else {
+            showScreenshotBugPrompt = false
+            return
+        }
+        // Open sheet before dismissing the prompt so cleanup won't drop the draft.
+        showBugReportSheet = true
+        showScreenshotBugPrompt = false
+    }
+
+    func dismissScreenshotBugPrompt() {
+        cancelScreenshotPromptAutoDismiss()
+        showScreenshotBugPrompt = false
+        // Keep draft only while the full report sheet is open.
+        if !showBugReportSheet {
+            bugReportDraft = nil
+        }
+    }
+
+    private func scheduleScreenshotPromptAutoDismiss(for draftId: UUID) {
+        cancelScreenshotPromptAutoDismiss()
+        screenshotPromptAutoDismissTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 8_000_000_000)
+            guard !Task.isCancelled else { return }
+            guard showScreenshotBugPrompt,
+                  !showBugReportSheet,
+                  bugReportDraft?.id == draftId
+            else { return }
+            dismissScreenshotBugPrompt()
+        }
+    }
+
+    private func cancelScreenshotPromptAutoDismiss() {
+        screenshotPromptAutoDismissTask?.cancel()
+        screenshotPromptAutoDismissTask = nil
+    }
+
+    private func makeBugReportDraft(jpeg: Data?) async -> KenosBugReportDraft {
+        let web = KenosActiveWebRegistry.preferred(for: self)
+        let diagnostics = await KenosBugDiagnosticsFactory.make(
+            model: self,
+            webView: web,
+            screenshotBytes: jpeg?.count ?? 0
+        )
+        return KenosBugReportDraft(
+            id: UUID(),
+            title: KenosBugReportPrefill.title(from: diagnostics),
+            notes: "",
+            severity: KenosBugReportPrefill.severity(from: diagnostics),
+            screenshotJPEG: jpeg,
+            diagnostics: diagnostics,
+            capturedAt: Date()
+        )
+    }
+
+    func refreshBugReportScreenshot() async {
+        guard var draft = bugReportDraft else {
+            await beginBugReport()
+            return
+        }
+        let previousTitle = draft.title
+        let jpeg = KenosBugReportCapture.captureKeyWindowJPEG()
+        draft.screenshotJPEG = jpeg
+        let web = KenosActiveWebRegistry.preferred(for: self)
+        let diagnostics = await KenosBugDiagnosticsFactory.make(
+            model: self,
+            webView: web,
+            screenshotBytes: jpeg?.count ?? 0
+        )
+        draft.diagnostics = diagnostics
+        draft.capturedAt = Date()
+        // Keep user notes; refresh auto title only when still in generated form.
+        if previousTitle.hasPrefix("[") {
+            draft.title = KenosBugReportPrefill.title(from: diagnostics)
+        }
+        bugReportDraft = draft
+    }
+    #endif
 
     /// Load a Daily Beta WKWebView path inside the matching native tab.
     func navigateDailyBetaShell(path: String) {
@@ -398,12 +561,8 @@ final class KenosAppModel: ObservableObject {
 
     private func handleHTTPOpen(_ url: URL) {
         let path = url.path.isEmpty ? "/" : url.path
-        let port = url.port
-        if port == 5188 || path.hasPrefix("/plan") {
-            openExternalURL(url)
-            return
-        }
-        if port == 5190 || path.hasPrefix("/day") || path.hasPrefix("/training") {
+        // Any embedded domain Continuity origin → Domain Mode (not Kenos shell tabs).
+        if KenosDomainRegistry.isEmbeddedWebContinuityURL(url) {
             openExternalURL(url)
             return
         }
@@ -798,7 +957,7 @@ final class KenosAppModel: ObservableObject {
     /// Secondary destinations for Domain More sheet (not on the dock).
     var domainMoreDestinations: [(title: String, systemImage: String, path: String)] {
         if let more = KenosDomainRegistry.navigationManifest(for: domainSpaceId)?.more, !more.isEmpty {
-            return more
+            return more.map { ($0.title, $0.systemImage, $0.path) }
         }
         return [("Home", "house", "/")]
     }
@@ -1062,19 +1221,9 @@ final class KenosAppModel: ObservableObject {
         }
     }
 
-    /// True for Daily Beta Plan/Training LAN (or production) domain Continuity origins.
+    /// True for Daily Beta embedded domain Continuity origins (SSOT: KenosDomainRegistry).
     func isDomainContinuityURL(_ url: URL) -> Bool {
-        let port = url.port
-        // Pack ports + adjacent Life OS apps that may join Continuity later.
-        if port == 5188 || port == 5190 || port == 5180 || port == 5189
-            || port == 5196 || port == 5879
-        {
-            return true
-        }
-        let host = (url.host ?? "").lowercased()
-        return host.contains("planner.kenos") || host.contains("fitness.kenos")
-            || host.contains("music.kenos") || host.contains("finance.kenos")
-            || host.contains("home.kenos") || host.contains("knowledge.kenos")
+        KenosDomainRegistry.isEmbeddedWebContinuityURL(url)
     }
 
     private func openExternalURL(_ url: URL) {

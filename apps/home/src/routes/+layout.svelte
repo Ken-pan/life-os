@@ -44,7 +44,10 @@
   let { children } = $props()
 
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
-  const nativeShell = $derived(isIosNativeShell())
+  /** URL param is reactive; session/flag covers SPA navigations that drop ?iosNativeShell=1. */
+  const nativeShell = $derived(
+    page.url.searchParams.get('iosNativeShell') === '1' || isIosNativeShell(),
+  )
 
   const planRoute = $derived(page.url.pathname === '/plan')
   // /storage 也是「地图页」:满屏画布 + 浮动搜索/清单面板,AppBar 让位给沉浸式,
@@ -160,9 +163,7 @@
   {/snippet}
 
   {#snippet header()}
-    {#if nativeShell && !(planRoute || storageRoute || tidyRoute)}
-      <DomainMusicHeader title={pageMeta.title} domainLabel="Home" />
-    {:else}
+    {#if !nativeShell}
       <AppBar
         title={pageMeta.title}
         subtitle={pageMeta.subtitle}
@@ -172,6 +173,9 @@
   {/snippet}
 
   {#snippet main()}
+    {#if nativeShell && !(planRoute || storageRoute || tidyRoute)}
+      <DomainMusicHeader title={pageMeta.title} domainLabel="Home" />
+    {/if}
     {@render children()}
   {/snippet}
 
@@ -187,3 +191,39 @@
     {/if}
   {/snippet}
 </LifeOsAppShell>
+
+<style>
+  /* Kenos Domain Mode — native dock is the only bottom bar */
+  :global(html[data-ios-native-shell='true'] nav.bottom-nav),
+  :global(
+      html[data-ios-native-shell='true'] [data-testid='home-shell-bottom-nav']
+    ) {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+  :global(html[data-ios-native-shell='true']) {
+    --mobile-tabbar-total-h: 0px;
+    --bottom-chrome-h: 0px;
+    --mobile-content-inset-tabbar: 0px;
+    --safe-top-effective: 0px;
+  }
+  :global(html[data-ios-native-shell='true'] .life-os-app-shell__main),
+  :global(html[data-ios-native-shell='true'] #main-content) {
+    padding-top: 54px !important;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
+  }
+  :global(html[data-ios-native-shell='true'] .domain-music-header) {
+    padding-top: 2px;
+    padding-bottom: 12px;
+    padding-inline: 16px;
+  }
+  :global(html[data-ios-native-shell='true'] .page-header),
+  :global(html[data-ios-native-shell='true'] .topbar),
+  :global(html[data-ios-native-shell='true'] header.app-header) {
+    display: none !important;
+  }
+</style>

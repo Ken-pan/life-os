@@ -47,7 +47,10 @@
   let { children } = $props()
 
   const finance = getFinanceStore()
-  const nativeShell = $derived(isIosNativeShell())
+  /** URL param is reactive; session/flag covers SPA navigations that drop ?iosNativeShell=1. */
+  const nativeShell = $derived(
+    page.url.searchParams.get('iosNativeShell') === '1' || isIosNativeShell(),
+  )
 
   const PWA_SETTINGS_STORAGE_KEY = 'fos-pwa-settings'
 
@@ -355,8 +358,33 @@
   :global(html[data-ios-native-shell='true'] .mobile-tabbar),
   :global(html[data-ios-native-shell='true'] .bottom-shell) {
     display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
   }
   :global(html[data-ios-native-shell='true'] aside) {
+    display: none !important;
+  }
+  :global(html[data-ios-native-shell='true']) {
+    --mobile-tabbar-total-h: 0px;
+    --bottom-chrome-h: 0px;
+    --mobile-content-inset-tabbar: 0px;
+    --safe-top-effective: 0px;
+  }
+  :global(html[data-ios-native-shell='true'] .main-wrap) {
+    padding-top: 54px !important;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
+  }
+  :global(html[data-ios-native-shell='true'] .domain-music-header) {
+    padding-top: 2px;
+    padding-bottom: 12px;
+    padding-inline: 16px;
+  }
+  :global(html[data-ios-native-shell='true'] header.app-header),
+  :global(html[data-ios-native-shell='true'] .page-header),
+  :global(html[data-ios-native-shell='true'] .topbar) {
     display: none !important;
   }
 </style>
