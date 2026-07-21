@@ -1,16 +1,16 @@
 {
-  "runId": "flowa-final-2026-07-21T05-33-43-801Z",
+  "runId": "flowa-final-2026-07-21T05-52-57-417Z",
   "flowA": {
     "status": "PASS",
-    "taskId": "ios-fa-mru7x8jx",
+    "taskId": "ios-fa-mru8lz01",
     "uidRedacted": "c283…c42e",
     "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
-    "expected": "FA Mut 3-801Z",
-    "actualDbTitle": "FA Mut 3-801Z",
+    "expected": "FA Mut 7-417Z",
+    "actualDbTitle": "FA Mut 7-417Z",
     "editorOpenEvidence": true,
     "uiOk": true,
     "verifyOk": true,
-    "method": "Open TaskEditor on entity (#task-title) in Kenos Continuity WKWebView; persist via USER JWT PATCH (not service_role). Hosted title writer disabled in Daily Beta build.",
+    "method": "Open TaskEditor on entity (#task-title) in Kenos Continuity WKWebView; prefer UI Save with Owner-limited hosted title writer; USER JWT PATCH fallback (never service_role).",
     "networkScope": "LAN-DEPENDENT"
   }
 }

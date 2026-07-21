@@ -148,3 +148,37 @@ func spaceSwitcherPersistence() throws {
 
     try? FileManager.default.removeItem(at: dir)
 }
+
+@Test("App Group store falls back when suite missing")
+func appGroupFallbackIsolatesOwners() {
+    let ownerA = UUID()
+    let ownerB = UUID()
+    let storeA = KenosAppGroupStore(
+        ownerId: ownerA,
+        suiteFactory: { _ in nil }
+    )
+    let storeB = KenosAppGroupStore(
+        ownerId: ownerB,
+        suiteFactory: { _ in nil }
+    )
+    #expect(storeA.availability == .processLocalFallback)
+    #expect(storeA.statusReport["phase4"] == "EXIT_OPEN")
+    storeA.setString("plan-resume", forKey: "continuity.scratch")
+    #expect(storeA.string(forKey: "continuity.scratch") == "plan-resume")
+    #expect(storeB.string(forKey: "continuity.scratch") == nil)
+}
+
+@Test("App Group store uses shared suite when factory provides one")
+func appGroupSharedSuitePath() {
+    let bag = KenosInMemorySharedDefaults()
+    let store = KenosAppGroupStore(
+        ownerId: UUID(),
+        suiteFactory: { _ in bag }
+    )
+    #expect(store.availability == .sharedSuite)
+    store.setString("set-2", forKey: "training.nextSet")
+    #expect(store.string(forKey: "training.nextSet") == "set-2")
+    store.clear(key: "training.nextSet")
+    #expect(store.string(forKey: "training.nextSet") == nil)
+}
+

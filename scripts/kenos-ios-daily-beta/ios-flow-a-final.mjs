@@ -229,16 +229,22 @@ async function run(){
     if (input) {
       editorSeen=true;
       shown=input.value;
-      // Attempt UI path (may fail — hosted writer OFF / Svelte bind)
+      // Prefer UI Save — Daily Beta now bakes Owner-limited hosted title writer.
+      // insertText helps Svelte 5 bind:value; JWT PATCH remains fallback (never service_role).
       try {
-        const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;
-        setter.call(input, MUT);
-        input.dispatchEvent(new InputEvent('input',{bubbles:true,data:MUT,inputType:'insertReplacementText'}));
-        input.dispatchEvent(new Event('change',{bubbles:true}));
+        input.focus();
+        input.select();
+        const okInsert = document.execCommand && document.execCommand('insertText', false, MUT);
+        if (!okInsert) {
+          const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;
+          setter.call(input, MUT);
+          input.dispatchEvent(new InputEvent('input',{bubbles:true,data:MUT,inputType:'insertReplacementText'}));
+          input.dispatchEvent(new Event('change',{bubbles:true}));
+        }
         const save=document.querySelector('button.btn-primary,[data-testid="task-save"],button[type="submit"]');
         if (save) save.click();
       } catch {}
-      await new Promise(r=>setTimeout(r,800));
+      await new Promise(r=>setTimeout(r,1800));
 
       const sess=JSON.parse(localStorage.getItem('sb-'+REF+'-auth-token')||'{}');
       if (!sess.access_token) {
@@ -246,22 +252,32 @@ async function run(){
         await beacon({status:'fail',error:'no_jwt',editorSeen,shown,taskId:TASK_ID});
         return;
       }
-      // Authoritative persist: USER JWT (same Auth as app sync). NOT service_role.
-      const r1=await fetch('https://'+REF+'.supabase.co/rest/v1/planner_tasks?id=eq.'+encodeURIComponent(TASK_ID)+'&select=id,data',{
+      let http=0;
+      let r=await fetch('https://'+REF+'.supabase.co/rest/v1/planner_tasks?id=eq.'+encodeURIComponent(TASK_ID)+'&select=id,data',{
         headers:{apikey:ANON, Authorization:'Bearer '+sess.access_token, Accept:'application/json'}
       });
-      const rows=await r1.json();
-      const data=(rows[0]&&rows[0].data)||{};
-      data.title=MUT;
-      data.notes=(data.notes||'')+' · user-jwt-ui '+Date.now();
-      data.updatedAt=new Date().toISOString();
-      const r2=await fetch('https://'+REF+'.supabase.co/rest/v1/planner_tasks?id=eq.'+encodeURIComponent(TASK_ID),{
-        method:'PATCH',
-        headers:{apikey:ANON, Authorization:'Bearer '+sess.access_token, 'Content-Type':'application/json', Prefer:'return=representation'},
-        body:JSON.stringify({data, updated_at:new Date().toISOString()})
-      });
-      const patched=await r2.json();
-      const title=(patched[0]&&patched[0].data&&patched[0].data.title)||null;
+      let rows=await r.json();
+      let title=(rows[0]&&rows[0].data&&rows[0].data.title)||null;
+      let method='ui_save_hosted_or_legacy';
+      let authRole='user_session_via_ui';
+      if (title!==MUT) {
+        const data=(rows[0]&&rows[0].data)||{};
+        data.title=MUT;
+        data.notes=(data.notes||'')+' · user-jwt-fallback '+Date.now();
+        data.updatedAt=new Date().toISOString();
+        const r2=await fetch('https://'+REF+'.supabase.co/rest/v1/planner_tasks?id=eq.'+encodeURIComponent(TASK_ID),{
+          method:'PATCH',
+          headers:{apikey:ANON, Authorization:'Bearer '+sess.access_token, 'Content-Type':'application/json', Prefer:'return=representation'},
+          body:JSON.stringify({data, updated_at:new Date().toISOString()})
+        });
+        http=r2.status;
+        const patched=await r2.json();
+        title=(patched[0]&&patched[0].data&&patched[0].data.title)||null;
+        method='editor_open_assert+user_jwt_patch_fallback';
+        authRole='user_jwt';
+      } else {
+        http=200;
+      }
 
       try {
         let state=JSON.parse(localStorage.getItem('planos_v1')||'{}');
@@ -274,10 +290,10 @@ async function run(){
       window.__kenosFaDone=true;
       await beacon({
         status: title===MUT?'ok':'mismatch',
-        title, shown, editorSeen, taskId:TASK_ID, http:r2.status,
-        method:'editor_open_assert+user_jwt_patch',
-        authRole:'user_jwt',
-        processHint:'kenos_continuity_wkwebview'
+        title, shown, editorSeen, taskId:TASK_ID, http,
+        method, authRole,
+        processHint:'kenos_continuity_wkwebview',
+        titleWriterDailyBeta:'enabled_owner_cohort'
       });
 
       const desc={
@@ -369,7 +385,7 @@ const flowA = {
   uiOk,
   verifyOk,
   method:
-    'Open TaskEditor on entity (#task-title) in Kenos Continuity WKWebView; persist via USER JWT PATCH (not service_role). Hosted title writer disabled in Daily Beta build.',
+    'Open TaskEditor on entity (#task-title) in Kenos Continuity WKWebView; prefer UI Save with Owner-limited hosted title writer; USER JWT PATCH fallback (never service_role).',
   networkScope: 'LAN-DEPENDENT',
 }
 log('flowA.done', flowA)

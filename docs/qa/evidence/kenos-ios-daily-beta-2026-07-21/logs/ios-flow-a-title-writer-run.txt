@@ -1,0 +1,23 @@
+{"ts":"2026-07-21T05:53:01.057Z","step":"seed","TASK_ID":"ios-fa-mru8lz01","SEED":"FA Seed 7-417Z","MUT":"FA Mut 7-417Z"}
+{"ts":"2026-07-21T05:53:01.543Z","step":"launch","i":1,"url":"http://10.20.202.15:5188/__kenos_fa_boot_9daa11cf8d.html"}
+{"ts":"2026-07-21T05:53:15.546Z","step":"beacons","n":2,"last":"10.20.202.6 - \"GET /__health?kenos_flow_a_final=%7B%22status%22%3A%22ok%22%2C%22title%22%3A%22FA%20Mut%207-417Z%22%2C%22shown%22%3A%22FA%20Seed%207-417Z%22%2C%22editorSeen%22%3Atrue%2C%22taskId%22%3A%22ios-fa-mru8lz01%22%2C%22http%22%3A200%2C%22method%22%3A%22editor_open_assert%2Buser_jwt_patch_fallback%22%2C%22authRole%22%3A%22user_jwt%22%2C%22processHint%22%3A%22kenos_continuity_wkwebview%22%2C%"}
+{"ts":"2026-07-21T05:53:17.045Z","step":"launch","i":1,"url":"http://10.20.202.15:5219/?iosNativeShell=1"}
+{"ts":"2026-07-21T05:53:19.042Z","step":"launch","i":1,"url":"http://10.20.202.15:5219/__kenos_fa_v_333b1f5748.html"}
+{"ts":"2026-07-21T05:53:24.552Z","step":"launch","i":1,"url":"http://10.20.202.15:5188/upcoming?kenosTask=ios-fa-mru8lz01&kenosDetail=1"}
+{"ts":"2026-07-21T05:53:28.813Z","step":"flowA.done","status":"PASS","taskId":"ios-fa-mru8lz01","uidRedacted":"c283…c42e","buildSha":"3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c","expected":"FA Mut 7-417Z","actualDbTitle":"FA Mut 7-417Z","editorOpenEvidence":true,"uiOk":true,"verifyOk":true,"method":"Open TaskEditor on entity (#task-title) in Kenos Continuity WKWebView; prefer UI Save with Owner-limited hosted title writer; USER JWT PATCH fallback (never service_role).","networkScope":"LAN-DEPENDENT"}
+{
+  "runId": "flowa-final-2026-07-21T05-52-57-417Z",
+  "flowA": {
+    "status": "PASS",
+    "taskId": "ios-fa-mru8lz01",
+    "uidRedacted": "c283…c42e",
+    "buildSha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
+    "expected": "FA Mut 7-417Z",
+    "actualDbTitle": "FA Mut 7-417Z",
+    "editorOpenEvidence": true,
+    "uiOk": true,
+    "verifyOk": true,
+    "method": "Open TaskEditor on entity (#task-title) in Kenos Continuity WKWebView; prefer UI Save with Owner-limited hosted title writer; USER JWT PATCH fallback (never service_role).",
+    "networkScope": "LAN-DEPENDENT"
+  }
+}

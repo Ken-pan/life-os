@@ -39,7 +39,7 @@ NETWORK SCOPE (iOS): LAN-DEPENDENT
 ```
 
 iOS 真机证据：`docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`（含 `logs/ios-flow-ab-latest.json`）。  
-Phase 4 仍 `EXIT_OPEN`（App Group / APNs / 分发）；无硬 Owner Action — 见 `OWNER_ACTION_NEXT.md`。
+Phase 4 仍 `EXIT_OPEN`（App Group / APNs / 分发）；`KenosAppGroupStore` 仅 LOCAL_FOUNDATION；Daily Beta Owner title writer 已 bake；无硬 Owner Action — 见 `OWNER_ACTION_NEXT.md` / `PHASE4_NEXT_SLICE.md`。
 
 ## 2. 状态词汇
 
