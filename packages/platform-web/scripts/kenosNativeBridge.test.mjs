@@ -1,0 +1,83 @@
+import assert from 'node:assert/strict'
+import {
+  isNativeBridgeAvailable,
+  getNativeCapabilities,
+  nativeHaptic,
+  nativeShare,
+  nativeAuthenticate,
+  ensureNativeUnlock,
+  clearNativeUnlock,
+  nativeNowPlayingUpdate,
+  nativeNowPlayingClear,
+  nativeLiveActivityUpsert,
+  nativeLiveActivityEnd,
+  nativeOpenContinuity,
+  publishNavManifest,
+  installNavManifestPublisher,
+} from '../src/kenosNativeBridge.js'
+
+// Node / non-shell: bridge helpers must be safe no-ops.
+assert.equal(isNativeBridgeAvailable(), false)
+
+const caps = await getNativeCapabilities()
+assert.equal(caps.ok, false)
+assert.equal(caps.skipped, true)
+
+const haptic = await nativeHaptic('success')
+assert.equal(haptic.skipped, true)
+
+const share = await nativeShare({ text: 'hello' })
+assert.equal(share.skipped, true)
+
+const auth = await nativeAuthenticate({ reason: 'test' })
+assert.equal(auth.skipped, true)
+
+const unlock = await ensureNativeUnlock({
+  storageKey: 'kenos.unlock.test',
+  reason: 'test',
+})
+assert.equal(unlock.ok, true)
+assert.equal(unlock.skipped, true)
+clearNativeUnlock('kenos.unlock.test')
+
+const np = await nativeNowPlayingUpdate({ title: 'Test', playing: true })
+assert.equal(np.skipped, true)
+const npClear = await nativeNowPlayingClear()
+assert.equal(npClear.skipped, true)
+
+const la = await nativeLiveActivityUpsert({
+  kind: 'training',
+  title: 'Chest',
+  subtitle: 'Set 2/4',
+  progress: 0.5,
+})
+assert.equal(la.skipped, true)
+const laEnd = await nativeLiveActivityEnd('training')
+assert.equal(laEnd.skipped, true)
+
+const openCont = await nativeOpenContinuity({
+  url: 'http://10.0.0.1:5188/',
+  domainId: 'plan',
+})
+assert.equal(openCont.skipped, true)
+
+const published = await publishNavManifest({
+  domainId: 'plan',
+  path: '/upcoming',
+  title: 'Plan',
+  unsavedDraft: true,
+  summary: 'Unsaved task',
+})
+assert.equal(published.skipped, true)
+assert.equal(published.manifest?.domainId, 'plan')
+assert.equal(published.manifest?.unsavedDraft, true)
+
+const dispose = installNavManifestPublisher(() => ({
+  domainId: 'training',
+  path: '/session',
+  liveState: 'active',
+}))
+assert.equal(typeof dispose, 'function')
+dispose()
+
+console.log('kenosNativeBridge.test.mjs: ok')

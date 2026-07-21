@@ -155,7 +155,7 @@
     font-variant-numeric: tabular-nums;
   }
   .heatmap__cell {
-    transition: opacity 100ms ease;
+    transition: opacity var(--kenos-motion-press-reduce) var(--ease-standard, ease);
   }
   /* 零值格用淡填充(GitHub 式);描边在整年 300+ 格的尺度下太吵 */
   .heatmap__cell--active {

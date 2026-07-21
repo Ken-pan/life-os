@@ -99,7 +99,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    transition: background var(--motion-fast, 120ms) var(--ease, ease);
+    transition: background var(--motion-fast) var(--ease, ease);
   }
 
   .life-os-wikilinks__link:hover {

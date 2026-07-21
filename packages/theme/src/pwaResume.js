@@ -1,13 +1,18 @@
-import { resolveAppVhCSSValue } from './viewportSync.js'
+import { resolveAppVhCSSValue, resolveKeyboardInset } from './viewportSync.js'
 import { resetScrollLock } from './scrollLock.js'
 import { findActiveScrollRoot } from './shell.js'
 
 export const PWA_FOREGROUND_DEFER_MS = 5000
 
-/** 回到前台时立刻校正 iOS PWA 视口高度，避免布局错位 */
+/** 回到前台时立刻校正 iOS PWA 视口高度 / 键盘 inset，避免布局错位 */
 export function flushViewportHeight() {
   if (typeof document === 'undefined') return
-  document.documentElement.style.setProperty('--app-vh', resolveAppVhCSSValue())
+  const root = document.documentElement
+  root.style.setProperty('--app-vh', resolveAppVhCSSValue())
+  const inset = resolveKeyboardInset()
+  root.style.setProperty('--keyboard-inset', `${inset}px`)
+  root.classList.toggle('keyboard-open', inset > 0)
+  root.dataset.keyboardOpen = inset > 0 ? 'true' : 'false'
 }
 
 /** 清除残留的 scroll lock，并 kick 主滚动面避免 iOS 恢复后无法滚动 */

@@ -54,3 +54,8 @@ export interface LifeOsDialogProps {
 
 export declare const LifeOsSheet: Component<LifeOsSheetProps>
 export declare const LifeOsDialog: Component<LifeOsDialogProps>
+
+/** RAF-gated `.show` for `.kenos-sheet-motion` (custom sheets that are not LifeOsSheet). */
+export declare function useSheetEnterShown(isOpen: () => boolean): {
+  readonly shown: boolean
+}

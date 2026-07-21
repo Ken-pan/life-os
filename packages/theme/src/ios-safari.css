@@ -210,6 +210,63 @@ body,
   }
 }
 
+/*
+  iOS 键盘全流程（viewportSync → --keyboard-inset + html.keyboard-open）
+  ─────────────────────────────────────────────────────────────────────
+  键盘升起时：收起 web 底栏。抬升策略分层，避免与 --app-vh 收缩双重垫高：
+  - standalone-pwa：壳高已锁 --app-vh（visual viewport），不再给 dock 加 inset
+  - native WKWebView：压缩 main 底 pad（Dock 被键盘盖住时避免 80px + 键盘空白）
+  - 其它移动 Safari：给 sticky dock / fixed capture sheet 补 --keyboard-inset
+*/
+@media (--life-os-mobile) {
+  html.keyboard-open .bottom-nav-host,
+  html.keyboard-open .bottom-shell,
+  html.keyboard-open .mobile-tabbar,
+  html.keyboard-open nav.bottom-nav,
+  html.keyboard-open [data-testid$='-shell-bottom-nav'] {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(110%);
+    transition:
+      opacity 160ms ease,
+      transform 180ms ease;
+  }
+
+  html.keyboard-open:not([data-ios-native-shell='true']) {
+    --mobile-tabbar-total-h: 0px;
+    --mobile-content-inset-tabbar: 0px;
+    --bottom-chrome-h: 0px;
+    --kenos-mobile-bottom-pad: max(12px, var(--keyboard-inset, 0px));
+  }
+
+  /* Fixed capture sheet is layout-viewport anchored — always lift. */
+  html.keyboard-open .capture-sheet {
+    top: max(8px, env(safe-area-inset-top, 0px));
+    max-height: calc(var(--app-vh, 100dvh) - 16px);
+    padding-bottom: max(18px, env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Safari / non-PWA: sticky docks still sit on the tall layout viewport. */
+  html.keyboard-open:not(.standalone-pwa):not([data-ios-native-shell='true'])
+    .life-os-keyboard-dock,
+  html.keyboard-open:not(.standalone-pwa):not([data-ios-native-shell='true'])
+    .dock-col,
+  html.keyboard-open:not(.standalone-pwa):not([data-ios-native-shell='true'])
+    .agent-composer {
+    padding-bottom: max(
+      10px,
+      var(--keyboard-inset, 0px),
+      env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  html.keyboard-open[data-ios-native-shell='true'] #main-content,
+  html.keyboard-open[data-ios-native-shell='true'] .life-os-app-shell__main,
+  html.keyboard-open[data-ios-native-shell='true'] .main-col {
+    padding-bottom: max(12px, var(--keyboard-inset, 0px)) !important;
+  }
+}
+
 /* ===== 细节控件 ===== */
 details>summary {
   list-style: none;

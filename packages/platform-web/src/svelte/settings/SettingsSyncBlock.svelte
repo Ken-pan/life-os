@@ -5,11 +5,17 @@
   import SettingsToggleRow from './SettingsToggleRow.svelte'
 
   /**
+   * Shared Life OS account / sync settings block.
+   * Use `signedOut` snippet for inline login forms (Home / Knowledge / AIOS).
+   * Use `signInHref` for apps with a dedicated `/auth` route.
+   *
    * @type {{
    *   title: string,
+   *   id?: string,
    *   unavailableDesc?: string,
    *   signedOutDesc?: string,
    *   signedOutLabel?: string,
+   *   ssoHint?: string,
    *   signedInDesc?: string,
    *   email?: string,
    *   configured?: boolean,
@@ -21,14 +27,17 @@
    *   signInClass?: string,
    *   onAutoSyncChange?: (checked: boolean) => void,
    *   actions?: import('svelte').Snippet,
-   *   footer?: import('svelte').Snippet
+   *   footer?: import('svelte').Snippet,
+   *   signedOut?: import('svelte').Snippet
    * }}
    */
   let {
     title,
+    id = 'cloud',
     unavailableDesc = '',
     signedOutDesc = '',
     signedOutLabel = '',
+    ssoHint = '',
     signedInDesc = '',
     email = '',
     configured = true,
@@ -41,10 +50,11 @@
     onAutoSyncChange,
     actions,
     footer,
+    signedOut,
   } = $props()
 </script>
 
-<SettingsSection {title} testId="settings-sync">
+<SettingsSection {title} {id} testId="settings-sync">
   {#if !configured}
     <p class="block-desc">{unavailableDesc}</p>
   {:else if signedIn}
@@ -61,12 +71,26 @@
       />
     {/if}
     {@render footer?.()}
+  {:else if signedOut}
+    {#if signedOutDesc}
+      <p class="block-desc">{signedOutDesc}</p>
+    {/if}
+    {#if ssoHint}
+      <p class="block-desc">{ssoHint}</p>
+    {/if}
+    {@render signedOut()}
   {:else if signedOutLabel}
     <SettingsStackBlock label={signedOutLabel} desc={signedOutDesc}>
       <a class={signInClass} href={signInHref}>{signInLabel}</a>
     </SettingsStackBlock>
+    {#if ssoHint}
+      <p class="block-desc">{ssoHint}</p>
+    {/if}
   {:else}
     <p class="block-desc">{signedOutDesc}</p>
+    {#if ssoHint}
+      <p class="block-desc">{ssoHint}</p>
+    {/if}
     <a class={signInClass} href={signInHref}>{signInLabel}</a>
   {/if}
 </SettingsSection>

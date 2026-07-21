@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { resolveAppVhCSSValue } from './viewportSync.js'
+import {
+  isEditableFocusTarget,
+  isKeyboardOpen,
+  resolveAppVhCSSValue,
+  resolveKeyboardInset,
+} from './viewportSync.js'
 
-/** @param {{ standalone?: boolean; mobile?: boolean; innerHeight?: number; visualHeight?: number }} opts */
+/** @param {{ standalone?: boolean; mobile?: boolean; innerHeight?: number; visualHeight?: number; offsetTop?: number }} opts */
 function stubViewport(opts) {
   const innerHeight = opts.innerHeight ?? 852
   const visualHeight = opts.visualHeight ?? innerHeight
@@ -21,7 +26,7 @@ function stubViewport(opts) {
       visualViewport: {
         height: visualHeight,
         width: 393,
-        offsetTop: 0,
+        offsetTop: opts.offsetTop ?? 0,
         offsetLeft: 0,
       },
       addEventListener: () => {},
@@ -40,8 +45,10 @@ function stubViewport(opts) {
           contains: () => false,
           add: () => {},
           remove: () => {},
+          toggle: () => {},
         },
         style: { setProperty: () => {} },
+        dataset: {},
       },
     },
     configurable: true,
@@ -83,4 +90,41 @@ test('resolveAppVhCSSValue uses 100dvh in desktop browser mode', () => {
     visualHeight: 720,
   })
   assert.equal(resolveAppVhCSSValue(), '100dvh')
+})
+
+test('resolveKeyboardInset ignores URL-bar jitter under floor', () => {
+  stubViewport({
+    standalone: true,
+    innerHeight: 852,
+    visualHeight: 800,
+    offsetTop: 0,
+  })
+  assert.equal(resolveKeyboardInset(), 0)
+  assert.equal(isKeyboardOpen(), false)
+})
+
+test('resolveKeyboardInset reports real keyboard height', () => {
+  stubViewport({
+    standalone: true,
+    innerHeight: 852,
+    visualHeight: 420,
+    offsetTop: 0,
+  })
+  assert.equal(resolveKeyboardInset(), 432)
+  assert.equal(isKeyboardOpen(), true)
+})
+
+test('resolveKeyboardInset subtracts iOS focus-scroll offsetTop', () => {
+  stubViewport({
+    standalone: true,
+    innerHeight: 852,
+    visualHeight: 420,
+    offsetTop: 40,
+  })
+  assert.equal(resolveKeyboardInset(), 392)
+})
+
+test('isEditableFocusTarget rejects null and non-elements', () => {
+  assert.equal(isEditableFocusTarget(null), false)
+  assert.equal(isEditableFocusTarget(undefined), false)
 })

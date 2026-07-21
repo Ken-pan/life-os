@@ -29,7 +29,11 @@ export {
   createCoreIdentityHandler,
 } from './coreIdentity.js'
 export { syncHomePortalSummary } from './homePortalMetadata.js'
-export { setupCrossDomainSSO } from './sso.js'
+export {
+  setupCrossDomainSSO,
+  LIFE_OS_SSO_COOKIE_NAME,
+  resolveSsoCookieDomain,
+} from './sso.js'
 
 /** Life OS 四端 appId */
 export const LIFE_OS_APP_IDS = /** @type {const} */ ([

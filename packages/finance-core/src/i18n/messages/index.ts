@@ -55,6 +55,7 @@ export const zhCN: MessageTree = {
     settingsSubtitle: '回报假设、通胀与个性化参数',
     fabLogTxn: '记一笔',
     fabLargeCashflow: '大额收支',
+    quickSwitch: '快速切换',
     mainNavAria: '主要导航',
     noAccountsYet: '尚未录入账户',
     dataUpdated: '数据更新于 {date}',
@@ -196,7 +197,8 @@ export const zhCN: MessageTree = {
     deviceLimitHint:
       '本账户最多 1 台电脑 + 1 部手机。要在这台新设备上使用，请先在已授权的设备上进入「设置 → 账户与设备」移除对应槽位。',
     signOut: '退出登录',
-    loginHint: '请使用你的账户登录。仅授权设备可访问。',
+    loginHint:
+      '使用 Life OS 账号登录（与 Planner / Fitness / Music / Home 等共用）。仅授权设备可访问。',
     email: '邮箱',
     password: '密码',
     login: '登录',
@@ -597,6 +599,8 @@ export const zhCN: MessageTree = {
     signOut: '退出登录',
     intro:
       '当前账户：{email} · 最多 {max} 个设备槽（1 台电脑 + 1 部手机，{used}/{max} 已使用）。系统通过本机持久化标识识别设备，认得出后再次打开几乎无需等待。',
+    ssoHint:
+      '与 Planner / Fitness / Music / Home 等共用同一 Life OS 账号；本机登录一次后，其它站点可自动接上。',
     loadFailed: '加载设备列表失败',
     removeFailed: '移除失败',
     loading: '加载中…',
@@ -1708,6 +1712,7 @@ export const enUS: MessageTree = {
     settingsSubtitle: 'Return assumptions, inflation & preferences',
     fabLogTxn: 'Log transaction',
     fabLargeCashflow: 'Large cash flow',
+    quickSwitch: 'Quick Switch',
     mainNavAria: 'Main navigation',
     noAccountsYet: 'No accounts yet',
     dataUpdated: 'Updated {date}',
@@ -1857,7 +1862,8 @@ export const enUS: MessageTree = {
     deviceLimitHint:
       'This account allows 1 computer + 1 phone. To use this device, remove a slot under Settings → Accounts & devices on an authorized device.',
     signOut: 'Sign out',
-    loginHint: 'Sign in with your account. Only authorized devices can access.',
+    loginHint:
+      'Sign in with your Life OS account (shared with Planner / Fitness / Music / Home). Only authorized devices can access.',
     email: 'Email',
     password: 'Password',
     login: 'Sign in',
@@ -2273,6 +2279,8 @@ export const enUS: MessageTree = {
     signOut: 'Sign out',
     intro:
       'Signed in as {email} · up to {max} device slots (1 computer + 1 phone, {used}/{max} used). This browser is recognized locally for fast return visits.',
+    ssoHint:
+      'Same Life OS account as Planner / Fitness / Music / Home — sign in once on this device and the other sites can pick it up.',
     loadFailed: 'Failed to load devices',
     removeFailed: 'Failed to remove device',
     loading: 'Loading…',

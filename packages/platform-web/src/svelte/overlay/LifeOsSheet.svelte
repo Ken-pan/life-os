@@ -2,11 +2,13 @@
   /**
    * Life OS Sheet — 底部弹层行为组件。
    * 外观由 @life-os/theme 的 .sheet-bg / .sheet / .sheet-handle 提供（components.css）；
-   * 本组件只负责行为：backdrop 关闭、Escape、focus trap、背景滚动锁、dialog ARIA。
+   * 层次入场由 .kenos-sheet-motion + .show（kenos-motion.css）提供，与 LifeOsDialog 同构。
+   * 本组件只负责行为：入场过渡、backdrop 关闭、Escape、focus trap、背景滚动锁、dialog ARIA。
    * 领域内容（表单、工具面板等）经 children/actions snippet 注入，组件保持 generic、无 app ID。
    */
   import { tick } from 'svelte'
   import { activateFocusTrap, lockScroll, unlockScroll } from '@life-os/theme'
+  import { useSheetEnterShown } from './sheetEnter.svelte.js'
 
   /**
    * @type {{
@@ -52,6 +54,7 @@
 
   /** @type {HTMLDivElement | null} */
   let sheetEl = $state(null)
+  const enter = useSheetEnterShown(() => open)
 
   /** @param {MouseEvent} e */
   function onBackdrop(e) {
@@ -89,7 +92,10 @@
 {#if open}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
   <div
-    class={['sheet-bg', bgClass].filter(Boolean).join(' ')}
+    class={['sheet-bg', 'kenos-sheet-motion', bgClass]
+      .filter(Boolean)
+      .join(' ')}
+    class:show={enter.shown}
     data-placement={placement === 'auto' ? 'auto' : undefined}
     onclick={onBackdrop}
   >

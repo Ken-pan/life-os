@@ -13,10 +13,25 @@
  * 只做检测，不依赖 @capacitor/core：原生壳里 bridge 必定注入 window.Capacitor 全局。
  */
 function isNativeShell() {
-  return (
-    typeof window !== 'undefined' &&
-    Boolean(/** @type {any} */ (window).Capacitor?.isNativePlatform?.())
-  )
+  if (typeof window === 'undefined') return false
+  if (Boolean(/** @type {any} */ (window).Capacitor?.isNativePlatform?.())) {
+    return true
+  }
+  // Kenos Continuity WKWebView — skip SW so LAN rebuilds are not stuck on stale cache.
+  try {
+    if (/** @type {any} */ (window).__KENOS_IOS_NATIVE_SHELL__ === true)
+      return true
+    if (document?.documentElement?.dataset?.iosNativeShell === 'true')
+      return true
+    if (
+      new URLSearchParams(window.location.search).get('iosNativeShell') === '1'
+    ) {
+      return true
+    }
+  } catch {
+    /* ignore */
+  }
+  return false
 }
 
 /**
@@ -42,11 +57,22 @@ export function registerServiceWorker(options = {}) {
 
   if (
     !enabled ||
-    isNativeShell() ||
     typeof navigator === 'undefined' ||
     !('serviceWorker' in navigator) ||
     typeof document === 'undefined'
   ) {
+    return () => {}
+  }
+
+  // Continuity / Capacitor: never register; also drop any prior SW so LAN rebuilds
+  // are not stuck behind a stale production cache from an earlier Safari visit.
+  if (isNativeShell()) {
+    void navigator.serviceWorker
+      .getRegistrations()
+      .then((regs) => {
+        for (const reg of regs) void reg.unregister()
+      })
+      .catch(() => {})
     return () => {}
   }
 

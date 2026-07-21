@@ -265,6 +265,16 @@ export declare function clampPopoverPosition(
   height: number,
   opts?: { padding?: number; bottomInset?: number },
 ): { left: number; top: number }
+export declare const KEYBOARD_INSET_FLOOR_PX: 80
+export declare function resolveKeyboardInset(): number
+export declare function isKeyboardOpen(): boolean
+export declare function isEditableFocusTarget(
+  el: Element | null | undefined,
+): el is HTMLElement
+export declare function ensureFocusedInputVisible(opts?: {
+  padding?: number
+  force?: boolean
+}): boolean
 export declare function bindViewportHeight(): () => void
 export declare function resolveAppVhCSSValue(): string
 

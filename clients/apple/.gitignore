@@ -8,3 +8,6 @@
 Apps/build-device/
 Apps/build-device-*/
 Apps/build-sim/
+Apps/build-sim-*/
+Apps/build-mac/
+Apps/build-mac-*/

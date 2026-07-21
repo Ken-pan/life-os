@@ -5,7 +5,7 @@
   "description": "Life OS web-only platform adapters",
   "type": "module",
   "scripts": {
-    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs && node scripts/networkResume.test.mjs && node scripts/appShell.test.mjs && node scripts/chartUtils.test.mjs && node scripts/wikilinks.test.mjs && node scripts/kenosSpaceContinuity.test.mjs"
+    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs && node scripts/networkResume.test.mjs && node scripts/appShell.test.mjs && node scripts/chartUtils.test.mjs && node scripts/wikilinks.test.mjs && node scripts/kenosSpaceContinuity.test.mjs && node --test scripts/kenosHealthReadiness.test.mjs && node scripts/kenosNativeBridge.test.mjs && node scripts/kenosSensory.test.mjs && node --test scripts/iosNativeShell.test.mjs && node scripts/settingsHash.test.mjs && node scripts/kenosAppLogs.test.mjs"
   },
   "types": "./src/index.d.ts",
   "exports": {
@@ -65,6 +65,11 @@
       "svelte": "./src/svelte/app-bar/index.js",
       "default": "./src/svelte/app-bar/index.js"
     },
+    "./svelte/domain-header": {
+      "import": "./src/svelte/domain-header/index.js",
+      "svelte": "./src/svelte/domain-header/index.js",
+      "default": "./src/svelte/domain-header/index.js"
+    },
     "./svelte/actions": {
       "types": "./src/svelte/actions/index.d.ts",
       "import": "./src/svelte/actions/index.js",
@@ -120,6 +125,15 @@
     "./svelte/settings/sync-block": {
       "svelte": "./src/svelte/settings/SettingsSyncBlock.svelte",
       "default": "./src/svelte/settings/SettingsSyncBlock.svelte"
+    },
+    "./svelte/settings/appearance-block": {
+      "svelte": "./src/svelte/settings/SettingsAppearanceBlock.svelte",
+      "default": "./src/svelte/settings/SettingsAppearanceBlock.svelte"
+    },
+    "./settings-hash": {
+      "types": "./src/settingsHash.d.ts",
+      "import": "./src/settingsHash.js",
+      "default": "./src/settingsHash.js"
     },
     "./svelte/menu": {
       "svelte": "./src/svelte/menu/Menu.svelte",
@@ -193,6 +207,15 @@
     "./network-resume": {
       "import": "./src/networkResume.js"
     },
+    "./ios-native-shell": {
+      "import": "./src/iosNativeShell.js"
+    },
+    "./kenos-native-bridge": {
+      "import": "./src/kenosNativeBridge.js"
+    },
+    "./kenos-sensory": {
+      "import": "./src/kenosSensory.js"
+    },
     "./app-badge": {
       "import": "./src/appBadge.js"
     },
@@ -237,6 +260,18 @@
     "./kenos-space-continuity": {
       "import": "./src/kenosSpaceContinuity.js",
       "default": "./src/kenosSpaceContinuity.js"
+    },
+    "./kenos-health-state-engine": {
+      "import": "./src/kenosHealthStateEngine.js",
+      "default": "./src/kenosHealthStateEngine.js"
+    },
+    "./kenos-health-readiness": {
+      "import": "./src/kenosHealthReadiness.js",
+      "default": "./src/kenosHealthReadiness.js"
+    },
+    "./kenos-app-logs": {
+      "import": "./src/kenosAppLogs.js",
+      "default": "./src/kenosAppLogs.js"
     }
   },
   "dependencies": {

@@ -516,7 +516,7 @@
   }
   .mindmap__pill {
     stroke-width: 1;
-    transition: filter 120ms ease;
+    transition: filter var(--dur-fast) var(--ease-standard, ease);
   }
   .mindmap__node--branch:hover .mindmap__pill {
     filter: brightness(1.06);

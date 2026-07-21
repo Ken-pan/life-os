@@ -55,8 +55,7 @@ export function fromWebThemePreference(pref) {
 function resolveWebThemePreference(pref) {
   if (
     pref === 'auto' &&
-    (typeof window === 'undefined' ||
-      typeof window.matchMedia !== 'function')
+    (typeof window === 'undefined' || typeof window.matchMedia !== 'function')
   ) {
     return 'light'
   }
@@ -129,7 +128,8 @@ export function applyDocumentMetaWeb(meta, options = {}) {
  * }} options
  */
 export function createThemePreferenceStoreWeb(options) {
-  const storage = options.storage === undefined ? getDefaultStorage() : options.storage
+  const storage =
+    options.storage === undefined ? getDefaultStorage() : options.storage
   const defaultPreference = normalizeColorSchemePreference(
     options.defaultPreference ?? 'system',
   )
@@ -210,7 +210,11 @@ export function createThemePreferenceStoreWeb(options) {
      */
     setPreference(nextPreference) {
       preference = normalizeColorSchemePreference(nextPreference)
-      writeStorage(storage, options.storageKey, toWebThemePreference(preference))
+      writeStorage(
+        storage,
+        options.storageKey,
+        toWebThemePreference(preference),
+      )
       syncResolved()
     },
     /**
@@ -232,7 +236,15 @@ export function createThemePreferenceStoreWeb(options) {
 }
 
 export { createI18n } from './i18n.js'
-export { extractWikilinks, parseWikilinks, knowledgeNoteUrl, knowledgeNativeNoteUrl, knowledgePathFromNativeUrl, KNOWLEDGE_NATIVE_SCHEME } from './wikilinks.js'
+export {
+  extractWikilinks,
+  parseWikilinks,
+  knowledgeNoteUrl,
+  knowledgeNativeNoteUrl,
+  knowledgePathFromNativeUrl,
+  KNOWLEDGE_NATIVE_SCHEME,
+} from './wikilinks.js'
+export { scrollToSettingsHash } from './settingsHash.js'
 
 // Svelte 组件走子路径出口（@life-os/platform-web/CommandPalette.svelte），
 // 保持本入口纯 JS，可被 Node 直接 import（包测试、脚本）。

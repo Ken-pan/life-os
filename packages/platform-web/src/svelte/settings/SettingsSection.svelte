@@ -8,6 +8,7 @@
   /** @type {{
     title: string,
     desc?: string,
+    id?: string,
     testId?: string,
     collapsible?: boolean,
     defaultExpanded?: boolean,
@@ -17,6 +18,7 @@
   let {
     title,
     desc = '',
+    id = '',
     testId = '',
     collapsible = false,
     defaultExpanded = true,
@@ -36,6 +38,7 @@
 <div
   class="settings-block set-group"
   class:settings-block--collapsed={collapsible && !expanded}
+  id={id || undefined}
   data-testid={testId || undefined}
 >
   {#if collapsible}

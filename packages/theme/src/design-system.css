@@ -12,10 +12,10 @@
   提取政策见 docs/roadmap/BACKLOG.md §不提取。
 
   @layer 顺序（后声明优先于先声明；app 未分层 CSS 仍可覆盖全部 life-os.*）：
-  tokens → base → platform → layout → shell → seg → settings → modal → components → utilities
+  tokens → base → platform → layout → shell → seg → settings → modal → components → motion → utilities
 */
 
-@layer life-os.tokens, life-os.base, life-os.platform, life-os.layout, life-os.shell, life-os.seg, life-os.settings, life-os.modal, life-os.components, life-os.utilities;
+@layer life-os.tokens, life-os.base, life-os.platform, life-os.layout, life-os.shell, life-os.seg, life-os.settings, life-os.modal, life-os.components, life-os.motion, life-os.utilities;
 
 @import './tokens.css' layer(life-os.tokens);
 @import './generated/component.css' layer(life-os.tokens);
@@ -31,6 +31,7 @@
 @import './settings-ext.css' layer(life-os.settings);
 @import './modal.css' layer(life-os.modal);
 @import './components.css' layer(life-os.components);
+@import './kenos-motion.css' layer(life-os.motion);
 @import './utilities.css' layer(life-os.utilities);
 /* 不分层：需要压过 app/brand 的未分层 CSS（见文件头注释） */
 @import './reduced-transparency.css';

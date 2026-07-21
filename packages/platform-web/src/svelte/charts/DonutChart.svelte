@@ -233,7 +233,7 @@
     align-items: center;
     gap: 8px;
     font-size: var(--text-sm, 12px);
-    transition: opacity 120ms ease;
+    transition: opacity var(--dur-fast) var(--ease-standard, ease);
   }
   .donut-chart__legend-item--dim {
     opacity: 0.4;

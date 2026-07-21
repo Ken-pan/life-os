@@ -66,14 +66,19 @@ export { createImeGuard } from './createImeGuard.js'
 export { createToastDeduper, resolveToastDuration } from './toastPolicy.js'
 
 export {
+  KEYBOARD_INSET_FLOOR_PX,
   bindViewportHeight,
   clampPopoverPosition,
+  ensureFocusedInputVisible,
   getBottomChromeHeight,
   getVisualViewportHeight,
   getViewportRect,
+  isEditableFocusTarget,
+  isKeyboardOpen,
   isStandalonePwa,
   needsViewportHeightSync,
   resolveAppVhCSSValue,
+  resolveKeyboardInset,
 } from './viewportSync.js'
 
 export {

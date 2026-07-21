@@ -44,7 +44,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    transition: opacity 120ms ease;
+    transition: opacity var(--dur-fast) var(--ease-standard, ease);
   }
   .chart-legend__item--muted {
     opacity: 0.35;

@@ -34,7 +34,8 @@ export function listKeyForSpaceId(spaceId, namespace = 'hosted') {
  */
 export function toIso(value = Date.now()) {
   if (typeof value === 'string' && value.includes('T')) return value
-  const ms = value instanceof Date ? value.getTime() : Number(value) || Date.now()
+  const ms =
+    value instanceof Date ? value.getTime() : Number(value) || Date.now()
   return new Date(ms).toISOString()
 }
 
@@ -72,7 +73,10 @@ export function buildResumeDescriptor(input) {
       input.substate && typeof input.substate === 'object'
         ? { ...input.substate }
         : undefined,
-    displayTitle: String(input.displayTitle || input.spaceId || 'Space').slice(0, 120),
+    displayTitle: String(input.displayTitle || input.spaceId || 'Space').slice(
+      0,
+      120,
+    ),
     displaySubtitle: input.displaySubtitle
       ? String(input.displaySubtitle).slice(0, 200)
       : undefined,
@@ -142,7 +146,9 @@ export function normalizeResumeDescriptor(raw, { now = Date.now() } = {}) {
 
   const route = String(obj.route || '').trim()
   if (!route) return null
-  const spaceId = String(obj.spaceId || spaceIdFromListKey(String(obj.listKey || ''))).trim()
+  const spaceId = String(
+    obj.spaceId || spaceIdFromListKey(String(obj.listKey || '')),
+  ).trim()
   if (!spaceId) return null
 
   const descriptor = buildResumeDescriptor({
@@ -155,9 +161,15 @@ export function normalizeResumeDescriptor(raw, { now = Date.now() } = {}) {
         ? /** @type {Record<string, unknown>} */ (obj.substate)
         : undefined,
     displayTitle: String(obj.displayTitle || titleForSpaceId(spaceId)),
-    displaySubtitle: obj.displaySubtitle ? String(obj.displaySubtitle) : undefined,
-    updatedAt: obj.updatedAt ? toIso(/** @type {any} */ (obj.updatedAt)) : toIso(now),
-    expiresAt: obj.expiresAt ? toIso(/** @type {any} */ (obj.expiresAt)) : undefined,
+    displaySubtitle: obj.displaySubtitle
+      ? String(obj.displaySubtitle)
+      : undefined,
+    updatedAt: obj.updatedAt
+      ? toIso(/** @type {any} */ (obj.updatedAt))
+      : toIso(now),
+    expiresAt: obj.expiresAt
+      ? toIso(/** @type {any} */ (obj.expiresAt))
+      : undefined,
   })
 
   // Expired descriptors are returned intact — callers use isResumeExpired + fallback.
@@ -298,17 +310,23 @@ export function resumeDescriptorToOpenUrl(descriptor, { origin } = {}) {
   }
 
   const sub = descriptor.substate || {}
-  if (descriptor.spaceId === 'plan' || spaceIdFromListKey(descriptor.spaceId) === 'plan') {
-    if (descriptor.entityId) url.searchParams.set('kenosTask', descriptor.entityId)
+  if (
+    descriptor.spaceId === 'plan' ||
+    spaceIdFromListKey(descriptor.spaceId) === 'plan'
+  ) {
+    if (descriptor.entityId)
+      url.searchParams.set('kenosTask', descriptor.entityId)
     const filter = sub.filter != null ? String(sub.filter) : ''
     // Only machine filters become query params (not human Continue copy).
     if (/^(overdue|inbox|today|upcoming|completed)$/i.test(filter)) {
       url.searchParams.set('kenosFilter', filter.toLowerCase())
     }
     if (sub.search) url.searchParams.set('kenosSearch', String(sub.search))
-    if (sub.projectId) url.searchParams.set('kenosProject', String(sub.projectId))
+    if (sub.projectId)
+      url.searchParams.set('kenosProject', String(sub.projectId))
     if (sub.detailOpen) url.searchParams.set('kenosDetail', '1')
-    if (sub.scrollAnchor) url.searchParams.set('kenosScroll', String(sub.scrollAnchor))
+    if (sub.scrollAnchor)
+      url.searchParams.set('kenosScroll', String(sub.scrollAnchor))
   }
   if (
     descriptor.spaceId === 'training' ||
@@ -325,7 +343,8 @@ export function resumeDescriptorToOpenUrl(descriptor, { origin } = {}) {
     }
     if (sub.timerRemain != null)
       url.searchParams.set('kenosTimerRemain', String(sub.timerRemain))
-    if (sub.timerMode) url.searchParams.set('kenosTimerMode', String(sub.timerMode))
+    if (sub.timerMode)
+      url.searchParams.set('kenosTimerMode', String(sub.timerMode))
     if (sub.elapsedSec != null)
       url.searchParams.set('kenosElapsed', String(sub.elapsedSec))
   }
@@ -337,11 +356,155 @@ export function resumeDescriptorToOpenUrl(descriptor, { origin } = {}) {
 }
 
 /**
+ * Legacy Life OS app ids → frozen Kenos domain ids (Continue storage SSOT).
+ * Callers may pass either; keys always use the canonical domain id.
+ */
+export const CONTINUE_DOMAIN_ID_ALIASES = Object.freeze({
+  planner: 'plan',
+  'planner-os': 'plan',
+  fitness: 'training',
+  fitnessos: 'training',
+  finance: 'money',
+  financeos: 'money',
+  'finance-os': 'money',
+  knowledge: 'library',
+  knowledgeos: 'library',
+  'knowledge-os': 'library',
+})
+
+/**
+ * @param {string} appOrDomainId
+ * @returns {string}
+ */
+export function canonicalContinueDomainId(appOrDomainId) {
+  const id = String(appOrDomainId || '').trim()
+  return CONTINUE_DOMAIN_ID_ALIASES[id] || id
+}
+
+/**
  * Namespaced storage key for domain-local continue mirrors (account isolation).
- * @param {string} appId
+ * Always uses canonical Kenos domain id (`plan` / `training` / `money` / …).
+ * @param {string} appOrDomainId
  * @param {string | null | undefined} userId
  */
-export function domainContinueStorageKey(appId, userId) {
+export function domainContinueStorageKey(appOrDomainId, userId) {
+  const domainId = canonicalContinueDomainId(appOrDomainId)
   const owner = userId ? String(userId) : 'anonymous'
-  return `kenos.continue.v2.${appId}.${owner}`
+  return `kenos.continue.v2.${domainId}.${owner}`
+}
+
+/**
+ * Legacy key before domain-id canonicalization (app id in the middle segment).
+ * @param {string} legacyAppId
+ * @param {string | null | undefined} userId
+ */
+export function legacyDomainContinueStorageKey(legacyAppId, userId) {
+  const owner = userId ? String(userId) : 'anonymous'
+  return `kenos.continue.v2.${String(legacyAppId || '').trim()}.${owner}`
+}
+
+/**
+ * Write continue JSON under the canonical key; migrate + remove legacy app-id key.
+ * @param {string} appOrDomainId
+ * @param {string | null | undefined} userId
+ * @param {unknown} descriptor
+ * @param {{ storage?: Storage }} [opts]
+ */
+export function writeDomainContinue(
+  appOrDomainId,
+  userId,
+  descriptor,
+  opts = {},
+) {
+  const storage =
+    opts.storage || (typeof localStorage !== 'undefined' ? localStorage : null)
+  if (!storage) return domainContinueStorageKey(appOrDomainId, userId)
+  const canonical = domainContinueStorageKey(appOrDomainId, userId)
+  const raw = JSON.stringify(descriptor)
+  storage.setItem(canonical, raw)
+  const rawId = String(appOrDomainId || '').trim()
+  const canonId = canonicalContinueDomainId(rawId)
+  if (rawId && rawId !== canonId) {
+    try {
+      storage.removeItem(legacyDomainContinueStorageKey(rawId, userId))
+    } catch {
+      /* ignore */
+    }
+  }
+  // Also drop known alias keys when writing via canonical id.
+  for (const [legacy, target] of Object.entries(CONTINUE_DOMAIN_ID_ALIASES)) {
+    if (target !== canonId) continue
+    try {
+      storage.removeItem(legacyDomainContinueStorageKey(legacy, userId))
+    } catch {
+      /* ignore */
+    }
+  }
+  return canonical
+}
+
+/**
+ * Read continue JSON; if only a legacy app-id key exists, migrate it forward.
+ * @param {string} appOrDomainId
+ * @param {string | null | undefined} userId
+ * @param {{ storage?: Storage }} [opts]
+ * @returns {string | null} raw JSON or null
+ */
+export function readDomainContinueRaw(appOrDomainId, userId, opts = {}) {
+  const storage =
+    opts.storage || (typeof localStorage !== 'undefined' ? localStorage : null)
+  if (!storage) return null
+  const canonical = domainContinueStorageKey(appOrDomainId, userId)
+  try {
+    const hit = storage.getItem(canonical)
+    if (hit) return hit
+  } catch {
+    return null
+  }
+  const canonId = canonicalContinueDomainId(appOrDomainId)
+  const candidates = new Set()
+  const rawId = String(appOrDomainId || '').trim()
+  if (rawId && rawId !== canonId) candidates.add(rawId)
+  for (const [legacy, target] of Object.entries(CONTINUE_DOMAIN_ID_ALIASES)) {
+    if (target === canonId) candidates.add(legacy)
+  }
+  for (const legacy of candidates) {
+    try {
+      const legacyKey = legacyDomainContinueStorageKey(legacy, userId)
+      const hit = storage.getItem(legacyKey)
+      if (!hit) continue
+      storage.setItem(canonical, hit)
+      storage.removeItem(legacyKey)
+      return hit
+    } catch {
+      /* try next */
+    }
+  }
+  return null
+}
+
+/**
+ * Remove canonical + legacy continue keys for a domain.
+ * @param {string} appOrDomainId
+ * @param {string | null | undefined} userId
+ * @param {{ storage?: Storage }} [opts]
+ */
+export function clearDomainContinue(appOrDomainId, userId, opts = {}) {
+  const storage =
+    opts.storage || (typeof localStorage !== 'undefined' ? localStorage : null)
+  if (!storage) return
+  const canonId = canonicalContinueDomainId(appOrDomainId)
+  try {
+    storage.removeItem(domainContinueStorageKey(canonId, userId))
+  } catch {
+    /* ignore */
+  }
+  for (const [legacy, target] of Object.entries(CONTINUE_DOMAIN_ID_ALIASES)) {
+    if (target !== canonId) continue
+    try {
+      storage.removeItem(legacyDomainContinueStorageKey(legacy, userId))
+    } catch {
+      /* ignore */
+    }
+  }
 }

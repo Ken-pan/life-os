@@ -1,0 +1,218 @@
+/*
+  Kenos Continuity motion — web mirror of KenosMotion.swift (native SSOT).
+
+  Roles:
+  - press / chrome / page / sheet — shared Continuity chrome + overlays
+  - Theme --dur-* / --ease-* remain for generic controls (buttons, inputs)
+
+  Consumers get this via design-system.css. Do not re-declare --kenos-motion-*
+  in DomainMusicHeader / SystemBar copies.
+*/
+
+:root {
+  --kenos-motion-chrome: 360ms;
+  --kenos-motion-page: 360ms;
+  --kenos-motion-sheet: 360ms;
+  --kenos-motion-press: 220ms;
+  --kenos-motion-reduce: 160ms;
+  --kenos-motion-press-reduce: 100ms;
+  --kenos-ease-chrome: cubic-bezier(0.22, 1, 0.36, 1);
+  --kenos-ease-page: cubic-bezier(0.22, 1, 0.36, 1);
+  --kenos-ease-press: cubic-bezier(0.3, 0, 0.2, 1);
+  --kenos-press-scale: 0.94;
+  --kenos-press-scale-bubble: 0.97;
+  --kenos-press-opacity: 0.88;
+  --kenos-page-enter-offset-y: 10px;
+  --kenos-page-enter-scale: 0.992;
+  --kenos-sheet-enter-offset-y: 18px;
+  --kenos-sheet-enter-scale: 0.985;
+  --kenos-motion-list: 180ms;
+  --kenos-list-enter-offset-y: 6px;
+  --kenos-drawer-side-offset-x: 24px;
+}
+
+@keyframes kenos-chrome-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Prefer these classes in scoped Svelte styles — animation names get hashed otherwise. */
+.kenos-anim-chrome-enter {
+  animation: kenos-chrome-enter var(--kenos-motion-chrome) var(--kenos-ease-chrome) both;
+}
+
+.kenos-anim-chrome-enter-stagger {
+  animation: kenos-chrome-enter var(--kenos-motion-chrome) var(--kenos-ease-chrome) 45ms both;
+}
+
+@keyframes kenos-page-enter {
+  from {
+    opacity: 0.72;
+    transform: translateY(var(--kenos-page-enter-offset-y)) scale(var(--kenos-page-enter-scale));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes kenos-page-enter-fade {
+  from {
+    opacity: 0.85;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* iOS native shell — soft SPA / tab content settle (WK may inject a twin). */
+html[data-ios-native-shell='true'] #main-content.kenos-page-enter,
+html[data-ios-native-shell='true'] .life-os-app-shell__main.kenos-page-enter {
+  animation: kenos-page-enter var(--kenos-motion-page) var(--kenos-ease-page) both;
+}
+
+/*
+  Sheet hierarchy motion — opt-in via .kenos-sheet-motion + .show
+  (LifeOsSheet / useSheetEnterShown). Backdrop fade + panel rise;
+  desktop adds a light scale settle.
+*/
+.sheet-bg.kenos-sheet-motion {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--kenos-motion-sheet) var(--kenos-ease-chrome);
+}
+
+.sheet-bg.kenos-sheet-motion.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sheet-bg.kenos-sheet-motion>.sheet {
+  transform: translateY(var(--kenos-sheet-enter-offset-y));
+  transition: transform var(--kenos-motion-sheet) var(--kenos-ease-page);
+}
+
+.sheet-bg.kenos-sheet-motion.show>.sheet {
+  transform: translateY(0);
+}
+
+@media (--life-os-desktop) {
+  .sheet-bg.kenos-sheet-motion>.sheet {
+    transform: translateY(12px) scale(var(--kenos-sheet-enter-scale));
+  }
+
+  .sheet-bg.kenos-sheet-motion.show>.sheet {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/*
+  Side / bottom drawers (Finance TxnEntry, SpendImpact, …).
+  Keyframes play on mount — pair with markup classes, no .show needed.
+*/
+@keyframes kenos-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes kenos-drawer-side-in {
+  from {
+    opacity: 0.4;
+    transform: translateX(var(--kenos-drawer-side-offset-x));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes kenos-drawer-sheet-in {
+  from {
+    opacity: 0.4;
+    transform: translateY(var(--kenos-sheet-enter-offset-y));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kenos-drawer-backdrop {
+  animation: kenos-fade-in var(--kenos-motion-sheet) var(--kenos-ease-chrome) both;
+}
+
+.kenos-drawer-panel {
+  animation: kenos-drawer-side-in var(--kenos-motion-sheet) var(--kenos-ease-page) both;
+}
+
+@media (--life-os-mobile) {
+  .kenos-drawer-panel {
+    animation-name: kenos-drawer-sheet-in;
+  }
+}
+
+/*
+  List / card settle — single-item, no stagger delays.
+  Use on inbox-style rows that appear as a unit, not decorative page fly-ins.
+*/
+@keyframes kenos-list-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--kenos-list-enter-offset-y));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kenos-anim-list-enter {
+  animation: kenos-list-enter var(--kenos-motion-list) var(--kenos-ease-page) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .kenos-anim-chrome-enter,
+  .kenos-anim-chrome-enter-stagger,
+  .kenos-anim-list-enter {
+    animation: none;
+  }
+
+  .kenos-drawer-backdrop,
+  .kenos-drawer-panel {
+    animation: kenos-fade-in var(--kenos-motion-reduce) ease-out both;
+  }
+
+  html[data-ios-native-shell='true'] #main-content.kenos-page-enter,
+  html[data-ios-native-shell='true'] .life-os-app-shell__main.kenos-page-enter {
+    animation: kenos-page-enter-fade var(--kenos-motion-reduce) ease-out both;
+  }
+
+  .sheet-bg.kenos-sheet-motion,
+  .sheet-bg.kenos-sheet-motion>.sheet {
+    transition-duration: var(--kenos-motion-reduce);
+    transition-timing-function: ease-out;
+  }
+
+  .sheet-bg.kenos-sheet-motion>.sheet,
+  .sheet-bg.kenos-sheet-motion.show>.sheet {
+    transform: none;
+  }
+}

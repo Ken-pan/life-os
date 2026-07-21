@@ -25,7 +25,13 @@ export function writeSyncMeta(
   userId: string,
 ): void
 
-export function setupCrossDomainSSO(supabase: import('@supabase/supabase-js').SupabaseClient): Promise<void>
+export const LIFE_OS_SSO_COOKIE_NAME: string
+export function resolveSsoCookieDomain(
+  hostname: string | null | undefined,
+): string | null
+export function setupCrossDomainSSO(
+  supabase: import('@supabase/supabase-js').SupabaseClient,
+): Promise<void>
 
 export function resolveSupabaseEnv(
   env: Record<string, string | undefined>,
@@ -66,13 +72,9 @@ export function createLifeOsAuth(
   supabase: import('@supabase/supabase-js').SupabaseClient,
   options: {
     appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal' | 'home'
-    onSession: (
-      session: import('@supabase/supabase-js').Session | null,
-    ) => void
+    onSession: (session: import('@supabase/supabase-js').Session | null) => void
     onSignedOut?: () => void
-    onSyncSession?: (options: {
-      force?: boolean
-    }) => void | Promise<unknown>
+    onSyncSession?: (options: { force?: boolean }) => void | Promise<unknown>
     onAllowedAppKeys?: (appKeys: string[] | null) => void
   },
 ): {

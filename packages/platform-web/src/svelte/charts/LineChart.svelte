@@ -371,7 +371,7 @@
     stroke-linejoin: round;
   }
   .line-chart__series {
-    transition: opacity 120ms ease;
+    transition: opacity var(--dur-fast) var(--ease-standard, ease);
   }
   .line-chart__series--dim {
     opacity: 0.25;

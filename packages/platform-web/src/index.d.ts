@@ -81,3 +81,14 @@ export type LocalCache = {
 }
 
 export declare function createLocalCache(options: LocalCacheOptions): LocalCache
+
+export declare function scrollToSettingsHash(
+  hash?: string,
+  opts?: {
+    delayMs?: number
+    retryMs?: number
+    retries?: number
+    behavior?: ScrollBehavior
+    block?: ScrollLogicalPosition
+  },
+): () => void

@@ -7,7 +7,11 @@ import {
   fallbackResumeToHome,
   migrateLegacyResume,
   resumeDescriptorToOpenUrl,
+  canonicalContinueDomainId,
   domainContinueStorageKey,
+  writeDomainContinue,
+  readDomainContinueRaw,
+  clearDomainContinue,
   buildKenosContinueHandoffUrl,
 } from '../src/kenosSpaceContinuity.js'
 
@@ -70,10 +74,45 @@ const fitnessUrl = resumeDescriptorToOpenUrl(d)
 assert.match(fitnessUrl, /kenosEx=c_fly/)
 assert.match(fitnessUrl, /kenosSet=2/)
 
+assert.equal(canonicalContinueDomainId('planner'), 'plan')
+assert.equal(canonicalContinueDomainId('fitness'), 'training')
+assert.equal(canonicalContinueDomainId('finance'), 'money')
+assert.equal(canonicalContinueDomainId('knowledge'), 'library')
 assert.equal(
   domainContinueStorageKey('planner', 'user-a'),
-  'kenos.continue.v2.planner.user-a',
+  'kenos.continue.v2.plan.user-a',
 )
+assert.equal(
+  domainContinueStorageKey('plan', 'user-a'),
+  'kenos.continue.v2.plan.user-a',
+)
+
+{
+  const mem = new Map()
+  const storage = {
+    getItem: (k) => (mem.has(k) ? mem.get(k) : null),
+    setItem: (k, v) => mem.set(k, String(v)),
+    removeItem: (k) => mem.delete(k),
+  }
+  storage.setItem(
+    'kenos.continue.v2.finance.user-a',
+    JSON.stringify({ spaceId: 'money', route: '/home/today' }),
+  )
+  const migrated = readDomainContinueRaw('money', 'user-a', { storage })
+  assert.ok(migrated)
+  assert.equal(mem.has('kenos.continue.v2.money.user-a'), true)
+  assert.equal(mem.has('kenos.continue.v2.finance.user-a'), false)
+  writeDomainContinue(
+    'finance',
+    'user-a',
+    { spaceId: 'money', route: '/history/insights' },
+    { storage },
+  )
+  assert.equal(mem.has('kenos.continue.v2.money.user-a'), true)
+  assert.equal(mem.has('kenos.continue.v2.finance.user-a'), false)
+  clearDomainContinue('money', 'user-a', { storage })
+  assert.equal(mem.has('kenos.continue.v2.money.user-a'), false)
+}
 
 const handoff = buildKenosContinueHandoffUrl('http://127.0.0.1:5197', d)
 assert.match(handoff, /kenosResume=/)

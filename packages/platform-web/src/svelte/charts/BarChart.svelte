@@ -380,7 +380,7 @@
     font-variant-numeric: tabular-nums;
   }
   .bar-chart__mark {
-    transition: opacity 120ms ease;
+    transition: opacity var(--dur-fast) var(--ease-standard, ease);
   }
   .bar-chart__mark--dim {
     opacity: 0.35;

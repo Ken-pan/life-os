@@ -281,7 +281,7 @@
     font-weight: 500;
   }
   .timeline-chart__row {
-    transition: opacity 120ms ease;
+    transition: opacity var(--dur-fast) var(--ease-standard, ease);
   }
   .timeline-chart__row--dim {
     opacity: 0.4;
