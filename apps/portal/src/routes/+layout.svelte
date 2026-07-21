@@ -24,6 +24,8 @@
   import { initPortalTheme } from '$lib/theme.svelte.js'
   import { registerServiceWorker } from '$lib/serviceWorker.js'
   import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
+  import { installKenosAppLogs } from '@life-os/platform-web/kenos-app-logs'
+  import { supabase } from '$lib/supabase.js'
   import {
     filterKenosExperimentalAccess,
     resolveKenosExperimentFlag,
@@ -46,7 +48,10 @@
     }),
   )
   const visibleAllowedAppKeys = $derived(
-    filterKenosExperimentalAccess(auth.allowedAppKeys ?? [], kenosExperimentEnabled),
+    filterKenosExperimentalAccess(
+      auth.allowedAppKeys ?? [],
+      kenosExperimentEnabled,
+    ),
   )
 
   const cpActions = $derived(
@@ -115,6 +120,10 @@
       }
     }
     document.addEventListener('visibilitychange', onVis)
+    const disposeAppLogs = installKenosAppLogs({
+      app: 'portal',
+      getSupabase: () => supabase,
+    })
 
     return () => {
       cleanupAuth()
@@ -122,6 +131,7 @@
       cleanupTheme()
       cleanupRecent()
       cleanupSw()
+      disposeAppLogs()
       document.removeEventListener('visibilitychange', onVis)
     }
   })

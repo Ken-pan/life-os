@@ -17,10 +17,15 @@ export default {
   },
   settings: {
     title: 'Settings',
+    appearance: 'Appearance',
     theme: 'Theme',
+    themeDesc: 'Choose System to follow the device light / dark mode',
     themeLight: 'Light',
     themeDark: 'Dark',
     themeAuto: 'System',
     language: 'Language',
+    languageDesc: 'Switch the interface language',
+    langZh: '中文',
+    langEn: 'English',
   },
 }

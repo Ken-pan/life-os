@@ -18,6 +18,10 @@ export function collectShellMetricsInBrowser(opts) {
   const wrapCs = wrap ? getComputedStyle(wrap) : null
   const hasAppShell = !!document.querySelector('.app-shell')
   const hasAuthScreen = !!document.querySelector('.auth-screen')
+  const shell =
+    main?.closest?.('[data-scroll-mode]') ||
+    document.querySelector('[data-scroll-mode]')
+  const scrollMode = shell?.getAttribute?.('data-scroll-mode') || null
 
   return {
     hasAppShell,
@@ -37,6 +41,7 @@ export function collectShellMetricsInBrowser(opts) {
     wrapHeight: wrapCs?.height ?? null,
     wrapOverflowY: wrapCs?.overflowY ?? null,
     wrapOffsetHeight: wrap?.offsetHeight ?? 0,
+    scrollMode,
   }
 }
 
@@ -52,8 +57,14 @@ export async function readShellMetrics(page, app, standalone = false) {
       document.documentElement.classList.add('standalone-pwa')
       document.documentElement.style.setProperty('--app-vh', '100vh')
       document.documentElement.style.setProperty('--safe-top-effective', '59px')
-      document.documentElement.style.setProperty('--safe-bottom-effective', '34px')
-      document.documentElement.style.setProperty('--mobile-tabbar-safe-padding', '34px')
+      document.documentElement.style.setProperty(
+        '--safe-bottom-effective',
+        '34px',
+      )
+      document.documentElement.style.setProperty(
+        '--mobile-tabbar-safe-padding',
+        '34px',
+      )
     })
     await page.waitForFunction(
       () =>

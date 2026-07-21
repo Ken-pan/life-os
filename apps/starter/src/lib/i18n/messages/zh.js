@@ -17,10 +17,15 @@ export default {
   },
   settings: {
     title: '设置',
+    appearance: '外观',
     theme: '主题',
+    themeDesc: '选「跟随系统」时，会跟随设备的浅色 / 深色模式',
     themeLight: '浅色',
     themeDark: '深色',
     themeAuto: '跟随系统',
     language: '语言',
+    languageDesc: '切换界面显示语言',
+    langZh: '中文',
+    langEn: 'English',
   },
 }

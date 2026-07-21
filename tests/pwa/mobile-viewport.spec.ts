@@ -41,7 +41,11 @@ for (const app of getAppList({ testEnabledOnly: true })) {
         if (metrics.hasAppShell) {
           expect(metrics.bodyDisplay).toBe('flex')
 
-          if (
+          // Locked workbenches (e.g. Knowledge /library) intentionally hide main
+          // overflow so columns own scroll — do not require content-mode `auto`.
+          if (metrics.scrollMode === 'locked') {
+            expect(metrics.mainOverflowY).toBe('hidden')
+          } else if (
             app.shellType === 'main-wrap-main' ||
             app.shellType === 'main-wrap-content'
           ) {
