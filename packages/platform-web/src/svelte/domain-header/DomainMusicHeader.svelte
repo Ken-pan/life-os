@@ -1,7 +1,8 @@
 <script>
   /**
-   * Domain Continuity — refined title + glass action bubble.
+   * Domain Continuity — static page title + glass action bubble.
    * Scrolls with page content (not fixed native overlay).
+   * Space switching is via Shelf (Spaces Orb in native dock only) — title is never a shelf trigger.
    * Motion: @life-os/theme kenos-motion.css (KenosMotion web mirror).
    *
    * Shared across Plan / Training / Money / Music / Health / Home / Library.
@@ -22,7 +23,6 @@
    *   backLabel?: string,
    *   onBack?: () => void,
    *   compact?: boolean,
-   *   quickSwitchLabel?: string,
    * }}
    */
   let {
@@ -38,14 +38,19 @@
     backLabel = 'Back',
     onBack = undefined,
     compact = false,
-    quickSwitchLabel = 'Quick Switch',
   } = $props()
 
   const heading = $derived(title || domainLabel)
+  const showDomainEyebrow = $derived(Boolean(title && domainLabel))
+  const headingAria = $derived(
+    showDomainEyebrow ? `${domainLabel} · ${heading}` : heading,
+  )
   const hasBackHref = $derived(Boolean(backHref))
-  /** Drill-in with explicit href: static title. History back still keeps QS chevron. */
-  const titleInteractive = $derived(!hasBackHref)
-  const titleAria = $derived(`${domainLabel}: ${quickSwitchLabel}`)
+  const actionCount = $derived(
+    1 + (showListsMenu ? 1 : 0) + (showCompose ? 1 : 0),
+  )
+  /** Single More → plain 44×44 toolbar button; multi-actions keep the cluster. */
+  const plainToolbar = $derived(actionCount === 1)
 
   function goBack() {
     if (typeof onBack === 'function') {
@@ -67,9 +72,9 @@
     }
   }
 
-  function openQuickSwitch() {
+  function openMore() {
     try {
-      window.location.href = 'kenos://quick-switch'
+      window.location.href = 'kenos://more'
     } catch {
       /* ignore */
     }
@@ -94,6 +99,20 @@
   function listsMenu() {
     if (typeof onListsMenu === 'function') onListsMenu()
   }
+
+  /**
+   * Title crossfade only when heading *changes* — not on first mount
+   * (chrome-enter already settles the stack).
+   * Decided in `$effect.pre` so `{#key}` remounts with the correct class.
+   */
+  let previousHeading = $state(/** @type {string | null} */ (null))
+  let titleCrossfade = $state(false)
+  $effect.pre(() => {
+    const next = heading
+    titleCrossfade =
+      previousHeading !== null && previousHeading !== next
+    previousHeading = next
+  })
 </script>
 
 {#if isIosNativeShell()}
@@ -127,7 +146,6 @@
               />
             </svg>
           </a>
-          <h1 class="large-title title-static kenos-anim-chrome-enter">{heading}</h1>
         {:else if showBack}
           <button
             type="button"
@@ -152,34 +170,26 @@
               />
             </svg>
           </button>
-          {#if titleInteractive}
-            <button
-              type="button"
-              class="title-btn kenos-anim-chrome-enter"
-              onclick={openQuickSwitch}
-              aria-label={titleAria}
-            >
-              <h1 class="large-title">{heading}</h1>
-              <span class="chevron" aria-hidden="true">⌄</span>
-            </button>
-          {:else}
-            <h1 class="large-title title-static kenos-anim-chrome-enter">{heading}</h1>
-          {/if}
-        {:else}
-          <button
-            type="button"
-            class="title-btn kenos-anim-chrome-enter"
-            onclick={openQuickSwitch}
-            aria-label={titleAria}
-          >
-            <h1 class="large-title">{heading}</h1>
-            <span class="chevron" aria-hidden="true">⌄</span>
-          </button>
         {/if}
+        <div class="title-stack kenos-anim-chrome-enter">
+          {#key heading}
+            <h1
+              class="large-title title-static"
+              class:kenos-anim-title-crossfade={titleCrossfade}
+              aria-label={headingAria}
+            >
+              {heading}
+            </h1>
+          {/key}
+          {#if showDomainEyebrow}
+            <p class="domain-eyebrow" aria-hidden="true">{domainLabel}</p>
+          {/if}
+        </div>
       </div>
     {/if}
     <div
       class="action-bubble kenos-anim-chrome-enter-stagger"
+      class:is-plain={plainToolbar}
       role="toolbar"
       aria-label="Domain actions"
     >
@@ -218,22 +228,20 @@
       <button
         type="button"
         class="bubble-btn"
-        onclick={openQuickSwitch}
-        aria-label={quickSwitchLabel}
+        onclick={openMore}
+        aria-label="More"
+        data-testid="kenos-domain-more"
       >
         <svg
           width="15"
           height="15"
           viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.75"
+          fill="currentColor"
           aria-hidden="true"
         >
-          <rect x="3" y="3" width="7" height="7" rx="1.5" />
-          <rect x="14" y="3" width="7" height="7" rx="1.5" />
-          <rect x="3" y="14" width="7" height="7" rx="1.5" />
-          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+          <circle cx="5" cy="12" r="1.75" />
+          <circle cx="12" cy="12" r="1.75" />
+          <circle cx="19" cy="12" r="1.75" />
         </svg>
       </button>
     </div>
@@ -242,13 +250,15 @@
 
 <style>
   .domain-music-header {
+    /* Geometry: --kenos-chrome-* (packages/design-tokens structural). */
     position: relative;
     z-index: 1;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 0 16px 8px;
+    padding: 0 var(--kenos-chrome-inline, 16px)
+      var(--kenos-chrome-header-pad-bottom, 8px);
     margin: 0;
     background: transparent;
   }
@@ -265,8 +275,8 @@
   }
   .domain-music-header.is-compact .action-bubble {
     position: absolute;
-    top: 8px;
-    right: 12px;
+    top: var(--kenos-chrome-header-pad-bottom, 8px);
+    right: var(--kenos-chrome-inline, 16px);
     pointer-events: auto;
   }
   .title-row {
@@ -276,16 +286,33 @@
     gap: 4px;
     flex: 1 1 auto;
   }
+  .title-stack {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .domain-eyebrow {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    color: var(--t3, #8e8e93);
+  }
   .back-btn {
     appearance: none;
     border: 0;
     background: transparent;
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
+    width: max(44px, var(--kenos-chrome-control-h, 32px));
+    height: max(44px, var(--kenos-chrome-control-h, 32px));
+    min-width: 44px;
+    min-height: 44px;
     margin-left: -6px;
     padding: 0;
-    border-radius: 999px;
+    border-radius: var(--kenos-chrome-control-radius, 8px);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -303,30 +330,9 @@
     transform: scale(var(--kenos-press-scale));
     opacity: var(--kenos-press-opacity);
   }
-  .title-btn {
-    appearance: none;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    min-width: 0;
-    padding: 0;
-    cursor: pointer;
-    text-align: left;
-    -webkit-tap-highlight-color: transparent;
-  }
   .title-static {
     cursor: default;
     pointer-events: none;
-  }
-  .title-btn:active .large-title {
-    opacity: 0.82;
-  }
-  .title-btn:active .chevron {
-    transform: translateY(2px);
-    opacity: 0.85;
   }
   .large-title {
     margin: 0;
@@ -334,70 +340,63 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 24px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
+    font-size: var(--kenos-chrome-title-size, 24px);
+    font-weight: var(--kenos-chrome-title-weight, 650);
+    letter-spacing: var(--kenos-chrome-title-tracking, -0.03em);
+    line-height: var(--kenos-chrome-title-leading, 1.15);
     color: var(--t1, #f5f5f7);
-    transition: opacity var(--kenos-motion-press) var(--kenos-ease-press);
   }
-  .chevron {
-    flex-shrink: 0;
-    font-size: 12px;
-    font-weight: 600;
-    color: color-mix(in srgb, var(--t1, #f5f5f7) 48%, transparent);
-    margin-top: 1px;
-    transition:
-      transform var(--kenos-motion-press) var(--kenos-ease-press),
-      opacity var(--kenos-motion-press) var(--kenos-ease-press);
-  }
+  /* Multi-action cluster keeps light material; single More stays plain. */
   .action-bubble {
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
-    padding: 1px;
-    border-radius: 999px;
-    background: color-mix(in srgb, #fff 14%, transparent);
-    border: 1px solid color-mix(in srgb, #fff 18%, transparent);
-    backdrop-filter: blur(24px) saturate(1.45);
-    -webkit-backdrop-filter: blur(24px) saturate(1.45);
-    box-shadow:
-      0 0 0 0.5px color-mix(in srgb, #000 28%, transparent),
-      0 1px 0 color-mix(in srgb, #fff 10%, transparent) inset;
+    gap: 2px;
+    padding: 0;
+    border-radius: var(--kenos-chrome-cluster-radius, 10px);
+    background: color-mix(in srgb, var(--bg, #111) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--t1, #fff) 12%, transparent);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    box-shadow: none;
     transform-origin: center;
     transition:
       transform var(--kenos-motion-press) var(--kenos-ease-press),
       opacity var(--kenos-motion-press) var(--kenos-ease-press);
   }
-  .action-bubble:active {
+  .action-bubble.is-plain {
+    background: transparent;
+    border-color: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .action-bubble:not(.is-plain):active {
     transform: scale(var(--kenos-press-scale-bubble));
     opacity: 0.96;
   }
-  :global(html[data-theme='light']) .action-bubble,
-  :global(html:not([data-theme='dark'])) .action-bubble {
-    background: color-mix(in srgb, var(--bg, #fff) 70%, transparent);
+  :global(html[data-theme='light']) .action-bubble:not(.is-plain),
+  :global(html:not([data-theme='dark'])) .action-bubble:not(.is-plain) {
+    background: color-mix(in srgb, var(--bg, #fff) 82%, transparent);
     border-color: color-mix(in srgb, var(--t1, #111) 10%, transparent);
-    box-shadow:
-      0 0 0 0.5px color-mix(in srgb, var(--t1, #111) 6%, transparent),
-      0 1px 0 color-mix(in srgb, #fff 75%, transparent) inset,
-      0 2px 8px color-mix(in srgb, var(--t1, #111) 6%, transparent);
+    box-shadow: none;
   }
-  :global(html[data-ios-native-shell='true'][data-theme='dark']) .action-bubble,
+  :global(html[data-ios-native-shell='true'][data-theme='dark'])
+    .action-bubble:not(.is-plain),
   :global(html[data-ios-native-shell='true']:not([data-theme='light']))
-    .action-bubble {
-    background: color-mix(in srgb, #fff 14%, transparent);
-    border-color: color-mix(in srgb, #fff 18%, transparent);
+    .action-bubble:not(.is-plain) {
+    background: color-mix(in srgb, #fff 10%, transparent);
+    border-color: color-mix(in srgb, #fff 14%, transparent);
   }
   .bubble-btn {
     appearance: none;
     border: 0;
     background: transparent;
     color: var(--t1, #f5f5f7);
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
-    border-radius: 999px;
+    width: max(44px, var(--kenos-chrome-control-h, 32px));
+    height: max(44px, var(--kenos-chrome-control-h, 32px));
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: var(--kenos-chrome-control-radius, 8px);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -412,20 +411,22 @@
       transform var(--kenos-motion-press) var(--kenos-ease-press),
       opacity var(--kenos-motion-press) var(--kenos-ease-press);
   }
+  .bubble-btn svg {
+    width: var(--kenos-chrome-icon-size, 15px);
+    height: var(--kenos-chrome-icon-size, 15px);
+  }
   .bubble-btn:active {
     background: color-mix(in srgb, #fff 14%, transparent);
     transform: scale(var(--kenos-press-scale));
     opacity: var(--kenos-press-opacity);
   }
   @media (prefers-reduced-motion: reduce) {
-    .large-title,
-    .chevron,
     .action-bubble,
     .bubble-btn,
     .back-btn {
       transition-duration: var(--kenos-motion-press-reduce);
     }
-    .action-bubble:active {
+    .action-bubble:not(.is-plain):active {
       transform: scale(0.99);
       opacity: 0.97;
     }
@@ -433,9 +434,6 @@
     .back-btn:active {
       transform: scale(0.98);
       opacity: 0.94;
-    }
-    .title-btn:active .chevron {
-      transform: none;
     }
   }
 </style>

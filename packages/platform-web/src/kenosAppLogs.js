@@ -590,9 +590,11 @@ export function installKenosAppLogs(options) {
       /* ignore */
     }
   }
-  const api = (createKenosAppLogs(options)(
-    /** @type {any} */ window,
-  ).__KENOS_APP_LOGS__ = api)
+  const api = createKenosAppLogs(options)
+  // Do not start the next statement with `(window)` — ASI would glue it onto the
+  // previous call as `createKenosAppLogs(...)(window)`.
+  const host = /** @type {any} */ (window)
+  host.__KENOS_APP_LOGS__ = api
   api.notice(`${options.app} web log session started`, {
     category: 'lifecycle',
     metadata: { href: window.location.href },

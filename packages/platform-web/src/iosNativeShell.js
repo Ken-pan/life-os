@@ -3,8 +3,42 @@ const CHROME_STYLE_ID = 'kenos-ios-native-shell-css'
 
 /** Match KenosWebChrome.domainDock / kenosTabs (KenosWebSurfaceView). */
 export const IOS_NATIVE_SHELL_TOP_PAD_PX = 54
-/** Base Domain/Kenos dock clearance. Live Accessory extra pad is injected dynamically by native. */
-export const IOS_NATIVE_SHELL_BOTTOM_PAD_PX = 80
+/**
+ * Base Domain/Kenos dock scroll-end pad (KenosGlass.dockScrollEndPadPx).
+ * = dock row 56 + float 6 + breathing 16. Pair with env(safe-area-inset-bottom).
+ * Live Accessory extra pad is injected dynamically by native.
+ */
+export const IOS_NATIVE_SHELL_BOTTOM_PAD_PX = 78
+
+/**
+ * Map a BCP-47 language tag to Kenos app locale (`zh` | `en`).
+ * @param {string} [language]
+ * @returns {'zh' | 'en'}
+ */
+export function preferredShellLocale(language = '') {
+  const lang = String(language || '').toLowerCase()
+  return lang.startsWith('zh') ? 'zh' : 'en'
+}
+
+/**
+ * Daily Beta WKWebView: align web i18n with the system locale (same as native Dock),
+ * so Chinese/English dock labels and page chrome do not mix.
+ * @param {(locale: 'zh' | 'en') => void} setLocale
+ * @param {() => string} [getLocale]
+ * @returns {boolean} true when locale was changed
+ */
+export function syncLocaleFromSystemForNativeShell(setLocale, getLocale) {
+  if (typeof setLocale !== 'function') return false
+  if (!isIosNativeShell()) return false
+  const nav =
+    (typeof window !== 'undefined' && window.navigator) ||
+    (typeof navigator !== 'undefined' ? navigator : null)
+  const navLang = nav?.language || nav?.languages?.[0] || ''
+  const next = preferredShellLocale(navLang)
+  if (typeof getLocale === 'function' && getLocale() === next) return false
+  setLocale(next)
+  return true
+}
 
 /**
  * Kenos iOS native WKWebView shell (vs browser / PWA / Tauri).
@@ -54,7 +88,10 @@ export function ensureIosNativeShellChromeCss() {
   style.id = CHROME_STYLE_ID
   style.textContent = [
     `html[data-ios-native-shell='true']{`,
+    `--kenos-chrome-top-inset:${top}px;`,
+    `--kenos-dock-scroll-end-pad:${bottom}px;`,
     `--mobile-tabbar-total-h:0px!important;`,
+    `--mobile-content-inset:0px!important;`,
     `--mobile-content-inset-tabbar:0px!important;`,
     `--bottom-chrome-h:0px!important;`,
     `--safe-top-effective:0px!important;`,
@@ -68,8 +105,9 @@ export function ensureIosNativeShellChromeCss() {
     `html[data-ios-native-shell='true'] #main-content,`,
     `html[data-ios-native-shell='true'] .life-os-app-shell__main,`,
     `html[data-ios-native-shell='true'] .main-col{`,
-    `padding-top:${top}px!important;`,
-    `padding-bottom:calc(env(safe-area-inset-bottom,0px) + ${bottom}px)!important;`,
+    `padding-top:var(--kenos-chrome-top-inset,${top}px)!important;`,
+    `padding-bottom:calc(env(safe-area-inset-bottom,0px) + var(--kenos-dock-scroll-end-pad,${bottom}px))!important;`,
+    `scroll-padding-bottom:calc(env(safe-area-inset-bottom,0px) + var(--kenos-dock-scroll-end-pad,${bottom}px))!important;`,
     `padding-left:0!important;`,
     `padding-right:0!important;`,
     `box-sizing:border-box!important;`,
@@ -101,7 +139,7 @@ export function ensureIosNativeShellChromeCss() {
     `}`,
     /* Fitness timer — clear Domain Dock. */
     `html[data-ios-native-shell='true'] .tw{`,
-    `bottom:calc(80px + 18px + env(safe-area-inset-bottom,0px))!important;`,
+    `bottom:calc(var(--kenos-dock-scroll-end-pad,${bottom}px) + 18px + env(safe-area-inset-bottom,0px))!important;`,
     `}`,
   ].join('')
   ;(document.head || document.documentElement).appendChild(style)

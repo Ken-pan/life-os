@@ -6,6 +6,8 @@ import {
   ensureIosNativeShellChromeCss,
   isIosNativeShell,
   markIosNativeShellDom,
+  preferredShellLocale,
+  syncLocaleFromSystemForNativeShell,
 } from '../src/iosNativeShell.js'
 
 describe('iosNativeShell chrome CSS', () => {
@@ -62,7 +64,41 @@ describe('iosNativeShell chrome CSS', () => {
 
   it('exports dock pad constants matching native KenosWebChrome', () => {
     assert.equal(IOS_NATIVE_SHELL_TOP_PAD_PX, 54)
-    assert.equal(IOS_NATIVE_SHELL_BOTTOM_PAD_PX, 80)
+    assert.equal(IOS_NATIVE_SHELL_BOTTOM_PAD_PX, 78)
+  })
+
+  it('maps system language tags to zh/en shell locale', () => {
+    assert.equal(preferredShellLocale('zh-Hans-CN'), 'zh')
+    assert.equal(preferredShellLocale('zh-TW'), 'zh')
+    assert.equal(preferredShellLocale('en-US'), 'en')
+    assert.equal(preferredShellLocale('ja-JP'), 'en')
+  })
+
+  it('syncs web locale from navigator language in native shell', () => {
+    globalThis.window = {
+      ...globalThis.window,
+      navigator: { language: 'en-US', languages: ['en-US'] },
+    }
+    let locale = 'zh'
+    assert.equal(
+      syncLocaleFromSystemForNativeShell(
+        (next) => {
+          locale = next
+        },
+        () => locale,
+      ),
+      true,
+    )
+    assert.equal(locale, 'en')
+    assert.equal(
+      syncLocaleFromSystemForNativeShell(
+        (next) => {
+          locale = next
+        },
+        () => locale,
+      ),
+      false,
+    )
   })
 
   it('detects shell from window flag', () => {
@@ -73,8 +109,10 @@ describe('iosNativeShell chrome CSS', () => {
     assert.equal(ensureIosNativeShellChromeCss(), true)
     const style = document.getElementById('kenos-ios-native-shell-css')
     assert.ok(style)
-    assert.match(style.textContent, /padding-top:54px/)
-    assert.match(style.textContent, /80px/)
+    assert.match(style.textContent, /padding-top:var\(--kenos-chrome-top-inset,54px\)/)
+    assert.match(style.textContent, /--kenos-chrome-top-inset:54px/)
+    assert.match(style.textContent, /--kenos-dock-scroll-end-pad:78px/)
+    assert.match(style.textContent, /scroll-padding-bottom:calc/)
     assert.match(style.textContent, /\.fab/)
     assert.match(style.textContent, /data-immersive-route/)
     assert.match(style.textContent, /data-kenos-web-chrome='none'/)

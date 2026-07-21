@@ -5,7 +5,7 @@
   "description": "Life OS web-only platform adapters",
   "type": "module",
   "scripts": {
-    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs && node scripts/networkResume.test.mjs && node scripts/appShell.test.mjs && node scripts/chartUtils.test.mjs && node scripts/wikilinks.test.mjs && node scripts/kenosSpaceContinuity.test.mjs && node --test scripts/kenosHealthReadiness.test.mjs && node scripts/kenosNativeBridge.test.mjs && node scripts/kenosSensory.test.mjs && node --test scripts/iosNativeShell.test.mjs && node scripts/settingsHash.test.mjs && node scripts/kenosAppLogs.test.mjs"
+    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs && node scripts/networkResume.test.mjs && node scripts/appShell.test.mjs && node scripts/chartUtils.test.mjs && node scripts/wikilinks.test.mjs && node scripts/kenosSpaceContinuity.test.mjs && node --test scripts/kenosHealthReadiness.test.mjs && node scripts/kenosNativeBridge.test.mjs && node scripts/kenosShellSettings.test.mjs && node scripts/kenosShellSettings.runtime.test.mjs && node scripts/kenosSensory.test.mjs && node --test scripts/iosNativeShell.test.mjs && node scripts/settingsHash.test.mjs && node scripts/kenosAppLogs.test.mjs"
   },
   "types": "./src/index.d.ts",
   "exports": {
@@ -212,6 +212,9 @@
     },
     "./kenos-native-bridge": {
       "import": "./src/kenosNativeBridge.js"
+    },
+    "./kenos-shell-settings": {
+      "import": "./src/kenosShellSettings.js"
     },
     "./kenos-sensory": {
       "import": "./src/kenosSensory.js"

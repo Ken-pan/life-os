@@ -103,26 +103,66 @@ export function nativeShare(payload = {}) {
 
 /**
  * Face ID / Touch ID / device passcode.
- * @param {{ reason?: string }} [opts]
+ * @param {{
+ *   reason?: string,
+ *   cancelTitle?: string,
+ *   reuseDuration?: number,
+ *   storageKey?: string,
+ *   force?: boolean,
+ *   grantTTL?: number,
+ *   prompt?: boolean,
+ * }} [opts]
  */
 export function nativeAuthenticate(opts = {}) {
   return call('authenticate', opts)
 }
 
 /**
+ * Invalidate an in-flight Face ID sheet (retry / leave / dispose).
+ * Native calls LAContext.invalidate() so the system UI dismisses.
+ */
+export function nativeCancelAuthenticate() {
+  return call('cancelAuthenticate', {})
+}
+
+/**
+ * Clear process-scoped native unlock grant (survives WK remount; not disk).
+ * @param {string} [storageKey]
+ */
+export function nativeClearUnlockGrant(storageKey = '') {
+  return call('clearUnlockGrant', { storageKey: String(storageKey || '') })
+}
+
+/** @deprecated Prefer nativeCancelAuthenticate */
+export const cancelNativeAuthenticate = nativeCancelAuthenticate
+
+/**
  * Session-scoped unlock for sensitive Continuity domains (Money / Work).
- * Caches success in sessionStorage so Space switches do not re-prompt every time.
+ * Caches success in sessionStorage + native process grant so Space switches
+ * and WK remounts (LAN blips) do not re-prompt every time.
  * Outside the native shell this is a no-op success.
+ *
+ * Root-cause rules (Apple LA + WK bridge):
+ * - Remount must NOT cancel in-flight Face ID (dispose is generation-only)
+ * - onMount uses prompt:false (restore grant only) — never auto-loop LA UI
+ * - User Unlock / Try again uses prompt:true (or force)
+ * - Same storageKey joins one in-flight Face ID (native coalesce)
  *
  * @param {{
  *   reason?: string,
  *   storageKey?: string,
  *   force?: boolean,
+ *   prompt?: boolean,
+ *   cancelTitle?: string,
+ *   reuseDuration?: number,
+ *   grantTTL?: number,
  * }} [opts]
- * @returns {Promise<{ ok: boolean, skipped?: boolean, cached?: boolean, code?: string, message?: string }>}
+ * @returns {Promise<{ ok: boolean, skipped?: boolean, cached?: boolean, cancelled?: boolean, code?: string, message?: string }>}
  */
 export async function ensureNativeUnlock(opts = {}) {
   const storageKey = String(opts.storageKey || 'kenos.nativeUnlock')
+  // force always presents LA; remount restore passes prompt:false.
+  const allowPrompt = opts.force ? true : opts.prompt !== false
   if (!isNativeBridgeAvailable()) {
     return { ok: true, skipped: true }
   }
@@ -134,31 +174,118 @@ export async function ensureNativeUnlock(opts = {}) {
     } catch {
       /* private mode */
     }
+  } else {
+    // Drop a stuck system Face ID sheet + native grant before re-prompting.
+    await nativeCancelAuthenticate()
+    try {
+      await nativeClearUnlockGrant(storageKey)
+    } catch {
+      /* older shells */
+    }
   }
-  const result = await nativeAuthenticate({
-    reason: opts.reason || 'Unlock this Kenos surface',
-  })
+  let result
+  try {
+    result = await nativeAuthenticate({
+      reason: opts.reason || 'Unlock this Kenos surface',
+      cancelTitle: opts.cancelTitle || 'Cancel',
+      reuseDuration: opts.reuseDuration ?? 10,
+      storageKey,
+      force: Boolean(opts.force),
+      grantTTL: opts.grantTTL ?? 900,
+      prompt: allowPrompt,
+    })
+  } catch (err) {
+    const code = err?.code || 'auth_failed'
+    const cancelled = code === 'auth_cancelled' || code === 'auth_superseded'
+    return {
+      ok: false,
+      cancelled,
+      code,
+      message: err?.message || 'Authentication failed',
+    }
+  }
   if (result?.ok) {
     try {
       sessionStorage.setItem(storageKey, '1')
     } catch {
       /* ignore */
     }
-    return { ok: true, cached: false }
+    return { ok: true, cached: Boolean(result.cached) }
   }
+  const code = result?.code || 'auth_failed'
+  const cancelled = code === 'auth_cancelled' || code === 'auth_superseded'
   return {
     ok: false,
-    code: result?.code || 'auth_failed',
+    cancelled,
+    code,
     message: result?.message || 'Authentication failed',
   }
 }
 
 /** Clear a previous ensureNativeUnlock cache (e.g. Settings → lock now). */
 export function clearNativeUnlock(storageKey = 'kenos.nativeUnlock') {
+  const key = String(storageKey)
   try {
-    sessionStorage.removeItem(String(storageKey))
+    sessionStorage.removeItem(key)
   } catch {
     /* ignore */
+  }
+  if (isNativeBridgeAvailable()) {
+    void nativeClearUnlockGrant(key)
+  }
+}
+
+/**
+ * Generation-guarded unlock controller for Continuity Money / Work gates.
+ * Prevents remount/retry races from flipping unlockState after a newer request.
+ *
+ * @param {{
+ *   storageKey: string,
+ *   reason: string,
+ *   cancelTitle?: string,
+ *   reuseDuration?: number,
+ * }} opts
+ */
+export function createNativeUnlockController(opts) {
+  let generation = 0
+  const storageKey = String(opts.storageKey || 'kenos.nativeUnlock')
+  const reason = opts.reason || 'Unlock this Kenos surface'
+
+  return {
+    /**
+     * @param {{ force?: boolean, prompt?: boolean }} [request]
+     * @returns {Promise<'open'|'locked'>}
+     */
+    async unlock(request = {}) {
+      const gen = ++generation
+      const force = Boolean(request.force)
+      const result = await ensureNativeUnlock({
+        storageKey,
+        reason,
+        force,
+        // Remount restore: prompt:false. Explicit Unlock / Try again: prompt true.
+        prompt: force ? true : request.prompt !== false,
+        cancelTitle: opts.cancelTitle || 'Cancel',
+        reuseDuration: opts.reuseDuration ?? 10,
+      })
+      if (gen !== generation) return 'locked'
+      return result.ok || result.skipped ? 'open' : 'locked'
+    },
+
+    /** Cancel system Face ID and mark this controller generation stale. */
+    async cancel() {
+      generation += 1
+      await nativeCancelAuthenticate()
+    },
+
+    /**
+     * Remount cleanup — bump generation only.
+     * Must NOT cancelAuthenticate: WK reload storms would kill Face ID and
+     * the next mount would re-prompt forever.
+     */
+    dispose() {
+      generation += 1
+    },
   }
 }
 
@@ -244,6 +371,104 @@ export function nativeOpenContinuity(payload = {}) {
     domainId: String(payload?.domainId || ''),
     path: String(payload?.path || ''),
   })
+}
+
+/**
+ * Whether Continuity exposes local UN scheduling (not remote APNs).
+ * @param {{ capabilities?: Record<string, boolean> } | null | undefined} [capsResult]
+ */
+export function hasNativeLocalNotifications(capsResult) {
+  return Boolean(capsResult?.capabilities?.localNotifications)
+}
+
+/** Request local notification permission via native shell. */
+export function nativeNotificationsRequestPermission() {
+  return call('notificationsRequestPermission')
+}
+
+export function nativeNotificationsGetStatus() {
+  return call('notificationsGetStatus')
+}
+
+export function nativeNotificationsGetPreferences() {
+  return call('notificationsGetPreferences')
+}
+
+/** @param {Record<string, unknown>} [prefs] */
+export function nativeNotificationsSetPreferences(prefs = {}) {
+  return call('notificationsSetPreferences', prefs)
+}
+
+/** Continuity-wide theme / locale SSOT (native UserDefaults). */
+export function nativeShellSettingsGet() {
+  return call('shellSettingsGet')
+}
+
+/** @param {{ theme?: string, locale?: string }} [prefs] */
+export function nativeShellSettingsSet(prefs = {}) {
+  return call('shellSettingsSet', prefs)
+}
+
+/**
+ * Schedule one local notification.
+ * @param {{
+ *   type?: string,
+ *   safeTitle?: string,
+ *   title?: string,
+ *   safeBody?: string,
+ *   body?: string,
+ *   deepLink: string,
+ *   deduplicationKey: string,
+ *   fireAt?: string|number,
+ *   risk?: string,
+ *   classification?: string,
+ * }} payload
+ */
+export function nativeNotificationsSchedule(payload = {}) {
+  return call('notificationsSchedule', payload)
+}
+
+/**
+ * @param {{ deduplicationKey?: string, id?: string, type?: string }} [payload]
+ */
+export function nativeNotificationsCancel(payload = {}) {
+  return call('notificationsCancel', payload)
+}
+
+/**
+ * Bulk-replace Planner reminder jobs on-device.
+ * @param {{ jobs?: Array<{ id?: string, taskId?: string, title?: string, fireAt?: number, fireAtMs?: number }> }} payload
+ */
+export function nativeNotificationsSyncReminders(payload = {}) {
+  return call('notificationsSyncReminders', {
+    jobs: Array.isArray(payload?.jobs) ? payload.jobs : [],
+  })
+}
+
+export function nativeNotificationsListPending() {
+  return call('notificationsListPending')
+}
+
+/**
+ * Sync native status-bar / chrome polarity with the resolved page theme.
+ * @param {'light'|'dark'} colorScheme
+ */
+export function publishChromeAppearance(colorScheme) {
+  const scheme = String(colorScheme || '').toLowerCase()
+  if (scheme !== 'light' && scheme !== 'dark') {
+    return Promise.resolve({ ok: false, skipped: true, code: 'invalid_color_scheme' })
+  }
+  if (!isNativeBridgeAvailable()) {
+    return Promise.resolve({ ok: false, skipped: true, colorScheme: scheme })
+  }
+  try {
+    if (typeof window.kenosNative?.publishChromeAppearance === 'function') {
+      return window.kenosNative.publishChromeAppearance({ colorScheme: scheme })
+    }
+    return call('publishChromeAppearance', { colorScheme: scheme })
+  } catch {
+    return Promise.resolve({ ok: false, skipped: true, colorScheme: scheme })
+  }
 }
 
 /**

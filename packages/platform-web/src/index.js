@@ -161,6 +161,7 @@ export function createThemePreferenceStoreWeb(options) {
 
   function applyCurrentTheme() {
     if (options.apply === false) return
+    // Dispatches `kenos:resolved-theme`; iOS bootstrap syncs status-bar polarity.
     applyResolvedTheme(resolved, options.themeOptions)
   }
 

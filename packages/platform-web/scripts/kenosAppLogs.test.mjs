@@ -6,6 +6,7 @@ import {
   levelMeetsMinimum,
   evaluateAppLogAlertRules,
   createKenosAppLogs,
+  installKenosAppLogs,
 } from '../src/kenosAppLogs.js'
 
 assert.equal(normalizeLogLevel('warn'), 'warning')
@@ -117,5 +118,32 @@ for (let i = 0; i < 40 && !calls.includes('kenos_scan_app_log_alerts'); i++) {
 assert.ok(calls.includes('kenos_ingest_app_logs'))
 assert.ok(calls.includes('kenos_scan_app_log_alerts'))
 api2.dispose()
+
+// ASI regression: install must not treat createKenosAppLogs() return as callable.
+{
+  const g = globalThis
+  const prevWindow = g.window
+  g.window = {
+    location: { href: 'http://localhost/test' },
+    addEventListener() {},
+    removeEventListener() {},
+  }
+  try {
+    const dispose = installKenosAppLogs({
+      app: 'aios',
+      getSupabase: () => null,
+      captureGlobals: false,
+      storage: null,
+      enabled: true,
+    })
+    assert.equal(typeof dispose, 'function')
+    assert.ok(g.window.__KENOS_APP_LOGS__)
+    assert.equal(g.window.__KENOS_APP_LOGS__.getStatus().app, 'aios')
+    dispose()
+  } finally {
+    if (prevWindow === undefined) delete g.window
+    else g.window = prevWindow
+  }
+}
 
 console.log('kenosAppLogs.test.mjs: ok')
