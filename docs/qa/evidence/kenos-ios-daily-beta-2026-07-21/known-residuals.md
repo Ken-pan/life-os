@@ -28,6 +28,7 @@ See `docs/qa/kenos-ios-ia-model-2026-07-21.md`:
 
 1. Full OS Dynamic Type / VoiceOver Settings sweep (still needs unlocked 17 Pro OS Settings).
    - ~~LAN Web Continue/Quick Switch 44px + aria-label~~ → **PASS** (`ia-web-a11y-soft.mjs`) after SystemBar hit-target bump.
+   - ~~iOS native Continue/Quick Switch unlock recheck~~ → **PASS_LAUNCH_NO_USB_SHOT** (launch @ 06:20:41Z; PNG needs USB — Wi‑Fi CoreDevice only).
 2. Wi‑Fi↔Cellular mid-session toggle.
 3. Network scope remains **LAN-DEPENDENT** until phone-reachable Owner canary replaces Mac LAN.
 4. ~~Hosted title writer OFF in Daily Beta~~ → **CLOSED for Owner keyboard Save**  

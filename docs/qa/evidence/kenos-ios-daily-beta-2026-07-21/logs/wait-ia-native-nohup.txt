@@ -1,0 +1,2 @@
+2026-07-21T06:18:51Z wait-ia-native start max_min=90 device=8097F071-CAB6-5AF0-8258-BCD985E9D79E pid=3916
+2026-07-21T06:18:51Z poll=1 lan=10.20.202.15

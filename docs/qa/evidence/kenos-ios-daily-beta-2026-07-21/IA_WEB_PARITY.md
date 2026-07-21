@@ -27,7 +27,7 @@ Continue no longer dumps All Domains / System tabs.
 | --- | --- | --- |
 | LAN Web Continue / Quick Switch / Switch Space | **PASS** | `logs/ia-web-parity-verify.json` · screenshots `screenshots/ia-web-parity/` |
 | Daily Beta release | `886994baf1d2` | `~/.kenos-daily-beta/current` |
-| iOS native Continue / Quick Switch toolbar | **BLOCKED_LOCKED** | 17 Pro launch denied (device Locked) — Owner unlock to re-verify |
+| iOS native Continue / Quick Switch toolbar | **PASS_LAUNCH_NO_USB_SHOT** | Unlock launch @ 06:20:41Z · a11y ids in KenosRootView · PNG needs USB |
 
 Script: `scripts/kenos-ios-daily-beta/ia-web-parity-verify.mjs`
 

@@ -1,0 +1,25 @@
+2026-07-21T06:20:13Z wait-ia-native start max_min=90 device=8097F071-CAB6-5AF0-8258-BCD985E9D79E pid=41885
+2026-07-21T06:20:13Z poll=1 lan=10.20.202.15
+23:20:14  Acquired tunnel connection to device.
+23:20:14  Enabling developer disk image services.
+23:20:14  Acquired usage assertion.
+ERROR: The application failed to launch. (com.apple.dt.CoreDeviceError error 10002 (0x2712))
+       BundleIdentifier = space.kenos.app.ios
+       ----------------------------------------
+           The request to open "space.kenos.app.ios" failed. (FBSOpenApplicationServiceErrorDomain error 1 (0x01))
+           NSLocalizedFailureReason = The request was denied by service delegate (SBMainWorkspace) for reason: Locked ("Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked").
+           FBSOpenApplicationRequestID = 0x9fff
+           BSErrorCodeDescription = RequestDenied
+       ----------------------------------------
+               The operation couldn’t be completed. Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked. (FBSOpenApplicationErrorDomain error 7 (0x07))
+               NSLocalizedFailureReason = Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked.
+               BSErrorCodeDescription = Locked
+2026-07-21T06:20:25Z still locked/failed ec=1
+2026-07-21T06:20:40Z poll=2 lan=10.20.202.15
+23:20:40  Acquired tunnel connection to device.
+23:20:40  Enabling developer disk image services.
+23:20:40  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T06:20:41Z UNLOCKED — capturing shell screenshot
+No device found with udid 00008150-000C38C20AC0401C.
+2026-07-21T06:20:43Z DONE shot_ec=255 code_ok=1

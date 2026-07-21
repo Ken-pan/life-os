@@ -4,7 +4,7 @@
 
 ## Optional soft residuals
 
-- Unlock **17 Pro** so `wait-and-verify-ia-native.sh` can screenshot native Continue / Quick Switch (waiter armed ≤90m).
+- Optional: plug **17 Pro USB** so `idevicescreenshot` can capture native Continue / Quick Switch chrome (Wi‑Fi CoreDevice launch already PASS).
 
 - Full Dynamic Type / VoiceOver OS Settings sweep
 - Wi‑Fi↔Cellular mid-session

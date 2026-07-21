@@ -1,6 +1,18 @@
 {
-  "ts": "2026-07-21T06:15:09.864544+00:00",
+  "ts": "2026-07-21T06:26:02.830215+00:00",
   "device": "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
-  "status": "BLOCKED_LOCKED",
-  "note": "Native Continue/Quick Switch shipped in 72e5ba6c9; Owner unlock needed to re-screenshot after web Daily Beta 886994baf."
+  "status": "PASS_LAUNCH_NO_USB_SHOT",
+  "unlockedLaunchAt": "2026-07-21T06:20:41Z",
+  "screenshot": null,
+  "idevicescreenshot": "No device found with udid (CoreDevice transport=localNetwork; USB required for libimobiledevice screenshot)",
+  "a11y_ids_in_source": true,
+  "a11y_ids": [
+    "kenos.continue.trigger",
+    "kenos.quickSwitch.trigger",
+    "kenos.spaceSwitcher.trigger"
+  ],
+  "dailyBetaOrigin": "http://10.20.202.15:5219",
+  "dailyBetaSha": "ac1101604",
+  "evidenceLog": "logs/wait-ia-native-toolbar.txt",
+  "note": "Native shell launched after unlock. Screenshot blocked without USB. Continue/Quick Switch accessibilityIdentifiers confirmed in KenosRootView source."
 }

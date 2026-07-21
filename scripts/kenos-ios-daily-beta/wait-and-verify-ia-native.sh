@@ -60,27 +60,30 @@ p = Path("$EVID/logs/ia-native-toolbar-status.json")
 p.write_text(json.dumps({
   "ts": datetime.now(timezone.utc).isoformat(),
   "device": "$DEVICE",
-  "status": "PASS_LAUNCH_SCREENSHOT" if $SHOT_EC == 0 else "PASS_LAUNCH_NO_SHOT",
+  "status": "PASS_LAUNCH_SCREENSHOT" if $SHOT_EC == 0 else "PASS_LAUNCH_NO_USB_SHOT",
   "screenshot": str(Path("$SHOT").relative_to("$ROOT")) if $SHOT_EC == 0 else None,
   "a11y_ids_in_source": bool($CODE_OK),
-  "note": "Launch + screenshot after unlock. Sheet open not XCUITest-tapped; Continue/Quick Switch ids present in KenosRootView.",
+  "note": "Unlock launch ok. idevicescreenshot needs USB (Wi-Fi CoreDevice alone is insufficient). Sheet open not XCUITest-tapped.",
   "dailyBetaOrigin": "http://${LAN}:5219" if "$LAN" else None,
 }, indent=2) + "\n")
 print("wrote", p)
 PY
 
     # Soft append to IA_WEB_PARITY
-    python3 - <<'PY'
+    python3 - <<PY
 from pathlib import Path
 p = Path("docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/IA_WEB_PARITY.md")
 t = p.read_text()
+shot_ok = int("$SHOT_EC") == 0
+label = "PASS_LAUNCH_SCREENSHOT" if shot_ok else "PASS_LAUNCH_NO_USB_SHOT"
+evidence = "\`04-ios-native-shell.png\`" if shot_ok else "unlock launch log · USB needed for PNG"
 old = "| iOS native Continue / Quick Switch toolbar | **BLOCKED_LOCKED** | 17 Pro launch denied (device Locked) — Owner unlock to re-verify |"
-new = "| iOS native Continue / Quick Switch toolbar | **PASS_LAUNCH_SCREENSHOT** | `04-ios-native-shell.png` · a11y ids in `KenosRootView` |"
+new = f"| iOS native Continue / Quick Switch toolbar | **{label}** | {evidence} · a11y ids in \`KenosRootView\` |"
 if old in t:
     p.write_text(t.replace(old, new))
-    print("IA_WEB_PARITY updated")
-elif "PASS_LAUNCH_SCREENSHOT" not in t:
-    p.write_text(t.rstrip() + "\n\nNative toolbar recheck completed after unlock — see `logs/ia-native-toolbar-status.json`.\n")
+elif "PASS_LAUNCH_NO_USB_SHOT" not in t and "PASS_LAUNCH_SCREENSHOT" not in t:
+    p.write_text(t.rstrip() + f"\n\nNative toolbar: **{label}** — see \`logs/ia-native-toolbar-status.json\`.\n")
+print("IA_WEB_PARITY", label)
 PY
 
     rm -f "$PIDFILE"
