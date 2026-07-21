@@ -243,6 +243,7 @@ export default {
     addBlock: 'Insert block below',
     dragBlock: 'Drag to reorder',
     linkPrompt: 'Enter link URL',
+    formatBar: 'Format',
     bold: 'Bold',
     italic: 'Italic',
     strike: 'Strikethrough',

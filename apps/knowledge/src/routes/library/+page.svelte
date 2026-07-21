@@ -6,8 +6,9 @@
   import { goto } from '$app/navigation'
   import { SearchField } from '@life-os/platform-web/svelte/form'
   import { EmptyState } from '@life-os/platform-web/svelte/status'
+  import { LifeOsSheet } from '@life-os/platform-web/svelte/overlay'
+  import { createImeGuard } from '@life-os/theme'
   import Plus from '@lucide/svelte/icons/plus'
-  import ArrowLeft from '@lucide/svelte/icons/arrow-left'
   import {
     S,
     allTags,
@@ -27,9 +28,12 @@
   import NoteConnections from '$lib/components/NoteConnections.svelte'
   import { t } from '$lib/i18n/index.js'
 
+  const ime = createImeGuard()
   let query = $state('')
   let activeTags = $state(new Set())
   let activeFolder = $state('')
+  /** Mobile tag overflow uses LifeOsSheet; desktop keeps anchored popover. */
+  let tagSheetMode = $state(false)
 
   const folders = $derived(allFolders())
   const contextItems = $derived(
@@ -235,6 +239,13 @@
   onMount(() => {
     const saved = Number(localStorage.getItem(LIST_W_KEY))
     if (saved >= LIST_W_MIN && saved <= LIST_W_MAX) listW = saved
+    const mq = window.matchMedia('(max-width: 640px)')
+    const syncTagSheet = () => {
+      tagSheetMode = mq.matches
+    }
+    syncTagSheet()
+    mq.addEventListener('change', syncTagSheet)
+    return () => mq.removeEventListener('change', syncTagSheet)
   })
   function startResize(e) {
     e.preventDefault()
@@ -275,12 +286,20 @@
   <!-- 列表列 -->
   <aside class="nw-list" class:is-hidden={selected}>
     <div class="nw-list__head">
-      <SearchField
-        value={query}
-        onChange={(v) => (query = v)}
-        placeholder={t('library.searchShort')}
-        clearLabel={t('library.clearSearch')}
-      />
+      <!-- composition listeners bubble from SearchField; live filter stays on during IME -->
+      <div
+        class="nw-search"
+        oncompositionstart={ime.compositionstart}
+        oncompositionend={(e) => ime.compositionend(e)}
+        oncompositioncancel={ime.compositioncancel}
+      >
+        <SearchField
+          value={query}
+          onChange={(v) => (query = v)}
+          placeholder={t('library.searchShort')}
+          clearLabel={t('library.clearSearch')}
+        />
+      </div>
       <button
         type="button"
         class="nw-new"
@@ -293,7 +312,7 @@
 
     {#if folders.length > 0}
       <div
-        class="chip-row nw-chips"
+        class="chip-row nw-chips life-os-scroll-x life-os-scroll-x--snap life-os-scroll-x--fade-edge"
         role="group"
         aria-label={t('library.folderAria')}
       >
@@ -320,7 +339,7 @@
     {/if}
     {#if tags.length > 0}
       <div
-        class="chip-row nw-chips"
+        class="chip-row nw-chips life-os-scroll-x life-os-scroll-x--snap life-os-scroll-x--fade-edge"
         role="group"
         aria-label={t('library.filterAria')}
       >
@@ -392,10 +411,6 @@
   <!-- 文档列 -->
   <section class="nw-doc" class:is-hidden={!selected}>
     {#if selected}
-      <button type="button" class="nw-back" onclick={backToList}>
-        <ArrowLeft size={16} strokeWidth={2.2} /><span>{t('nav.allNotes')}</span
-        >
-      </button>
       {#if selectedFilteredOut}
         <div class="nw-filter-note" role="status">
           {t('library.notInFilter')}
@@ -409,6 +424,7 @@
         onDelete={deleteNote}
         onTogglePin={pinNote}
         onOpenNote={selectNote}
+        onClose={backToList}
       >
         {#snippet footer()}
           <NoteConnections item={selected} onOpen={selectNote} />
@@ -458,7 +474,93 @@
   }}
 />
 
-{#if tagPanelOpen}
+{#snippet tagPanelBody()}
+  {#if showTagSearch}
+    <input
+      class="nw-tagpop__search"
+      type="search"
+      placeholder={t('library.tagSearch')}
+      bind:value={tagPanelQuery}
+      use:autofocus
+      oncompositionstart={ime.compositionstart}
+      oncompositionend={(e) => ime.compositionend(e)}
+      oncompositioncancel={ime.compositioncancel}
+    />
+  {/if}
+  <div class="nw-tagpop__scroll">
+    {#if q}
+      <!-- 搜索态：扁平结果 -->
+      <div class="nw-tagpop__list">
+        {#each panelMatch as tag (tag)}
+          <button
+            type="button"
+            class="chip"
+            aria-pressed={activeTags.has(tag)}
+            onclick={() => toggleTag(tag)}>{tag}</button
+          >
+        {/each}
+        {#if panelMatch.length === 0}<p class="nw-tagpop__empty">
+            {t('library.noTagMatch')}
+          </p>{/if}
+      </div>
+    {:else}
+      {#if panelSelected.length > 0}
+        <p class="nw-tagpop__grp">{t('library.tagGroupSelected')}</p>
+        <div class="nw-tagpop__list">
+          {#each panelSelected as tag (tag)}
+            <button
+              type="button"
+              class="chip"
+              aria-pressed="true"
+              onclick={() => toggleTag(tag)}>{tag} ✕</button
+            >
+          {/each}
+        </div>
+      {/if}
+      {#if panelRecent.length > 0}
+        <p class="nw-tagpop__grp">{t('library.tagGroupRecent')}</p>
+        <div class="nw-tagpop__list">
+          {#each panelRecent as tag (tag)}
+            <button type="button" class="chip" onclick={() => toggleTag(tag)}
+              >{tag}</button
+            >
+          {/each}
+        </div>
+      {/if}
+      {#if panelRest.length > 0}
+        <p class="nw-tagpop__grp">{t('library.tagGroupAll')}</p>
+        <div class="nw-tagpop__list">
+          {#each panelRest as tag (tag)}
+            <button type="button" class="chip" onclick={() => toggleTag(tag)}
+              >{tag}</button
+            >
+          {/each}
+        </div>
+      {/if}
+    {/if}
+  </div>
+  {#if activeTags.size > 0}
+    <button
+      type="button"
+      class="nw-tagpop__clear"
+      onclick={() => (activeTags = new Set())}
+      >{t('library.filterClear')}</button
+    >
+  {/if}
+{/snippet}
+
+{#if tagPanelOpen && tagSheetMode}
+  <LifeOsSheet
+    open={tagPanelOpen}
+    title={t('library.filterAria')}
+    onClose={() => (tagPanelOpen = false)}
+    ariaLabel={t('library.filterAria')}
+  >
+    <div class="nw-tag-sheet">
+      {@render tagPanelBody()}
+    </div>
+  </LifeOsSheet>
+{:else if tagPanelOpen}
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
   <div
     class="nw-tagpop__backdrop"
@@ -472,75 +574,7 @@
     role="dialog"
     aria-label={t('library.filterAria')}
   >
-    {#if showTagSearch}
-      <input
-        class="nw-tagpop__search"
-        type="search"
-        placeholder={t('library.tagSearch')}
-        bind:value={tagPanelQuery}
-        use:autofocus
-      />
-    {/if}
-    <div class="nw-tagpop__scroll">
-      {#if q}
-        <!-- 搜索态：扁平结果 -->
-        <div class="nw-tagpop__list">
-          {#each panelMatch as tag (tag)}
-            <button
-              type="button"
-              class="chip"
-              aria-pressed={activeTags.has(tag)}
-              onclick={() => toggleTag(tag)}>{tag}</button
-            >
-          {/each}
-          {#if panelMatch.length === 0}<p class="nw-tagpop__empty">
-              {t('library.noTagMatch')}
-            </p>{/if}
-        </div>
-      {:else}
-        {#if panelSelected.length > 0}
-          <p class="nw-tagpop__grp">{t('library.tagGroupSelected')}</p>
-          <div class="nw-tagpop__list">
-            {#each panelSelected as tag (tag)}
-              <button
-                type="button"
-                class="chip"
-                aria-pressed="true"
-                onclick={() => toggleTag(tag)}>{tag} ✕</button
-              >
-            {/each}
-          </div>
-        {/if}
-        {#if panelRecent.length > 0}
-          <p class="nw-tagpop__grp">{t('library.tagGroupRecent')}</p>
-          <div class="nw-tagpop__list">
-            {#each panelRecent as tag (tag)}
-              <button type="button" class="chip" onclick={() => toggleTag(tag)}
-                >{tag}</button
-              >
-            {/each}
-          </div>
-        {/if}
-        {#if panelRest.length > 0}
-          <p class="nw-tagpop__grp">{t('library.tagGroupAll')}</p>
-          <div class="nw-tagpop__list">
-            {#each panelRest as tag (tag)}
-              <button type="button" class="chip" onclick={() => toggleTag(tag)}
-                >{tag}</button
-              >
-            {/each}
-          </div>
-        {/if}
-      {/if}
-    </div>
-    {#if activeTags.size > 0}
-      <button
-        type="button"
-        class="nw-tagpop__clear"
-        onclick={() => (activeTags = new Set())}
-        >{t('library.filterClear')}</button
-      >
-    {/if}
+    {@render tagPanelBody()}
   </div>
 {/if}
 
@@ -651,9 +685,13 @@
     gap: var(--space-2, 8px);
     padding-inline: var(--space-1, 4px);
   }
-  .nw-list__head :global(.field),
-  .nw-list__head :global([role='search']) {
+  .nw-search {
     flex: 1;
+    min-width: 0;
+  }
+  .nw-search :global(.field),
+  .nw-search :global([role='search']) {
+    width: 100%;
     min-width: 0;
   }
   .nw-new {
@@ -675,18 +713,28 @@
   .nw-new:hover {
     filter: brightness(1.08);
   }
-  /* 标签行单行水平滚动，别让它把工具区撑高 */
+  @media (max-width: 640px) {
+    .nw-new span {
+      display: none;
+    }
+    .nw-new {
+      padding: 0;
+      width: 36px;
+      justify-content: center;
+    }
+  }
+  /* 标签行单行水平滚动（life-os-scroll-x 管 overflow / 滚动条 / 边缘淡出） */
   .nw-chips {
     flex-wrap: nowrap;
-    overflow-x: auto;
     padding-inline: var(--space-1, 4px);
-    scrollbar-width: none;
-  }
-  .nw-chips::-webkit-scrollbar {
-    display: none;
   }
   .nw-chips .chip {
     flex: 0 0 auto;
+  }
+  .nw-tag-sheet {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2, 8px);
   }
   .nw-list__body {
     flex: 1;
@@ -824,34 +872,6 @@
   .nw-doc :global(.ed-pane) {
     flex: 1;
     min-height: 0;
-  }
-  .nw-back {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1, 4px);
-    align-self: flex-start;
-    margin: var(--space-2, 8px) var(--space-3, 12px) 0;
-    padding: var(--space-1, 4px) var(--space-2, 8px);
-    border: none;
-    border-radius: var(--radius-control, 8px);
-    background: transparent;
-    color: var(--t2, var(--text-secondary));
-    font-size: var(--text-sm, 12px);
-    cursor: pointer;
-  }
-  .nw-back:hover {
-    background: color-mix(in srgb, var(--t1, var(--text)) 6%, transparent);
-    color: var(--t1, var(--text));
-  }
-  /* Native detail: reserve trailing space for overlay Quick Switch bubble. */
-  :global(html[data-ios-native-shell='true']) .nw-back {
-    max-width: calc(100% - 56px);
-  }
-  /* 桌面双列不需要返回键（放在基样式之后覆盖） */
-  @container life-os-main (min-width: 840px) {
-    .nw-back {
-      display: none;
-    }
   }
   .nw-empty {
     flex: 1;

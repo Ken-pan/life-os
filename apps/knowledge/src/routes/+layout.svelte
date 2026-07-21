@@ -20,6 +20,7 @@
     suspendLibrarySpace,
   } from '$lib/kenos/knowledgeSpaceAdapter.js'
   import { ICONS } from '$lib/iconRegistry.js'
+  import { startNote } from '$lib/compose.svelte.js'
   import {
     S,
     applyTheme,
@@ -49,6 +50,10 @@
       page.url.searchParams.has('note'),
   )
   const hideHeader = $derived(libraryDetail && narrowLayout)
+  /** Web AppBar compose — list only; detail hides header / native uses DomainMusicHeader. */
+  const showLibraryCompose = $derived(
+    page.url.pathname.startsWith('/library') && !libraryDetail,
+  )
   /** URL param is reactive; session/flag covers SPA navigations that drop ?iosNativeShell=1. */
   const nativeShell = $derived(
     page.url.searchParams.get('iosNativeShell') === '1' || isIosNativeShell(),
@@ -140,13 +145,17 @@
 
   {#snippet header()}
     {#if !nativeShell}
-      <AppBar title={pageTitle} hidden={hideHeader} />
+      <AppBar
+        title={pageTitle}
+        hidden={hideHeader}
+        onNew={showLibraryCompose ? startNote : undefined}
+      />
     {/if}
   {/snippet}
 
   {#snippet main()}
     {#if nativeShell}
-      <!-- Note detail: compact chrome keeps Quick Switch; list keeps full title + compose. -->
+      <!-- Note detail: compact chrome keeps More overlay; list keeps full title + compose. -->
       <DomainMusicHeader
         title={pageTitle}
         domainLabel="Library"
@@ -191,7 +200,7 @@
     --mobile-content-inset-tabbar: 0px;
     --safe-top-effective: 0px;
   }
-  /* Anchor for compact DomainMusicHeader overlay (note detail Quick Switch). */
+  /* Anchor for compact DomainMusicHeader overlay (note detail More bubble). */
   :global(html[data-ios-native-shell='true'] .life-os-app-shell__main) {
     position: relative;
   }

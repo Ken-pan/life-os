@@ -236,6 +236,7 @@ export default {
     addBlock: '在下方插入块',
     dragBlock: '拖动重排',
     linkPrompt: '输入链接地址',
+    formatBar: '格式',
     bold: '加粗',
     italic: '斜体',
     strike: '删除线',
