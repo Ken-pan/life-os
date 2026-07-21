@@ -1,0 +1,28 @@
+=== SMOKE MATRIX ===
+spaces OK
+work home
+work → Kenos
+money home
+total 16376
+drwxr-xr-x  22 kenpan  staff      704 Jul 21 07:27 .
+drwxr-xr-x  26 kenpan  staff      832 Jul 21 07:23 ..
+-rw-r--r--@  1 kenpan  staff   349486 Jul 21 07:24 00-probe.png
+-rw-r--r--@  1 kenpan  staff   275379 Jul 21 07:24 01-kenos-today.png
+-rw-r--r--@  1 kenpan  staff   349746 Jul 21 07:25 10-spaces.png
+-rw-r--r--@  1 kenpan  staff   275571 Jul 21 07:25 20-work-home.png
+-rw-r--r--@  1 kenpan  staff   403131 Jul 21 07:25 21-work-return-kenos.png
+-rw-r--r--@  1 kenpan  staff   134419 Jul 21 07:25 30-money-home.png
+-rw-r--r--@  1 kenpan  staff   403403 Jul 21 07:26 31-money-return-kenos.png
+-rw-r--r--@  1 kenpan  staff   306207 Jul 21 07:26 40-library-home.png
+-rw-r--r--@  1 kenpan  staff   403403 Jul 21 07:26 41-library-return-kenos.png
+-rw-r--r--@  1 kenpan  staff   210082 Jul 21 07:26 50-music-home.png
+-rw-r--r--@  1 kenpan  staff   948941 Jul 21 07:26 51-music-return-kenos.png
+-rw-r--r--@  1 kenpan  staff   489820 Jul 21 07:26 60-home-home.png
+-rw-r--r--@  1 kenpan  staff   403403 Jul 21 07:26 61-home-return-kenos.png
+-rw-r--r--@  1 kenpan  staff   433054 Jul 21 07:26 70-health-home.png
+-rw-r--r--@  1 kenpan  staff   403536 Jul 21 07:26 71-health-return-kenos.png
+-rw-r--r--@  1 kenpan  staff   295204 Jul 21 07:26 80-plan-home.png
+-rw-r--r--@  1 kenpan  staff   402235 Jul 21 07:27 81-plan-return-kenos.png
+-rw-r--r--@  1 kenpan  staff  1101461 Jul 21 07:27 90-training-home.png
+-rw-r--r--@  1 kenpan  staff   402235 Jul 21 07:27 91-training-return-kenos.png
+-rw-r--r--@  1 kenpan  staff   349351 Jul 21 07:27 99-spaces-final.png

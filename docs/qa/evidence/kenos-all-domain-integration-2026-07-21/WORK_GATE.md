@@ -21,7 +21,8 @@
 ## Honest residuals
 
 - Work hub is still AIOS-hosted (not a standalone Work OS app).
-- Device smoke Spaces→Work→Kenos pending when LAN preview available.
+- Device smoke Spaces→Work→Kenos **PASS_LAN** 2026-07-21 (`20-work-home.png` Domain Dock).
+- Production Work reads local-off by design (capability banner on Continuity).
 - Today/Inbox aggregation cross-cut comes in Phase C.
 
 ## Regression

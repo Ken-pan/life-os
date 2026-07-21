@@ -1,5 +1,29 @@
 {
-  "date": "2026-07-21",
-  "note": "No mock screenshots claiming device integration. Capture when LAN smoke runs.",
-  "entries": []
+  "evidenceRoot": "docs/qa/evidence/kenos-all-domain-integration-2026-07-21",
+  "device": "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+  "udid": "00008150-000C38C20AC0401C",
+  "lanOrigin": "http://10.20.202.15",
+  "nativeBuild": "202607211429",
+  "capturedAt": "2026-07-21T14:29:00Z",
+  "method": "devicectl payload-url + pymobiledevice3 dvt screenshot --userspace",
+  "screenshots": [
+    { "file": "screenshots/10-spaces.png", "domain": "kenos", "step": "spaces" },
+    { "file": "screenshots/20-work-home.png", "domain": "work", "step": "domain_home" },
+    { "file": "screenshots/21-work-return-kenos.png", "domain": "work", "step": "return_kenos" },
+    { "file": "screenshots/30-money-home.png", "domain": "money", "step": "domain_home" },
+    { "file": "screenshots/31-money-return-kenos.png", "domain": "money", "step": "return_kenos" },
+    { "file": "screenshots/40-library-home.png", "domain": "library", "step": "domain_home" },
+    { "file": "screenshots/41-library-return-kenos.png", "domain": "library", "step": "return_kenos" },
+    { "file": "screenshots/50-music-home.png", "domain": "music", "step": "domain_home" },
+    { "file": "screenshots/51-music-return-kenos.png", "domain": "music", "step": "return_kenos" },
+    { "file": "screenshots/60-home-home.png", "domain": "home", "step": "domain_home" },
+    { "file": "screenshots/61-home-return-kenos.png", "domain": "home", "step": "return_kenos" },
+    { "file": "screenshots/70-health-home.png", "domain": "health", "step": "domain_home" },
+    { "file": "screenshots/71-health-return-kenos.png", "domain": "health", "step": "return_kenos" },
+    { "file": "screenshots/80-plan-home.png", "domain": "plan", "step": "domain_home_regression" },
+    { "file": "screenshots/81-plan-return-kenos.png", "domain": "plan", "step": "return_kenos" },
+    { "file": "screenshots/90-training-home.png", "domain": "training", "step": "domain_home_regression" },
+    { "file": "screenshots/91-training-return-kenos.png", "domain": "training", "step": "return_kenos" },
+    { "file": "screenshots/99-spaces-final.png", "domain": "kenos", "step": "spaces_final" }
+  ]
 }

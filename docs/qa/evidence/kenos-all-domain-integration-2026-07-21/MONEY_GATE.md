@@ -24,5 +24,6 @@
 
 ## Residuals
 
-- Device smoke pending LAN finance preview.
+- Device smoke **PASS_LAN** 2026-07-21 (`30-money-home.png` — native Money dock; AuthGate until Owner login).
+- Finance LAN serve not yet in `kenos-ctl` (manual `0.0.0.0:5180` for Continuity).
 - Inbox/Assistant providers still stub (Phase C).

@@ -1,0 +1,76 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "ddiServices",
+      "--device",
+      "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+      "--json-output",
+      "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/logs/ddi.json"
+    ],
+    "commandType" : "devicectl.device.info.ddiServices",
+    "environment" : {
+      "TERM" : "dumb"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "success",
+    "version" : "518.33"
+  },
+  "result" : {
+    "ddiMetadata" : {
+      "buildUpdate" : "17F113",
+      "contentIsCompatible" : true,
+      "coreDeviceVersionChecksIncludeDevelopmentRevision" : true,
+      "developmentRevision" : 0,
+      "enforcingCoreDeviceVersionChecks" : true,
+      "isUsable" : true,
+      "platform" : "iOS",
+      "projectMetadata" : [
+        {
+          "name" : "Citrine",
+          "version" : "1902"
+        },
+        {
+          "name" : "CoreDevice",
+          "version" : "518.33"
+        },
+        {
+          "name" : "DTDeveloperDiskImageSupport",
+          "version" : "14.0.0"
+        },
+        {
+          "name" : "DTOCMock",
+          "version" : "23002"
+        },
+        {
+          "name" : "GPUToolsDevice_DDI",
+          "version" : "314.9"
+        },
+        {
+          "name" : "JetsamProperties",
+          "version" : "2648.0.21"
+        },
+        {
+          "name" : "LiveExecutionResultsLogger",
+          "version" : "20101"
+        },
+        {
+          "name" : "Mercury",
+          "version" : "70"
+        },
+        {
+          "name" : "Playgrounds",
+          "version" : "103"
+        },
+        {
+          "name" : "XCTest",
+          "version" : "24904"
+        }
+      ],
+      "variant" : "external"
+    },
+    "deviceIdentifier" : "8097F071-CAB6-5AF0-8258-BCD985E9D79E"
+  }
+}
