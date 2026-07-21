@@ -1,6 +1,7 @@
 import { createAuthSyncHandler } from './authSync.js'
 import { createCoreIdentityHandler } from './coreIdentity.js'
 import { LIFE_OS_PERSONAL_OWNER_EMAIL } from './constants.js'
+import { ensureLifeOsSsoReady } from './supabaseClient.js'
 
 /**
  * Life OS 标准 auth 生命周期：getSession 引导 + onAuthStateChange 上接
@@ -91,25 +92,50 @@ export function createLifeOsAuth(supabase, options) {
   function init() {
     if (typeof window === 'undefined') return () => {}
 
-    supabase.auth.getSession().then(({ data }) => {
-      onSession(data.session)
-      checkAppAccess(data.session)
-    })
-
+    let cancelled = false
+    let ssoBootstrapped = false
+    let accessCheckGen = 0
     const handleAuthSync = createAuthSyncHandler({
       onSignedOut,
       onSyncSession,
     })
     const handleCoreIdentity = createCoreIdentityHandler(supabase, appId)
 
+    function scheduleAccessCheck(session) {
+      const gen = ++accessCheckGen
+      void checkAppAccess(session).catch(() => {
+        if (cancelled || gen !== accessCheckGen) return
+      })
+    }
+
+    // Subscribe first so SSO setSession → SIGNED_IN is not missed, but do not
+    // publish a cold null session until Cookie/Keychain restore has finished.
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cancelled) return
+      // Suppress provisional empty INITIAL_SESSION only until SSO bootstrap.
+      if (!session && event === 'INITIAL_SESSION' && !ssoBootstrapped) return
       onSession(session)
       handleAuthSync(event, session)
       handleCoreIdentity(event, session)
-      checkAppAccess(session)
+      scheduleAccessCheck(session)
     })
 
-    return () => data.subscription.unsubscribe()
+    void (async () => {
+      await ensureLifeOsSsoReady(supabase)
+      if (cancelled) return
+      ssoBootstrapped = true
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (cancelled) return
+      onSession(session)
+      scheduleAccessCheck(session)
+    })()
+
+    return () => {
+      cancelled = true
+      data.subscription.unsubscribe()
+    }
   }
 
   async function signUp(email, password) {

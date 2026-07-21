@@ -192,7 +192,7 @@ const FRIEND_SESSION = { user: { id: 'friend', email: 'friend@example.com' } }
   auth.init()
   await flush()
 
-  supabase.emit('INITIAL_SESSION', null) // 冷启动未登录：不算登出
+  supabase.emit('INITIAL_SESSION', null) // 冷启动未登录：不算登出，且不抢跑 SSO
   assert.equal(signedOut, 0)
   supabase.emit('SIGNED_OUT', null)
   assert.equal(signedOut, 1)

@@ -21,6 +21,7 @@ export {
   LIFE_OS_SUPABASE_URL,
   LIFE_OS_SUPABASE_PUBLISHABLE_KEY,
   createLifeOsSupabaseClient,
+  ensureLifeOsSsoReady,
 } from './supabaseClient.js'
 export { createLifeOsAuth } from './authController.js'
 export {
@@ -33,6 +34,10 @@ export {
   setupCrossDomainSSO,
   LIFE_OS_SSO_COOKIE_NAME,
   resolveSsoCookieDomain,
+  parseJwtExp,
+  isAccessTokenFresh,
+  normalizeSsoTokens,
+  isFatalAuthRestoreError,
 } from './sso.js'
 
 /** Life OS 四端 appId */

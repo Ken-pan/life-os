@@ -2,6 +2,7 @@ import { browser } from '$app/environment'
 import {
   mapAuthErrorMessage,
   LIFE_OS_PERSONAL_OWNER_EMAIL,
+  ensureLifeOsSsoReady,
 } from '@life-os/sync'
 import { t } from '$lib/i18n/index.js'
 import {
@@ -194,6 +195,8 @@ export async function initCloud() {
       hydrateMemoryFromLocalStorage()
     }
   })
+  // Wait for Cookie / iOS Keychain vault restore before first getSession.
+  await ensureLifeOsSsoReady(sb)
   const { data } = await sb.auth.getSession()
   const u = data?.session?.user
   lastAuthUserId = u?.id ?? null

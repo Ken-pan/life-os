@@ -34,7 +34,8 @@ export const { auth, initAuth, authErrorMessage, signUp, signIn, signOut } =
       network: t('auth.errNetwork'),
       generic: t('auth.initFailed'),
     }),
-    // 与 React AuthGate 对齐：session 为空即走登出清理（含冷启动未登录）。
+    // Empty session after SSO bootstrap = truly signed out (authController awaits
+    // ensureLifeOsSsoReady so Continuity cold starts no longer race AuthGate).
     onSessionChange: (session) => {
       if (!session) signedOutHandler?.()
     },

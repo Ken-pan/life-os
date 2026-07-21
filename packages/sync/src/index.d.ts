@@ -32,6 +32,21 @@ export function resolveSsoCookieDomain(
 export function setupCrossDomainSSO(
   supabase: import('@supabase/supabase-js').SupabaseClient,
 ): Promise<void>
+export function ensureLifeOsSsoReady(
+  supabase: import('@supabase/supabase-js').SupabaseClient,
+): Promise<void>
+export function parseJwtExp(token: string | null | undefined): number | null
+export function isAccessTokenFresh(
+  accessToken: string | null | undefined,
+  skewSeconds?: number,
+): boolean
+export function normalizeSsoTokens(raw: unknown): {
+  access_token: string
+  refresh_token: string
+} | null
+export function isFatalAuthRestoreError(
+  error: { message?: string; status?: number; code?: string } | null,
+): boolean
 
 export function resolveSupabaseEnv(
   env: Record<string, string | undefined>,

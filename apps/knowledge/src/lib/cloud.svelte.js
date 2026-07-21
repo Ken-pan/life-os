@@ -1,5 +1,10 @@
 import { browser } from '$app/environment'
-import { createLifeOsSupabaseClient, mapAuthErrorMessage, LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
+import {
+  createLifeOsSupabaseClient,
+  ensureLifeOsSsoReady,
+  mapAuthErrorMessage,
+  LIFE_OS_PERSONAL_OWNER_EMAIL,
+} from '@life-os/sync'
 import { createClient } from '@supabase/supabase-js'
 import { t } from '$lib/i18n/index.js'
 
@@ -43,6 +48,7 @@ export async function initCloud() {
     const u = session?.user
     CLOUD.user = u ? { id: u.id, email: u.email ?? '' } : null
   })
+  await ensureLifeOsSsoReady(sb)
   const { data } = await sb.auth.getSession()
   const u = data?.session?.user
   CLOUD.user = u ? { id: u.id, email: u.email ?? '' } : null

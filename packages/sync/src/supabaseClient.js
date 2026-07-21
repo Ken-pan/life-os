@@ -7,6 +7,8 @@ export const LIFE_OS_SUPABASE_PUBLISHABLE_KEY =
   'sb_publishable_V_BnCiRU9vozOl3VLL8AAg_KsUfDEcL'
 
 const BROWSER_CLIENT_CACHE_KEY = '__lifeOsSupabaseClients__'
+/** @type {WeakMap<object, Promise<void>>} */
+const SSO_READY = new WeakMap()
 
 /** @returns {Map<string, object> | null} */
 function getBrowserClientCache() {
@@ -15,6 +17,16 @@ function getBrowserClientCache() {
     globalThis[BROWSER_CLIENT_CACHE_KEY] = new Map()
   }
   return globalThis[BROWSER_CLIENT_CACHE_KEY]
+}
+
+/**
+ * Wait until Cookie / iOS Keychain SSO restore finished for this client.
+ * Auth bootstrap must await this before treating a null session as signed-out.
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @returns {Promise<void>}
+ */
+export function ensureLifeOsSsoReady(supabase) {
+  return SSO_READY.get(supabase) ?? Promise.resolve()
 }
 
 /**
@@ -46,7 +58,10 @@ export function createLifeOsSupabaseClient(createClient, options) {
     clientOptions,
   )
 
-  setupCrossDomainSSO(supabase)
+  const ssoReady = setupCrossDomainSSO(supabase).catch((err) => {
+    console.error('[sso] setup failed:', err)
+  })
+  SSO_READY.set(supabase, ssoReady)
 
   const result = { supabase, url, anonKey, isSupabaseConfigured: configured }
   cache?.set(cacheKey, result)
