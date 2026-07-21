@@ -11,7 +11,8 @@ options:
   createIntermediateGroups: true
 settings:
   base:
-    DEVELOPMENT_TEAM: ''
+    # Dogfood Team (same as home-scan / prior KenosIOS device builds).
+    DEVELOPMENT_TEAM: 93NJ4CAU8B
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: '6.0'
     CURRENT_PROJECT_VERSION: '1'
@@ -86,14 +87,20 @@ targets:
               NSExceptionAllowsInsecureHTTPLoads: true
             '172.16.0.0/12':
               NSExceptionAllowsInsecureHTTPLoads: true
+            # Tailscale CGNAT + MagicDNS (preferred Mac↔iPhone pair)
+            '100.64.0.0/10':
+              NSExceptionAllowsInsecureHTTPLoads: true
+            ts.net:
+              NSExceptionAllowsInsecureHTTPLoads: true
+              NSIncludesSubdomains: true
         NSBonjourServices:
           - _http._tcp
         LSApplicationQueriesSchemes:
           - x-apple-health
           - homescan
         NSLocalNetworkUsageDescription: >-
-          Kenos connects to your Mac Daily Beta on the private LAN (Bonjour
-          .local hostname) when the cloud shell is unavailable.
+          Kenos connects to your paired Mac Daily Beta over Tailscale
+          (MagicDNS) or private LAN Bonjour when the cloud shell is unavailable.
         NSHealthShareUsageDescription: >-
           Kenos reads Apple Health metrics you enable (sleep, heart, activity,
           workouts, and more) to power Health status. Data stays on your devices
@@ -111,6 +118,12 @@ targets:
         NSSupportsLiveActivitiesFrequentUpdates: true
     entitlements:
       path: iOS/KenosIOS.entitlements
+      properties:
+        # HealthKit only for now — required for the system permission sheet.
+        # App Groups / iCloud need an explicit App ID registration; add after
+        # HealthKit dogfood works (wildcard profiles cannot carry HealthKit).
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios
@@ -122,8 +135,9 @@ targets:
         CODE_SIGN_ENTITLEMENTS: iOS/KenosIOS.entitlements
         CURRENT_PROJECT_VERSION: '1'
         MARKETING_VERSION: '1.0.0'
-        # Prefer mDNS hostname — injected at device-build as LocalHostName.local
-        KENOS_DAILY_BETA_ORIGIN: 'http://Kens-M5-Max-MacBook-Pro.local:5219'
+        # Prefer Tailscale MagicDNS (Mac↔iPhone pair). device-build-install.sh
+        # overwrites from ~/.kenos-daily-beta/device-trust.json when present.
+        KENOS_DAILY_BETA_ORIGIN: 'http://kens-m5-max-macbook-pro.tail04e0e6.ts.net:5219'
     dependencies:
       - package: KenosContracts
       - package: KenosClient
@@ -163,6 +177,11 @@ targets:
             '127.0.0.1':
               NSExceptionAllowsInsecureHTTPLoads: true
             localhost:
+              NSExceptionAllowsInsecureHTTPLoads: true
+              NSIncludesSubdomains: true
+            '100.64.0.0/10':
+              NSExceptionAllowsInsecureHTTPLoads: true
+            ts.net:
               NSExceptionAllowsInsecureHTTPLoads: true
               NSIncludesSubdomains: true
     settings:

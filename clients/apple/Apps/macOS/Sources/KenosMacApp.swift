@@ -25,19 +25,15 @@ struct KenosMacApp: App {
                 .keyboardShortcut("r", modifiers: [.command])
             }
             CommandMenu("Kenos") {
-                Button("Command Bar…") {
-                    model.openQuickSwitch()
-                }
-                .keyboardShortcut(" ", modifiers: [.command, .shift])
+                Button("Spaces…") { model.openSpaceShelf() }
+                    .keyboardShortcut("s", modifiers: [.command, .shift])
                 Divider()
                 Button("Today") { model.selectMacSidebar(.today) }
                     .keyboardShortcut("1", modifiers: [.command])
-                Button("Assistant") { model.selectMacSidebar(.assistant) }
+                Button("Ask") { model.selectMacSidebar(.assistant) }
                     .keyboardShortcut("2", modifiers: [.command])
                 Button("Inbox") { model.selectMacSidebar(.inbox) }
                     .keyboardShortcut("3", modifiers: [.command])
-                Button("Spaces…") { model.openSpaceSwitcher() }
-                    .keyboardShortcut("s", modifiers: [.command, .shift])
                 Divider()
                 Button("Work") { model.selectMacSidebar(.domain("work")) }
                 Button("Plan") { model.selectMacSidebar(.domain("plan")) }
@@ -111,8 +107,8 @@ struct KenosMacApp: App {
                 Button("Open Inbox") {
                     model.selectMacSidebar(.inbox)
                 }
-                Button("Command Bar…") {
-                    model.openQuickSwitch()
+                Button("Spaces…") {
+                    model.openSpaceShelf()
                 }
                 if model.shellMode == .domain {
                     Button("Leave Space") {

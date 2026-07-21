@@ -100,7 +100,7 @@ struct KenosMacShellSurface: View {
 
     private var shellTitle: String {
         switch model.macSidebarSelection {
-        case .assistant: return "Assistant"
+        case .assistant: return "Ask"
         case .inbox: return "Inbox"
         default: return "Today"
         }
@@ -641,6 +641,8 @@ enum KenosMacNativeBridge {
         haptic: function () { return Promise.resolve({ ok: true, skipped: true }); },
         share: function () { return Promise.reject({ code: 'unsupported', message: 'share unavailable on macOS shell' }); },
         authenticate: function () { return Promise.resolve({ ok: true, skipped: true }); },
+        cancelAuthenticate: function () { return Promise.resolve({ ok: true, cancelled: true, skipped: true }); },
+        clearUnlockGrant: function () { return Promise.resolve({ ok: true, skipped: true }); },
         reportAuthSession: function () { return Promise.resolve({ ok: true, skipped: true }); },
         getSharedAuthTokens: function () { return Promise.resolve({ ok: true, signedIn: false, skipped: true }); },
         publishNavManifest: function (m) {

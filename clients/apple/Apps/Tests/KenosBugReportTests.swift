@@ -61,6 +61,31 @@ final class KenosBugReportTests: XCTestCase {
         XCTAssertLessThanOrEqual(data!.count, 80_000)
     }
 
+    func testBlankCaptureHeuristicIgnoresDarkInkUI() {
+        let size = CGSize(width: 400, height: 800)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        // Kenos ink + a light dock strip — must NOT be treated as a failed blank snap.
+        let inkUI = renderer.image { ctx in
+            UIColor(red: 0.031, green: 0.035, blue: 0.039, alpha: 1).setFill()
+            ctx.fill(CGRect(origin: .zero, size: size))
+            UIColor(white: 0.85, alpha: 1).setFill()
+            ctx.fill(CGRect(x: 40, y: size.height - 80, width: size.width - 80, height: 48))
+        }
+        XCTAssertFalse(KenosBugReportCapture.isVisuallyBlankCapture(inkUI))
+
+        let pureWhite = renderer.image { ctx in
+            UIColor.white.setFill()
+            ctx.fill(CGRect(origin: .zero, size: size))
+        }
+        XCTAssertTrue(KenosBugReportCapture.isVisuallyBlankCapture(pureWhite))
+
+        let pureBlack = renderer.image { ctx in
+            UIColor.black.setFill()
+            ctx.fill(CGRect(origin: .zero, size: size))
+        }
+        XCTAssertTrue(KenosBugReportCapture.isVisuallyBlankCapture(pureBlack))
+    }
+
     func testInferAppFromDomainHost() {
         let model = KenosAppModel()
         model.shellMode = .domain
@@ -213,10 +238,62 @@ final class KenosBugReportTests: XCTestCase {
         XCTAssertFalse(model.bugReportDraft?.title.isEmpty ?? true)
     }
 
-    func testSystemScreenshotPromptSuppressedWhenSettingsOpen() async {
+    func testSystemScreenshotPromptWorksOnSettings() async {
+        let model = KenosAppModel()
+        model.focusStore.logoutClear()
+        model.setAskAfterScreenshotEnabled(true)
+        model.presentSettings()
+        XCTAssertTrue(model.showSettingsSheet)
+        XCTAssertEqual(model.selectedTab, .today)
+        await model.handleSystemScreenshot()
+        XCTAssertTrue(model.showScreenshotBugPrompt)
+        XCTAssertEqual(model.bugReportDraft?.diagnostics.chromeContext, "settings")
+    }
+
+    func testPresentSettingsKeepsUnderlyingTab() {
+        let model = KenosAppModel()
+        model.selectedTab = .inbox
+        model.presentSettings()
+        XCTAssertTrue(model.showSettingsSheet)
+        XCTAssertEqual(model.selectedTab, .inbox)
+        model.dismissSettings()
+        XCTAssertFalse(model.showSettingsSheet)
+        XCTAssertEqual(model.selectedTab, .inbox)
+    }
+
+    func testBeginBugReportDismissesSettingsSheet() async {
+        let model = KenosAppModel()
+        model.presentSettings()
+        XCTAssertTrue(model.showSettingsSheet)
+        await model.beginBugReport(delayCapture: false)
+        XCTAssertFalse(model.showSettingsSheet)
+        XCTAssertTrue(model.showBugReportSheet)
+    }
+
+    func testSystemScreenshotPromptWorksWithShelfOpen() async {
+        let model = KenosAppModel()
+        model.focusStore.logoutClear()
+        model.setAskAfterScreenshotEnabled(true)
+        model.showSpaceShelf = true
+        await model.handleSystemScreenshot()
+        XCTAssertTrue(model.showScreenshotBugPrompt)
+        XCTAssertEqual(model.bugReportDraft?.diagnostics.chromeContext, "shelf")
+    }
+
+    func testSystemScreenshotPromptWorksWithCaptureSheetOpen() async {
+        let model = KenosAppModel()
+        model.focusStore.logoutClear()
+        model.setAskAfterScreenshotEnabled(true)
+        model.showCaptureSheet = true
+        await model.handleSystemScreenshot()
+        XCTAssertTrue(model.showScreenshotBugPrompt)
+        XCTAssertEqual(model.bugReportDraft?.diagnostics.chromeContext, "capture")
+    }
+
+    func testSystemScreenshotPromptBlockedOnlyWhileReportSheetOpen() async {
         let model = KenosAppModel()
         model.setAskAfterScreenshotEnabled(true)
-        model.selectedTab = .settings
+        model.showBugReportSheet = true
         await model.handleSystemScreenshot()
         XCTAssertFalse(model.showScreenshotBugPrompt)
         XCTAssertNil(model.bugReportDraft)
@@ -247,6 +324,40 @@ final class KenosBugReportTests: XCTestCase {
         XCTAssertEqual(autoAfter, "[kenos] Inbox")
         // Enrich only rewrites title when the field still equals the previous auto value.
         XCTAssertNotEqual(autoBefore, autoAfter)
+    }
+
+    func testPromptSubtitleSurfacesChromeContext() {
+        var d = sampleDiagnostics()
+        d.chromeContext = "shelf"
+        XCTAssertEqual(KenosBugReportPrefill.promptSubtitle(from: d), "kenos · Shelf · /spaces")
+        d.chromeContext = "settings"
+        XCTAssertEqual(KenosBugReportPrefill.promptSubtitle(from: d), "kenos · Settings")
+    }
+
+    func testChromeContextListsOpenSurfaces() {
+        let model = KenosAppModel()
+        model.focusStore.logoutClear()
+        model.showSettingsSheet = true
+        model.showSpaceShelf = true
+        model.showDomainMoreSheet = true
+        XCTAssertEqual(model.screenshotChromeContext(), "settings,shelf,domainMore")
+    }
+
+    func testChromeContextIncludesFocus() {
+        let model = KenosAppModel()
+        model.focusStore.logoutClear()
+        model.focusStore.startTrainingFocus()
+        XCTAssertTrue(model.hideGlobalNavForFocus || model.focusStore.isPaused)
+        XCTAssertEqual(model.screenshotChromeContext(), "focus")
+    }
+
+    func testPassthroughWindowPassesRootViewHits() {
+        let window = KenosPassthroughWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 400))
+        let root = UIViewController()
+        let host = UIView(frame: window.bounds)
+        root.view = host
+        window.rootViewController = root
+        XCTAssertNil(window.hitTest(CGPoint(x: 10, y: 10), with: nil))
     }
 
     func testSubmitRequiresTitle() async {

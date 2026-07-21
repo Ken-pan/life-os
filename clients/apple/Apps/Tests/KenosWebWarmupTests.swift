@@ -1,4 +1,5 @@
 import XCTest
+import KenosDesign
 @testable import KenosIOS
 
 #if os(iOS)
@@ -12,23 +13,25 @@ final class KenosWebWarmupTests: XCTestCase {
     }
 
     func testResolvedBottomPadIncludesLiveAccessory() {
+        let dockPad = KenosGlass.dockScrollEndPadPx
+        XCTAssertEqual(dockPad, 78) // 56 row + 6 inset + 16 clearance
         XCTAssertEqual(
             KenosWebChrome.resolvedBottomPadPx(chrome: .kenosTabs, accessoryExtraPx: 0),
-            80
+            dockPad
         )
         XCTAssertEqual(
             KenosWebChrome.resolvedBottomPadPx(
                 chrome: .domainDock,
                 accessoryExtraPx: KenosWebChrome.liveAccessoryExpandedPadPx
             ),
-            160
+            dockPad + KenosWebChrome.liveAccessoryExpandedPadPx
         )
         XCTAssertEqual(
             KenosWebChrome.resolvedBottomPadPx(
                 chrome: .kenosTabs,
                 accessoryExtraPx: KenosWebChrome.liveAccessoryMinimizedPadPx
             ),
-            132
+            dockPad + KenosWebChrome.liveAccessoryMinimizedPadPx
         )
         XCTAssertEqual(
             KenosWebChrome.resolvedBottomPadPx(chrome: .none, accessoryExtraPx: 80),

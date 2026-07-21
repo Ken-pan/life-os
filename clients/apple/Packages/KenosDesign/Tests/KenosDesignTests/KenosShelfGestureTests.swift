@@ -83,6 +83,43 @@ func shelfRubberBandAndCaps() {
         KenosShelfGesture.cappedOpenTranslation(KenosShelfGesture.panelWidth + 200)
             > KenosShelfGesture.panelWidth
     )
+
+    let narrow: CGFloat = 262.4
+    #expect(
+        KenosShelfGesture.cappedOpenTranslation(narrow + 200, panelWidth: narrow) > narrow
+    )
+    #expect(
+        KenosShelfGesture.cappedDismissOffset(-400, panelWidth: narrow) == -narrow
+    )
+    let overshoot = KenosShelfGesture.cappedOpenProgress(
+        translationX: narrow + 80,
+        panelWidth: narrow
+    )
+    #expect(overshoot > 1)
+    #expect(overshoot <= KenosShelfGesture.openProgressOvershootCap)
+}
+
+@Test("Shelf dismiss min-distance SSOT is shared")
+func shelfDismissMinDistanceSSOT() {
+    #expect(KenosShelfGesture.dismissDragMinimumDistance == 16)
+    #expect(KenosShelfGesture.dismissDragMinimumDistance >= 12)
+    #expect(KenosShelfGesture.dismissDragMinimumDistance <= 20)
+}
+
+@Test("Shelf threshold tokens flip once at commit distance")
+func shelfThresholdTokens() {
+    #expect(KenosShelfGesture.openThresholdToken(openDragX: 0) == 0)
+    #expect(
+        KenosShelfGesture.openThresholdToken(
+            openDragX: KenosShelfGesture.openDistance
+        ) == 1
+    )
+    #expect(KenosShelfGesture.closeThresholdToken(dismissDragX: 0) == 0)
+    #expect(
+        KenosShelfGesture.closeThresholdToken(
+            dismissDragX: -KenosShelfGesture.closeDistance
+        ) == 1
+    )
 }
 
 @Test("Shelf edge-open zone stays dock-adjacent and leaves mid-screen for Back")

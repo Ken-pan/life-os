@@ -131,7 +131,7 @@ public enum KenosWidgetGlanceBridge {
 
     private static func makePlaceholderDomains(openable: Bool) -> [String: DomainWidgetGlance] {
         let slots: [(String, String, String, UInt32, String, String)] = [
-            ("plan", "Plan", openable ? "Open Plan" : "Unavailable", 0xC9A227, "checklist", "kenos://domain/plan"),
+            ("plan", "Plan", openable ? "Open Plan" : "Unavailable", 0xD4AE2E, "checklist", "kenos://domain/plan"),
             ("training", "Training", openable ? "Start workout" : "Unavailable", 0xC45C4A, "figure.strengthtraining.traditional", "kenos://training/session"),
             ("music", "Music", openable ? "Open Music" : "Unavailable", 0x8B7EC8, "music.note", "kenos://domain/music"),
             ("health", "Health", openable ? "Readiness" : "Unavailable", 0x5B6CFF, "heart.text.square", "kenos://domain/health"),

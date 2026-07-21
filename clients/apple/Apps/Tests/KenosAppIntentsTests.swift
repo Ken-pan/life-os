@@ -36,6 +36,10 @@ final class KenosAppIntentsTests: XCTestCase {
     }
 
     func testPushFoundationLocalReadyRemoteGated() {
+        UserDefaults.standard.removeObject(forKey: KenosPushTokenStore.remoteEnabledDefaultsKey)
+        defer {
+            UserDefaults.standard.removeObject(forKey: KenosPushTokenStore.remoteEnabledDefaultsKey)
+        }
         XCTAssertFalse(KenosPushFoundation.isEnabled)
         XCTAssertFalse(KenosPushFoundation.remotePushEnabled)
         XCTAssertTrue(KenosPushFoundation.localSchedulingEnabled)

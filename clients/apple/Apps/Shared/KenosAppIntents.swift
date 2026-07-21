@@ -45,7 +45,7 @@ enum KenosShellDestination: String, AppEnum, CaseIterable, Sendable {
 
     nonisolated static let caseDisplayRepresentations: [KenosShellDestination: DisplayRepresentation] = [
         .today: "Today",
-        .assistant: "Assistant",
+        .assistant: "Ask",
         .inbox: "Inbox",
         .shelf: "Spaces Shelf",
         .settings: "Settings",
@@ -105,7 +105,7 @@ struct OpenKenosDomainIntent: AppIntent {
 /// Open Kenos shell destinations (`kenos://today`, shelf, compose, …).
 struct OpenKenosShellIntent: AppIntent {
     nonisolated static let title: LocalizedStringResource = "Open Kenos"
-    nonisolated static let description = IntentDescription("Open Today, Assistant, Inbox, Shelf, or Compose in Kenos.")
+    nonisolated static let description = IntentDescription("Open Today, Ask, Inbox, Shelf, or Compose in Kenos.")
     nonisolated static let openAppWhenRun = true
 
     @Parameter(title: "Destination")

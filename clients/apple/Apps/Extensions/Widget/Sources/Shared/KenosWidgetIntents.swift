@@ -31,9 +31,9 @@ struct KenosWidgetStartTrainingIntent: AppIntent {
 }
 
 struct KenosWidgetOpenAssistantIntent: AppIntent {
-    nonisolated static let title: LocalizedStringResource = "Open Assistant"
+    nonisolated static let title: LocalizedStringResource = "Open Ask"
     nonisolated static let openAppWhenRun = true
-    nonisolated static let description = IntentDescription("Open Kenos Assistant.")
+    nonisolated static let description = IntentDescription("Open Kenos Ask.")
 
     @MainActor
     func perform() async throws -> some IntentResult {

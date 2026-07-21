@@ -18,14 +18,16 @@ import KenosStore
 
 @MainActor
 final class KenosAppModel: ObservableObject {
-    /// System top-level IA: Spaces (leading) + Today · Assistant · Inbox · Settings capsule.
+    /// System top-level IA: Spaces Orb + Today · Ask · Inbox capsule.
+    /// Settings remains a Tab case for deep-link routing / macOS sidebar, but on iOS
+    /// it presents as a modal sheet (off-dock) so Global Dock is not a second exit.
     enum Tab: String, CaseIterable, Identifiable {
         case today, assistant, spaces, inbox, settings
         var id: String { rawValue }
         var title: String {
             switch self {
             case .today: return "Today"
-            case .assistant: return "Assistant"
+            case .assistant: return "Ask"
             case .spaces: return "Spaces"
             case .inbox: return "Inbox"
             case .settings: return "Settings"
@@ -51,7 +53,7 @@ final class KenosAppModel: ObservableObject {
         var title: String {
             switch self {
             case .today: return "Today"
-            case .assistant: return "Assistant"
+            case .assistant: return "Ask"
             case .inbox: return "Inbox"
             case .settings: return "Settings"
             case .domain(let domainId):
@@ -107,6 +109,8 @@ final class KenosAppModel: ObservableObject {
     /// Which chrome sheet is open — Continue (Recent) vs Switch Space vs Quick Switch.
     @Published var spaceChromeMode: SpaceChromeMode = .switchSpace
     #if os(iOS)
+    /// Settings modal — overlays current Kenos/Domain surface; Global Dock hidden.
+    @Published var showSettingsSheet = false
     /// Quiet confirm after system screenshot — not the full report sheet.
     @Published var showScreenshotBugPrompt = false
     /// Full report sheet (after user confirms, or explicit Settings entry).
@@ -137,6 +141,9 @@ final class KenosAppModel: ObservableObject {
     @Published var domainLeaveSummary = ""
     /// Web Navigation Manifest `liveState` (e.g. `editing`) — Domain dock hides for sheets.
     @Published var domainWebLiveState: String = ""
+    /// Content canvas polarity — drives `preferredColorScheme` / status-bar foreground.
+    /// Light Domain content must not keep a forced dark (white) status bar.
+    @Published var chromeAppearance: KenosChromeAppearance = .dark
     /// Live Accessory compact strip (scroll-down minimize · Music / iOS 26 bottomAccessory).
     @Published var liveAccessoryMinimized = false
     private var pendingDomainLeaveAction: (() -> Void)?
@@ -163,7 +170,7 @@ final class KenosAppModel: ObservableObject {
         case continueRecent
         /// Pinned + All Domains + System Today (Spaces directory).
         case switchSpace
-        /// Searchable Quick Switch (Things Quick Find).
+        /// Searchable Quick Switch (Things Quick Find). Trigger glyph: switch, not magnifyingglass.
         case quickSwitch
     }
     let focusStore: KenosFocusStore
@@ -225,7 +232,8 @@ final class KenosAppModel: ObservableObject {
     let sessionStore: KenosKeychainSessionStore
     let session: MockSessionProvider
     let handoff: KenosHandoffSession
-    let notifications: MockNotificationProvider
+    let notifications: KenosLocalNotificationCenter
+    @Published var notificationPreferences: KenosNotificationPreferences = .default
     let approvalsActionsEnabled = false
     private let ownerId = UUID(uuidString: "20000000-0000-4000-8000-000000000001")!
     /// Stabilization health bag (no UI). Falls back process-local until App Group entitlement.
@@ -285,7 +293,7 @@ final class KenosAppModel: ObservableObject {
             ownerId: ownerId,
             persistDirectory: cacheDirectory.appendingPathComponent("handoff")
         )
-        self.notifications = MockNotificationProvider()
+        self.notifications = KenosLocalNotificationCenter.shared
         let focusStore = KenosFocusStore(
             ownerId: ownerId,
             directory: cacheDirectory.appendingPathComponent("focus")
@@ -303,6 +311,14 @@ final class KenosAppModel: ObservableObject {
         spaceSwitcherStore.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+        NotificationCenter.default.publisher(for: .kenosNotificationsDidChange)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    await self?.refreshNotificationInbox()
+                }
+            }
             .store(in: &cancellables)
         #if os(iOS)
         NotificationCenter.default.publisher(for: .kenosNowPlayingDidChange)
@@ -325,6 +341,24 @@ final class KenosAppModel: ObservableObject {
                 self.syncDomainDockSlot(fromManifest: manifest)
                 self.publishSystemDiscovery(from: manifest)
                 self.schedulePublishWidgetGlance()
+            }
+            .store(in: &cancellables)
+        NotificationCenter.default.publisher(for: .kenosChromeAppearanceDidChange)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] note in
+                guard let self else { return }
+                let raw = (note.userInfo?["colorScheme"] as? String)
+                    ?? (note.object as? String)
+                guard let next = KenosChromeAppearance.parse(raw) else { return }
+                let fromDomain = (note.userInfo?["fromDomain"] as? Bool) ?? false
+                let fromShell = (note.userInfo?["fromShell"] as? Bool) ?? false
+                // Warm Continuity WK must not flip Kenos status bar (and vice versa).
+                if self.shellMode == .domain {
+                    guard fromDomain || (!fromDomain && !fromShell) else { return }
+                } else {
+                    guard fromShell || (!fromDomain && !fromShell) else { return }
+                }
+                self.applyChromeAppearance(next, reason: "web")
             }
             .store(in: &cancellables)
         NotificationCenter.default.publisher(for: .kenosLiveActivityDidChange)
@@ -364,17 +398,12 @@ final class KenosAppModel: ObservableObject {
             KenosLog.debug("space switcher bound", category: .session, metadata: ["owner": "present"])
         }
         recordRuntimeHealth()
-        try? await notifications.schedule(KenosNotificationFixtures.planReminder())
-        try? await notifications.schedule(KenosNotificationFixtures.approvalRequested())
+        notificationPreferences = await notifications.currentPreferences()
         notificationInbox = await notifications.pending()
         publishWidgetGlance(force: true)
         #if os(iOS)
         KenosPushFoundation.registerIfEnabled()
         KenosSpotlightFoundation.indexDomainCatalog()
-        if let reminder = notificationInbox.first(where: { $0.type == .planReminder }) {
-            // Local banner only — no APNs. Delay so first paint settles.
-            _ = await KenosPushFoundation.scheduleLocal(reminder, delaySeconds: 8)
-        }
         consumeWidgetPendingDeepLink()
         #endif
         try? await handoff.drainIncoming()
@@ -780,7 +809,8 @@ final class KenosAppModel: ObservableObject {
                     }
                     return
                 case "quick-switch", "quickswitch", "search":
-                    openQuickSwitch()
+                    // Retired Quick Switch chrome — Space switching is Shelf-only.
+                    openSpaceShelf()
                     return
                 case "continue":
                     openContinue()
@@ -807,9 +837,20 @@ final class KenosAppModel: ObservableObject {
                     if shellMode == .domain { returnToKenosFromDomain() }
                     navigateDailyBetaShell(path: "/inbox")
                     return
+                case "more":
+                    // Domain → More sheet (settings live there). Kenos → Settings tab.
+                    if shellMode == .domain {
+                        openDomainMore()
+                    } else {
+                        presentSettings()
+                    }
+                    return
                 case "settings":
-                    if shellMode == .domain { returnToKenosFromDomain() }
-                    navigateDailyBetaShell(path: "/settings")
+                    if shellMode == .domain {
+                        openDomainMore()
+                    } else {
+                        presentSettings()
+                    }
                     return
                 case "domain", "space", "open":
                     // Shortcuts / App Intents: kenos://domain/plan[?path=/upcoming]
@@ -852,6 +893,21 @@ final class KenosAppModel: ObservableObject {
             if let q = comps?.queryItems?.first(where: { $0.name == "path" })?.value, !q.isEmpty {
                 return q.hasPrefix("/") ? q : "/\(q)"
             }
+            // Legacy / Continuity: kenos://plan/task/<id> → Planner ?kenosTask=
+            let taskParts: [String] = {
+                if host == "domain" || host == "space" || host == "open" {
+                    return Array(pathParts.dropFirst())
+                }
+                return pathParts
+            }()
+            if (domainId == "plan" || domainId == "planner"),
+               taskParts.count >= 2,
+               taskParts[0] == "task"
+            {
+                let taskId = taskParts[1]
+                let encoded = taskId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? taskId
+                return "/?kenosTask=\(encoded)"
+            }
             if host == "domain" || host == "space" || host == "open" {
                 if pathParts.count >= 2 {
                     return "/" + pathParts.dropFirst().joined(separator: "/")
@@ -884,22 +940,35 @@ final class KenosAppModel: ObservableObject {
         UserDefaults.standard.set(enabled, forKey: "kenos.bug.askAfterScreenshot")
     }
 
-    /// Other chrome that should suppress the quiet screenshot offer.
+    /// Only block re-entrancy — chrome/sheets/Settings used to be blind spots for dogfood.
+    /// Prompt hosts in an elevated UIWindow so it stays visible above modal sheets.
     private var blocksScreenshotBugPrompt: Bool {
-        showBugReportSheet
-            || showScreenshotBugPrompt
-            || selectedTab == .settings
-            || showSpaceSwitcher
-            || showCaptureSheet
-            || showDomainMoreSheet
-            || showSpaceShelf
-            || showDomainLeaveConfirm
+        showBugReportSheet || showScreenshotBugPrompt
     }
 
-    /// Bottom padding so the prompt sits above Kenos/Domain dock (or flush in Focus).
+    /// Native chrome open at capture time (triage metadata; never secrets).
+    func screenshotChromeContext() -> String {
+        var parts: [String] = []
+        if showSettingsSheet || selectedTab == .settings { parts.append("settings") }
+        if showSpaceShelf { parts.append("shelf") }
+        if showSpaceSwitcher { parts.append("spaceSwitcher") }
+        if showCaptureSheet { parts.append("capture") }
+        if showDomainMoreSheet { parts.append("domainMore") }
+        if showDomainLeaveConfirm { parts.append("leaveConfirm") }
+        if hideGlobalNavForFocus || focusStore.isPaused || focusStore.showCompletedSummary {
+            parts.append("focus")
+        }
+        return parts.joined(separator: ",")
+    }
+
+    /// Bottom padding so the prompt sits above Kenos/Domain dock (or flush in Focus / sheets).
     var screenshotBugPromptBottomPadding: CGFloat {
         if hideGlobalNavForFocus || focusStore.isPaused || focusStore.showCompletedSummary {
             return 28
+        }
+        // Presented sheets cover the dock — sit near the home indicator.
+        if showSettingsSheet || showSpaceSwitcher || showCaptureSheet || showDomainMoreSheet {
+            return max(KenosGlass.dockBottomInset, 28)
         }
         // Icon-only dock (~56) + bottom inset + home-indicator clearance.
         return KenosGlass.dockBottomInset + 72
@@ -918,8 +987,10 @@ final class KenosAppModel: ObservableObject {
             return
         }
         // Capture BEFORE any prompt UI so the attachment is the host screen, not our dialog.
-        let capture = await KenosBugReportCapture.captureKeyWindowJPEG()
-        // Re-check after await — Settings/sheet may have opened during capture.
+        let capture = await KenosBugReportCapture.captureKeyWindowJPEG(
+            webViewFallback: KenosActiveWebRegistry.preferred(for: self)
+        )
+        // Re-check after await — sheet / prompt may have opened during capture.
         guard askAfterScreenshotEnabled, !blocksScreenshotBugPrompt else { return }
         let draft = makeBugReportDraftFast(
             jpeg: capture.jpeg,
@@ -940,11 +1011,19 @@ final class KenosAppModel: ObservableObject {
         ])
         cancelScreenshotPromptAutoDismiss()
         showScreenshotBugPrompt = false
-        if delayCapture {
-            // Let Settings sheet dismiss before capturing.
+        // SwiftUI cannot stack two root sheets — dismiss Settings (or other chrome)
+        // before presenting the bug-report sheet.
+        let dismissedChrome = showSettingsSheet || showDomainMoreSheet || showCaptureSheet
+        if showSettingsSheet { showSettingsSheet = false }
+        if showDomainMoreSheet { showDomainMoreSheet = false }
+        if showCaptureSheet { showCaptureSheet = false }
+        if delayCapture || dismissedChrome {
+            // Brief settle so prior sheet chrome finishes dismissing before capture.
             try? await Task.sleep(nanoseconds: 360_000_000)
         }
-        let capture = await KenosBugReportCapture.captureKeyWindowJPEG()
+        let capture = await KenosBugReportCapture.captureKeyWindowJPEG(
+            webViewFallback: KenosActiveWebRegistry.preferred(for: self)
+        )
         bugReportDraft = await makeBugReportDraft(
             jpeg: capture.jpeg,
             captureSource: "manual",
@@ -959,6 +1038,8 @@ final class KenosAppModel: ObservableObject {
             showScreenshotBugPrompt = false
             return
         }
+        // SwiftUI cannot stack Settings + bug-report sheets.
+        if showSettingsSheet { showSettingsSheet = false }
         // Open sheet before dismissing the prompt so cleanup won't drop the draft.
         showBugReportSheet = true
         showScreenshotBugPrompt = false
@@ -1088,7 +1169,9 @@ final class KenosAppModel: ObservableObject {
             return
         }
         let previousTitle = draft.title
-        let capture = await KenosBugReportCapture.captureKeyWindowJPEG()
+        let capture = await KenosBugReportCapture.captureKeyWindowJPEG(
+            webViewFallback: KenosActiveWebRegistry.preferred(for: self)
+        )
         draft.screenshotJPEG = capture.jpeg
         let web = KenosActiveWebRegistry.preferred(for: self)
         let diagnostics = await KenosBugDiagnosticsFactory.make(
@@ -1115,6 +1198,12 @@ final class KenosAppModel: ObservableObject {
         KenosLog.breadcrumb("shell navigate", category: .shell, metadata: ["path": path])
         let normalized = path.hasPrefix("/") ? path : "/\(path)"
         let pathOnly = normalized.split(separator: "?", maxSplits: 1).first.map(String.init) ?? normalized
+        #if os(iOS)
+        if pathOnly.hasPrefix("/settings") {
+            presentSettings()
+            return
+        }
+        #endif
         let tab = tabForShellPath(pathOnly)
         let previous = dailyBetaPathByTab[tab]
         if previous != normalized {
@@ -1135,6 +1224,12 @@ final class KenosAppModel: ObservableObject {
         // Same-origin shell deep link → load exact path in the matching tab WebView
         // (not just switch tabs). Required for /settings login CTA and Continue targets.
         if isDailyBetaShellURL(url) {
+            #if os(iOS)
+            if path.hasPrefix("/settings") {
+                presentSettings()
+                return
+            }
+            #endif
             let tab = tabForShellPath(path)
             dailyBetaPathByTab[tab] = relativeShellPath(url)
             selectedTab = tab
@@ -1150,12 +1245,20 @@ final class KenosAppModel: ObservableObject {
         case "/inbox":
             selectedTab = .inbox
         case "/settings":
+            #if os(iOS)
+            presentSettings()
+            #else
             selectedTab = .settings
+            #endif
         default:
             if path.hasPrefix("/spaces/") {
                 selectedTab = .spaces
             } else if path.hasPrefix("/settings") {
+                #if os(iOS)
+                presentSettings()
+                #else
                 selectedTab = .settings
+                #endif
             } else {
                 selectedTab = .today
             }
@@ -1206,10 +1309,51 @@ final class KenosAppModel: ObservableObject {
     }
 
     func openNotification(_ record: KenosNotificationRecord) {
-        if KenosNotificationSafety.isExpired(record, now: ISO8601DateFormatter().string(from: Date())) {
+        if KenosNotificationSafety.isExpired(record, now: KenosNotificationISO.nowString()) {
             return
         }
         open(urlString: record.deepLink)
+    }
+
+    func refreshNotificationInbox() async {
+        notificationPreferences = await notifications.currentPreferences()
+        notificationInbox = await notifications.pending()
+        publishWidgetGlance(force: false)
+    }
+
+    func updateNotificationPreferences(_ prefs: KenosNotificationPreferences) async {
+        await notifications.updatePreferences(prefs)
+        notificationPreferences = prefs
+    }
+
+    func setNotificationCategoryEnabled(_ type: KenosNotificationType, enabled: Bool) async {
+        var prefs = await notifications.currentPreferences()
+        prefs.categoryEnabled[type] = enabled
+        await updateNotificationPreferences(prefs)
+    }
+
+    func setNotificationQuietHours(start: Int?, end: Int?) async {
+        var prefs = await notifications.currentPreferences()
+        prefs.quietHoursStart = start
+        prefs.quietHoursEnd = end
+        await updateNotificationPreferences(prefs)
+    }
+
+    /// Snooze a plan reminder by 15 minutes (notification action).
+    func snoozePlanReminder(deduplicationKey: String, minutes: Int = 15) async {
+        let pending = await notifications.pending()
+        guard let existing = pending.first(where: { $0.deduplicationKey == deduplicationKey }) else {
+            return
+        }
+        let fireAt = Date().addingTimeInterval(TimeInterval(minutes * 60))
+        var next = existing
+        next.fireAt = KenosNotificationISO.string(from: fireAt)
+        try? await notifications.replace(
+            deduplicationKey: deduplicationKey,
+            with: next,
+            at: fireAt
+        )
+        await refreshNotificationInbox()
     }
 
     func openCapture() {
@@ -1232,10 +1376,9 @@ final class KenosAppModel: ObservableObject {
         showSpaceSwitcher = true
     }
 
-    /// Quick Switch = searchable recent + spaces (Things Quick Find).
+    /// Legacy Quick Switch entry — redirects to Space Shelf (SSOT for switching).
     func openQuickSwitch() {
-        spaceChromeMode = .quickSwitch
-        showSpaceSwitcher = true
+        openSpaceShelf()
     }
 
     func dismissSpaceChrome() {
@@ -1534,6 +1677,7 @@ final class KenosAppModel: ObservableObject {
         showSpaceShelf = false
         domainDockSlot = 0
         domainWebLiveState = ""
+        applyChromeAppearance(.dark, reason: "returnKenos")
         selectedTab = previousKenosTab
         #if os(iOS)
         KenosSystemDiscovery.resign()
@@ -1830,6 +1974,10 @@ final class KenosAppModel: ObservableObject {
         shellMode = .domain
         domainDockSlot = 0
         syncDomainDockSlot(for: url)
+        applyChromeAppearance(
+            KenosDomainRegistry.defaultChromeAppearance(forContinuity: url),
+            reason: "restoreDomain"
+        )
         showSpaceSwitcher = false
         showSpaceShelf = false
         #if os(iOS)
@@ -1857,19 +2005,30 @@ final class KenosAppModel: ObservableObject {
         KenosDomainRegistry.definition(for: domainSpaceId)?.label ?? "Space"
     }
 
-    /// Brand accent per Space / Kenos Mode — dock selection + Space Shelf icons.
-    /// SSOT: domainIntegration.core.js / domainIdentity.core.js via KenosDomainRegistry.
+    /// Brand accent per Space / Kenos Mode — shelf cards / general tints (adaptive L/D).
+    /// SSOT: domainIdentity.core.js via KenosDomainRegistry semantic pairs.
     static func accentColor(for spaceId: String) -> Color {
         KenosDomainRegistry.accentColor(for: spaceId)
+    }
+
+    /// Dock / glass chrome accent — higher contrast than content accent.
+    static func accentOnGlass(for spaceId: String) -> Color {
+        KenosDomainRegistry.accentOnGlass(for: spaceId)
     }
 
     var domainAccent: Color {
         Self.accentColor(for: domainSpaceId)
     }
 
-    /// Dock selected tint — Domain uses active Space accent; Kenos Mode uses Kenos blue.
+    /// Dock selected tint on Liquid Glass — Domain Space on-glass pair; Kenos Mode Kenos on-glass.
     var dockSelectionAccent: Color {
-        shellMode == .domain ? domainAccent : Self.accentColor(for: "kenos")
+        shellMode == .domain
+            ? Self.accentOnGlass(for: domainSpaceId)
+            : Self.accentOnGlass(for: "kenos")
+    }
+
+    var dockSelectionSpaceId: String {
+        shellMode == .domain ? domainSpaceId : "kenos"
     }
 
     struct DomainDockItem: Equatable {
@@ -1883,29 +2042,29 @@ final class KenosAppModel: ObservableObject {
         var opensMore: Bool = false
     }
 
-    /// Kenos Mode capsule — four destinations; Spaces is a separate leading chip.
+    /// Kenos Mode capsule — three destinations; Spaces is a separate leading Orb.
     var kenosCapsuleDockItems: [DomainDockItem] {
         [
             .init(title: "Today", systemImage: "sun.max", kenosTab: .today),
-            .init(title: "Assistant", systemImage: "bubble.left.and.bubble.right", kenosTab: .assistant),
+            .init(title: "Ask", systemImage: "bubble.left.and.bubble.right", kenosTab: .assistant),
             .init(title: "Inbox", systemImage: "tray", kenosTab: .inbox),
-            .init(title: "Settings", systemImage: "gearshape", kenosTab: .settings),
         ]
     }
 
-    /// Domain capsule — max 4 slots (Spaces chip stays separate → 5 total).
+    /// Domain capsule — max 3 destinations (Spaces Orb separate). More lives in domain header.
     /// Manifest SSOT: KenosDomainRegistry ← domainIntegration.core.js
     var domainDockItems: [DomainDockItem] {
         if let manifest = KenosDomainRegistry.navigationManifest(for: domainSpaceId) {
-            return manifest.slots.map {
-                .init(title: $0.title, systemImage: $0.systemImage, path: $0.path, opensMore: $0.opensMore)
-            }
+            return manifest.slots
+                .filter { !$0.opensMore }
+                .map {
+                    .init(title: $0.title, systemImage: $0.systemImage, path: $0.path, opensMore: false)
+                }
         }
         return [
             .init(title: "Home", systemImage: "house", path: "/"),
             .init(title: "Browse", systemImage: "list.bullet", path: "/"),
             .init(title: "Library", systemImage: "books.vertical", path: "/"),
-            .init(title: "More", systemImage: "ellipsis", opensMore: true),
         ]
     }
 
@@ -1970,10 +2129,7 @@ final class KenosAppModel: ObservableObject {
                 persistDomainContinuity(next)
             }
         }
-        // Secondary paths are not capsule slots — leave More as the active chrome cue.
-        if let moreIdx = domainDockItems.firstIndex(where: \.opensMore) {
-            domainDockSlot = moreIdx
-        }
+        // Secondary paths are not capsule destinations — keep prior slot highlight.
     }
 
     /// When LAN companion is down, rewrite Continuity onto public `*.kenos.space`.
@@ -2030,6 +2186,11 @@ final class KenosAppModel: ObservableObject {
         shellMode = .domain
         domainDockSlot = 0
         syncDomainDockSlot(for: url)
+        // Optimistic status-bar polarity before first paint (web may refine via data-theme).
+        applyChromeAppearance(
+            KenosDomainRegistry.defaultChromeAppearance(forContinuity: url),
+            reason: "enterDomain"
+        )
         #if os(iOS)
         cancelInactiveContinuityTTLRelease()
         #endif
@@ -2038,19 +2199,52 @@ final class KenosAppModel: ObservableObject {
         #endif
     }
 
+    /// Sync SwiftUI `preferredColorScheme` + WK canvas/veil with content polarity.
+    func applyChromeAppearance(_ next: KenosChromeAppearance, reason: String) {
+        guard chromeAppearance != next else { return }
+        chromeAppearance = next
+        KenosLog.debug("chrome appearance", category: .shell, metadata: [
+            "scheme": next.rawValue,
+            "reason": reason,
+        ])
+        #if os(iOS)
+        KenosWebRuntime.setCanvasAppearance(next)
+        #endif
+    }
+
     func selectKenosDockTab(_ tab: Tab) {
         // Always clear chrome overlays; only republish tab when it actually changes
         // (avoids softNavigate + SwiftUI churn on re-taps).
         if showSpaceShelf { showSpaceShelf = false }
         if showDomainMoreSheet { showDomainMoreSheet = false }
+        #if os(iOS)
+        if tab == .settings {
+            presentSettings()
+            return
+        }
+        #endif
         guard selectedTab != tab else { return }
         selectedTab = tab
     }
 
-    /// Settings is a system tab — never a sheet.
+    /// iOS: modal Settings sheet over the current surface (preserves tab + scroll).
+    /// macOS: sidebar Settings row.
     func presentSettings() {
+        #if os(iOS)
+        if showSpaceShelf { showSpaceShelf = false }
+        if showDomainMoreSheet { showDomainMoreSheet = false }
+        // Do not flip selectedTab — Done must restore the prior page/scroll, not Today.
+        showSettingsSheet = true
+        #else
         selectKenosDockTab(.settings)
+        #endif
     }
+
+    #if os(iOS)
+    func dismissSettings() {
+        showSettingsSheet = false
+    }
+    #endif
 
     func selectDomainDockSlot(_ index: Int) {
         guard domainDockItems.indices.contains(index) else { return }
@@ -2154,10 +2348,8 @@ final class KenosAppModel: ObservableObject {
                 return (offset, p)
             }
             .max(by: { $0.path.count < $1.path.count })
-        if let bestMore, bestMore.count >= (bestCapsule?.path.count ?? 0),
-           let moreIdx = domainDockItems.firstIndex(where: \.opensMore)
-        {
-            if domainDockSlot != moreIdx { domainDockSlot = moreIdx }
+        // More destinations live in the domain header — don't steal capsule highlight.
+        if let bestMore, bestMore.count >= (bestCapsule?.path.count ?? 0) {
             return
         }
         if let bestCapsule, domainDockSlot != bestCapsule.offset {
@@ -2212,7 +2404,7 @@ final class KenosAppModel: ObservableObject {
             "tasks": "tasks", "today": "today", "home": "home",
             "calendar": "calendar", "schedule": "calendar",
             "inbox": "inbox", "more": "more",
-            // Training dock: Today · Program · Discover · More
+            // Training dock: Today · Program · Library · More
             "discover": training ? "discover" : "more",
             "program": training ? "program" : "more",
             "library": "library", "browse": "more",
@@ -2229,11 +2421,8 @@ final class KenosAppModel: ObservableObject {
             "playlists": "more", "stats": "more", "tools": "more",
         ]
         let normalized = aliases[tab] ?? tab
-        if normalized == "more",
-           let moreIdx = domainDockItems.firstIndex(where: \.opensMore)
-        {
-            return moreIdx
-        }
+        // "more" is header-only — no dock capsule index.
+        if normalized == "more" { return nil }
         if let byTitle = domainDockItems.enumerated().first(where: {
             $0.element.title.lowercased() == normalized
         }) {
@@ -2294,13 +2483,18 @@ final class KenosAppModel: ObservableObject {
                 .first
             guard let best else {
                 if inDomain, spaceId == currentId {
-                    return (Self.shelfSubtitle(for: continuityURL), "Now")
+                    return (
+                        KenosSpaceShelfLabels.destinationLabel(for: continuityURL, spaceId: spaceId),
+                        "Now"
+                    )
                 }
                 return (Self.spaceCatalog.first(where: { $0.id == spaceId })?.subtitle ?? spaceId, nil)
             }
             let when = iso.date(from: best.1.updatedAt)
             let sub = best.1.displaySubtitle
-                ?? (inDomain && spaceId == currentId ? Self.shelfSubtitle(for: continuityURL) : best.1.displayTitle)
+                ?? (inDomain && spaceId == currentId
+                    ? KenosSpaceShelfLabels.destinationLabel(for: continuityURL, spaceId: spaceId)
+                    : best.1.displayTitle)
             return (sub, when.map { relativeTimeString(from: $0) })
         }
 
@@ -2308,13 +2502,23 @@ final class KenosAppModel: ObservableObject {
 
         // 1) Kenos — first-class system home (current when not in Domain).
         let kenosCurrent = !inDomain
+        let waiting = notificationInbox.reduce(into: 0) { count, item in
+            if item.type != .planReminder, item.type != .approvalRequested { count += 1 }
+        }
+        // Title = Space name only; destination / status live in the subtitle
+        // (same grammar as Plan / Training / Music Current rows).
+        let kenosSubtitle: String = {
+            if waiting > 0 {
+                return waiting == 1 ? "Today · 1 waiting" : "Today · \(waiting) waiting"
+            }
+            // Role line — never put "Today" in the title (collides with destination).
+            return "Today · Ask · Inbox"
+        }()
         cards.append(
             SpaceShelfCard(
                 id: "kenos",
                 title: "Kenos",
-                subtitle: kenosCurrent
-                    ? previousKenosTab.title
-                    : "Today · Assistant · Inbox",
+                subtitle: kenosSubtitle,
                 relativeTime: kenosCurrent ? "Now" : nil,
                 isCurrent: kenosCurrent,
                 listKey: "kenos",
@@ -2326,17 +2530,21 @@ final class KenosAppModel: ObservableObject {
 
         // 2) Full domain catalog — Plan, Training, Money, Music, Work, Home, Library…
         for entry in Self.spaceCatalog {
-            let isCurrent = inDomain && (
-                entry.id == currentId
-                    || (currentId == "plan" && entry.id == "plan")
-                    || (currentId == "training" && entry.id == "training")
-            )
+            let isCurrent = inDomain && entry.id == currentId
             let meta = resumeMeta(for: entry.id)
             cards.append(
                 SpaceShelfCard(
                     id: entry.id,
                     title: entry.title,
-                    subtitle: isCurrent ? Self.shelfSubtitle(for: continuityURL) : meta.subtitle,
+                    subtitle: isCurrent
+                        ? KenosSpaceShelfLabels.currentSubtitle(
+                            spaceId: entry.id,
+                            url: continuityURL,
+                            resumeSubtitle: meta.subtitle,
+                            spaceTitle: entry.title,
+                            catalogSubtitle: entry.subtitle
+                        )
+                        : meta.subtitle,
                     relativeTime: isCurrent ? (meta.relative ?? "Now") : meta.relative,
                     isCurrent: isCurrent,
                     listKey: entry.id,
@@ -2388,24 +2596,6 @@ final class KenosAppModel: ObservableObject {
         if seconds < 3600 { return "\(seconds / 60)m ago" }
         if seconds < 86400 { return "\(seconds / 3600)h ago" }
         return "\(seconds / 86400)d ago"
-    }
-
-    private static func shelfSubtitle(for url: URL?) -> String {
-        guard let url else { return "Home" }
-        let path = url.path
-        if path.isEmpty || path == "/" { return "Home" }
-        let leaf = path.split(separator: "/").last.map(String.init) ?? path
-        switch leaf.lowercased() {
-        case "calendar": return "Calendar"
-        case "projects": return "Projects"
-        case "search": return "Search"
-        case "session": return "Workout"
-        case "library": return "Library"
-        case "records": return "History"
-        case "focus": return "Focus"
-        case "summary": return "Summary"
-        default: return leaf.prefix(1).uppercased() + leaf.dropFirst()
-        }
     }
 
     /// True for Daily Beta embedded domain Continuity origins (SSOT: KenosDomainRegistry).
@@ -2497,7 +2687,92 @@ final class KenosAppModel: ObservableObject {
         lastCapture = nil
         captureText = ""
         inboxDestination = nil
+        #if os(iOS)
+        if selectedTab == .settings { selectedTab = .today }
+        presentSettings()
+        #else
         selectedTab = .settings
+        #endif
         KenosLog.notice("logout complete", category: .session, metadata: ["breadcrumb": "1"])
+    }
+}
+
+/// Pure copy helpers for Space Shelf Current / resume subtitles.
+/// Never emit a generic "Home" that collides with Kenos Home or Domain home tabs.
+enum KenosSpaceShelfLabels {
+    /// Domain landing destination when Continuity is at the Space home path.
+    static func homeDestination(for spaceId: String) -> String {
+        switch spaceId {
+        case "plan": return "Tasks"
+        case "training": return "Today"
+        case "music": return "Library"
+        case "money": return "Overview"
+        case "work": return "Projects"
+        case "library": return "Vault"
+        case "home": return "Rooms"
+        case "health": return "Status"
+        case "paper": return "Notebooks"
+        default: return "Space"
+        }
+    }
+
+    /// Path → destination label. Domain home uses Space-specific names (not "Home").
+    static func destinationLabel(for url: URL?, spaceId: String) -> String {
+        if let url {
+            let path = url.path
+            let atHome = path.isEmpty
+                || path == "/"
+                || KenosDomainRegistry.isDomainHomePath(path, domainId: spaceId)
+            if !atHome {
+                let leaf = path.split(separator: "/").last.map(String.init) ?? path
+                switch leaf.lowercased() {
+                case "calendar": return "Calendar"
+                case "projects": return "Projects"
+                case "search": return "Search"
+                case "session": return "Workout"
+                case "library": return "Library"
+                case "records": return "History"
+                case "focus": return "Focus"
+                case "summary": return "Summary"
+                case "today": return "Today"
+                case "inbox": return "Inbox"
+                case "triage": return "Triage"
+                case "program": return "Program"
+                case "discover": return "Library"
+                case "accounts": return "Accounts"
+                case "plan": return spaceId == "home" ? "Rooms" : "Plan"
+                default:
+                    if leaf.count > 1 {
+                        return leaf.prefix(1).uppercased() + leaf.dropFirst()
+                    }
+                }
+            }
+        }
+        return homeDestination(for: spaceId)
+    }
+
+    /// Current-row subtitle: destination (+ optional contextual status).
+    static func currentSubtitle(
+        spaceId: String,
+        url: URL?,
+        resumeSubtitle: String,
+        spaceTitle: String? = nil,
+        catalogSubtitle: String? = nil
+    ) -> String {
+        let destination = destinationLabel(for: url, spaceId: spaceId)
+        let resume = resumeSubtitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let catalog = (catalogSubtitle ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let title = (spaceTitle ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if resume.isEmpty
+            || resume.caseInsensitiveCompare(destination) == .orderedSame
+            || (!catalog.isEmpty && resume.caseInsensitiveCompare(catalog) == .orderedSame)
+            || resume.caseInsensitiveCompare(spaceId) == .orderedSame
+            || (!title.isEmpty && resume.caseInsensitiveCompare(title) == .orderedSame)
+            || resume.caseInsensitiveCompare("home") == .orderedSame
+        {
+            return destination
+        }
+        if resume.contains("·") { return resume }
+        return "\(destination) · \(resume)"
     }
 }

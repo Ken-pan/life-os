@@ -57,7 +57,41 @@ enum KenosSharedWebAuth {
         return false
     }
 
+    /// encodeURIComponent-compatible cookie payload (matches `packages/sync` SSO).
+    static func encodeSsoCookieValue(accessToken: String, refreshToken: String) -> String? {
+        let payload: [String: String] = [
+            "access_token": accessToken,
+            "refresh_token": refreshToken,
+        ]
+        guard
+            let data = try? JSONSerialization.data(withJSONObject: payload, options: []),
+            let json = String(data: data, encoding: .utf8)
+        else { return nil }
+        var allowed = CharacterSet.alphanumerics
+        allowed.insert(charactersIn: "-_.!~*'()")
+        return json.addingPercentEncoding(withAllowedCharacters: allowed)
+    }
+
+    /// True when both hosts are Life OS auth surfaces that may share one vault.
+    /// Exact host, or same `*.kenos.space` / Netlify site family.
+    static func hostsCompatible(_ a: String, _ b: String) -> Bool {
+        let x = a.lowercased()
+        let y = b.lowercased()
+        if x.isEmpty || y.isEmpty { return false }
+        if x == y { return true }
+        let xKenos = x == "kenos.space" || x.hasSuffix(".kenos.space")
+        let yKenos = y == "kenos.space" || y.hasSuffix(".kenos.space")
+        if xKenos && yKenos { return true }
+        let xNetlify = x.hasSuffix(".netlify.app")
+        let yNetlify = y.hasSuffix(".netlify.app")
+        if xNetlify && yNetlify { return true }
+        return false
+    }
+
     static var hasSharedTokens: Bool { loadSharedTokens() != nil }
+
+    @MainActor private static var seedInFlight = false
+    @MainActor private static var seedAgain = false
 
     static func loadSharedTokens() -> SharedTokens? {
         guard
@@ -93,6 +127,11 @@ enum KenosSharedWebAuth {
             ]
         )
         NotificationCenter.default.post(name: .kenosSharedWebAuthDidChange, object: nil)
+        // Push Cookie into shared WKWebsiteDataStore so every Continuity origin
+        // can restore via `lifeos_shared_session` without waiting for Keychain.
+        Task { @MainActor in
+            await seedSharedSessionCookies()
+        }
     }
 
     static func clearSharedTokens() {
@@ -100,11 +139,123 @@ enum KenosSharedWebAuth {
         try? secureStore.deleteSecret(account: refreshAccount)
         try? secureStore.deleteSecret(account: userIdAccount)
         NotificationCenter.default.post(name: .kenosSharedWebAuthDidChange, object: nil)
+        Task { @MainActor in
+            await clearSsoCookiesOnly()
+        }
+    }
+
+    /// Hosts / domains that should receive the mirrored SSO cookie.
+    static func ssoCookieTargets() -> [(domain: String, secure: Bool)] {
+        var targets: [(domain: String, secure: Bool)] = [
+            (domain: ".kenos.space", secure: true),
+            (domain: "localhost", secure: false),
+            (domain: "127.0.0.1", secure: false),
+        ]
+        if let lan = KenosDailyBetaConfig.configuredLanOrigin.host?.lowercased(),
+           !lan.isEmpty,
+           !targets.contains(where: { $0.domain == lan })
+        {
+            targets.append((domain: lan, secure: false))
+        }
+        for def in KenosDomainRegistry.definitions {
+            guard let origin = def.productionOrigin,
+                  let host = URL(string: origin)?.host?.lowercased(),
+                  !host.isEmpty,
+                  !targets.contains(where: { $0.domain == host || $0.domain == ".\(host)" })
+            else { continue }
+            // Parent `.kenos.space` already covers these; keep host-only belt for Netlify.
+            if host.hasSuffix("netlify.app") {
+                targets.append((domain: host, secure: true))
+            }
+        }
+        return targets
+    }
+
+    @MainActor
+    static func seedSharedSessionCookies() async {
+        // Coalesce concurrent seeds (login + Continuity hard-load + launch warm).
+        if seedInFlight {
+            seedAgain = true
+            return
+        }
+        seedInFlight = true
+        defer { seedInFlight = false }
+        repeat {
+            seedAgain = false
+            await seedSharedSessionCookiesOnce()
+        } while seedAgain
+    }
+
+    @MainActor
+    private static func seedSharedSessionCookiesOnce() async {
+        guard let tokens = loadSharedTokens(),
+              let value = encodeSsoCookieValue(
+                accessToken: tokens.accessToken,
+                refreshToken: tokens.refreshToken
+              )
+        else { return }
+
+        // WKHTTPCookieStore soft-drops oversized cookies; skip rather than half-write.
+        if value.utf8.count > 3500 {
+            KenosLog.notice(
+                "shared web auth cookie skipped — oversized",
+                category: .session,
+                metadata: ["bytes": String(value.utf8.count)]
+            )
+            return
+        }
+
+        let store = WKWebsiteDataStore.default().httpCookieStore
+        let expires = Date().addingTimeInterval(365 * 24 * 60 * 60)
+        var written = 0
+        for target in ssoCookieTargets() {
+            var props: [HTTPCookiePropertyKey: Any] = [
+                .name: ssoCookieName,
+                .value: value,
+                .path: "/",
+                .domain: target.domain,
+                .expires: expires,
+                // HttpOnly: Continuity JS cannot exfiltrate via document.cookie XSS.
+                // Restore path on iOS is Keychain vault (+ Cookie sent on HTTP).
+                HTTPCookiePropertyKey("HttpOnly"): "TRUE",
+            ]
+            if target.secure {
+                props[.secure] = "TRUE"
+            }
+            props[.sameSitePolicy] = HTTPCookieStringPolicy.sameSiteLax
+            guard let cookie = HTTPCookie(properties: props) else { continue }
+            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+                store.setCookie(cookie) { cont.resume() }
+            }
+            written += 1
+        }
+        KenosLog.notice(
+            "shared web auth cookies seeded",
+            category: .session,
+            metadata: ["cookies": String(written)]
+        )
+    }
+
+    @MainActor
+    private static func clearSsoCookiesOnly() async {
+        let cookieStore = WKWebsiteDataStore.default().httpCookieStore
+        let cookies = await withCheckedContinuation { (cont: CheckedContinuation<[HTTPCookie], Never>) in
+            cookieStore.getAllCookies { cont.resume(returning: $0) }
+        }
+        for cookie in cookies where cookie.name == ssoCookieName {
+            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+                cookieStore.delete(cookie) { cont.resume() }
+            }
+        }
     }
 
     @MainActor
     static func clearSharedWebAuth() async {
-        clearSharedTokens()
+        // Clear Keychain without scheduling a second cookie Task — we clear below.
+        try? secureStore.deleteSecret(account: accessAccount)
+        try? secureStore.deleteSecret(account: refreshAccount)
+        try? secureStore.deleteSecret(account: userIdAccount)
+        NotificationCenter.default.post(name: .kenosSharedWebAuthDidChange, object: nil)
 
         let store = WKWebsiteDataStore.default()
         let cookieStore = store.httpCookieStore
@@ -162,9 +313,11 @@ enum KenosWebChrome: String {
     }
 
     /// Base dock clearance above home indicator (Live Accessory is added separately).
+    /// SSOT: `KenosGlass.dockScrollEndPadPx` — content may scroll under glass, but
+    /// scroll-end padding keeps the last item fully above the dock at rest.
     var bottomPadPx: Int {
         switch self {
-        case .kenosTabs, .domainDock: return 80
+        case .kenosTabs, .domainDock: return KenosGlass.dockScrollEndPadPx
         case .none: return 24
         }
     }
@@ -185,6 +338,30 @@ enum KenosWebChrome: String {
 /// Shared WK runtime — ink + reachability cache so Space switches avoid white letterbox.
 enum KenosWebRuntime {
     static let ink = UIColor(red: 0.031, green: 0.035, blue: 0.039, alpha: 1)
+    /// Load-cover / under-page canvas — tracks `KenosChromeAppearance` (not stuck on ink for light Domains).
+    @MainActor private(set) static var canvasAppearance: KenosChromeAppearance = .dark
+    /// Tags must match Coordinator load/freeze overlays.
+    private static let loadCoverTag = 0x4B4C4452 // KLDR
+    private static let freezeOverlayTag = 0x4B46525A // KFRZ
+
+    @MainActor
+    static var canvasUIColor: UIColor { canvasAppearance.uiColor }
+
+    /// Apply content polarity to warm WK surfaces before / during first paint.
+    @MainActor
+    static func setCanvasAppearance(_ next: KenosChromeAppearance) {
+        canvasAppearance = next
+        let color = next.uiColor
+        for webView in [KenosActiveWebRegistry.domainWebView, KenosActiveWebRegistry.shellWebView].compactMap({ $0 }) {
+            webView.backgroundColor = color
+            webView.scrollView.backgroundColor = color
+            if #available(iOS 15.0, *) {
+                webView.underPageBackgroundColor = color
+            }
+            webView.viewWithTag(loadCoverTag)?.backgroundColor = color
+            webView.viewWithTag(freezeOverlayTag)?.backgroundColor = color
+        }
+    }
     /// Last successful Daily Beta health probe — skip ProgressView on tab remount.
     @MainActor static var dailyBetaReachable = false
     /// Domain Continuity origin keys (`host:port`) that recently answered a probe.
@@ -399,6 +576,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                 "--bottom-chrome-h:0px!important;",
                 "--safe-top-effective:0px!important;",
                 "--safe-top:0px!important;",
+                "--kenos-dock-scroll-end-pad:\(bottomPad)px;",
                 "}",
                 /* Immersive Focus/Summary — restore real inset; chrome pad is 0. */
                 "html[data-ios-native-shell='true'][data-immersive-route='true'],",
@@ -436,12 +614,15 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                 "box-sizing:border-box!important;",
                 "background:transparent!important;",
                 "}",
-                /* ONE scroll-root pad only — never nest .app-shell + .main-col + workspace. */
+                /* ONE scroll-root pad only — never nest .app-shell + .main-col + workspace.
+                 * Canvas is full-bleed under Liquid Glass dock; padding-bottom is scroll-end
+                 * clearance so the last content/action rests fully above the dock at rest. */
                 "html[data-ios-native-shell='true'] #main-content,",
                 "html[data-ios-native-shell='true'] .life-os-app-shell__main,",
                 "html[data-ios-native-shell='true'] .main-col{",
                 "padding-top:\(topPad)px!important;",
                 "padding-bottom:calc(env(safe-area-inset-bottom,0px) + \(bottomPad)px)!important;",
+                "scroll-padding-bottom:calc(env(safe-area-inset-bottom,0px) + \(bottomPad)px)!important;",
                 "padding-left:0!important;",
                 "padding-right:0!important;",
                 "box-sizing:border-box!important;",
@@ -470,7 +651,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                 "display:none!important;",
                 "}",
                 "html[data-ios-native-shell='true'] .tw{",
-                "bottom:calc(80px + 18px + env(safe-area-inset-bottom,0px))!important;",
+                "bottom:calc(\(bottomPad)px + 18px + env(safe-area-inset-bottom,0px))!important;",
                 "}",
                 /* Kenos space pages — pack under Music-style scroll header. */
                 "html[data-ios-native-shell='true'] .space-page{",
@@ -510,7 +691,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                 "}",
                 /* Hierarchical SPA settle only — dock/tab peer swaps set __KENOS_PEER_SWAP_UNTIL__. */
                 "html[data-ios-native-shell='true']{",
-                "--kenos-motion-page:360ms;",
+                "--kenos-motion-page:320ms;",
                 "--kenos-ease-page:cubic-bezier(0.22,1,0.36,1);",
                 "}",
                 "html[data-ios-native-shell='true'] #main-content.kenos-page-enter,",
@@ -520,7 +701,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                 "animation:kenos-page-enter var(--kenos-motion-page) var(--kenos-ease-page) both;",
                 "}",
                 "@keyframes kenos-page-enter{",
-                "from{opacity:0.72;transform:translateY(10px) scale(0.992);}",
+                "from{opacity:0.78;transform:translateY(8px) scale(0.994);}",
                 "to{opacity:1;transform:translateY(0) scale(1);}",
                 "}",
                 "@media (prefers-reduced-motion:reduce){",
@@ -688,12 +869,13 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         view.scrollView.scrollIndicatorInsets = .zero
         view.scrollView.automaticallyAdjustsScrollIndicatorInsets = false
         view.isOpaque = true
-        let ink = KenosWebRuntime.ink
-        view.backgroundColor = ink
-        view.scrollView.backgroundColor = ink
-        view.underPageBackgroundColor = ink
+        let canvas = KenosWebRuntime.canvasUIColor
+        view.backgroundColor = canvas
+        view.scrollView.backgroundColor = canvas
+        view.underPageBackgroundColor = canvas
         view.isHidden = !isActive
-        // First mount: solid ink cover until first paint (blank WKWebView is white).
+        // First mount: solid canvas cover until first paint (blank WKWebView is white).
+        // Light Domains must not veil with dark ink while status bar already flipped.
         context.coordinator.installLoadCover(on: view)
         let initial = Self.shellURL(url)
         KenosLog.info("webview load", category: .web, metadata: [
@@ -702,11 +884,10 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             "mode": stayInApp ? "domain" : "shell",
             "chrome": chrome.rawValue,
         ])
-        view.load(URLRequest(url: initial))
         context.coordinator.webView = view
-        context.coordinator.loadedURL = initial
         context.coordinator.observeProgress(on: view)
         context.coordinator.applyActivation(isActive, on: view)
+        context.coordinator.loadSeedingSSO(on: view, url: initial)
         if stayInApp {
             KenosDomainWebBridge.activeWebView = view
             KenosActiveWebRegistry.domainWebView = view
@@ -764,7 +945,11 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                         s.textContent = s.textContent
                           .replace(/padding-top:\\d+px!important;/g, 'padding-top:\(topPad)px!important;')
                           .replace(/padding-bottom:calc\\(env\\(safe-area-inset-bottom,0px\\) \\+ \\d+px\\)!important;/g,
-                            'padding-bottom:calc(env(safe-area-inset-bottom,0px) + \(bottomPad)px)!important;');
+                            'padding-bottom:calc(env(safe-area-inset-bottom,0px) + \(bottomPad)px)!important;')
+                          .replace(/scroll-padding-bottom:calc\\(env\\(safe-area-inset-bottom,0px\\) \\+ \\d+px\\)!important;/g,
+                            'scroll-padding-bottom:calc(env(safe-area-inset-bottom,0px) + \(bottomPad)px)!important;')
+                          .replace(/--kenos-dock-scroll-end-pad:\\d+px;/g,
+                            '--kenos-dock-scroll-end-pad:\(bottomPad)px;');
                       }
                     } catch (e) {}
                     """
@@ -794,10 +979,9 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                 }
                 #endif
                 context.coordinator.beginProtectedNavigation(on: uiView, freezePixels: true)
-                context.coordinator.loadedURL = next
                 context.coordinator.lastNativePath = nextPath
                 context.coordinator.loadRetryCount = 0
-                uiView.load(URLRequest(url: next))
+                context.coordinator.loadSeedingSSO(on: uiView, url: next)
             } else if nativePathJump {
                 context.coordinator.loadedURL = next
                 context.coordinator.lastNativePath = nextPath
@@ -805,14 +989,14 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             }
         } else if !Self.sameNavigationTarget(live, next) {
             let sameOrigin = liveOrigin == nextOrigin
-            context.coordinator.loadedURL = next
             context.coordinator.lastNativePath = nextPath
             context.coordinator.loadRetryCount = 0
             if sameOrigin, live != nil {
+                context.coordinator.loadedURL = next
                 context.coordinator.softNavigate(uiView, to: next)
             } else {
                 context.coordinator.beginProtectedNavigation(on: uiView, freezePixels: true)
-                uiView.load(URLRequest(url: next))
+                context.coordinator.loadSeedingSSO(on: uiView, url: next)
             }
         }
     }
@@ -968,7 +1152,11 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                         s.textContent = s.textContent
                           .replace(/padding-top:\\d+px!important;/g, 'padding-top:\(topPad)px!important;')
                           .replace(/padding-bottom:calc\\(env\\(safe-area-inset-bottom,0px\\) \\+ \\d+px\\)!important;/g,
-                            'padding-bottom:calc(env(safe-area-inset-bottom,0px) + \(bottomPad)px)!important;');
+                            'padding-bottom:calc(env(safe-area-inset-bottom,0px) + \(bottomPad)px)!important;')
+                          .replace(/scroll-padding-bottom:calc\\(env\\(safe-area-inset-bottom,0px\\) \\+ \\d+px\\)!important;/g,
+                            'scroll-padding-bottom:calc(env(safe-area-inset-bottom,0px) + \(bottomPad)px)!important;')
+                          .replace(/--kenos-dock-scroll-end-pad:\\d+px;/g,
+                            '--kenos-dock-scroll-end-pad:\(bottomPad)px;');
                       }
                     } catch (e) {}
                     """
@@ -1081,7 +1269,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                     if kind == "assign" || kind == "fail" {
                         self.beginProtectedNavigation(on: webView, freezePixels: true)
                         if kind == "fail" {
-                            webView.load(URLRequest(url: url))
+                            self.loadSeedingSSO(on: webView, url: url)
                         }
                         return
                     }
@@ -1106,7 +1294,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                         ])
                         self.beginProtectedNavigation(on: webView, freezePixels: true)
                         self.loadRetryCount = 0
-                        webView.load(URLRequest(url: url))
+                        self.loadSeedingSSO(on: webView, url: url)
                     }
                     self.softNavFallbackWorkItem = work
                     DispatchQueue.main.asyncAfter(
@@ -1148,14 +1336,29 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             }
         }
 
+        /// Seed Keychain → WKCookieStore before Continuity hard loads so Cookie SSO
+        /// works on Music/Finance/etc. without a second interactive login.
+        func loadSeedingSSO(on webView: WKWebView, url: URL) {
+            loadedURL = url
+            Task { @MainActor [weak self, weak webView] in
+                await KenosSharedWebAuth.seedSharedSessionCookies()
+                guard let self, let webView else { return }
+                // Drop stale loads if a newer Continuity target won the race.
+                guard self.loadedURL == url else { return }
+                webView.load(URLRequest(url: url))
+            }
+        }
+
         func installLoadCover(on webView: WKWebView) {
+            let canvas = KenosWebRuntime.canvasUIColor
             if let existing = webView.viewWithTag(Self.loadCoverTag) {
+                existing.backgroundColor = canvas
                 existing.alpha = 1
                 return
             }
             let cover = UIView(frame: webView.bounds)
             cover.tag = Self.loadCoverTag
-            cover.backgroundColor = KenosWebRuntime.ink
+            cover.backgroundColor = canvas
             cover.alpha = 1
             cover.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             cover.isUserInteractionEnabled = false
@@ -1168,7 +1371,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             let bounds = webView.bounds
             let host = UIView(frame: bounds)
             host.tag = Self.freezeOverlayTag
-            host.backgroundColor = KenosWebRuntime.ink
+            host.backgroundColor = KenosWebRuntime.canvasUIColor
             host.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             host.isUserInteractionEnabled = false
             host.clipsToBounds = true
@@ -1389,7 +1592,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self, weak webView] in
                 guard let self, let webView else { return }
                 self.beginProtectedNavigation(on: webView, freezePixels: false)
-                webView.load(URLRequest(url: url))
+                self.loadSeedingSSO(on: webView, url: url)
             }
         }
 
@@ -1495,7 +1698,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             ])
             // Blank WebView recovery (Apple / Embrace guidance).
             if let url = loadedURL ?? webView.url {
-                webView.load(URLRequest(url: url))
+                loadSeedingSSO(on: webView, url: url)
             }
         }
 
@@ -1626,13 +1829,12 @@ struct KenosDailyBetaSurface: View {
     @State private var originEpoch = 0
 
     private var url: URL { KenosDailyBetaConfig.pathURL(path) }
-    private let ink = Color(red: 0.031, green: 0.035, blue: 0.039)
 
     var body: some View {
-        // Optimistic: paint WKWebView immediately on ink — never gate first frame
-        // behind a health probe (that ProgressView swap was a visible flash).
+        // Optimistic: paint WKWebView immediately on the current chrome canvas —
+        // never gate first frame behind a health probe (ProgressView was a flash).
         ZStack {
-            ink
+            KenosChromeAppearance.dark.canvasColor
             if unreachable {
                 ContentUnavailableView {
                     Label("Kenos unreachable", systemImage: "wifi.exclamationmark")
@@ -1667,7 +1869,7 @@ struct KenosDailyBetaSurface: View {
                     }
                     Button("Retry") {
                         KenosWebRuntime.invalidateReachability()
-                        // Stuck on dead production (e.g. unresolved aios.kenos.space) → bounce to LAN.
+                        // Stuck on dead production (e.g. unresolved www.kenos.space) → bounce to LAN.
                         if KenosDailyBetaConfig.useProductionOverride,
                            KenosDailyBetaConfig.isConfiguredOriginLanDependent
                         {
@@ -1704,7 +1906,7 @@ struct KenosDailyBetaSurface: View {
             .allowsHitTesting(false)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(ink.ignoresSafeArea())
+        .background(KenosChromeAppearance.dark.canvasColor.ignoresSafeArea())
         .ignoresSafeArea(.container, edges: [.top, .bottom])
         .ignoresSafeArea()
         .task(id: "\(originEpoch)-\(KenosDailyBetaConfig.kenOsOrigin.absoluteString)") {

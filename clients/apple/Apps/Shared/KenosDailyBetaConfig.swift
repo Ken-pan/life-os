@@ -7,15 +7,35 @@ extension Notification.Name {
 
 /// Origins for iOS Personal Daily Beta.
 /// Prefers phone-reachable stable mDNS hostname over DHCP IPv4 / 127.0.0.1.
-/// When LAN is offline, can fall back to production `*.kenos.space` (cellular-reachable).
+/// When LAN is offline, falls back to the hosted AIOS canary + `*.kenos.space` domains.
 enum KenosDailyBetaConfig {
     static let originDefaultsKey = "kenos.dailyBeta.origin"
     static let enabledDefaultsKey = "kenos.dailyBeta.enabled"
     static let preferProductionFallbackKey = "kenos.dailyBeta.preferProductionFallback"
     static let useProductionOverrideKey = "kenos.dailyBeta.useProductionOverride"
+    static let resolvedProductionShellKey = "kenos.dailyBeta.resolvedProductionShell"
 
-    /// Public AIOS shell — reachable off LAN (cellular / Mac sleep).
-    static let productionKenOsOrigin = URL(string: "https://aios.kenos.space")!
+    /// Preferred www primary, then Netlify canary (site renamed off aios-*).
+    static let productionShellCandidates: [URL] = [
+        URL(string: "https://www.kenos.space")!,
+        URL(string: "https://kenos-www.netlify.app")!,
+    ]
+
+    /// Public Kenos shell — reachable off LAN (cellular / Mac sleep).
+    /// Prefers www; falls back to Netlify canary until apex/www DNS + SSL are Ready.
+    static var productionKenOsOrigin: URL {
+        if let raw = UserDefaults.standard.string(forKey: resolvedProductionShellKey),
+           let url = URL(string: raw),
+           let host = url.host, !host.isEmpty
+        {
+            // Migrate stale aios.* / old Netlify hostnames.
+            if host == "aios.kenos.space" || host == "aios-kenos.netlify.app" {
+                return productionShellCandidates[1]
+            }
+            return url
+        }
+        return productionShellCandidates[1]
+    }
 
     /// Bundle default from Info.plist (injected at device build as `http://<LocalHostName>.local:5219`).
     static var bundleOrigin: URL? {
@@ -51,10 +71,16 @@ enum KenosDailyBetaConfig {
     }
 
     /// When LAN Daily Beta is unreachable, auto-switch shell/domains to production.
-    /// Default **off** until `aios.kenos.space` is a real Owner canary (DNS currently unresolved).
+    /// iOS default **on** — cellular / Mac sleep should reach the hosted canary.
     static var preferProductionFallback: Bool {
         get {
-            if UserDefaults.standard.object(forKey: preferProductionFallbackKey) == nil { return false }
+            if UserDefaults.standard.object(forKey: preferProductionFallbackKey) == nil {
+                #if os(iOS)
+                return true
+                #else
+                return false
+                #endif
+            }
             return UserDefaults.standard.bool(forKey: preferProductionFallbackKey)
         }
         set {
@@ -147,7 +173,11 @@ enum KenosDailyBetaConfig {
     }
 
     static func rememberSuccessfulHostname(_ host: String?) {
-        guard let host, KenosOriginResolver.isMdnsHostname(host) else { return }
+        guard let host else { return }
+        // Persist stable Mac↔phone hostnames (.local or Tailscale MagicDNS).
+        guard KenosOriginResolver.isMdnsHostname(host)
+            || KenosOriginResolver.isTailnetHostname(host)
+        else { return }
         lastKnownGoodHostname = host
     }
 
@@ -155,8 +185,8 @@ enum KenosDailyBetaConfig {
         if let url {
             UserDefaults.standard.set(url.absoluteString, forKey: originDefaultsKey)
             UserDefaults.standard.set(true, forKey: enabledDefaultsKey)
-            if let host = url.host, KenosOriginResolver.isMdnsHostname(host) {
-                lastKnownGoodHostname = host
+            if let host = url.host {
+                rememberSuccessfulHostname(host)
             }
         } else {
             UserDefaults.standard.removeObject(forKey: originDefaultsKey)
@@ -205,19 +235,40 @@ enum KenosDailyBetaConfig {
         return false
     }
 
-    /// Auto fallback only when production actually answers — never stick on a dead DNS name.
+    /// Probe preferred custom domain then Netlify canary; remember the first that answers.
+    static func resolveReachableProductionShell(timeout: TimeInterval = 3) async -> URL? {
+        // Prefer cached hit first (fast path on cellular).
+        let cached = productionKenOsOrigin
+        if await probeOriginReachable(cached, timeout: timeout) {
+            return cached
+        }
+        for candidate in productionShellCandidates {
+            if candidate.host == cached.host { continue }
+            if await probeOriginReachable(candidate, timeout: timeout) {
+                UserDefaults.standard.set(candidate.absoluteString, forKey: resolvedProductionShellKey)
+                return candidate
+            }
+        }
+        return nil
+    }
+
+    /// Auto fallback only when a production shell actually answers — never stick on dead DNS.
     @discardableResult
     static func activateProductionFallbackIfReachable(reason: String) async -> Bool {
         guard preferProductionFallback else { return false }
         guard !useProductionOverride else { return false }
-        let ok = await probeOriginReachable(productionKenOsOrigin)
-        guard ok else {
+        guard let shell = await resolveReachableProductionShell() else {
             KenosLog.warning("production fallback skipped — unreachable", category: .network, metadata: [
                 "reason": reason,
-                "host": productionKenOsOrigin.host ?? "",
+                "tried": productionShellCandidates.compactMap(\.host).joined(separator: ","),
             ])
             return false
         }
+        UserDefaults.standard.set(shell.absoluteString, forKey: resolvedProductionShellKey)
+        KenosLog.info("production shell resolved", category: .network, metadata: [
+            "reason": reason,
+            "host": shell.host ?? "",
+        ])
         return activateProductionFallback(reason: reason)
     }
 
@@ -233,7 +284,11 @@ enum KenosDailyBetaConfig {
 
     /// True when the *effective* origin is a private LAN / link-local host.
     static var isLanDependentOrigin: Bool {
-        isPrivateLanHost(kenOsOrigin.host)
+        let snap = originSnapshot
+        if snap.networkScope == .production || snap.networkScope == .phoneReachable {
+            return false
+        }
+        return isPrivateLanHost(kenOsOrigin.host)
     }
 
     /// True when the Owner-configured origin (before override) is LAN.
@@ -244,12 +299,16 @@ enum KenosDailyBetaConfig {
     static func isPrivateLanHost(_ host: String?) -> Bool {
         guard let host = host?.lowercased(), !host.isEmpty else { return true }
         if host == "localhost" || host == "127.0.0.1" || host.hasSuffix(".local") { return true }
+        // Tailscale MagicDNS — preferred Mac↔iPhone pair (stable across Wi‑Fi / cellular).
+        if host.hasSuffix(".ts.net") { return true }
         let parts = host.split(separator: ".").compactMap { Int($0) }
         guard parts.count == 4 else { return false }
         if parts[0] == 10 { return true }
         if parts[0] == 127 { return true }
         if parts[0] == 172 && (16...31).contains(parts[1]) { return true }
         if parts[0] == 192 && parts[1] == 168 { return true }
+        // Tailscale CGNAT 100.64.0.0/10
+        if parts[0] == 100 && (64...127).contains(parts[1]) { return true }
         return false
     }
 
@@ -285,6 +344,13 @@ enum KenosDailyBetaConfig {
 
     private static func domainOrigin(port: Int, production: String) -> URL {
         if useProductionOverride, let url = URL(string: production) { return url }
+        // Phone-reachable HTTPS shell has no LAN Continuity ports — use production domains.
+        let scope = originSnapshot.networkScope
+        if scope == .phoneReachable || scope == .production,
+           let url = URL(string: production)
+        {
+            return url
+        }
         return rewritePort(kenOsOrigin, to: port)
     }
 

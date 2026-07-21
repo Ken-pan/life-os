@@ -1,23 +1,24 @@
 import SwiftUI
 import UIKit
 import UserNotifications
+import KenosContracts
+import KenosNotifications
 
 @main
 struct KenosApp: App {
     @UIApplicationDelegateAdaptor(KenosAppDelegate.self) private var appDelegate
     @StateObject private var model = KenosAppModel()
 
-    /// Kenos ink — must match LaunchBackground / WKWebView so cold start never flashes white.
-    private let ink = Color(red: 0.031, green: 0.035, blue: 0.039)
-
     var body: some Scene {
         WindowGroup {
             ZStack {
-                ink.ignoresSafeArea()
+                model.chromeAppearance.canvasColor.ignoresSafeArea()
                 KenosRootView(model: model)
             }
-            .preferredColorScheme(.dark)
-            .background(ink.ignoresSafeArea())
+            // Status bar foreground follows content: light canvas → dark icons, dark → light.
+            // Never hardcode `.dark` — Plan Tasks/Calendar are light and white icons fail contrast.
+            .preferredColorScheme(model.chromeAppearance.colorScheme)
+            .background(model.chromeAppearance.canvasColor.ignoresSafeArea())
             .privacySensitive()
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
                 model.releaseInactiveContinuityIfNeeded()
@@ -62,6 +63,10 @@ final class KenosAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificatio
         Task { @MainActor in
             KenosWebRuntime.warmWebContentProcessIfNeeded()
         }
+        // Mirror Keychain SSO vault → shared WK cookies before first Continuity paint.
+        Task { @MainActor in
+            await KenosSharedWebAuth.seedSharedSessionCookies()
+        }
         Task { @MainActor in
             KenosMetricKitSubscriber.shared.start()
         }
@@ -78,7 +83,32 @@ final class KenosAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificatio
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        completionHandler([.banner, .sound])
+        let info = notification.request.content.userInfo
+        let typeRaw = info["kenosType"] as? String
+        // UNUserNotificationCenter completion handlers are not Sendable; call once then forget.
+        nonisolated(unsafe) let finish = completionHandler
+        Task {
+            let prefs = await KenosLocalNotificationCenter.shared.currentPreferences()
+            let type = typeRaw.flatMap(KenosNotificationType.init(rawValue:))
+            let allowed: Bool = {
+                guard let type else { return true }
+                let record = KenosNotificationRecord(
+                    type: type,
+                    safeTitle: "x",
+                    safeBody: "y",
+                    deepLink: "kenos://today",
+                    risk: .r0,
+                    classification: .personal,
+                    createdAt: KenosNotificationISO.nowString(),
+                    deduplicationKey: "foreground-gate"
+                )
+                return prefs.allowsSystemDelivery(
+                    for: record,
+                    domain: KenosNotificationDomainMap.domain(for: type)
+                )
+            }()
+            finish(allowed ? [.banner, .sound] : [])
+        }
     }
 
     nonisolated func userNotificationCenter(
@@ -87,8 +117,36 @@ final class KenosAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificatio
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let info = response.notification.request.content.userInfo
+        let action = response.actionIdentifier
+        let dedupe = info["kenosDedupeKey"] as? String
         let link = info["kenosDeepLink"] as? String
-        if let link, !link.isEmpty {
+
+        if action == KenosNotificationActionID.snooze15m, let dedupe, !dedupe.isEmpty {
+            KenosLog.info("notification snooze", category: .deepLink, metadata: [
+                "dedupe": String(dedupe.prefix(48)),
+            ])
+            nonisolated(unsafe) let finish = completionHandler
+            Task {
+                let pending = await KenosLocalNotificationCenter.shared.pending()
+                if let existing = pending.first(where: { $0.deduplicationKey == dedupe }) {
+                    let fireAt = Date().addingTimeInterval(15 * 60)
+                    var next = existing
+                    next.fireAt = KenosNotificationISO.string(from: fireAt)
+                    try? await KenosLocalNotificationCenter.shared.replace(
+                        deduplicationKey: dedupe,
+                        with: next,
+                        at: fireAt
+                    )
+                }
+                finish()
+            }
+            return
+        }
+
+        let shouldOpen =
+            action == UNNotificationDefaultActionIdentifier
+            || action == KenosNotificationActionID.open
+        if shouldOpen, let link, !link.isEmpty {
             KenosLog.info("notification open", category: .deepLink, metadata: [
                 "link": String(link.prefix(80)),
             ])
@@ -119,5 +177,19 @@ final class KenosAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificatio
     func applicationWillEnterForeground(_ application: UIApplication) {
         KenosLog.info("app will enter foreground", category: .lifecycle)
         KenosLogCloudSync.shared.kick(reason: "foreground")
+    }
+
+    func application(
+        _ application: UIApplication,
+        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+    ) {
+        KenosPushTokenStore.remember(deviceToken: deviceToken)
+    }
+
+    func application(
+        _ application: UIApplication,
+        didFailToRegisterForRemoteNotificationsWithError error: Error
+    ) {
+        KenosPushTokenStore.rememberFailure(error)
     }
 }

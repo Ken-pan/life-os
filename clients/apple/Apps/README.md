@@ -28,11 +28,11 @@ KenosMac is a **sidebar + detail** shell (not an iOS Dock clone):
 | Kenos Mode          | Daily Beta ON → AIOS shell WK (`KenosMacShellSurface`); OFF → native pages |
 | Spaces / Continuity | In-app Domain WK; Back ⌘[ · Forward ⌘] · Reload ⌘R · unreachable recovery  |
 | Switch Space        | Toolbar Spaces / ⌘⇧S → `SpaceSwitcherSheet`                                |
-| Command Bar         | ⌘⇧Space Quick Switch · ⌘1/2/3 Today/Assistant/Inbox                        |
+| Spaces              | ⌘⇧S Space Shelf / Switch Space · ⌘1/2/3 Today/Assistant/Inbox              |
 | Capture             | ⌘N sheet · ⌘⇧N toolbar · Menu Bar draft                                    |
 | Menu Bar            | Focus · Approvals · current Space · Capture · Leave Space                  |
 
-Default Daily Beta origin: `http://127.0.0.1:5219` (Settings can save loopback or switch to production). ATS allows local networking. Non-goals: multi-window Assistant panel, Runtime/Vault, Live Activities, App Store / notarization.
+**Mac ↔ iPhone trust:** personal Tailscale pair (MagicDNS). `kenos-ctl start` runs `ensure-tailnet-pair.mjs` → `~/.kenos-daily-beta/device-trust.json`. iOS Daily Beta origin prefers that MagicDNS host; LocalAI stays on Mac `127.0.0.1:18888` and is reached from the phone via **AIOS-only** same-origin `/__localai` (companions keep the proxy off). The static proxy enforces a peer allowlist (`loopback` + trust `mac.ipv4` / `phone.ipv4`); optional `KENOS_LOCALAI_ALLOW_LAN=1` widens to RFC1918/CGNAT (weaker — doctor warns). Chat concurrency is gated (`KENOS_LOCALAI_MAX_INFLIGHT`, default 2) so a wedged 35B worker is less likely under phone load. Prefer Tailscale Admin ACLs that only allow these two devices; **do not** use Tailscale Funnel or bind LocalAI on a public interface. Mac loopback dogfood: `http://127.0.0.1:5219`. Non-goals: multi-window Assistant panel, Runtime/Vault, Live Activities, App Store / notarization.
 
 ## Apple Health (iOS)
 
@@ -61,18 +61,20 @@ Unified JS ↔ Native surface for Continuity domains (`kenosNative` / `@life-os/
 
 | Method                  | Status     | Notes                                                                         |
 | ----------------------- | ---------- | ----------------------------------------------------------------------------- |
-| `getCapabilities`       | shipped    | reports haptic/share/auth/nav/spotlight/userActivity + gated push/LA/appGroup |
+| `getCapabilities`       | shipped    | haptic/share/auth/nav/spotlight/userActivity + `localNotifications` + gated push/LA/appGroup |
 | `haptic`                | shipped    | light/medium/heavy/soft/rigid/selection/success/warning/error/pulse           |
 | `share`                 | shipped    | system share sheet                                                            |
-| `authenticate`          | shipped    | Face ID / Touch ID / passcode (`NSFaceIDUsageDescription`)                    |
+| `authenticate`          | shipped    | Face ID / Touch ID / passcode — single-flight LAContext + 180s bridge timeout |
+| `cancelAuthenticate`    | shipped    | `LAContext.invalidate()` — Cancel / Try again / leave Continuity              |
 | `publishNavManifest`    | shipped    | Domain Navigation Manifest → dock `activeTab` + leave-guard / chrome          |
 | `nowPlaying.*`          | shipped    | Music → MPNowPlayingInfoCenter (`KenosNowPlayingBridge`)                      |
 | `liveActivity.*`        | shipped    | Upsert/end → in-shell Live Accessory + system ActivityKit when user-enabled   |
 | `openContinuity`        | shipped    | Skip DomainLaunch intermediate page → Continuity WKWebView                    |
+| `notifications.*`       | shipped    | Local UN: permission / prefs / schedule / cancel / syncReminders / listPending |
 | Spotlight               | shipped    | Domain catalog + surface (`KenosSystemDiscovery` + Spotlight foundation)      |
 | Apple Handoff           | shipped    | `NSUserActivity` via discovery (≠ Watch `KenosHandoff`); resign on leave      |
 | App Intents / Shortcuts | shipped    | Open Space / Start Training / Capture / Deep Work / shell destinations        |
-| Local notifications     | shipped    | Plan reminder schedules locally; tap → `kenos://` deep link                   |
+| Local notifications     | shipped    | Plan / Training / AIOS brief·approvals·work due / Money bills / Health focus·wind-down |
 | APNs remote push        | foundation | Owner-gated (`remotePushEnabled = false`)                                     |
 | Widget glance           | dogfood    | App Group `group.space.kenos.app` + full snapshot (Today / Spaces / domains)  |
 
@@ -161,6 +163,16 @@ Native logging for dogfood / iteration lives in `Shared/KenosLog*.swift`:
   background flush works after sign-in). Bug Report attach sets `bug_id`
 - Requires Kenos web shell sign-in (JWT) + portal membership for `bug_logs` app=`kenos`
 - Toggle **Sync to Supabase** in Diagnostics (default ON); cloud floor defaults to Notice+
+- **Settings (iOS):** modal `NavigationStack` sheet (`showSettingsSheet`) with Done —
+  Global Dock is hidden while open; dismiss restores the prior tab/surface and scroll.
+  Not a system tab that keeps the dock as a second exit.
+- **Screenshot → Bug Report:** system screenshot offers a quiet prompt on **any** surface
+  (Today / Assistant / Spaces / Inbox / Settings modal / Domain Continuity / Focus, plus Space
+  Shelf, Capture, Space Switcher, Domain More). Prompt hosts in an elevated passthrough
+  `UIWindow` (above modal sheets; taps outside the card fall through). Diagnostics record
+  `chromeContext` (incl. `focus`). Capture retries committed frames; WKWebView snapshot is
+  last-resort only for pure white/black blanks (never replaces a dark Kenos window shot).
+  Backgrounding cancels the quiet offer so it cannot block the next screenshot.
 - **Crash auto-report:** MetricKit → `KenosCrashReporter`
   - Logs crash/hang/cpu/disk/appLaunch under category `diagnostics`
   - Severe kinds (`crash` / `hang` / `cpuException`) auto-queue a high-severity

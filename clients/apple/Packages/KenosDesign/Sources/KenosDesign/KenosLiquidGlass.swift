@@ -10,9 +10,8 @@ public enum KenosGlass {
     /// Symmetric float inset (live accessory / sheets).
     public static let dockHorizontalInset: CGFloat = 14
 
-    /// Split dock — Spaces flush to leading edge (docked half-capsule);
-    /// destination capsule keeps a fuller trailing float.
-    public static let dockLeadingInset: CGFloat = 0
+    /// Floating dock insets — Orb + capsule share the same screen margins.
+    public static let dockLeadingInset: CGFloat = 14
     public static let dockTrailingInset: CGFloat = 14
 
     /// Gap above home indicator.
@@ -20,6 +19,28 @@ public enum KenosGlass {
 
     /// Icon-only dock row height (48pt hit + capsule pad) — edge-gesture clearance SSOT.
     public static let dockRowHeight: CGFloat = 56
+
+    /// Breathing room between the last scroll content and the top of the floating dock.
+    /// Content may pass *behind* glass while scrolling; at rest the end must clear the dock.
+    public static let dockContentClearance: CGFloat = 16
+
+    /// Scroll-end pad above the home indicator (dock row + float + clearance).
+    /// CSS pairs this with `env(safe-area-inset-bottom)` — do not include the home indicator here.
+    public static var dockScrollEndPadPx: Int {
+        Int(dockRowHeight + dockBottomInset + dockContentClearance)
+    }
+
+    /// Spaces Orb diameter (circle Liquid Glass control).
+    public static let spacesOrbSize: CGFloat = 48
+
+    /// Gap between Spaces Orb and destination capsule.
+    public static let orbCapsuleGap: CGFloat = 8
+
+    /// Outer pad inside the destination glass capsule.
+    public static let capsuleOuterPadding: CGFloat = 4
+
+    /// Destination icon hit target (HIG ≥44).
+    public static let destinationHitSize: CGFloat = 48
 
     /// Top chrome under status bar (tools / domain title).
     public static let chromeTopInset: CGFloat = 54
@@ -39,7 +60,7 @@ public enum KenosGlass {
     }
 
     /// Selected-tab highlight — continuous capsule wrapping the **entire** selected
-    /// dock cell (icon + label). Accent tint lives on the content, not on the glass fill.
+    /// dock cell. Accent tint lives on the plate, not a hard black fill.
     public static var selectionShape: Capsule {
         Capsule(style: .continuous)
     }
@@ -63,7 +84,8 @@ public extension View {
             self
                 .background(prominent ? .thinMaterial : .ultraThinMaterial, in: shape)
                 .overlay {
-                    shape.stroke(Color.white.opacity(0.14), lineWidth: 0.5)
+                    // Semantic stroke — adapts to light/dark (no hard-coded white).
+                    shape.stroke(Color.primary.opacity(0.12), lineWidth: 0.5)
                 }
         }
     }

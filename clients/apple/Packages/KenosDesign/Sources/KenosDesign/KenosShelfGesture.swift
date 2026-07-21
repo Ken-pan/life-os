@@ -1,12 +1,13 @@
 import CoreGraphics
 import Foundation
+import SwiftUI
 
 /// Space Shelf drawer gesture math — SSOT for Kenos + Domain shells.
 ///
 /// Feels like iOS Mail / Telegram / Slack:
 /// - 1:1 finger tracking up to panel width
 /// - light rubber-band past the open stop
-/// - commit by distance **or** flick velocity
+/// - commit by distance **or** flick velocity (pts/sec)
 /// - Reduce Motion callers skip live offsets and only use open/close springs
 ///
 /// Edge-open zoning (Apple HIG + Navigation v2):
@@ -15,7 +16,14 @@ import Foundation
 /// - Visible Spaces tip remains the primary affordance; edge band must not steal its taps
 public enum KenosShelfGesture {
     /// Visible drawer width (must match `KenosSpaceShelfView` frame).
-    public static let panelWidth: CGFloat = 288
+    /// Caps near `min(screen × 0.82, 320)` on common phones without mid-gesture resize.
+    public static let panelWidth: CGFloat = 320
+
+    /// Preferred panel width for a container (Shelf layout helper).
+    public static func preferredPanelWidth(containerWidth: CGFloat) -> CGFloat {
+        guard containerWidth > 0 else { return panelWidth }
+        return min(containerWidth * 0.82, panelWidth)
+    }
 
     /// Leading hit strip over WKWebView / scroll content.
     /// ~Apple edge width; narrow enough to avoid vertical-scroll steal.
@@ -31,7 +39,13 @@ public enum KenosShelfGesture {
     /// Max fraction of container height claimed by the reach zone (excl. dock clearance).
     public static let edgeOpenReachMaxFraction: CGFloat = 0.18
 
-    /// Translation that maps to progress 1.0 (1:1 with panel).
+    /// Shared minimum distance for panel + dimmer dismiss drags.
+    public static let dismissDragMinimumDistance: CGFloat = 16
+
+    /// Peak interactive open progress past 1.0 (rubber-band visual).
+    public static let openProgressOvershootCap: CGFloat = 1.08
+
+    /// Translation that maps to progress 1.0 when panel is full-width default.
     public static let trackingDistance: CGFloat = panelWidth
 
     // MARK: Open (edge → shelf)
@@ -112,26 +126,41 @@ public enum KenosShelfGesture {
     // MARK: Progress / commit
 
     /// Progress (0…1+) from an opening edge-pan translation.
-    public static func openProgress(translationX: CGFloat) -> CGFloat {
+    public static func openProgress(
+        translationX: CGFloat,
+        panelWidth resolvedWidth: CGFloat = panelWidth
+    ) -> CGFloat {
+        let distance = max(1, resolvedWidth)
         let clamped = max(0, translationX)
-        if clamped <= trackingDistance {
-            return min(1, clamped / trackingDistance)
+        if clamped <= distance {
+            return min(1, clamped / distance)
         }
-        let overshoot = clamped - trackingDistance
+        let overshoot = clamped - distance
         let banded = rubberBand(overshoot, limit: rubberBandLimit)
-        return 1 + banded / trackingDistance
+        return 1 + banded / distance
+    }
+
+    /// Cap open progress for UI (allows slight rubber-band overshoot).
+    public static func cappedOpenProgress(
+        translationX: CGFloat,
+        panelWidth resolvedWidth: CGFloat = panelWidth
+    ) -> CGFloat {
+        min(openProgressOvershootCap, openProgress(translationX: translationX, panelWidth: resolvedWidth))
     }
 
     /// Finger-follow X offset for the content backdrop while opening (subtle parallax).
     public static func backdropParallax(translationX: CGFloat, reduceMotion: Bool) -> CGFloat {
         guard !reduceMotion else { return 0 }
-        return max(0, translationX) * 0.12
+        return max(0, translationX) * 0.07
     }
 
     /// Progress (0…1) while the open shelf is being dragged closed (`dismissOffset` ≤ 0).
-    public static func dismissProgress(dismissOffsetX: CGFloat) -> CGFloat {
+    public static func dismissProgress(
+        dismissOffsetX: CGFloat,
+        panelWidth resolvedWidth: CGFloat = panelWidth
+    ) -> CGFloat {
         let pulled = max(0, -dismissOffsetX)
-        return max(0, min(1, 1 - pulled / panelWidth))
+        return max(0, min(1, 1 - pulled / max(1, resolvedWidth)))
     }
 
     /// Rubber-band a positive overshoot toward `limit` (Apple scroll feel).
@@ -142,15 +171,28 @@ public enum KenosShelfGesture {
     }
 
     /// Cap opening translation used for live preview (includes soft overshoot).
-    public static func cappedOpenTranslation(_ translationX: CGFloat) -> CGFloat {
+    public static func cappedOpenTranslation(
+        _ translationX: CGFloat,
+        panelWidth resolvedWidth: CGFloat = panelWidth
+    ) -> CGFloat {
+        let distance = max(1, resolvedWidth)
         let x = max(0, translationX)
-        if x <= trackingDistance { return x }
-        return trackingDistance + rubberBand(x - trackingDistance, limit: rubberBandLimit)
+        if x <= distance { return x }
+        return distance + rubberBand(x - distance, limit: rubberBandLimit)
     }
 
     /// Cap dismiss drag so the panel can't be pushed past the leading edge.
-    public static func cappedDismissOffset(_ translationX: CGFloat) -> CGFloat {
-        min(0, max(translationX, -panelWidth))
+    public static func cappedDismissOffset(
+        _ translationX: CGFloat,
+        panelWidth resolvedWidth: CGFloat = panelWidth
+    ) -> CGFloat {
+        min(0, max(translationX, -max(1, resolvedWidth)))
+    }
+
+    /// Horizontal velocity in **points/sec** from a SwiftUI drag end.
+    /// Prefer this over `predictedEndTranslation - translation` (that is not pts/sec).
+    public static func dragVelocityX(_ value: DragGesture.Value) -> CGFloat {
+        value.velocity.width
     }
 
     public static func shouldCommitOpen(
@@ -189,5 +231,17 @@ public enum KenosShelfGesture {
         currentOffset: CGFloat
     ) -> Bool {
         previousOffset > -closeDistance && currentOffset <= -closeDistance
+    }
+
+    /// Boolean distance gate (tests / diagnostics). Prefer `crossedOpenThreshold`
+    /// + a monotonic tick for `.sensoryFeedback` — a 0↔1 token re-fires on reset.
+    public static func openThresholdToken(openDragX: CGFloat) -> Int {
+        openDragX >= openDistance ? 1 : 0
+    }
+
+    /// Boolean distance gate (tests / diagnostics). Prefer `crossedCloseThreshold`
+    /// + a monotonic tick for `.sensoryFeedback` — a 0↔1 token re-fires on reset.
+    public static func closeThresholdToken(dismissDragX: CGFloat) -> Int {
+        dismissDragX <= -closeDistance ? 1 : 0
     }
 }

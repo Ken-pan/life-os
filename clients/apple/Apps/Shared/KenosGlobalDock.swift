@@ -3,50 +3,94 @@ import KenosDesign
 
 #if os(iOS)
 
-/// Global dock — **Spaces edge tip** (drawer hint) + **four-icon floating capsule**.
-/// Icon-only; SSOT for Kenos + Domain modes.
+/// Global dock — **Spaces Orb** (identity) + **destination capsule** (location).
+///
+/// Visual hierarchy (locked):
+/// - Orb = Space identity — neutral Glass, accent **icon only**, no accent plate
+/// - Selected tab = destination — accent icon + soft selection plate + label (primary weight)
+/// - Shelf open: Orb may densify / morph to close; capsule hides
 ///
 /// Honest mapping to Apple:
 /// - Capsule ≈ iOS 26 floating Tab Bar (Liquid Glass, equal top-level destinations)
-/// - Spaces tip ≠ system Tab Bar — it's a leading drawer affordance (Maps/Gmail pattern)
-/// - Prefer system `glassEffect` over custom material + drop shadow
+/// - Spaces Orb ≠ system Tab Bar — circular drawer control (Maps / Music language)
 struct KenosGlobalDock: View {
     @ObservedObject var model: KenosAppModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.locale) private var locale
-    /// System tab icons sit ~23–25pt; icon-only can read a touch larger.
-    @ScaledMetric(relativeTo: .title3) private var iconSize: CGFloat = 25
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// System tab icons sit ~22–24pt; Dynamic Type scales with title3.
+    @ScaledMetric(relativeTo: .title3) private var iconSize: CGFloat = 22
+    @ScaledMetric(relativeTo: .title3) private var orbIconSize: CGFloat = 20
+    @ScaledMetric(relativeTo: .caption2) private var labelSize: CGFloat = 10
 
+    /// Follow Continuity shell Language (system / zh / en), not only device locale.
     private var prefersChinese: Bool {
-        locale.identifier.lowercased().hasPrefix("zh")
+        KenosShellSettingsStore.current.resolvedLocale() == "zh"
+    }
+
+    /// VoiceOver / larger accessibility sizes — always show destination labels.
+    private var showsAllLabels: Bool {
+        dynamicTypeSize.isAccessibilitySize
+    }
+
+    /// Expand selected label when ≤3 destinations (Kenos + Domain) or Accessibility sizes.
+    private var expandsSelectedLabel: Bool {
+        showsAllLabels || capsuleItems.count <= 3
     }
 
     private enum Metrics {
-        static let duoGap: CGFloat = 10
-        /// Outer glass pad — keep tight so selected block can sit close to the rim.
-        static let capsulePad: CGFloat = 3
-        static let hitSize: CGFloat = 48
-        /// Compact Spaces tip — chevron peek at leading edge.
-        static let tipWidth: CGFloat = 20
-        static let tipIconSize: CGFloat = 13
-        /// Large trailing radius ≈ half tip height → true half-capsule.
-        static let tipTrailingRadius: CGFloat = 28
-        /// Invisible hit pad (HIG ≥44) — visual tip stays slim.
-        static let tipHitWidth: CGFloat = 48
-        static let tipHitHeight: CGFloat = 56
-        static let tipSwipeMinDistance: CGFloat = 10
-        /// Tight margin vs outer capsule — selected pill should read as a large block.
+        static let duoGap: CGFloat = KenosGlass.orbCapsuleGap
+        static let capsulePad: CGFloat = KenosGlass.capsuleOuterPadding
+        static let hitSize: CGFloat = KenosGlass.destinationHitSize
+        static let orbSize: CGFloat = KenosGlass.spacesOrbSize
         static let selInsetH: CGFloat = 2
         static let selInsetV: CGFloat = 2
+        /// A11y bump on top of per-Space plate opacity.
+        static let selectionPlateA11yBump: Double = 0.06
+        /// Shelf-open Orb fill — denser so close affordance stays discoverable on Shelf.
+        static let orbShelfFillOpacity: Double = 0.20
+        static let orbShelfFillOpacityStrong: Double = 0.28
+        /// Stroke on open Orb — reads as a discrete close control on the light Shelf plane.
+        static let orbShelfStrokeOpacity: Double = 0.22
+        static let orbShelfStrokeOpacityStrong: Double = 0.32
+        static let tipSwipeMinDistance: CGFloat = 10
     }
 
+    /// On-glass Space accent — Orb icon + selected-tab chrome (not Orb glass fill).
     private var selectionTint: Color { model.dockSelectionAccent }
+
+    private var selectionPlateOpacity: Double {
+        let base = KenosDomainRegistry.selectionPlateOpacity(
+            for: model.dockSelectionSpaceId,
+            scheme: colorScheme
+        )
+        if reduceTransparency || colorSchemeContrast == .increased {
+            return min(0.28, base + Metrics.selectionPlateA11yBump)
+        }
+        return base
+    }
+
+    private var orbShelfFillOpacity: Double {
+        if reduceTransparency || colorSchemeContrast == .increased {
+            return Metrics.orbShelfFillOpacityStrong
+        }
+        return Metrics.orbShelfFillOpacity
+    }
+
+    private var orbShelfStrokeOpacity: Double {
+        if reduceTransparency || colorSchemeContrast == .increased {
+            return Metrics.orbShelfStrokeOpacityStrong
+        }
+        return Metrics.orbShelfStrokeOpacity
+    }
 
     private var capsuleItems: [KenosAppModel.DomainDockItem] {
         model.shellMode == .domain ? model.domainDockItems : model.kenosCapsuleDockItems
     }
 
-    private var spacesChipSelected: Bool {
+    private var spacesShelfOpen: Bool {
         model.showSpaceShelf
     }
 
@@ -54,8 +98,14 @@ struct KenosGlobalDock: View {
         KenosMotion.selection(reduceMotion: reduceMotion)
     }
 
+    /// Shelf open/close uses chrome soft-impact at distance threshold — not Dock selection.
+    /// Dock morph uses open spring both ways (close spring is for the drawer itself).
+    private var shelfAnimation: Animation {
+        KenosMotion.shelf(reduceMotion: reduceMotion, closing: false)
+    }
+
     private var selectionHapticToken: String {
-        if model.showSpaceShelf { return "shelf" }
+        // Omit Shelf — chrome owns soft impact on threshold cross / tip settle.
         if model.shellMode == .domain {
             return "d:\(model.domainDockSlot):\(model.showDomainMoreSheet)"
         }
@@ -63,17 +113,13 @@ struct KenosGlobalDock: View {
     }
 
     private var selectedCapsuleIndex: Int? {
-        if spacesChipSelected { return nil }
+        if spacesShelfOpen { return nil }
         if model.shellMode == .domain {
-            if model.showDomainMoreSheet,
-               let idx = capsuleItems.firstIndex(where: \.opensMore)
-            {
-                return idx
-            }
             return capsuleItems.indices.contains(model.domainDockSlot)
                 ? model.domainDockSlot
                 : nil
         }
+        if model.selectedTab == .settings { return nil }
         return capsuleItems.firstIndex(where: { $0.kenosTab == model.selectedTab })
     }
 
@@ -90,72 +136,113 @@ struct KenosGlobalDock: View {
     private var dockRow: some View {
         if #available(iOS 26.0, *) {
             GlassEffectContainer(spacing: Metrics.duoGap) {
-                HStack(alignment: .center, spacing: Metrics.duoGap) {
-                    spacesEdgeTip
-                    destinationCapsule
-                }
-                .frame(maxWidth: .infinity)
+                dockContent
             }
         } else {
-            HStack(alignment: .center, spacing: Metrics.duoGap) {
-                spacesEdgeTip
+            dockContent
+        }
+    }
+
+    private var dockContent: some View {
+        HStack(alignment: .center, spacing: Metrics.duoGap) {
+            spacesOrb
+            if !spacesShelfOpen {
                 destinationCapsule
+                    .transition(
+                        reduceMotion
+                            ? .opacity
+                            : .asymmetric(
+                                insertion: .opacity.combined(with: .scale(scale: 0.96)),
+                                removal: .opacity.combined(with: .scale(scale: 0.96))
+                            )
+                    )
             }
-            .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity, alignment: spacesShelfOpen ? .leading : .center)
+        .animation(shelfAnimation, value: spacesShelfOpen)
     }
 
-    /// Compact leading tip — drawer affordance (tap / swipe-right). Not a fifth tab.
-    /// Visual stays slim; hit pad expands into the gap (HIG ≥44).
-    private var spacesEdgeTip: some View {
+    /// Circular Spaces control — Space **identity**, not a second selected tab.
+    /// Closed: clear Glass + accent icon. Open: same Orb morphs to chevron.left (primary close).
+    private var spacesOrb: some View {
         Button {
-            withAnimation(selectionAnimation) {
-                model.activateSpacesDockButton()
-            }
+            // Chrome owns Shelf spring; Orb morph follows `spacesShelfOpen` + shelfAnimation.
+            model.activateSpacesDockButton()
         } label: {
-            Image(systemName: spacesChipSelected ? "chevron.left" : "chevron.right")
-                .font(.system(size: Metrics.tipIconSize, weight: .semibold))
+            Image(systemName: spacesShelfOpen ? "chevron.left" : "square.grid.2x2.fill")
+                .font(.system(size: orbIconSize, weight: spacesShelfOpen ? .semibold : .medium))
                 .symbolRenderingMode(.monochrome)
-                .foregroundStyle(Color.primary.opacity(0.55))
-                .frame(width: Metrics.tipWidth, height: Metrics.hitSize)
-                .padding(.trailing, 6)
-                .padding(.vertical, Metrics.capsulePad)
-                .kenosLiquidGlass(in: spacesTipShape, interactive: true, prominent: true)
+                .foregroundStyle(
+                    spacesShelfOpen
+                        ? AnyShapeStyle(Color.primary.opacity(0.94))
+                        : AnyShapeStyle(selectionTint)
+                )
+                .frame(width: Metrics.orbSize, height: Metrics.orbSize)
+                .background {
+                    if spacesShelfOpen {
+                        // Opaque backplate so the close Orb never dissolves into the Shelf plane.
+                        Circle()
+                            .fill(colorScheme == .light
+                                ? Color.white.opacity(reduceTransparency ? 1 : 0.94)
+                                : Color.black.opacity(reduceTransparency ? 0.72 : 0.55))
+                            .accessibilityHidden(true)
+                        Circle()
+                            .fill(selectionTint.opacity(orbShelfFillOpacity))
+                            .accessibilityHidden(true)
+                    }
+                }
+                // Closed = neutral identity glass; open = Tab-Bar-density close affordance.
+                .kenosLiquidGlass(
+                    in: Circle(),
+                    interactive: true,
+                    prominent: spacesShelfOpen
+                )
+                // Stroke above glass — persistent close affordance on Shelf surface.
+                .overlay {
+                    if spacesShelfOpen {
+                        Circle()
+                            .strokeBorder(Color.primary.opacity(orbShelfStrokeOpacity), lineWidth: 1)
+                            .accessibilityHidden(true)
+                    }
+                }
+                // Lift just enough to separate from Shelf plane — not a floating FAB.
+                .shadow(
+                    color: spacesShelfOpen
+                        ? Color.black.opacity(colorScheme == .light ? 0.10 : 0.24)
+                        : .clear,
+                    radius: spacesShelfOpen ? 8 : 0,
+                    x: 0,
+                    y: spacesShelfOpen ? 1 : 0
+                )
         }
-        .buttonStyle(.plain)
-        // Invisible hit expansion into the duo gap (keeps glass visually slim).
-        .padding(.trailing, 14)
-        .padding(.vertical, 6)
-        .contentShape(Rectangle())
-        .simultaneousGesture(spacesTipSwipe)
-        .accessibilityIdentifier("kenos.dock.spaces")
-        .accessibilityLabel(localizedDockTitle("Spaces"))
-        .accessibilityHint("Opens Space Shelf. Swipe right just above the bottom dock to open.")
-        .accessibilityAddTraits(spacesChipSelected ? [.isButton, .isSelected] : .isButton)
-        .animation(selectionAnimation, value: spacesChipSelected)
-    }
-
-    private var spacesTipShape: UnevenRoundedRectangle {
-        UnevenRoundedRectangle(
-            topLeadingRadius: 0,
-            bottomLeadingRadius: 0,
-            bottomTrailingRadius: Metrics.tipTrailingRadius,
-            topTrailingRadius: Metrics.tipTrailingRadius,
-            style: .continuous
+        .buttonStyle(
+            KenosPressStyle(reduceMotion: reduceMotion, pressedScale: KenosMotion.orbPressScale)
         )
+        .frame(width: Metrics.orbSize, height: Metrics.hitSize + Metrics.capsulePad * 2)
+        .contentShape(Circle())
+        .simultaneousGesture(spacesOrbSwipe)
+        .accessibilityIdentifier("kenos.dock.spaces")
+        .accessibilityLabel(spacesShelfOpen ? localizedDockTitle("Close Spaces") : localizedDockTitle("Spaces"))
+        .accessibilityHint(
+            spacesShelfOpen
+                ? (prefersChinese ? "关闭空间 Shelf。" : "Closes the Space Shelf.")
+                : (prefersChinese ? "打开空间 Shelf。向右滑动也可打开。" : "Opens the Space Shelf. Swipe right to open.")
+        )
+        .accessibilityAddTraits(spacesShelfOpen ? [.isButton, .isSelected] : .isButton)
+        .accessibilitySortPriority(spacesShelfOpen ? 10 : 0)
+        .animation(shelfAnimation, value: spacesShelfOpen)
     }
 
-    /// Swipe-right on the tip opens the shelf (same commit math as edge pan).
-    private var spacesTipSwipe: some Gesture {
+    private var spacesOrbSwipe: some Gesture {
         DragGesture(minimumDistance: Metrics.tipSwipeMinDistance, coordinateSpace: .local)
             .onEnded { value in
+                guard !spacesShelfOpen else { return }
                 let dx = value.translation.width
                 let dy = value.translation.height
                 let predicted = value.predictedEndTranslation.width
-                let velocity = predicted - dx
+                let velocity = KenosShelfGesture.dragVelocityX(value)
                 let horizontal = abs(dx) >= abs(dy) * 0.8
                 guard horizontal else { return }
-                // Tip is a short affordance — slightly lower distance bar than full-edge pan.
                 let shouldOpen = dx > 24
                     || KenosShelfGesture.shouldCommitOpen(
                         translationX: dx,
@@ -163,13 +250,11 @@ struct KenosGlobalDock: View {
                         predictedTranslationX: predicted
                     )
                 guard shouldOpen else { return }
-                withAnimation(selectionAnimation) {
-                    model.openSpaceShelf()
-                }
+                model.openSpaceShelf()
             }
     }
 
-    /// Four destinations — floating Liquid Glass tab capsule (Apple Tab Bar language).
+    /// Destination capsule — floating Liquid Glass tab cluster.
     private var destinationCapsule: some View {
         let count = max(capsuleItems.count, 1)
         return HStack(spacing: 0) {
@@ -181,9 +266,14 @@ struct KenosGlobalDock: View {
             GeometryReader { geo in
                 if let index = selectedCapsuleIndex, count > 0 {
                     let itemWidth = geo.size.width / CGFloat(count)
-                    // iOS 26 system tab: selected = darker gray capsule (not accent fill).
                     Capsule(style: .continuous)
-                        .fill(Color.black.opacity(0.42))
+                        .fill(selectionTint.opacity(selectionPlateOpacity))
+                        .overlay {
+                            if colorSchemeContrast == .increased || reduceTransparency {
+                                Capsule(style: .continuous)
+                                    .strokeBorder(Color.primary.opacity(0.35), lineWidth: 1)
+                            }
+                        }
                         .frame(
                             width: max(0, itemWidth - Metrics.selInsetH * 2),
                             height: max(0, geo.size.height - Metrics.selInsetV * 2)
@@ -203,77 +293,133 @@ struct KenosGlobalDock: View {
         .frame(maxWidth: .infinity)
         .frame(height: Metrics.hitSize + Metrics.capsulePad * 2)
         .kenosLiquidGlass(in: Capsule(style: .continuous), interactive: true, prominent: true)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Destinations")
     }
 
     @ViewBuilder
     private func capsuleButton(index: Int, item: KenosAppModel.DomainDockItem) -> some View {
         let selected = isCapsuleSelected(index: index, item: item)
         let title = localizedDockTitle(item.title)
+        let showLabel = showsAllLabels || (expandsSelectedLabel && selected)
+        let symbol = dockSymbol(item.systemImage, selected: selected)
         Button {
-            // HIG peer tabs: content swap is instant. Do NOT wrap in withAnimation —
-            // that springs the whole WK/safeArea tree. Pill/icon use .animation(value:).
+            // HIG peer tabs: content swap is instant. Do NOT wrap in withAnimation.
             if model.shellMode == .domain {
                 model.selectDomainDockSlot(index)
             } else if let tab = item.kenosTab {
                 model.selectKenosDockTab(tab)
             }
         } label: {
-            Image(systemName: item.systemImage)
-                .font(.system(size: iconSize, weight: selected ? .semibold : .regular))
-                .symbolRenderingMode(.monochrome)
-                // Selected = accent tint; idle ≈ near-white (system inactive reads bright on glass).
-                .foregroundStyle(
-                    selected
-                        ? AnyShapeStyle(selectionTint)
-                        : AnyShapeStyle(Color.white.opacity(0.92))
-                )
-                .frame(maxWidth: .infinity)
-                .frame(height: Metrics.hitSize)
-                .contentShape(Rectangle())
+            Group {
+                if showLabel {
+                    HStack(spacing: 5) {
+                        Image(systemName: symbol)
+                            .font(.system(size: iconSize * 0.92, weight: .regular))
+                        Text(title)
+                            .font(.system(size: labelSize, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                    }
+                } else {
+                    Image(systemName: symbol)
+                        .font(.system(size: iconSize, weight: .regular))
+                }
+            }
+            .symbolRenderingMode(.monochrome)
+            .foregroundStyle(
+                selected
+                    ? AnyShapeStyle(selectionTint)
+                    : AnyShapeStyle(Color.secondary)
+            )
+            .frame(maxWidth: .infinity)
+            .frame(height: Metrics.hitSize)
+            .contentShape(Rectangle())
         }
         .buttonStyle(KenosPressStyle(reduceMotion: reduceMotion))
         .animation(selectionAnimation, value: selected)
+        .animation(selectionAnimation, value: showLabel)
         .accessibilityIdentifier("kenos.dock.capsule.\(index)")
         .accessibilityLabel(title)
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityHint(selected ? "Selected" : "Double tap to open \(title)")
     }
 
     private func localizedDockTitle(_ title: String) -> String {
-        guard prefersChinese else { return title }
+        // English SSOT titles → zh (Round 1: full Chinese UI except Kenos / Paper brands).
+        guard prefersChinese else {
+            // Training hub SSOT title is Resources; show product name Library.
+            if title == "Discover" || title == "Explore" || title == "Resources" {
+                return "Library"
+            }
+            return title
+        }
         switch title {
         case "Spaces": return "空间"
+        case "Close Spaces": return "关闭空间"
         case "Tasks": return "任务"
         case "Calendar": return "日历"
         case "Inbox": return "收件箱"
         case "More": return "更多"
-        case "Today": return "今天"
+        case "Today": return "今日"
         case "Program": return "计划"
-        case "Discover": return "发现"
-        case "Workout": return "训练"
+        case "Discover", "Explore", "Resources": return "资料"
+        case "Library": return "资料库"
+        case "Exercises": return "动作库"
+        case "Workout", "Training": return "训练"
         case "History": return "历史"
         case "Focus": return "专注"
-        case "Assistant": return "助手"
+        case "Ask", "Assistant": return "助手"
         case "Settings": return "设置"
-        case "Home": return "首页"
+        case "Home": return "家"
         case "Search": return "搜索"
-        case "Library": return "资料库"
         case "Rooms": return "房间"
         case "Items": return "物品"
         case "Organize": return "整理"
         case "Status": return "状态"
         case "Trends": return "趋势"
         case "Accounts": return "账户"
+        case "Money": return "财务"
+        case "Music": return "音乐"
+        case "Work", "Deep Work": return "工作"
+        case "Plan": return "计划"
+        case "Current": return "当前"
+        case "Recent": return "最近"
+        case "Other Spaces", "All Spaces": return "其他空间"
         default: return title
         }
     }
 
     private func isCapsuleSelected(index: Int, item: KenosAppModel.DomainDockItem) -> Bool {
-        if model.showSpaceShelf { return false }
+        if spacesShelfOpen { return false }
         if model.shellMode == .domain {
-            if item.opensMore { return model.showDomainMoreSheet }
             return model.domainDockSlot == index && !model.showDomainMoreSheet
         }
         return model.selectedTab == item.kenosTab
+    }
+
+    /// Prefer `.fill` when selected — same weight, clearer selection without scale jump.
+    private func dockSymbol(_ name: String, selected: Bool) -> String {
+        guard selected else { return name }
+        if name.hasSuffix(".fill") { return name }
+        switch name {
+        case "sun.max",
+             "tray",
+             "checklist",
+             "calendar",
+             "house",
+             "magnifyingglass",
+             "heart.text.square",
+             "building.columns",
+             "archivebox",
+             "square.grid.2x2",
+             "list.bullet.rectangle",
+             "bubble.left.and.bubble.right",
+             "music.note.list":
+            return "\(name).fill"
+        default:
+            return name
+        }
     }
 }
 

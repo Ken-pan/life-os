@@ -57,10 +57,6 @@ struct KenosDomainModeShell: View {
         KenosMotion.shelf(reduceMotion: reduceMotion, closing: false)
     }
 
-    private var closeAnimation: Animation {
-        KenosMotion.shelf(reduceMotion: reduceMotion, closing: true)
-    }
-
     private var isDraggingShelf: Bool {
         (!model.showSpaceShelf && openDragX > 0.5)
             || (model.showSpaceShelf && dismissDragX < -0.5)
@@ -127,13 +123,16 @@ struct KenosDomainModeShell: View {
                         )
                 )
                 .modifier(DomainShelfClip(
-                    cornerRadius: KenosSpaceShelfChrome.clipRadius(progress: shelfProgress)
+                    cornerRadius: reduceMotion
+                        ? 0
+                        : KenosSpaceShelfChrome.clipRadius(progress: shelfProgress)
                 ))
+                // Soft page depth while Shelf owns the trailing edge shadow.
                 .shadow(
-                    color: .black.opacity(0.32 * Double(min(1, shelfProgress))),
-                    radius: 24,
-                    x: 0,
-                    y: 8
+                    color: .black.opacity(0.14 * Double(min(1, shelfProgress))),
+                    radius: 14,
+                    x: -1,
+                    y: 6
                 )
                 // Drag follows the finger; commit open/close uses interruptible spring.
                 .animation(isDraggingShelf ? nil : openAnimation, value: shelfProgress)
@@ -146,6 +145,7 @@ struct KenosDomainModeShell: View {
                 enabled: allowsShelfEdgeOpen,
                 additionalBottomChrome: edgeOpenLiveAccessoryChrome,
                 onChanged: { translation in
+                    guard !reduceMotion else { return }
                     openDragX = translation
                 },
                 onEnded: { translation, velocity in
@@ -154,11 +154,10 @@ struct KenosDomainModeShell: View {
                         velocityX: velocity
                     )
                     if shouldOpen {
-                        withAnimation(openAnimation) {
-                            model.openSpaceShelf()
-                        }
+                        // Chrome owns spring via showSpaceShelf onChange.
+                        model.openSpaceShelf()
                     } else {
-                        withAnimation(closeAnimation) {
+                        withAnimation(KenosMotion.shelfInteractive(reduceMotion: reduceMotion)) {
                             openDragX = 0
                             shelfProgress = 0
                         }
@@ -178,44 +177,26 @@ struct KenosDomainModeShell: View {
             // 3) Shelf above web — must outrank WKWebView.
             KenosSpaceShelfChrome(
                 model: model,
-                dimOpacity: KenosMotion.shelfDimOpacity,
                 openDragX: $openDragX,
                 dismissDragX: $dismissDragX,
                 progress: $shelfProgress
             )
             .zIndex(2)
 
-            // 4) Dock above WKWebView (sibling — not inside web ZStack) so Spaces taps work.
-            //    When shelf is open, sit under dimmer/shelf so the drawer isn't covered by the bar.
+            // 4) Dock above WKWebView + Shelf (zIndex 5) so Spaces Orb remains the close anchor.
             // Same bottom geometry as Kenos Mode: dock sits above home indicator
             // (+ dockBottomInset). Web canvas alone is edge-to-edge.
-            if !hideDomainDock {
-                VStack(spacing: 0) {
-                    Spacer(minLength: 0)
-                    if let live = model.liveAccessory, shelfProgress < 0.02 {
-                        KenosLiveAccessoryBar(
-                            accessory: live,
-                            minimized: model.liveAccessoryMinimized
-                        ) {
-                            model.activateLiveAccessory(live)
-                        }
-                        .padding(.horizontal, KenosGlass.dockHorizontalInset)
-                        .padding(.bottom, model.liveAccessoryMinimized ? 4 : 8)
-                    }
-                    KenosGlobalDock(model: model)
-                        .padding(.leading, KenosGlass.dockLeadingInset)
-                        .padding(.trailing, KenosGlass.dockTrailingInset)
-                        .padding(.bottom, KenosGlass.dockBottomInset)
-                }
-                // Shelf open → dock yields chrome (same as Kenos Mode).
-                .opacity(shelfProgress > 0.02 ? 0 : 1)
-                // No Live Accessory layout spring — peer dock swaps stay stable (HIG).
-                .animation(openAnimation, value: shelfProgress)
-                .animation(KenosMotion.page(reduceMotion: reduceMotion), value: hideDomainDock)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                .zIndex(shelfProgress > 0.02 ? 1.5 : 4)
-                .allowsHitTesting(shelfProgress < 0.02)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+            if !hideDomainDock, !model.showSettingsSheet {
+                KenosBottomChromeBar(model: model)
+                    // Match content: 1:1 while dragging; spring only on settle.
+                    .animation(isDraggingShelf ? nil : openAnimation, value: shelfProgress)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                    .zIndex(shelfProgress > 0.02 ? 5 : 4)
+                    .transition(
+                        reduceMotion
+                            ? .opacity
+                            : .move(edge: .bottom).combined(with: .opacity)
+                    )
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -231,10 +212,8 @@ struct KenosDomainModeShell: View {
         }
         .onChange(of: hideDomainDock) { _, hidden in
             if hidden {
-                withAnimation(closeAnimation) {
-                    model.dismissSpaceShelf()
-                    model.showDomainMoreSheet = false
-                }
+                model.dismissSpaceShelf()
+                model.showDomainMoreSheet = false
             }
         }
         .sheet(isPresented: $model.showDomainMoreSheet) {
@@ -262,7 +241,7 @@ struct KenosDomainModeShell: View {
     /// Full-bleed WKWebView only — chrome (dock/shelf) is a sibling above this layer.
     private var domainWebCanvas: some View {
         ZStack {
-            Color(red: 0.031, green: 0.035, blue: 0.039)
+            model.chromeAppearance.canvasColor
             if domainUnreachable {
                 ContentUnavailableView {
                     Label("\(model.domainDisplayTitle) unreachable", systemImage: "wifi.exclamationmark")
@@ -496,258 +475,375 @@ struct KenosDomainModeShell: View {
 /// Domain dock — superseded by `KenosGlobalDock` (Spaces chip + 4-item capsule).
 typealias KenosDomainDock = KenosGlobalDock
 
-/// Global app/space switcher — Kenos + full Life OS catalog (not recent-only).
+/// System-level Space Switcher — Current row + Recent rail + Other Spaces list.
 ///
-/// Visual language: Linear / Slack / Things — calm surface, typography-led rows,
-/// accent only on the current Space. Inactive icons stay muted (no rainbow list).
+/// Quiet navigation drawer (not App Launcher): light selected fill, icon tint,
+/// checkmark — no heavy cards / strokes / uppercase section chrome.
 struct KenosSpaceShelfView: View {
     @ObservedObject var model: KenosAppModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     /// Interactive swipe-to-dismiss — owned by `KenosSpaceShelfChrome` so dimmer tracks.
     @Binding var dismissDragX: CGFloat
+    /// Resolved drawer width (matches chrome `preferredPanelWidth`).
+    var panelWidth: CGFloat = KenosShelfGesture.panelWidth
+    /// In-shelf filter — Space switching stays in Shelf (no Quick Switch hop).
+    @State private var shelfQuery = ""
 
-    /// Leave a strip of dimmed content visible — hierarchy cue (Telegram / Slack).
-    private var panelWidth: CGFloat { KenosShelfGesture.panelWidth }
+    private var prefersChinese: Bool {
+        KenosShellSettingsStore.current.resolvedLocale() == "zh"
+    }
+
+    private enum ShelfIconPlate {
+        /// Current — light accent plate; glyph stays full brand.
+        case current
+        /// Recent — neutral plate; accent glyph only.
+        case recent
+        /// Other Spaces — neutral plate; muted accent glyph.
+        case catalog
+    }
+
+    /// Section labels — secondary ~68% (readable on light Shelf, not decorative).
+    private var sectionLabelColor: Color { Color.primary.opacity(0.68) }
+    /// Row / Current subtitles — secondary ~60%.
+    private var rowSubtitleColor: Color { Color.primary.opacity(0.60) }
+    /// Search placeholder + glyph — secondary, not tertiary.
+    private var searchPlaceholderColor: Color { Color.primary.opacity(0.55) }
+    /// List hairlines — adaptive ~0.10.
+    private var rowDividerColor: Color { Color.primary.opacity(0.10) }
+
+    /// Shared content inset — Search / Current / lists share one leading edge.
+    private let shelfContentInset: CGFloat = 16
 
     private var cardsById: [String: KenosAppModel.SpaceShelfCard] {
         Dictionary(uniqueKeysWithValues: model.spaceShelfCards.map { ($0.id, $0) })
     }
 
-    private var kenosCard: KenosAppModel.SpaceShelfCard? {
-        model.spaceShelfCards.first(where: \.isKenos)
+    private var normalizedShelfQuery: String {
+        shelfQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
-    private var pinnedDomainCards: [KenosAppModel.SpaceShelfCard] {
-        model.pinnedSpaceIds.compactMap { id -> KenosAppModel.SpaceShelfCard? in
-            guard let card = cardsById[id], !card.isKenos else { return nil }
-            return card
+    private func matchesShelfQuery(_ card: KenosAppModel.SpaceShelfCard) -> Bool {
+        let q = normalizedShelfQuery
+        guard !q.isEmpty else { return true }
+        if card.title.lowercased().contains(q) { return true }
+        if card.subtitle.lowercased().contains(q) { return true }
+        if card.id.lowercased().contains(q) { return true }
+        // Localized display strings — zh users search 「计划」not "Plan".
+        if localizedShelfCardTitle(card).lowercased().contains(q) { return true }
+        if localizedShelfSubtitle(card).lowercased().contains(q) { return true }
+        return false
+    }
+
+    /// Visual protagonist — wherever the user is leaving from.
+    private var currentCard: KenosAppModel.SpaceShelfCard? {
+        let card = model.spaceShelfCards.first(where: \.isCurrent)
+            ?? model.spaceShelfCards.first(where: \.isKenos)
+        guard let card, matchesShelfQuery(card) else { return nil }
+        return card
+    }
+
+    /// Running Continuity domains (excludes current).
+    private var activeDomainCards: [KenosAppModel.SpaceShelfCard] {
+        let active = Set(model.activeShelfSpaceIds.filter { $0 != "kenos" })
+        return model.spaceShelfCards.filter {
+            !$0.isKenos && !$0.isCurrent && active.contains($0.id)
         }
     }
 
-    /// Running Continuity (Training / Focus / Music / tidy) — IA Active section.
-    private var activeDomainCards: [KenosAppModel.SpaceShelfCard] {
-        let active = Set(model.activeShelfSpaceIds.filter { $0 != "kenos" })
-        return model.spaceShelfCards.filter { !$0.isKenos && active.contains($0.id) }
-    }
-
-    /// Up to 3 recent domains (excludes current + pinned + Active) — Arc / Slack pattern.
-    private var recentDomainCards: [KenosAppModel.SpaceShelfCard] {
-        let pinned = Set(model.pinnedSpaceIds)
-        let active = Set(model.activeShelfSpaceIds)
+    /// Up to 3 meaningful continuations — Active first, then recent resume.
+    private var recentRailCards: [KenosAppModel.SpaceShelfCard] {
         var seen = Set<String>()
         var out: [KenosAppModel.SpaceShelfCard] = []
-        for id in model.recentSpaceIds {
-            guard let card = cardsById[id], !card.isKenos, !card.isCurrent else { continue }
-            guard !pinned.contains(card.id), !active.contains(card.id), !seen.contains(card.id) else { continue }
+        func append(_ card: KenosAppModel.SpaceShelfCard) {
+            guard !seen.contains(card.id), !card.isCurrent else { return }
+            guard matchesShelfQuery(card) else { return }
             seen.insert(card.id)
             out.append(card)
+        }
+        for card in activeDomainCards { append(card); if out.count == 3 { return out } }
+        for id in model.recentSpaceIds {
+            guard let card = cardsById[id], !card.isKenos else { continue }
+            // Prefer cards with resume meta over bare catalog visits.
+            guard card.relativeTime != nil || model.activeShelfSpaceIds.contains(card.id) else {
+                continue
+            }
+            append(card)
             if out.count == 3 { break }
+        }
+        // Soft fill if empty — still show recent visits so Shelf never feels broken.
+        if out.isEmpty {
+            for id in model.recentSpaceIds {
+                guard let card = cardsById[id], !card.isCurrent else { continue }
+                append(card)
+                if out.count == 3 { break }
+            }
         }
         return out
     }
 
-    private var otherDomainCards: [KenosAppModel.SpaceShelfCard] {
-        let pinned = Set(model.pinnedSpaceIds)
-        return model.spaceShelfCards.filter { !$0.isKenos && !pinned.contains($0.id) }
-    }
-
-    private var openAnimation: Animation {
-        KenosMotion.shelf(reduceMotion: reduceMotion, closing: false)
-    }
-
-    private var closeAnimation: Animation {
-        KenosMotion.shelf(reduceMotion: reduceMotion, closing: true)
+    private var allListCards: [KenosAppModel.SpaceShelfCard] {
+        let hide = Set(recentRailCards.map(\.id))
+        return model.spaceShelfCards.filter { card in
+            if card.isCurrent { return false }
+            if hide.contains(card.id) { return false }
+            return matchesShelfQuery(card)
+        }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
-                .padding(.horizontal, 16)
+                .padding(.horizontal, shelfContentInset)
                 .padding(.top, KenosGlass.chromeTopInset)
-                .padding(.bottom, 10)
+                .padding(.bottom, 14)
 
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 18) {
-                    if let kenosCard {
-                        // "System" — avoids colliding with the Home domain.
-                        shelfSection("System") {
-                            shelfCard(kenosCard, featured: true)
+                VStack(alignment: .leading, spacing: 22) {
+                    if let currentCard {
+                        shelfSection(localizedShelfSection("Current")) {
+                            currentSpaceCard(currentCard)
                         }
                     }
 
-                    if !activeDomainCards.isEmpty {
-                        shelfSection("Active") {
-                            shelfCardGrid(activeDomainCards)
+                    if !recentRailCards.isEmpty {
+                        shelfSection(localizedShelfSection("Recent")) {
+                            recentSpacesList(recentRailCards)
                         }
                     }
 
-                    if !recentDomainCards.isEmpty {
-                        shelfSection("Recent") {
-                            shelfCardGrid(recentDomainCards)
+                    if !allListCards.isEmpty {
+                        shelfSection(localizedShelfSection("Other Spaces")) {
+                            allSpacesList(allListCards)
                         }
-                    }
-
-                    if !pinnedDomainCards.isEmpty {
-                        shelfSection("Pinned") {
-                            shelfCardGrid(pinnedDomainCards)
-                        }
-                    }
-
-                    shelfSection("All Spaces") {
-                        shelfCardGrid(otherDomainCards)
                     }
                 }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 8)
-            }
-
-            footer
-                .padding(.horizontal, 10)
-                .padding(.top, 6)
+                .padding(.horizontal, shelfContentInset)
                 .padding(.bottom, 10)
-                .safeAreaPadding(.bottom, 4)
+                // Clearance for Spaces Orb (persistent close anchor) sitting above the Shelf.
+                .safeAreaPadding(
+                    .bottom,
+                    KenosGlass.dockRowHeight + KenosGlass.dockBottomInset + 8
+                )
+            }
         }
         .frame(maxHeight: .infinity, alignment: .top)
-        .frame(width: panelWidth)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background {
             ZStack(alignment: .trailing) {
                 Rectangle()
                     .fill(.ultraThickMaterial)
+                // Scheme A: opaque navigation plane (~0.94 light / ~0.90 dark), not float glass.
                 Rectangle()
-                    .fill(Color.primary.opacity(0.08))
+                    .fill(shelfSurfaceVeil)
+                // Trailing hairline — light plane separation (shadow owned by chrome).
+                Rectangle()
+                    .fill(Color.primary.opacity(colorScheme == .light ? 0.08 : 0.14))
                     .frame(width: 0.5)
             }
             .ignoresSafeArea()
         }
-        // Position is owned by `KenosSpaceShelfChrome` (revealProgress).
-        // Simultaneous drag so ScrollView vertical pans still win.
         .simultaneousGesture(dismissDragGesture)
         .accessibilityElement(children: .contain)
         .accessibilityAction(named: "Close") {
-            withAnimation(closeAnimation) {
-                model.dismissSpaceShelf()
-            }
+            // Chrome owns spring via showSpaceShelf onChange.
+            model.dismissSpaceShelf()
         }
     }
 
-    /// Leftward horizontal drag closes the shelf; vertical scrolls stay with ScrollView.
+    /// Extra veil over material so Domain content can't compete with Shelf chrome.
+    private var shelfSurfaceVeil: Color {
+        if colorScheme == .light {
+            return Color.white.opacity(reduceTransparency ? 0.88 : 0.72)
+        }
+        return Color.black.opacity(reduceTransparency ? 0.46 : 0.30)
+    }
+
     private var dismissDragGesture: some Gesture {
-        DragGesture(minimumDistance: 18, coordinateSpace: .local)
-            .onChanged { value in
-                guard !reduceMotion else { return }
-                let dx = value.translation.width
-                let dy = value.translation.height
-                // Slightly prefer horizontal so a deliberate close isn't stolen by scroll.
-                guard abs(dx) > abs(dy) * 1.05, dx < 0 else {
-                    if dismissDragX != 0 { dismissDragX = 0 }
-                    return
-                }
-                dismissDragX = KenosShelfGesture.cappedDismissOffset(dx)
+        DragGesture(
+            minimumDistance: KenosShelfGesture.dismissDragMinimumDistance,
+            coordinateSpace: .local
+        )
+        .onChanged { value in
+            guard !reduceMotion else { return }
+            let dx = value.translation.width
+            let dy = value.translation.height
+            guard abs(dx) > abs(dy) * 1.05, dx < 0 else {
+                if dismissDragX != 0 { dismissDragX = 0 }
+                return
             }
-            .onEnded { value in
-                let dx = value.translation.width
-                let predicted = value.predictedEndTranslation.width
-                let velocity = predicted - dx
-                let shouldClose = KenosShelfGesture.shouldCommitClose(
-                    translationX: dx,
-                    velocityX: velocity,
-                    predictedTranslationX: predicted
-                )
-                if shouldClose {
-                    withAnimation(closeAnimation) {
-                        model.dismissSpaceShelf()
-                    }
-                } else {
-                    withAnimation(openAnimation) {
-                        dismissDragX = 0
-                    }
+            dismissDragX = KenosShelfGesture.cappedDismissOffset(dx, panelWidth: panelWidth)
+        }
+        .onEnded { value in
+            let dx = value.translation.width
+            let predicted = value.predictedEndTranslation.width
+            let velocity = KenosShelfGesture.dragVelocityX(value)
+            let shouldClose = KenosShelfGesture.shouldCommitClose(
+                translationX: dx,
+                velocityX: velocity,
+                predictedTranslationX: predicted
+            )
+            if shouldClose {
+                model.dismissSpaceShelf()
+            } else {
+                withAnimation(KenosMotion.shelfInteractive(reduceMotion: reduceMotion)) {
+                    dismissDragX = 0
                 }
             }
+        }
     }
 
+    // MARK: Header
+
+    /// One search entry only — filters Shelf in place (does not open Quick Switch).
     private var header: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Spaces")
-                    .font(.system(.title3, design: .rounded).weight(.semibold))
-                    .foregroundStyle(.primary)
-                Text(headerSubtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            Spacer(minLength: 8)
-            Button {
-                withAnimation(KenosMotion.shelf(reduceMotion: reduceMotion, closing: true)) {
-                    model.dismissSpaceShelf()
-                }
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.secondary)
-                    .frame(minWidth: 28, minHeight: 28)
-                    .background(Circle().fill(Color.primary.opacity(0.08)))
-            }
-            .buttonStyle(KenosPressStyle(reduceMotion: reduceMotion))
-            .accessibilityLabel("Close Space Shelf")
-        }
-    }
+        VStack(alignment: .leading, spacing: 10) {
+            Text(prefersChinese ? "空间" : "Spaces")
+                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .foregroundStyle(.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
 
-    private var headerSubtitle: String {
-        if model.shellMode == .domain {
-            return "Now in \(model.domainDisplayTitle)"
-        }
-        return "Jump to a domain"
-    }
-
-    private var footer: some View {
-        VStack(spacing: 8) {
-            Rectangle()
-                .fill(Color.primary.opacity(0.08))
-                .frame(height: 0.5)
-                .padding(.horizontal, 6)
-
-            Button {
-                withAnimation(KenosMotion.shelf(reduceMotion: reduceMotion, closing: true)) {
-                    model.dismissSpaceShelf()
-                }
-                model.openQuickSwitch()
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                    Text("Quick Switch")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.primary)
-                    Spacer(minLength: 0)
-                    Text("Search")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(.ultraThinMaterial)
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(searchPlaceholderColor)
+                TextField(
+                    "",
+                    text: $shelfQuery,
+                    prompt: Text(prefersChinese ? "搜索空间…" : "Search spaces…")
+                        .foregroundStyle(searchPlaceholderColor)
                 )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
-                )
+                .font(.subheadline.weight(.medium))
+                .textInputAutocapitalization(.never)
+                .disableAutocorrection(true)
+                .accessibilityLabel(prefersChinese ? "搜索空间" : "Search Spaces")
+                .accessibilityIdentifier("kenos.spaceShelf.search")
+                .accessibilityHint(prefersChinese ? "在 Shelf 内筛选空间" : "Filter Spaces inside Shelf")
             }
-            .buttonStyle(KenosPressStyle(reduceMotion: reduceMotion))
-            .accessibilityIdentifier("kenos.spaceShelf.quickSwitch")
-            .accessibilityHint("Search Spaces and recent objects")
+            .padding(.horizontal, 12)
+            .frame(height: 36)
+            .background(
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .fill(Color.primary.opacity(0.05))
+            )
         }
     }
 
-    private var cardColumns: [GridItem] {
-        [
-            GridItem(.flexible(), spacing: 8),
-            GridItem(.flexible(), spacing: 8),
-        ]
+    private func localizedShelfSection(_ title: String) -> String {
+        guard prefersChinese else { return title }
+        switch title {
+        case "Current": return "当前"
+        case "Recent": return "最近"
+        case "Other Spaces", "All Spaces": return "其他空间"
+        default: return title
+        }
     }
+
+    private func localizedShelfCardTitle(_ card: KenosAppModel.SpaceShelfCard) -> String {
+        // Space name only — destination / status belong in the subtitle.
+        if card.isKenos { return "Kenos" }
+        guard prefersChinese else { return card.title }
+        switch card.id {
+        case "home": return "家"
+        case "plan": return "计划"
+        case "training": return "训练"
+        case "work": return "工作"
+        case "money": return "财务"
+        case "music": return "音乐"
+        case "library", "knowledge": return "知识库"
+        case "health": return "健康"
+        case "paper": return "Paper"
+        default: return card.title
+        }
+    }
+
+    /// Catalog / glance subtitles — Chinese when system prefers zh-Hans.
+    private func localizedShelfSubtitle(_ card: KenosAppModel.SpaceShelfCard) -> String {
+        if card.isKenos {
+            return localizedKenosSubtitle(card.subtitle)
+        }
+        guard prefersChinese else { return card.subtitle }
+        // Current rows keep live destination · status; catalog falls back to role line.
+        if card.isCurrent { return localizedLiveSubtitle(card.subtitle) }
+        switch card.id {
+        case "plan": return "任务与日程"
+        case "training": return "健身训练"
+        case "work": return "项目与决策"
+        case "money": return "财务决策"
+        case "library", "knowledge": return "知识库"
+        case "music": return "曲库与播放"
+        case "home": return "房间 · 物品 · 整理"
+        case "health": return "状态 · 专注 · 趋势"
+        case "paper": return "笔记与采集"
+        default:
+            return localizedLiveSubtitle(card.subtitle)
+        }
+    }
+
+    private func localizedKenosSubtitle(_ subtitle: String) -> String {
+        guard prefersChinese else { return subtitle }
+        if subtitle == "Today · Ask · Inbox" { return "今日 · 问答 · 收件箱" }
+        // "Today · N waiting" → "今日 · N 项待处理"
+        if subtitle.hasPrefix("Today · "), subtitle.hasSuffix(" waiting") {
+            let mid = subtitle
+                .dropFirst("Today · ".count)
+                .dropLast(" waiting".count)
+                .trimmingCharacters(in: .whitespaces)
+            if let n = Int(mid), n > 0 {
+                return "今日 · \(n) 项待处理"
+            }
+        }
+        return localizedLiveSubtitle(subtitle)
+    }
+
+    private func localizedLiveSubtitle(_ subtitle: String) -> String {
+        guard prefersChinese else { return subtitle }
+        switch subtitle {
+        case "Next up": return "下一步"
+        case "In progress": return "进行中"
+        case "In focus", "Focus": return "专注中"
+        case "Paused": return "已暂停"
+        case "Organize": return "整理"
+        case "Music": return "音乐"
+        case "Open Money": return "打开财务"
+        case "Focus · high": return "专注 · 高"
+        case "Tasks": return "任务"
+        case "Today": return "今日"
+        case "Library": return "曲库"
+        case "Calendar": return "日历"
+        case "Overview": return "概览"
+        case "Ask": return "问答"
+        case "Inbox": return "收件箱"
+        case "Projects": return "项目"
+        case "Vault": return "知识库"
+        case "Rooms": return "房间"
+        case "Status": return "状态"
+        case "Notebooks": return "笔记"
+        case "Workout": return "训练"
+        case "Program": return "计划"
+        case "History": return "历史"
+        case "Accounts": return "账户"
+        case "Search": return "搜索"
+        case "Triage": return "分拣"
+        case "Summary": return "总结"
+        default:
+            // "Today · Chest" / "Tasks · Next up" — translate known destination heads.
+            if let sep = subtitle.range(of: " · ") {
+                let head = String(subtitle[..<sep.lowerBound])
+                let tail = String(subtitle[sep.upperBound...])
+                let localizedHead = localizedLiveSubtitle(head)
+                let localizedTail = localizedLiveSubtitle(tail)
+                if localizedHead != head || localizedTail != tail {
+                    return "\(localizedHead) · \(localizedTail)"
+                }
+            }
+            return subtitle
+        }
+    }
+
+    // MARK: Sections
 
     @ViewBuilder
     private func shelfSection<Content: View>(
@@ -755,244 +851,203 @@ struct KenosSpaceShelfView: View {
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title.uppercased())
-                .font(.caption2.weight(.semibold))
-                .tracking(0.7)
-                .foregroundStyle(.tertiary)
-                .padding(.horizontal, 4)
+            Text(title)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(sectionLabelColor)
+                .padding(.horizontal, 2)
                 .accessibilityAddTraits(.isHeader)
             content()
         }
     }
 
-    private func shelfCardGrid(_ cards: [KenosAppModel.SpaceShelfCard]) -> some View {
-        LazyVGrid(columns: cardColumns, spacing: 8) {
-            ForEach(cards) { card in
-                shelfCard(card)
-            }
-        }
-    }
-
-    private func shelfCard(
-        _ card: KenosAppModel.SpaceShelfCard,
-        featured: Bool = false
-    ) -> some View {
+    /// Current Space — quiet selected row (icon + light tint + check). Not a dashboard card.
+    private func currentSpaceCard(_ card: KenosAppModel.SpaceShelfCard) -> some View {
         let accent = KenosAppModel.accentColor(for: card.id)
-        let isPinned = !card.isKenos && model.pinnedSpaceIds.contains(card.id)
-        let showDetail = shouldShowSubtitle(card)
-
+        // On-glass pair keeps Plan ochre / Training red readable on light tint.
+        let mark = KenosAppModel.accentOnGlass(for: card.id)
         return Button {
-            withAnimation(KenosMotion.shelf(reduceMotion: reduceMotion)) {
-                model.openShelfCard(card)
-            }
+            select(card)
         } label: {
-            if featured {
-                featuredCardLabel(
-                    card: card,
-                    accent: accent,
-                    isPinned: isPinned,
-                    showDetail: showDetail
-                )
-            } else {
-                gridCardLabel(
-                    card: card,
-                    accent: accent,
-                    isPinned: isPinned,
-                    showDetail: showDetail
-                )
-            }
-        }
-        .buttonStyle(KenosPressStyle(reduceMotion: reduceMotion))
-        .contextMenu {
-            if !card.isKenos {
-                Button {
-                    model.togglePinnedSpace(id: card.id)
-                } label: {
-                    Label(
-                        isPinned ? "Unpin" : "Pin",
-                        systemImage: isPinned ? "star.slash" : "star"
-                    )
-                }
-            }
-        }
-        .accessibilityIdentifier("kenos.spaceShelf.card.\(card.id)")
-        .accessibilityLabel(accessibilityLabel(for: card, isPinned: isPinned))
-        .accessibilityAddTraits(card.isCurrent ? [.isSelected] : [])
-        .accessibilityHint(card.isCurrent ? "Current Space" : "Opens \(card.title)")
-    }
-
-    /// Resume / current context earns a second line; static catalog blurbs stay out.
-    private func shouldShowSubtitle(_ card: KenosAppModel.SpaceShelfCard) -> Bool {
-        card.isCurrent || card.relativeTime != nil
-    }
-
-    /// Full-width Kenos / System tile — App Library: color on icon; tint only when current.
-    @ViewBuilder
-    private func featuredCardLabel(
-        card: KenosAppModel.SpaceShelfCard,
-        accent: Color,
-        isPinned: Bool,
-        showDetail: Bool
-    ) -> some View {
-        HStack(alignment: .center, spacing: 12) {
-            shelfIcon(card: card, accent: accent, size: 44, cornerRadius: 12)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(card.title)
-                        .font(.body.weight(card.isCurrent ? .semibold : .medium))
+            HStack(spacing: 12) {
+                shelfIcon(card: card, accent: accent, size: 36, cornerRadius: 10, plate: .current)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(localizedShelfCardTitle(card))
+                        .font(.body.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
-                    if isPinned {
-                        Image(systemName: "star.fill")
-                            .font(.caption2.weight(.bold))
-                            .foregroundStyle(accent.opacity(0.7))
-                            .accessibilityHidden(true)
-                    }
-                }
-                if showDetail {
-                    Text(card.subtitle)
+                    Text(localizedShelfSubtitle(card))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(rowSubtitleColor)
                         .lineLimit(1)
                 }
+                Spacer(minLength: 4)
+                Image(systemName: "checkmark")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(mark)
+                    .accessibilityHidden(true)
             }
-            Spacer(minLength: 4)
-            shelfTrailing(card: card, accent: accent)
-        }
-        .padding(.horizontal, card.isCurrent ? 12 : 8)
-        .padding(.vertical, card.isCurrent ? 12 : 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            if card.isCurrent {
+            .padding(.horizontal, 12)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+            .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(accent.opacity(0.18))
-            }
+                    .fill(accent.opacity(0.07))
+            )
         }
-        .overlay {
-            if card.isCurrent {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(accent.opacity(0.32), lineWidth: 1)
-            }
-        }
-        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .buttonStyle(KenosPressStyle(reduceMotion: reduceMotion))
+        .contextMenu { pinMenu(for: card) }
+        .accessibilityIdentifier("kenos.spaceShelf.card.\(card.id)")
+        .accessibilityLabel(accessibilityLabel(for: card))
+        .accessibilityAddTraits(.isSelected)
+        .accessibilityHint(prefersChinese ? "当前空间" : "Current Space")
     }
 
-    /// 2-column domain tile — colored icon plate carries identity; idle has no gray card wash.
-    @ViewBuilder
-    private func gridCardLabel(
-        card: KenosAppModel.SpaceShelfCard,
-        accent: Color,
-        isPinned: Bool,
-        showDetail: Bool
+    /// Recent — same row grammar as All (icon + title + subtitle), not capsules.
+    private func recentSpacesList(_ cards: [KenosAppModel.SpaceShelfCard]) -> some View {
+        shelfRowList(cards, plate: .recent, showPin: false, showChevron: true)
+    }
+
+    private func allSpacesList(_ cards: [KenosAppModel.SpaceShelfCard]) -> some View {
+        shelfRowList(cards, plate: .catalog, showPin: true, showChevron: true)
+    }
+
+    private func shelfRowList(
+        _ cards: [KenosAppModel.SpaceShelfCard],
+        plate: ShelfIconPlate,
+        showPin: Bool,
+        showChevron: Bool
     ) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top, spacing: 6) {
-                shelfIcon(card: card, accent: accent, size: 44, cornerRadius: 12)
-                Spacer(minLength: 0)
-                if isPinned {
-                    Image(systemName: "star.fill")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(accent.opacity(0.7))
-                        .accessibilityHidden(true)
-                } else if card.isCurrent {
-                    Circle()
-                        .fill(accent)
-                        .frame(width: 7, height: 7)
-                        .padding(.top, 4)
-                        .accessibilityHidden(true)
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(card.title)
-                    .font(.subheadline.weight(card.isCurrent ? .semibold : .medium))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-                if showDetail, let relative = card.relativeTime {
-                    Text(relative)
-                        .font(.caption2.weight(card.isCurrent ? .semibold : .regular))
-                        .foregroundStyle(card.isCurrent ? accent : .secondary)
-                        .lineLimit(1)
-                } else if showDetail {
-                    Text(card.subtitle)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+        VStack(spacing: 0) {
+            ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
+                shelfSpaceRow(card, plate: plate, showPin: showPin, showChevron: showChevron)
+                if index < cards.count - 1 {
+                    Rectangle()
+                        .fill(rowDividerColor)
+                        .frame(height: 0.5)
+                        .padding(.leading, 42)
                 }
             }
         }
-        .padding(card.isCurrent ? 10 : 6)
-        .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
-        .background {
-            if card.isCurrent {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(accent.opacity(0.18))
-            }
-        }
-        .overlay {
-            if card.isCurrent {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(accent.opacity(0.32), lineWidth: 1)
-            }
-        }
-        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
-    /// App Library–style icon plate: saturated accent wash + solid glyph (identity, not chrome).
+    private func shelfSpaceRow(
+        _ card: KenosAppModel.SpaceShelfCard,
+        plate: ShelfIconPlate,
+        showPin: Bool,
+        showChevron: Bool
+    ) -> some View {
+        let accent = KenosAppModel.accentColor(for: card.id)
+        let isPinned = showPin && !card.isKenos && model.pinnedSpaceIds.contains(card.id)
+        return Button {
+            select(card)
+        } label: {
+            HStack(spacing: 12) {
+                shelfIcon(card: card, accent: accent, size: 30, cornerRadius: 8, plate: plate)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(localizedShelfCardTitle(card))
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        if isPinned {
+                            Image(systemName: "star.fill")
+                                .font(.caption2)
+                                .foregroundStyle(accent.opacity(0.7))
+                                .accessibilityHidden(true)
+                        }
+                    }
+                    Text(localizedShelfSubtitle(card))
+                        .font(.caption)
+                        .foregroundStyle(rowSubtitleColor)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                if showChevron {
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.primary.opacity(0.36))
+                }
+            }
+            .padding(.vertical, 12)
+            .frame(minHeight: 52)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(KenosPressStyle(reduceMotion: reduceMotion))
+        .contextMenu { pinMenu(for: card) }
+        .accessibilityIdentifier("kenos.spaceShelf.card.\(card.id)")
+        .accessibilityLabel(accessibilityLabel(for: card, isPinned: isPinned))
+        .accessibilityHint(
+            prefersChinese
+                ? "打开\(localizedShelfCardTitle(card))"
+                : "Opens \(localizedShelfCardTitle(card))"
+        )
+    }
+
+    // MARK: Helpers
+
+    private func select(_ card: KenosAppModel.SpaceShelfCard) {
+        // Chrome owns Shelf spring via showSpaceShelf onChange.
+        model.openShelfCard(card)
+    }
+
+    @ViewBuilder
+    private func pinMenu(for card: KenosAppModel.SpaceShelfCard) -> some View {
+        if !card.isKenos {
+            let isPinned = model.pinnedSpaceIds.contains(card.id)
+            Button {
+                model.togglePinnedSpace(id: card.id)
+            } label: {
+                Label(
+                    prefersChinese
+                        ? (isPinned ? "取消固定" : "固定")
+                        : (isPinned ? "Unpin" : "Pin"),
+                    systemImage: isPinned ? "star.slash" : "star"
+                )
+            }
+        }
+    }
+
     private func shelfIcon(
         card: KenosAppModel.SpaceShelfCard,
         accent: Color,
-        size: CGFloat = 44,
-        cornerRadius: CGFloat = 12
+        size: CGFloat = 36,
+        cornerRadius: CGFloat = 10,
+        plate: ShelfIconPlate
     ) -> some View {
-        let active = card.isCurrent
+        let plateFill: Color = {
+            switch plate {
+            case .current: return accent.opacity(0.16)
+            case .recent, .catalog: return Color.primary.opacity(0.06)
+            }
+        }()
+        let glyph: Color = {
+            switch plate {
+            case .current: return KenosAppModel.accentOnGlass(for: card.id)
+            case .recent: return accent.opacity(0.88)
+            case .catalog: return accent.opacity(0.72)
+            }
+        }()
         return ZStack {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            accent.opacity(active ? 0.38 : 0.28),
-                            accent.opacity(active ? 0.26 : 0.18),
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(plateFill)
             Image(systemName: card.systemImage)
                 .font(.system(size: size * 0.42, weight: .semibold))
                 .symbolRenderingMode(.monochrome)
-                .foregroundStyle(accent)
+                .foregroundStyle(glyph)
         }
         .frame(width: size, height: size)
-        .shadow(color: accent.opacity(active ? 0.22 : 0.12), radius: active ? 6 : 3, y: 1)
-    }
-
-    @ViewBuilder
-    private func shelfTrailing(card: KenosAppModel.SpaceShelfCard, accent: Color) -> some View {
-        if let relative = card.relativeTime {
-            Text(relative)
-                .font(.caption2.weight(card.isCurrent ? .semibold : .regular))
-                .foregroundStyle(card.isCurrent ? accent.opacity(0.95) : Color.secondary.opacity(0.55))
-                .lineLimit(1)
-        } else if card.isCurrent {
-            Circle()
-                .fill(accent)
-                .frame(width: 6, height: 6)
-                .accessibilityHidden(true)
-        }
+        .accessibilityHidden(true)
     }
 
     private func accessibilityLabel(
         for card: KenosAppModel.SpaceShelfCard,
-        isPinned: Bool
+        isPinned: Bool = false
     ) -> String {
-        var parts = [card.title]
-        if shouldShowSubtitle(card) { parts.append(card.subtitle) }
+        var parts = [localizedShelfCardTitle(card), localizedShelfSubtitle(card)]
         if let relative = card.relativeTime { parts.append(relative) }
-        if isPinned { parts.append("Pinned") }
-        if card.isCurrent { parts.append("Current") }
-        return parts.joined(separator: ", ")
+        if isPinned { parts.append(prefersChinese ? "已固定" : "Pinned") }
+        if card.isCurrent { parts.append(prefersChinese ? "当前" : "Current") }
+        return parts.filter { !$0.isEmpty }.joined(separator: ", ")
     }
 }
 
@@ -1142,7 +1197,9 @@ struct EdgeShelfPanOverlay: UIViewRepresentable {
 
         @objc func handlePan(_ gesture: UIPanGestureRecognizer) {
             let raw = gesture.translation(in: gesture.view).x
-            let t = KenosShelfGesture.cappedOpenTranslation(raw)
+            let containerWidth = gesture.view?.bounds.width ?? 0
+            let panelWidth = KenosShelfGesture.preferredPanelWidth(containerWidth: containerWidth)
+            let t = KenosShelfGesture.cappedOpenTranslation(raw, panelWidth: panelWidth)
             let v = gesture.velocity(in: gesture.view).x
             switch gesture.state {
             case .began:

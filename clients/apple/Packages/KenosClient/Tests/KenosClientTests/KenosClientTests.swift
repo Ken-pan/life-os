@@ -219,7 +219,7 @@ func widgetSnapshotRoundTrip() {
         title: "Review",
         subtitle: "Next up",
         deepLink: "kenos://domain/plan",
-        accentRGB: 0xC9A227,
+        accentRGB: 0xD4AE2E,
         systemImage: "checklist"
     )
     let health = DomainWidgetGlance(
@@ -293,7 +293,7 @@ func widgetSnapshotContentEqualsIgnoresTimestamps() {
         title: "Review",
         subtitle: "Next up",
         deepLink: "kenos://domain/plan",
-        accentRGB: 0xC9A227,
+        accentRGB: 0xD4AE2E,
         systemImage: "checklist",
         updatedAt: "2026-01-01T00:00:00Z"
     )

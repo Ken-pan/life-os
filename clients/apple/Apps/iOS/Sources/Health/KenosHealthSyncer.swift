@@ -113,9 +113,18 @@ final class KenosHealthSyncer: ObservableObject {
                 await sync()
             }
         } catch {
-            status = "Authorization failed: \(error.localizedDescription)"
+            let detail = error.localizedDescription
+            // Empty / stripped HealthKit entitlement never presents the system sheet.
+            if detail.localizedCaseInsensitiveContains("entitlement")
+                || detail.localizedCaseInsensitiveContains("authorization")
+            {
+                status =
+                    "HealthKit entitlement missing or unsigned — enable HealthKit for this App ID, set a Development Team, rebuild, then tap Connect"
+            } else {
+                status = "Authorization failed: \(detail)"
+            }
             KenosLog.error("HealthKit authorization failed", category: .health, metadata: [
-                "error": error.localizedDescription,
+                "error": detail,
             ])
         }
     }

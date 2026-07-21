@@ -2,79 +2,99 @@ import SwiftUI
 
 /// Continuity chrome motion — Apple HIG Motion / Animation / Reduce Motion.
 ///
-/// Principles baked into these tokens:
-/// - Motion supports meaning (selection travel, shelf hierarchy, chrome settle), not decoration
-/// - System-like springs: snappy selection (~0.3–0.4s feel), low bounce, silky settle
-/// - Interruptible (spring settles from current velocity when reversed)
-/// - Reduce Motion → short ease / opacity-first; skip large scale travel
+/// Three families only (avoid animation soup):
+/// - **Micro** — press / icon feedback (`0.18s`)
+/// - **Selection** — dock pill / Orb morph (`0.28 / 0.88`)
+/// - **Spatial** — Shelf + Mode transitions (`0.32 / 0.90`, close faster)
+///
+/// Reduce Motion → short ease / opacity-first; skip parallax, z-scale, elastic bounce.
 ///
 /// Web mirrors (CSS `@life-os/theme` `kenos-motion.css`):
-/// `--kenos-motion-chrome/page/sheet` ≈ 360ms, `--kenos-motion-press` ≈ 220ms,
+/// `--kenos-motion-chrome/page/sheet` ≈ 320ms, `--kenos-motion-press` ≈ 180ms,
 /// `--kenos-ease-chrome` ≈ cubic-bezier(0.22, 1, 0.36, 1).
 public enum KenosMotion {
-    /// Dock tab selection / Spaces chip — snappy, not toy-bouncy.
-    public static let selectionResponse: Double = 0.36
+    // MARK: - Micro
+
+    public static let pressResponse: Double = 0.18
+    public static let pressDamping: Double = 0.86
+    public static let microDuration: Double = 0.18
+
+    // MARK: - Selection
+
+    public static let selectionResponse: Double = 0.28
     public static let selectionDamping: Double = 0.88
 
-    /// Press scale feedback on dock / chrome controls.
-    public static let pressResponse: Double = 0.20
-    public static let pressDamping: Double = 0.86
+    // MARK: - Spatial
 
-    /// Space Shelf open — snappy drawer snap (Mail / Telegram / Slack).
-    public static let shelfOpenResponse: Double = 0.34
-    public static let shelfOpenDamping: Double = 0.86
-    /// Space Shelf close — slightly quicker, less bounce than open.
-    public static let shelfCloseResponse: Double = 0.28
+    public static let spatialResponse: Double = 0.32
+    public static let spatialDamping: Double = 0.90
+    public static let shelfOpenResponse: Double = spatialResponse
+    public static let shelfOpenDamping: Double = spatialDamping
+    public static let shelfCloseResponse: Double = 0.24
     public static let shelfCloseDamping: Double = 0.92
-    /// Backward-compat aliases (= open).
+    /// Backward-compat aliases (= open / spatial).
     public static let shelfResponse: Double = shelfOpenResponse
     public static let shelfDamping: Double = shelfOpenDamping
-
-    /// Page chrome enter (Music-style title + glass bubble settle).
-    public static let chromeResponse: Double = 0.36
-    public static let chromeDamping: Double = 0.90
-
-    /// Kenos ↔ Domain shell morph — calm depth crossfade (Linear / Music).
-    public static let shellModeResponse: Double = 0.38
-    public static let shellModeDamping: Double = 0.94
-
-    /// Soft SPA hierarchical settle (in-web push / sheet content) — NOT peer dock tabs.
-    /// Peer tabs (HIG): instant swap; only selection chrome uses `selection`.
-    public static let pageResponse: Double = 0.36
+    public static let chromeResponse: Double = selectionResponse
+    public static let chromeDamping: Double = selectionDamping
+    public static let shellModeResponse: Double = spatialResponse
+    public static let shellModeDamping: Double = spatialDamping
+    public static let pageResponse: Double = spatialResponse
     public static let pageDamping: Double = 0.92
 
     /// Launch veil / freeze uncover — short ease-out, never bouncy.
-    public static let unveilDuration: Double = 0.32
+    public static let unveilDuration: Double = 0.28
     public static let unveilReduceDuration: Double = 0.12
 
     /// Soft SPA veil (native ink flash mask) — hierarchical hops only; peer softNavigate skips it.
     public static let softVeilInDuration: Double = 0.08
-    public static let softVeilOutDuration: Double = 0.30
+    public static let softVeilOutDuration: Double = 0.28
 
     public static let reduceMotionDuration: Double = 0.16
     public static let reduceMotionPressDuration: Double = 0.10
 
     /// Backdrop morph when shelf is open (full motion only).
-    /// Slightly restrained — drawer hierarchy cue, not a zoom gimmick.
-    public static let shelfBackdropScaleDelta: CGFloat = 0.055
-    public static let shelfBackdropOffsetX: CGFloat = 28
+    /// Gentle retreat (~0.97) — navigation drawer, not App Switcher / Stage Manager.
+    public static let shelfBackdropScaleDelta: CGFloat = 0.03
+    public static let shelfBackdropOffsetX: CGFloat = 20
     public static let shelfCornerRadius: CGFloat = 22
-    public static let shelfDimOpacity: Double = 0.44
-    public static let shelfDimOpacityKenos: Double = 0.32
+    /// Base Shelf dim — prefer `adaptiveShelfDimOpacity` at call sites.
+    /// Paired with an opaque Shelf surface (scheme A): medium veil, not a heavy blackout.
+    public static let shelfDimOpacity: Double = 0.30
+    public static let shelfDimOpacityKenos: Double = 0.30
 
-    /// Kenos ↔ Domain depth cue (outgoing shrinks slightly; incoming settles in).
+    /// Content-adaptive dim: light canvases need slightly more veil; dark need less.
+    /// Reduce Transparency raises the floor so the drawer still reads as modal.
+    public static func adaptiveShelfDimOpacity(
+        colorScheme: ColorScheme,
+        reduceTransparency: Bool
+    ) -> Double {
+        var value = shelfDimOpacity
+        switch colorScheme {
+        case .light: value += 0.02
+        case .dark: value -= 0.02
+        @unknown default: break
+        }
+        if reduceTransparency { value += 0.08 }
+        return min(0.48, max(0.26, value))
+    }
+
+    /// Kenos ↔ Domain depth cue — Reduce Motion disables entirely via `shellSurfaceScale`.
     public static let shellOutgoingScale: CGFloat = 0.978
     public static let shellIncomingScale: CGFloat = 1.0
-    public static let shellHiddenScale: CGFloat = 1.018
 
     /// Soft SPA page settle travel (web CSS mirrors this).
-    public static let pageEnterOffsetY: CGFloat = 10
-    public static let pageEnterScale: CGFloat = 0.992
+    public static let pageEnterOffsetY: CGFloat = 8
+    public static let pageEnterScale: CGFloat = 0.994
 
-    public static let pressScale: CGFloat = 0.94
-    public static let pressScaleReduced: CGFloat = 0.98
-    public static let pressOpacity: Double = 0.88
-    public static let pressOpacityReduced: Double = 0.94
+    public static let pressScale: CGFloat = 0.97
+    public static let pressScaleReduced: CGFloat = 0.99
+    public static let orbPressScale: CGFloat = 0.98
+    public static let orbPressScaleReduced: CGFloat = 0.99
+    public static let pressOpacity: Double = 0.92
+    public static let pressOpacityReduced: Double = 0.96
+
+    // MARK: - Animations
 
     public static func selection(reduceMotion: Bool) -> Animation {
         if reduceMotion {
@@ -90,19 +110,29 @@ public enum KenosMotion {
         return .spring(response: pressResponse, dampingFraction: pressDamping)
     }
 
-    /// Shelf / dimmer — interruptible spring so a quick reverse doesn't finish the old ease.
-    /// - Parameter closing: use the snappier close spring (best practice: dismiss faster than present).
-    public static func shelf(reduceMotion: Bool, closing: Bool = false) -> Animation {
+    /// Micro family alias (same as press).
+    public static func micro(reduceMotion: Bool) -> Animation {
+        press(reduceMotion: reduceMotion)
+    }
+
+    /// Spatial family — Shelf open / Mode morph / hierarchical page settle.
+    public static func spatial(reduceMotion: Bool, closing: Bool = false) -> Animation {
         if reduceMotion {
             return .easeOut(duration: reduceMotionDuration)
         }
         if closing {
             return .spring(response: shelfCloseResponse, dampingFraction: shelfCloseDamping)
         }
-        return .spring(response: shelfOpenResponse, dampingFraction: shelfOpenDamping)
+        return .spring(response: spatialResponse, dampingFraction: spatialDamping)
     }
 
-    /// Live finger-follow while edge-panning / swipe-dismissing the shelf.
+    /// Shelf / dimmer — interruptible spring so a quick reverse doesn't finish the old ease.
+    public static func shelf(reduceMotion: Bool, closing: Bool = false) -> Animation {
+        spatial(reduceMotion: reduceMotion, closing: closing)
+    }
+
+    /// Cancel / settle after an interrupted shelf drag (not for live finger-follow).
+    /// Live open/dismiss uses `animation(nil)` + progress binding; this spring snaps back.
     public static func shelfInteractive(reduceMotion: Bool) -> Animation {
         if reduceMotion {
             return .easeOut(duration: reduceMotionPressDuration)
@@ -110,23 +140,17 @@ public enum KenosMotion {
         return .interactiveSpring(response: 0.22, dampingFraction: 0.86, blendDuration: 0.15)
     }
 
-    /// Title / toolbar chrome settle — same family as selection.
+    /// Title / toolbar chrome settle — Selection family.
     public static func chrome(reduceMotion: Bool) -> Animation {
-        if reduceMotion {
-            return .easeOut(duration: reduceMotionDuration)
-        }
-        return .spring(response: chromeResponse, dampingFraction: chromeDamping)
+        selection(reduceMotion: reduceMotion)
     }
 
-    /// Dual-layer shell Mode switch (Kenos hall ↔ Domain Continuity).
+    /// Dual-layer shell Mode switch — Spatial family.
     public static func shellMode(reduceMotion: Bool) -> Animation {
-        if reduceMotion {
-            return .easeOut(duration: reduceMotionDuration)
-        }
-        return .spring(response: shellModeResponse, dampingFraction: shellModeDamping)
+        spatial(reduceMotion: reduceMotion)
     }
 
-    /// Soft tab / SPA content settle.
+    /// Soft SPA hierarchical settle — uses `pageDamping` (slightly snappier than shelf open).
     public static func page(reduceMotion: Bool) -> Animation {
         if reduceMotion {
             return .easeOut(duration: reduceMotionDuration)
@@ -146,25 +170,23 @@ public enum KenosMotion {
     }
 
     public static func shelfBackdropScale(reduceMotion: Bool, progress: CGFloat) -> CGFloat {
-        let p = shelfEasedProgress(progress)
         if reduceMotion { return 1 }
+        let p = shelfEasedProgress(progress)
         return 1 - shelfBackdropScaleDelta * p
     }
 
     public static func shelfBackdropOffset(reduceMotion: Bool, progress: CGFloat) -> CGFloat {
-        let p = shelfEasedProgress(progress)
         if reduceMotion { return 0 }
+        let p = shelfEasedProgress(progress)
         return shelfBackdropOffsetX * p
     }
 
     /// Depth scale for a dual-layer shell surface.
     public static func shellSurfaceScale(
         reduceMotion: Bool,
-        isForeground: Bool,
-        isPresent: Bool
+        isForeground: Bool
     ) -> CGFloat {
         if reduceMotion { return 1 }
-        if !isPresent { return shellHiddenScale }
         return isForeground ? shellIncomingScale : shellOutgoingScale
     }
 
@@ -173,14 +195,18 @@ public enum KenosMotion {
         return reduceMotion ? pressScaleReduced : pressScale
     }
 
+    /// Spaces Orb press — subtler than destination cells; respects Reduce Motion.
+    public static func orbPressScale(reduceMotion: Bool, pressed: Bool) -> CGFloat {
+        guard pressed else { return 1 }
+        return reduceMotion ? orbPressScaleReduced : orbPressScale
+    }
+
     public static func pressOpacity(reduceMotion: Bool, pressed: Bool) -> Double {
         guard pressed else { return 1 }
         return reduceMotion ? pressOpacityReduced : pressOpacity
     }
 
     /// Shelf panel — slide + subtle fade; Reduce Motion → opacity only.
-    /// Prefer offset-driven chrome (`KenosSpaceShelfChrome`) for interactive pans;
-    /// this transition covers boolean open/close commits.
     public static func shelfPanelTransition(reduceMotion: Bool) -> AnyTransition {
         if reduceMotion { return .opacity }
         return .asymmetric(
@@ -205,16 +231,28 @@ public enum KenosMotion {
 /// Light press scale for nav-adjacent chrome (shelf close, live accessory, cards).
 public struct KenosPressStyle: ButtonStyle {
     public var reduceMotion: Bool
+    /// Override idle→pressed scale (e.g. Spaces Orb uses a subtler dip).
+    public var pressedScale: CGFloat?
 
-    public init(reduceMotion: Bool) {
+    nonisolated public init(reduceMotion: Bool, pressedScale: CGFloat? = nil) {
         self.reduceMotion = reduceMotion
+        self.pressedScale = pressedScale
     }
 
     public func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(
-                KenosMotion.pressScale(reduceMotion: reduceMotion, pressed: configuration.isPressed)
-            )
+        let scale: CGFloat = {
+            guard configuration.isPressed else { return 1 }
+            if let pressedScale {
+                // Custom idle→pressed dip still softens under Reduce Motion.
+                if reduceMotion {
+                    return min(1, pressedScale + (1 - pressedScale) * 0.5)
+                }
+                return pressedScale
+            }
+            return KenosMotion.pressScale(reduceMotion: reduceMotion, pressed: true)
+        }()
+        return configuration.label
+            .scaleEffect(scale)
             .opacity(
                 KenosMotion.pressOpacity(reduceMotion: reduceMotion, pressed: configuration.isPressed)
             )

@@ -6,12 +6,12 @@ import SwiftUI
 struct KenosDomainMoreSheet: View {
     @ObservedObject var model: KenosAppModel
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.locale) private var locale
     @State private var homeScanMissingAlert = false
     @State private var homeScanMissingTitle = "HomeScan"
 
+    /// Follow Continuity shell Language (system / zh / en), not only device locale.
     private var prefersChinese: Bool {
-        locale.identifier.lowercased().hasPrefix("zh")
+        KenosShellSettingsStore.current.resolvedLocale() == "zh"
     }
 
     private var moreTitle: String { prefersChinese ? "更多" : "More" }
@@ -70,7 +70,12 @@ struct KenosDomainMoreSheet: View {
 
     /// Manifest titles are English SSOT; localize for zh Continuity UI.
     private func localizedTitle(_ title: String) -> String {
-        guard prefersChinese else { return title }
+        guard prefersChinese else {
+            if title == "Discover" || title == "Explore" || title == "Resources" {
+                return "Library"
+            }
+            return title
+        }
         switch title {
         case "Search": return "搜索"
         case "Upcoming": return "即将"
@@ -80,11 +85,17 @@ struct KenosDomainMoreSheet: View {
         case "Insights": return "洞察"
         case "Settings": return "设置"
         case "Program": return "计划"
+        case "Discover", "Explore", "Resources": return "资料"
         case "Library": return "资料库"
-        case "Discover": return "发现"
+        case "Exercises": return "动作库"
+        case "Workout", "Training": return "训练"
+        case "Today": return "今日"
+        case "Tasks": return "任务"
+        case "Calendar": return "日历"
+        case "Inbox": return "收件箱"
         case "Stats": return "统计"
         case "Tools": return "工具"
-        case "Assistant": return "助手"
+        case "Ask", "Assistant": return "助手"
         case "Spaces": return "Spaces"
         case "Forecast": return "预测"
         case "Stocks": return "股票"

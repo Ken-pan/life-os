@@ -3,6 +3,9 @@ import Foundation
 import LocalAuthentication
 import UIKit
 import WebKit
+import KenosClient
+import KenosContracts
+import KenosNotifications
 
 /// Unified JS ↔ Native capability surface for Kenos Continuity.
 ///
@@ -87,6 +90,8 @@ enum KenosNativeCapabilityBridge {
     }
 
     private(set) static var lastNavManifest: NavManifest = .empty
+    /// Last `data-theme` / publishChromeAppearance value from Continuity (`light`|`dark`).
+    private(set) static var lastChromeAppearance: String = ""
 
     /// Injected at document start so `window.kenosNative` works before SPA modules load.
     static let bootstrapScript = """
@@ -106,11 +111,14 @@ enum KenosNativeCapabilityBridge {
             var id = 'n' + (++seq) + '_' + Date.now();
             pending[id] = { resolve: resolve, reject: reject };
             handlers.kenosNative.postMessage({ id: id, method: method, params: params || {} });
+            // Face ID / passcode often exceeds 15s; killing the promise while
+            // LAContext is still up leaves Money/Work stuck on "Unlocking…".
+            var timeoutMs = method === 'authenticate' ? 180000 : 15000;
             setTimeout(function () {
               if (!pending[id]) return;
               delete pending[id];
               reject({ code: 'native_bridge_timeout', message: 'Timed out: ' + method });
-            }, 15000);
+            }, timeoutMs);
           } catch (e) {
             reject({ code: 'native_bridge_error', message: String(e && e.message || e) });
           }
@@ -136,11 +144,17 @@ enum KenosNativeCapabilityBridge {
         haptic: function (style) { return call('haptic', { style: style || 'light' }); },
         share: function (payload) { return call('share', payload || {}); },
         authenticate: function (opts) { return call('authenticate', opts || {}); },
+        cancelAuthenticate: function () { return call('cancelAuthenticate', {}); },
+        clearUnlockGrant: function (p) { return call('clearUnlockGrant', p || {}); },
         reportAuthSession: function (p) { return call('reportAuthSession', p || {}); },
         getSharedAuthTokens: function () { return call('getSharedAuthTokens', {}); },
         publishNavManifest: function (m) {
           try { window.__KENOS_NAV_MANIFEST__ = m || {}; } catch (e) {}
           return call('publishNavManifest', m || {});
+        },
+        publishChromeAppearance: function (p) {
+          var scheme = (p && (p.colorScheme || p.theme || p.scheme)) || '';
+          return call('publishChromeAppearance', { colorScheme: String(scheme || '') });
         },
         nowPlaying: {
           update: function (p) { return call('nowPlayingUpdate', p || {}); },
@@ -154,9 +168,50 @@ enum KenosNativeCapabilityBridge {
             return call('liveActivityEnd', kind || {});
           }
         },
-        openContinuity: function (p) { return call('openContinuity', p || {}); }
+        openContinuity: function (p) { return call('openContinuity', p || {}); },
+        shellSettings: {
+          get: function () { return call('shellSettingsGet', {}); },
+          set: function (p) { return call('shellSettingsSet', p || {}); }
+        },
+        notifications: {
+          requestPermission: function () { return call('notificationsRequestPermission', {}); },
+          getStatus: function () { return call('notificationsGetStatus', {}); },
+          getPreferences: function () { return call('notificationsGetPreferences', {}); },
+          setPreferences: function (p) { return call('notificationsSetPreferences', p || {}); },
+          schedule: function (p) { return call('notificationsSchedule', p || {}); },
+          cancel: function (p) { return call('notificationsCancel', p || {}); },
+          syncReminders: function (p) { return call('notificationsSyncReminders', p || {}); },
+          listPending: function () { return call('notificationsListPending', {}); }
+        }
       };
       try { window.__KENOS_NAV_MANIFEST__ = window.__KENOS_NAV_MANIFEST__ || {}; } catch (e) {}
+      // Keep native status-bar polarity in sync with html[data-theme] (FOUC bootstrap + SPA).
+      function reportChromeAppearance(scheme) {
+        try {
+          if (scheme !== 'light' && scheme !== 'dark') return;
+          if (window.__KENOS_LAST_CHROME_APPEARANCE__ === scheme) return;
+          window.__KENOS_LAST_CHROME_APPEARANCE__ = scheme;
+          if (window.kenosNative && typeof window.kenosNative.publishChromeAppearance === 'function') {
+            window.kenosNative.publishChromeAppearance({ colorScheme: scheme });
+          }
+        } catch (e) {}
+      }
+      function readTheme() {
+        try {
+          return String(document.documentElement.getAttribute('data-theme') || '').toLowerCase();
+        } catch (e) { return ''; }
+      }
+      try {
+        reportChromeAppearance(readTheme());
+        var mo = new MutationObserver(function () { reportChromeAppearance(readTheme()); });
+        mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        window.addEventListener('kenos:resolved-theme', function (ev) {
+          try {
+            var t = ev && ev.detail && ev.detail.theme;
+            reportChromeAppearance(String(t || '').toLowerCase());
+          } catch (e) {}
+        });
+      } catch (e) {}
     })();
     """
 
@@ -166,10 +221,14 @@ enum KenosNativeCapabilityBridge {
             "haptic": true,
             "share": true,
             "authenticate": true,
+            "cancelAuthenticate": true,
+            "clearUnlockGrant": true,
             "reportAuthSession": true,
             "getSharedAuthTokens": true,
             "sharedAuth": KenosSharedWebAuth.hasSharedTokens,
             "navManifest": true,
+            "chromeAppearance": true,
+            "shellSettings": true,
             "nowPlaying": true,
             "openContinuity": true,
             "getCapabilities": true,
@@ -177,6 +236,8 @@ enum KenosNativeCapabilityBridge {
             "userActivity": KenosUserActivityFoundation.isEnabled,
             // Owner-gated — foundation stubs return false until entitlements land.
             "push": KenosPushFoundation.isEnabled,
+            // Local UN scheduling (Planner reminders / Inbox) — shipped.
+            "localNotifications": KenosPushFoundation.localSchedulingEnabled,
             // System Dynamic Island / Lock Screen ActivityKit — owner-gated.
             "liveActivity": KenosLiveActivityFoundation.isEnabled,
             // In-shell Live Accessory / Shelf cache always accepts upserts.
@@ -186,6 +247,7 @@ enum KenosNativeCapabilityBridge {
     }
 
     /// Human-readable status for gated surfaces (web can surface honestly).
+    /// `localNotifications` auth is filled asynchronously in `getCapabilities`.
     static var capabilityStatus: [String: String] {
         [
             "liveActivity": KenosLiveActivityFoundation.statusSummary,
@@ -193,6 +255,7 @@ enum KenosNativeCapabilityBridge {
             "push": KenosPushFoundation.statusSummary,
             "spotlight": KenosSpotlightFoundation.statusSummary,
             "userActivity": KenosUserActivityFoundation.statusSummary,
+            "localNotifications": "pending",
         ]
     }
 
@@ -218,13 +281,131 @@ enum KenosNativeCapabilityBridge {
         case "getCapabilities":
             // Warm Taptic generators while Continuity probes capabilities.
             warmGeneratorsIfNeeded()
-            resolve(id: id, webView: webView, value: [
-                "ok": true,
-                "capabilities": capabilitySnapshot,
-                "status": capabilityStatus,
-                "shell": "ios",
-                "version": 1,
-            ])
+            Task { @MainActor in
+                var status = capabilityStatus
+                status["localNotifications"] = await KenosPushFoundation.localAuthorizationStatus()
+                resolve(id: id, webView: webView, value: [
+                    "ok": true,
+                    "capabilities": capabilitySnapshot,
+                    "status": status,
+                    "shell": "ios",
+                    "version": 1,
+                ])
+            }
+
+        case "notificationsRequestPermission":
+            Task { @MainActor in
+                let status = await KenosPushFoundation.requestPermission()
+                resolve(id: id, webView: webView, value: [
+                    "ok": true,
+                    "status": status,
+                ])
+            }
+
+        case "notificationsGetStatus":
+            Task { @MainActor in
+                let status = await KenosPushFoundation.localAuthorizationStatus()
+                resolve(id: id, webView: webView, value: [
+                    "ok": true,
+                    "status": status,
+                    "localNotifications": KenosPushFoundation.localSchedulingEnabled,
+                    "push": KenosPushFoundation.remotePushEnabled,
+                ])
+            }
+
+        case "notificationsGetPreferences":
+            Task { @MainActor in
+                let prefs = await KenosLocalNotificationCenter.shared.currentPreferences()
+                resolve(id: id, webView: webView, value: [
+                    "ok": true,
+                    "preferences": encodeNotificationPreferences(prefs),
+                ])
+            }
+
+        case "notificationsSetPreferences":
+            Task { @MainActor in
+                var prefs = await KenosLocalNotificationCenter.shared.currentPreferences()
+                applyNotificationPreferences(params, to: &prefs)
+                await KenosLocalNotificationCenter.shared.updatePreferences(prefs)
+                resolve(id: id, webView: webView, value: [
+                    "ok": true,
+                    "preferences": encodeNotificationPreferences(prefs),
+                ])
+            }
+
+        case "notificationsSchedule":
+            Task { @MainActor in
+                do {
+                    let record = try decodeNotificationRecord(params)
+                    let fireAt = resolveFireAtDate(params) ?? KenosNotificationISO.date(from: record.fireAt)
+                    try await KenosLocalNotificationCenter.shared.schedule(record, at: fireAt)
+                    resolve(id: id, webView: webView, value: [
+                        "ok": true,
+                        "id": record.id.uuidString,
+                        "deduplicationKey": record.deduplicationKey,
+                    ])
+                } catch {
+                    reject(
+                        id: id,
+                        webView: webView,
+                        code: "notification_schedule_failed",
+                        message: error.localizedDescription
+                    )
+                }
+            }
+
+        case "notificationsCancel":
+            Task { @MainActor in
+                let dedupe = stringValue(params["deduplicationKey"])
+                let rawId = stringValue(params["id"])
+                let typeRaw = stringValue(params["type"])
+                if !dedupe.isEmpty {
+                    await KenosLocalNotificationCenter.shared.cancel(deduplicationKey: dedupe)
+                } else if let uuid = UUID(uuidString: rawId) {
+                    await KenosLocalNotificationCenter.shared.cancel(id: uuid)
+                } else if let type = KenosNotificationType(rawValue: typeRaw) {
+                    await KenosLocalNotificationCenter.shared.cancelAll(type: type)
+                } else {
+                    reject(
+                        id: id,
+                        webView: webView,
+                        code: "notification_cancel_bad_payload",
+                        message: "deduplicationKey, id, or type required"
+                    )
+                    return
+                }
+                resolve(id: id, webView: webView, value: ["ok": true])
+            }
+
+        case "notificationsSyncReminders":
+            Task { @MainActor in
+                do {
+                    let jobs = decodeReminderJobs(params["jobs"])
+                    try await KenosLocalNotificationCenter.shared.syncPlanReminders(jobs)
+                    let pending = await KenosLocalNotificationCenter.shared.pending()
+                    let planCount = pending.filter { $0.type == .planReminder }.count
+                    resolve(id: id, webView: webView, value: [
+                        "ok": true,
+                        "scheduled": planCount,
+                    ])
+                } catch {
+                    reject(
+                        id: id,
+                        webView: webView,
+                        code: "notification_sync_failed",
+                        message: error.localizedDescription
+                    )
+                }
+            }
+
+        case "notificationsListPending":
+            Task { @MainActor in
+                let pending = await KenosLocalNotificationCenter.shared.pending()
+                resolve(id: id, webView: webView, value: [
+                    "ok": true,
+                    "pending": pending.map(encodeNotificationRecord),
+                ])
+            }
 
         case "haptic":
             let style = stringValue(params["style"]).lowercased()
@@ -237,11 +418,17 @@ enum KenosNativeCapabilityBridge {
         case "authenticate":
             authenticate(params: params, id: id, webView: webView)
 
+        case "cancelAuthenticate":
+            cancelAuthenticate(id: id, webView: webView)
+
+        case "clearUnlockGrant":
+            clearUnlockGrant(params: params, id: id, webView: webView)
+
         case "reportAuthSession":
             reportAuthSession(params: params, id: id, webView: webView)
 
         case "getSharedAuthTokens":
-            getSharedAuthTokens(id: id, webView: webView)
+            getSharedAuthTokens(params: params, id: id, webView: webView)
 
         case "publishNavManifest":
             let manifest = NavManifest(dict: params)
@@ -252,6 +439,51 @@ enum KenosNativeCapabilityBridge {
                 userInfo: ["manifest": manifest]
             )
             resolve(id: id, webView: webView, value: ["ok": true])
+
+        case "publishChromeAppearance":
+            let raw = stringValue(params["colorScheme"]).lowercased()
+            guard raw == "light" || raw == "dark" else {
+                reject(
+                    id: id,
+                    webView: webView,
+                    code: "invalid_params",
+                    message: "colorScheme must be light|dark"
+                )
+                return
+            }
+            lastChromeAppearance = raw
+            let fromDomain = webView != nil && webView === KenosActiveWebRegistry.domainWebView
+            let fromShell = webView != nil && webView === KenosActiveWebRegistry.shellWebView
+            NotificationCenter.default.post(
+                name: .kenosChromeAppearanceDidChange,
+                object: raw,
+                userInfo: [
+                    "colorScheme": raw,
+                    "fromDomain": fromDomain,
+                    "fromShell": fromShell,
+                ]
+            )
+            resolve(id: id, webView: webView, value: [
+                "ok": true,
+                "colorScheme": raw,
+                "fromDomain": fromDomain,
+                "fromShell": fromShell,
+            ])
+
+        case "shellSettingsGet":
+            let snap = KenosShellSettingsStore.current
+            resolve(id: id, webView: webView, value: [
+                "ok": true,
+                "settings": KenosShellSettingsStore.encode(snap),
+            ])
+
+        case "shellSettingsSet":
+            let snap = KenosShellSettingsStore.apply(params: params)
+            broadcastShellSettings(snap, excluding: webView)
+            resolve(id: id, webView: webView, value: [
+                "ok": true,
+                "settings": KenosShellSettingsStore.encode(snap),
+            ])
 
         case "openContinuity":
             openContinuity(params: params, id: id, webView: webView)
@@ -314,7 +546,7 @@ enum KenosNativeCapabilityBridge {
     // MARK: - Shared web SSO (Keychain vault ↔ Continuity origins)
 
     private static func reportAuthSession(params: [String: Any], id: String, webView: WKWebView?) {
-        guard allowSharedAuth(for: webView) else {
+        guard allowSharedAuth(for: webView, params: params) else {
             reject(id: id, webView: webView, code: "host_not_allowed", message: "Auth host not allowed")
             return
         }
@@ -344,8 +576,8 @@ enum KenosNativeCapabilityBridge {
         ])
     }
 
-    private static func getSharedAuthTokens(id: String, webView: WKWebView?) {
-        guard allowSharedAuth(for: webView) else {
+    private static func getSharedAuthTokens(params: [String: Any], id: String, webView: WKWebView?) {
+        guard allowSharedAuth(for: webView, params: params) else {
             reject(id: id, webView: webView, code: "host_not_allowed", message: "Auth host not allowed")
             return
         }
@@ -365,9 +597,39 @@ enum KenosNativeCapabilityBridge {
         resolve(id: id, webView: webView, value: payload)
     }
 
-    private static func allowSharedAuth(for webView: WKWebView?) -> Bool {
-        guard let host = webView?.url?.host, !host.isEmpty else { return false }
-        return KenosSharedWebAuth.isAuthRelatedHost(host)
+    /// Prefer JS `host` (window.location.hostname) — `webView.url` is often nil during
+    /// provisional Continuity loads, which previously blocked vault restore.
+    /// When both JS host and WK URL host are present, require auth-related + compatible
+    /// family (blocks a compromised page from reading the vault for an unrelated host).
+    private static func allowSharedAuth(for webView: WKWebView?, params: [String: Any] = [:]) -> Bool {
+        let fromParams = stringValue(params["host"])
+        let fromWeb = webView?.url?.host ?? ""
+
+        if !fromParams.isEmpty, !fromWeb.isEmpty {
+            guard KenosSharedWebAuth.isAuthRelatedHost(fromParams),
+                  KenosSharedWebAuth.isAuthRelatedHost(fromWeb),
+                  KenosSharedWebAuth.hostsCompatible(fromParams, fromWeb)
+            else { return false }
+            return true
+        }
+        if !fromParams.isEmpty, KenosSharedWebAuth.isAuthRelatedHost(fromParams) {
+            return true
+        }
+        if !fromWeb.isEmpty, KenosSharedWebAuth.isAuthRelatedHost(fromWeb) {
+            return true
+        }
+        // Last resort: Continuity surface already pointed at a known Life OS host.
+        if let loaded = KenosActiveWebRegistry.domainWebView?.url?.host
+            ?? KenosActiveWebRegistry.shellWebView?.url?.host,
+           !loaded.isEmpty,
+           KenosSharedWebAuth.isAuthRelatedHost(loaded)
+        {
+            if !fromParams.isEmpty {
+                return KenosSharedWebAuth.hostsCompatible(fromParams, loaded)
+            }
+            return true
+        }
+        return false
     }
 
     private static func boolValue(_ value: Any?) -> Bool {
@@ -522,11 +784,88 @@ enum KenosNativeCapabilityBridge {
     }
 
     // MARK: - Biometrics
+    //
+    // Apple guidance (LocalAuthentication):
+    // - Fresh LAContext per attempt; never reuse across sessions
+    // - canEvaluatePolicy before evaluatePolicy
+    // - invalidate() to stop pending UI (appCancel) — required for retry / leave
+    // - deviceOwnerAuthentication so passcode is the system fallback
+    // - localizedCancelTitle so Cancel is intentional, not a dead end
+    //
+    // Bridge guidance: do NOT kill the JS promise at 15s while the system
+    // Face ID sheet is still up (authenticate uses a long timeout). Cancel
+    // must call cancelAuthenticate → invalidate so UI + Promise stay in sync.
+    //
+    // Remount guidance: WK reload / LAN `-1004` clears sessionStorage. Keep a
+    // process-scoped grant keyed by `storageKey` so Money/Work do not re-prompt
+    // Face ID for every Continuity remount in the same app process.
+
+    /// Single-flight LA evaluation — overlapping Face ID sheets deadlock Continuity.
+    @MainActor private static var activeAuthContext: LAContext?
+    @MainActor private static var activeAuthRequestId: String?
+    @MainActor private static var activeAuthStorageKey: String = ""
+    @MainActor private static weak var activeAuthWebView: WKWebView?
+    /// Extra bridge callers waiting on the same in-flight `storageKey`.
+    @MainActor private static var activeAuthWaiters: [(id: String, webView: WKWebView?)] = []
 
     private static func authenticate(params: [String: Any], id: String, webView: WKWebView?) {
         let reason = stringValue(params["reason"]).nilIfEmpty
             ?? "Unlock this Kenos surface"
+        let storageKey = stringValue(params["storageKey"])
+        let force = boolValue(params["force"])
+        // prompt=false: restore-only (grant / session). Never present Face ID.
+        // Used on Continuity remount so reload storms cannot loop LA UI.
+        let allowPrompt = params["prompt"] == nil ? true : boolValue(params["prompt"])
+        let grantTTL = (params["grantTTL"] as? NSNumber)?.doubleValue
+            ?? (params["grantTTL"] as? Double)
+            ?? KenosUnlockGrantStore.defaultTTL
+
+        if force {
+            KenosUnlockGrantStore.clear(storageKey)
+        } else if KenosUnlockGrantStore.isValid(storageKey) {
+            resolve(id: id, webView: webView, value: [
+                "ok": true,
+                "cached": true,
+                "biometryType": "cached",
+            ])
+            return
+        }
+
+        if !allowPrompt {
+            resolve(id: id, webView: webView, value: [
+                "ok": false,
+                "cached": false,
+                "code": "auth_required",
+                "message": "Unlock required",
+            ])
+            return
+        }
+
+        // Same-key remount: join the in-flight Face ID instead of superseding it.
+        if !force,
+           activeAuthRequestId != nil,
+           !storageKey.isEmpty,
+           activeAuthStorageKey == storageKey
+        {
+            activeAuthWaiters.append((id: id, webView: webView))
+            return
+        }
+
+        // Different key / force — supersede the previous system sheet.
+        cancelActiveAuthentication(code: "auth_superseded", message: "Replaced by a newer unlock request")
+
         let context = LAContext()
+        context.localizedCancelTitle = stringValue(params["cancelTitle"]).nilIfEmpty ?? "Cancel"
+        let reuse = (params["reuseDuration"] as? NSNumber)?.doubleValue
+            ?? (params["reuseDuration"] as? Double)
+            ?? 10
+        if reuse > 0 {
+            context.touchIDAuthenticationAllowableReuseDuration = min(
+                reuse,
+                LATouchIDAuthenticationMaximumAllowableReuseDuration
+            )
+        }
+
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
             reject(
@@ -537,23 +876,109 @@ enum KenosNativeCapabilityBridge {
             )
             return
         }
+
         let biometry = biometryName(context.biometryType)
+        activeAuthContext = context
+        activeAuthRequestId = id
+        activeAuthStorageKey = storageKey
+        activeAuthWebView = webView
+        activeAuthWaiters = []
+
         context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, evalError in
+            let ok = success
+            let mapped = Self.mapAuthFailure(evalError)
             Task { @MainActor in
-                if success {
-                    resolve(id: id, webView: webView, value: [
+                guard activeAuthRequestId == id else { return }
+                let replyView = activeAuthWebView ?? webView
+                let waiters = activeAuthWaiters
+                activeAuthContext = nil
+                activeAuthRequestId = nil
+                activeAuthStorageKey = ""
+                activeAuthWebView = nil
+                activeAuthWaiters = []
+                if ok {
+                    KenosUnlockGrantStore.remember(storageKey, ttl: grantTTL)
+                    let value: [String: Any] = [
                         "ok": true,
+                        "cached": false,
                         "biometryType": biometry,
-                    ])
+                    ]
+                    resolve(id: id, webView: replyView, value: value)
+                    for waiter in waiters {
+                        resolve(id: waiter.id, webView: waiter.webView ?? replyView, value: value)
+                    }
                 } else {
                     reject(
                         id: id,
-                        webView: webView,
-                        code: "auth_failed",
-                        message: evalError?.localizedDescription ?? "Authentication failed"
+                        webView: replyView,
+                        code: mapped.code,
+                        message: mapped.message
                     )
+                    for waiter in waiters {
+                        reject(
+                            id: waiter.id,
+                            webView: waiter.webView ?? replyView,
+                            code: mapped.code,
+                            message: mapped.message
+                        )
+                    }
                 }
             }
+        }
+    }
+
+    /// Web "Cancel" / explicit leave — invalidate system Face ID and settle the Promise.
+    /// Remount dispose must NOT call this (see JS createNativeUnlockController.dispose).
+    private static func cancelAuthenticate(id: String, webView: WKWebView?) {
+        cancelActiveAuthentication(code: "auth_cancelled", message: "Authentication cancelled")
+        resolve(id: id, webView: webView, value: ["ok": true, "cancelled": true])
+    }
+
+    /// Drop a process-scoped Continuity unlock grant (Settings → lock / force).
+    private static func clearUnlockGrant(params: [String: Any], id: String, webView: WKWebView?) {
+        let storageKey = stringValue(params["storageKey"])
+        KenosUnlockGrantStore.clear(storageKey.isEmpty ? nil : storageKey)
+        resolve(id: id, webView: webView, value: [
+            "ok": true,
+            "cleared": storageKey.isEmpty ? "all" : storageKey,
+        ])
+    }
+
+    @MainActor
+    private static func cancelActiveAuthentication(code: String, message: String) {
+        let prevId = activeAuthRequestId
+        let prevView = activeAuthWebView
+        let prev = activeAuthContext
+        let waiters = activeAuthWaiters
+        activeAuthRequestId = nil
+        activeAuthStorageKey = ""
+        activeAuthWebView = nil
+        activeAuthContext = nil
+        activeAuthWaiters = []
+        prev?.invalidate()
+        if let prevId {
+            reject(id: prevId, webView: prevView, code: code, message: message)
+        }
+        for waiter in waiters {
+            reject(id: waiter.id, webView: waiter.webView, code: code, message: message)
+        }
+    }
+
+    private static func mapAuthFailure(_ error: Error?) -> (code: String, message: String) {
+        let message = error?.localizedDescription ?? "Authentication failed"
+        guard let la = error as? LAError else {
+            return ("auth_failed", message)
+        }
+        switch la.code {
+        case .userCancel, .appCancel, .systemCancel:
+            return ("auth_cancelled", message)
+        case .userFallback:
+            return ("auth_fallback", message)
+        case .biometryLockout, .biometryNotAvailable, .biometryNotEnrolled,
+             .passcodeNotSet, .authenticationFailed:
+            return ("auth_failed", message)
+        default:
+            return ("auth_failed", message)
         }
     }
 
@@ -565,6 +990,198 @@ enum KenosNativeCapabilityBridge {
         case .none: return "none"
         @unknown default: return "unknown"
         }
+    }
+
+    // MARK: - Local notifications (bridge encode/decode)
+
+    private static func encodeNotificationPreferences(_ prefs: KenosNotificationPreferences) -> [String: Any] {
+        var categories: [String: Bool] = [:]
+        for type in KenosNotificationType.allCases {
+            categories[type.rawValue] = prefs.categoryEnabled[type] ?? true
+        }
+        var domains: [String: Bool] = [:]
+        for (domain, enabled) in prefs.domainEnabled {
+            domains[domain.rawValue] = enabled
+        }
+        var encoded: [String: Any] = [
+            "categoryEnabled": categories,
+            "sensitivePreviewAllowed": prefs.sensitivePreviewAllowed,
+            "watchDeliveryEnabled": prefs.watchDeliveryEnabled,
+            "criticalAlertsEnabled": prefs.criticalAlertsEnabled,
+            "domainEnabled": domains,
+            "syncFailureVisible": prefs.syncFailureVisible,
+            "isLocalDistributionPreference": prefs.isLocalDistributionPreference,
+        ]
+        if let start = prefs.quietHoursStart {
+            encoded["quietHoursStart"] = start
+        } else {
+            encoded["quietHoursStart"] = NSNull()
+        }
+        if let end = prefs.quietHoursEnd {
+            encoded["quietHoursEnd"] = end
+        } else {
+            encoded["quietHoursEnd"] = NSNull()
+        }
+        return encoded
+    }
+
+    private static func applyNotificationPreferences(_ params: [String: Any], to prefs: inout KenosNotificationPreferences) {
+        if let categories = params["categoryEnabled"] as? [String: Any] {
+            for (key, value) in categories {
+                guard let type = KenosNotificationType(rawValue: key) else { continue }
+                prefs.categoryEnabled[type] = boolValue(value)
+            }
+        }
+        if params["quietHoursStart"] is NSNull {
+            prefs.quietHoursStart = nil
+        } else if let start = params["quietHoursStart"] as? Int {
+            prefs.quietHoursStart = start
+        } else if let start = params["quietHoursStart"] as? Double {
+            prefs.quietHoursStart = Int(start)
+        }
+        if params["quietHoursEnd"] is NSNull {
+            prefs.quietHoursEnd = nil
+        } else if let end = params["quietHoursEnd"] as? Int {
+            prefs.quietHoursEnd = end
+        } else if let end = params["quietHoursEnd"] as? Double {
+            prefs.quietHoursEnd = Int(end)
+        }
+        if params["sensitivePreviewAllowed"] != nil {
+            prefs.sensitivePreviewAllowed = boolValue(params["sensitivePreviewAllowed"])
+        }
+        if params["watchDeliveryEnabled"] != nil {
+            prefs.watchDeliveryEnabled = boolValue(params["watchDeliveryEnabled"])
+        }
+        if params["syncFailureVisible"] != nil {
+            prefs.syncFailureVisible = boolValue(params["syncFailureVisible"])
+        }
+        if let domains = params["domainEnabled"] as? [String: Any] {
+            for (key, value) in domains {
+                guard let domain = KenosDomain(rawValue: key) else { continue }
+                prefs.domainEnabled[domain] = boolValue(value)
+            }
+        }
+    }
+
+    private static func resolveFireAtDate(_ params: [String: Any]) -> Date? {
+        if let n = params["fireAt"] as? Double {
+            // Heuristic: ms since epoch vs seconds.
+            let secs = n > 1_000_000_000_000 ? n / 1000 : n
+            return Date(timeIntervalSince1970: secs)
+        }
+        if let n = params["fireAt"] as? Int {
+            let v = Double(n)
+            let secs = v > 1_000_000_000_000 ? v / 1000 : v
+            return Date(timeIntervalSince1970: secs)
+        }
+        if let n = params["fireAtMs"] as? Double {
+            return Date(timeIntervalSince1970: n / 1000)
+        }
+        if let n = params["fireAtMs"] as? Int {
+            return Date(timeIntervalSince1970: Double(n) / 1000)
+        }
+        return KenosNotificationISO.date(from: stringValue(params["fireAt"]))
+    }
+
+    private static func decodeNotificationRecord(_ params: [String: Any]) throws -> KenosNotificationRecord {
+        let typeRaw = stringValue(params["type"])
+        guard let type = KenosNotificationType(rawValue: typeRaw.isEmpty ? "plan_reminder" : typeRaw) else {
+            throw KenosClientError.malformedPayload
+        }
+        let title = stringValue(params["safeTitle"]).isEmpty
+            ? stringValue(params["title"])
+            : stringValue(params["safeTitle"])
+        let body = stringValue(params["safeBody"]).isEmpty
+            ? stringValue(params["body"])
+            : stringValue(params["safeBody"])
+        let deepLink = stringValue(params["deepLink"])
+        let dedupe = stringValue(params["deduplicationKey"])
+        guard !title.isEmpty, !deepLink.isEmpty, !dedupe.isEmpty else {
+            throw KenosClientError.malformedPayload
+        }
+        let risk = KenosRisk(rawValue: stringValue(params["risk"])) ?? .r1
+        let classification =
+            KenosDataClassification(rawValue: stringValue(params["classification"])) ?? .personal
+        let createdAt = stringValue(params["createdAt"]).isEmpty
+            ? KenosNotificationISO.nowString()
+            : stringValue(params["createdAt"])
+        let id = UUID(uuidString: stringValue(params["id"])) ?? UUID()
+        return KenosNotificationRecord(
+            id: id,
+            type: type,
+            safeTitle: title,
+            safeBody: body.isEmpty ? title : body,
+            deepLink: deepLink,
+            risk: risk,
+            classification: classification,
+            createdAt: createdAt,
+            expiresAt: {
+                let raw = stringValue(params["expiresAt"])
+                return raw.isEmpty ? nil : raw
+            }(),
+            deduplicationKey: dedupe,
+            fireAt: {
+                let raw = stringValue(params["fireAt"])
+                return raw.isEmpty ? nil : raw
+            }()
+        )
+    }
+
+    private static func encodeNotificationRecord(_ record: KenosNotificationRecord) -> [String: Any] {
+        var dict: [String: Any] = [
+            "id": record.id.uuidString,
+            "type": record.type.rawValue,
+            "safeTitle": record.safeTitle,
+            "safeBody": record.safeBody,
+            "deepLink": record.deepLink,
+            "risk": record.risk.rawValue,
+            "classification": record.classification.rawValue,
+            "createdAt": record.createdAt,
+            "deduplicationKey": record.deduplicationKey,
+        ]
+        if let expiresAt = record.expiresAt { dict["expiresAt"] = expiresAt }
+        if let fireAt = record.fireAt { dict["fireAt"] = fireAt }
+        return dict
+    }
+
+    private static func decodeReminderJobs(_ value: Any?) -> [(taskId: String, title: String, fireAtMs: Double)] {
+        guard let list = value as? [[String: Any]] else { return [] }
+        return list.compactMap { job in
+            let taskId = stringValue(job["id"]).isEmpty ? stringValue(job["taskId"]) : stringValue(job["id"])
+            let title = stringValue(job["title"])
+            let fireAtMs: Double = {
+                if let n = job["fireAt"] as? Double { return n }
+                if let n = job["fireAt"] as? Int { return Double(n) }
+                if let n = job["fireAtMs"] as? Double { return n }
+                if let n = job["fireAtMs"] as? Int { return Double(n) }
+                return 0
+            }()
+            guard !taskId.isEmpty, !title.isEmpty, fireAtMs > 0 else { return nil }
+            return (taskId: taskId, title: title, fireAtMs: fireAtMs)
+        }
+    }
+
+    // MARK: - Shell settings broadcast
+
+    /// Push Continuity-wide theme/locale into every live WKWebView (except the writer).
+    static func broadcastShellSettings(
+        _ snapshot: KenosShellSettingsStore.Snapshot = KenosShellSettingsStore.current,
+        excluding writer: WKWebView? = nil
+    ) {
+        guard let json = jsonString(KenosShellSettingsStore.encode(snapshot)) else { return }
+        let js = """
+        try {
+          window.dispatchEvent(new CustomEvent('kenos:shell-settings', { detail: \(json) }));
+        } catch (e) {}
+        """
+        #if os(iOS)
+        for webView in [KenosActiveWebRegistry.shellWebView, KenosActiveWebRegistry.domainWebView]
+            .compactMap({ $0 })
+        {
+            if let writer, webView === writer { continue }
+            webView.evaluateJavaScript(js, completionHandler: nil)
+        }
+        #endif
     }
 
     // MARK: - Reply helpers
@@ -633,6 +1250,7 @@ enum KenosNativeCapabilityBridge {
 
 extension Notification.Name {
     static let kenosNavManifestDidChange = Notification.Name("kenosNavManifestDidChange")
+    static let kenosChromeAppearanceDidChange = Notification.Name("kenosChromeAppearanceDidChange")
 }
 
 private extension String {

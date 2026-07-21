@@ -1,5 +1,196 @@
 import Foundation
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
+
+/// Content chrome appearance for status bar + WK first-paint canvas.
+/// Light content → dark status-bar foreground; dark content → light foreground.
+enum KenosChromeAppearance: String, Equatable, CaseIterable {
+    case light
+    case dark
+
+    var colorScheme: ColorScheme {
+        self == .light ? .light : .dark
+    }
+
+    /// Brand-approximate canvas used under Liquid Glass / load veil (not a flash of the opposite pole).
+    var canvasColor: Color {
+        switch self {
+        case .light:
+            return Color(red: 0.961, green: 0.953, blue: 0.941) // planner --bg #f5f3f0
+        case .dark:
+            return Color(red: 0.031, green: 0.035, blue: 0.039) // Kenos ink #08090a
+        }
+    }
+
+    #if canImport(UIKit)
+    var uiColor: UIColor {
+        switch self {
+        case .light:
+            return UIColor(red: 0.961, green: 0.953, blue: 0.941, alpha: 1)
+        case .dark:
+            return UIColor(red: 0.031, green: 0.035, blue: 0.039, alpha: 1)
+        }
+    }
+    #endif
+
+    /// Status bar / chrome foreground polarity implied by this canvas.
+    var statusBarUsesLightContent: Bool { self == .dark }
+
+    static func parse(_ raw: String?) -> KenosChromeAppearance? {
+        switch (raw ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil
+        }
+    }
+}
+
+/// Per-Space semantic accent — never one hex for light + dark + glass.
+/// Mirror: `apps/aios/src/lib/kenos/domainIdentity.core.js`.
+struct KenosDomainAccent: Equatable {
+    var accentLight: UInt32
+    var accentDark: UInt32
+    var accentOnGlassLight: UInt32
+    var accentOnGlassDark: UInt32
+    /// Selected dock plate opacity on light glass (~10%).
+    var selectionPlateOpacityLight: Double
+    /// Selected dock plate opacity on dark glass (~14%).
+    var selectionPlateOpacityDark: Double
+
+    /// Legacy single channel (widgets / glances) — prefer dark brand.
+    var accentRGB: UInt32 { accentDark }
+
+    init(
+        light: UInt32,
+        dark: UInt32,
+        onGlassLight: UInt32,
+        onGlassDark: UInt32,
+        plateLight: Double = 0.10,
+        plateDark: Double = 0.14
+    ) {
+        self.accentLight = light
+        self.accentDark = dark
+        self.accentOnGlassLight = onGlassLight
+        self.accentOnGlassDark = onGlassDark
+        self.selectionPlateOpacityLight = plateLight
+        self.selectionPlateOpacityDark = plateDark
+    }
+
+    func rgb(for scheme: ColorScheme) -> UInt32 {
+        scheme == .dark ? accentDark : accentLight
+    }
+
+    func onGlassRGB(for scheme: ColorScheme) -> UInt32 {
+        scheme == .dark ? accentOnGlassDark : accentOnGlassLight
+    }
+
+    func selectionPlateOpacity(for scheme: ColorScheme) -> Double {
+        scheme == .dark ? selectionPlateOpacityDark : selectionPlateOpacityLight
+    }
+
+    func color(for scheme: ColorScheme) -> Color {
+        Self.color(rgb: rgb(for: scheme))
+    }
+
+    func onGlass(for scheme: ColorScheme) -> Color {
+        Self.color(rgb: onGlassRGB(for: scheme))
+    }
+
+    /// Adapts with the environment color scheme.
+    var adaptiveColor: Color {
+        #if canImport(UIKit)
+        Color(
+            uiColor: UIColor { traits in
+                let rgb = traits.userInterfaceStyle == .dark ? accentDark : accentLight
+                return Self.uiColor(rgb: rgb)
+            }
+        )
+        #else
+        color(for: .dark)
+        #endif
+    }
+
+    var adaptiveOnGlass: Color {
+        #if canImport(UIKit)
+        Color(
+            uiColor: UIColor { traits in
+                let rgb = traits.userInterfaceStyle == .dark
+                    ? accentOnGlassDark
+                    : accentOnGlassLight
+                return Self.uiColor(rgb: rgb)
+            }
+        )
+        #else
+        onGlass(for: .dark)
+        #endif
+    }
+
+    static func color(rgb: UInt32) -> Color {
+        Color(
+            red: Double((rgb >> 16) & 0xFF) / 255.0,
+            green: Double((rgb >> 8) & 0xFF) / 255.0,
+            blue: Double(rgb & 0xFF) / 255.0
+        )
+    }
+
+    #if canImport(UIKit)
+    static func uiColor(rgb: UInt32) -> UIColor {
+        UIColor(
+            red: CGFloat((rgb >> 16) & 0xFF) / 255.0,
+            green: CGFloat((rgb >> 8) & 0xFF) / 255.0,
+            blue: CGFloat(rgb & 0xFF) / 255.0,
+            alpha: 1
+        )
+    }
+    #endif
+
+    // Brand presets — light = deeper for cream/glass; dark = brighter brand.
+    static let kenos = KenosDomainAccent(
+        light: 0x3D6FD4, dark: 0x5B8CFF,
+        onGlassLight: 0x2F5BB8, onGlassDark: 0x7AA3FF
+    )
+    /// Plan — light ochre aligns planner `--accent` #c47a08; never use #C9A227 on light glass.
+    /// onGlassLight ~12% deeper than #9A6410 so check / icon hold on cream Shelf tint.
+    static let plan = KenosDomainAccent(
+        light: 0xC47A08, dark: 0xD4AE2E,
+        onGlassLight: 0x87580E, onGlassDark: 0xE0B83A,
+        plateLight: 0.10, plateDark: 0.14
+    )
+    static let training = KenosDomainAccent(
+        light: 0xA8483A, dark: 0xC45C4A,
+        onGlassLight: 0x943C30, onGlassDark: 0xE0705C
+    )
+    static let work = KenosDomainAccent(
+        light: 0x4A7AB0, dark: 0x6A9BE0,
+        onGlassLight: 0x3A6494, onGlassDark: 0x86B4EB
+    )
+    static let money = KenosDomainAccent(
+        light: 0x2F7A52, dark: 0x3D9B6E,
+        onGlassLight: 0x276645, onGlassDark: 0x4DB882
+    )
+    static let library = KenosDomainAccent(
+        light: 0x4A58A0, dark: 0x5B6BBF,
+        onGlassLight: 0x3D4A8A, onGlassDark: 0x7A88D4
+    )
+    static let music = KenosDomainAccent(
+        light: 0x6E629E, dark: 0x8B7EC8,
+        onGlassLight: 0x5A4F88, onGlassDark: 0xA698DB
+    )
+    static let home = KenosDomainAccent(
+        light: 0x5A7088, dark: 0x8AADC8,
+        onGlassLight: 0x4A5F74, onGlassDark: 0x9BBDD4
+    )
+    static let health = KenosDomainAccent(
+        light: 0x4556D4, dark: 0x5B6CFF,
+        onGlassLight: 0x3846B8, onGlassDark: 0x7A88FF
+    )
+    static let paper = KenosDomainAccent(
+        light: 0x6E5A42, dark: 0x8B7355,
+        onGlassLight: 0x5A4834, onGlassDark: 0xC4A882
+    )
+}
 
 /// Swift mirror of `apps/aios/src/lib/kenos/domainIntegration.core.js`.
 ///
@@ -23,7 +214,10 @@ enum KenosDomainRegistry {
         var homePath: String
         var systemImage: String
         var aliases: [String]
-        var accentRGB: UInt32
+        var accent: KenosDomainAccent
+
+        /// Legacy RGB — dark brand channel (widgets / App Group glances).
+        var accentRGB: UInt32 { accent.accentRGB }
     }
 
     struct DockSlot: Equatable {
@@ -65,27 +259,27 @@ enum KenosDomainRegistry {
     ]
 
     static let definitions: [Definition] = [
-        .init(id: "kenos", label: "Kenos", subtitle: "Today · Assistant · Inbox", strategy: .native, appId: "aios", productionOrigin: "https://aios.kenos.space", devPort: 5219, homePath: "/", systemImage: "circle.grid.2x2.fill", aliases: [], accentRGB: 0x5B8CFF),
-        .init(id: "plan", label: "Plan", subtitle: "Tasks and schedule", strategy: .embeddedWeb, appId: "planner", productionOrigin: "https://planner.kenos.space", devPort: 5188, homePath: "/", systemImage: "checklist", aliases: ["planner", "planner-os"], accentRGB: 0xC9A227),
-        .init(id: "training", label: "Training", subtitle: "Fitness workouts", strategy: .embeddedWeb, appId: "fitness", productionOrigin: "https://fitness.kenos.space", devPort: 5190, homePath: "/", systemImage: "figure.strengthtraining.traditional", aliases: ["fitness", "fitnessos"], accentRGB: 0xC45C4A),
-        .init(id: "work", label: "Work", subtitle: "Projects and decisions", strategy: .embeddedWeb, appId: "aios", productionOrigin: "https://aios.kenos.space", devPort: 5219, homePath: "/work", systemImage: "briefcase", aliases: ["work-focus"], accentRGB: 0x6A9BE0),
-        .init(id: "money", label: "Money", subtitle: "Finance decisions", strategy: .embeddedWeb, appId: "finance", productionOrigin: "https://finance.kenos.space", devPort: 5180, homePath: "/home/today", systemImage: "dollarsign.circle", aliases: ["finance", "financeos", "finance-os"], accentRGB: 0x3D9B6E),
-        .init(id: "library", label: "Library", subtitle: "Knowledge vault", strategy: .embeddedWeb, appId: "knowledge", productionOrigin: "https://knowledge.kenos.space", devPort: 5879, homePath: "/library", systemImage: "books.vertical", aliases: ["knowledge", "knowledgeos", "knowledge-os"], accentRGB: 0x5B6BBF),
-        .init(id: "music", label: "Music", subtitle: "Library and playback", strategy: .embeddedWeb, appId: "music", productionOrigin: "https://music.kenos.space", devPort: 5189, homePath: "/", systemImage: "music.note", aliases: [], accentRGB: 0x8B7EC8),
-        .init(id: "home", label: "Home", subtitle: "Rooms · Items · Organize", strategy: .embeddedWeb, appId: "home", productionOrigin: "https://home.kenos.space", devPort: 5196, homePath: "/plan", systemImage: "house", aliases: [], accentRGB: 0x7AA0C8),
-        .init(id: "health", label: "Health", subtitle: "Status · Focus · Trends", strategy: .embeddedWeb, appId: "health", productionOrigin: "https://health.kenos.space", devPort: 5192, homePath: "/", systemImage: "heart.text.square", aliases: ["focus", "status"], accentRGB: 0x5B6CFF),
-        .init(id: "paper", label: "Paper", subtitle: "Notebooks and capture", strategy: .legacyFallback, appId: nil, productionOrigin: nil, devPort: nil, homePath: "/spaces/paper", systemImage: "pencil.and.outline", aliases: ["paperos", "paper-os"], accentRGB: 0x8B7355),
+        .init(id: "kenos", label: "Kenos", subtitle: "Today · Ask · Inbox", strategy: .native, appId: "aios", productionOrigin: "https://www.kenos.space", devPort: 5219, homePath: "/", systemImage: "circle.grid.2x2.fill", aliases: [], accent: .kenos),
+        .init(id: "plan", label: "Plan", subtitle: "Tasks and schedule", strategy: .embeddedWeb, appId: "planner", productionOrigin: "https://planner.kenos.space", devPort: 5188, homePath: "/", systemImage: "checklist", aliases: ["planner", "planner-os"], accent: .plan),
+        .init(id: "training", label: "Training", subtitle: "Fitness workouts", strategy: .embeddedWeb, appId: "fitness", productionOrigin: "https://fitness.kenos.space", devPort: 5190, homePath: "/", systemImage: "figure.strengthtraining.traditional", aliases: ["fitness", "fitnessos"], accent: .training),
+        .init(id: "work", label: "Work", subtitle: "Projects and decisions", strategy: .embeddedWeb, appId: "aios", productionOrigin: "https://www.kenos.space", devPort: 5219, homePath: "/work", systemImage: "briefcase", aliases: ["work-focus"], accent: .work),
+        .init(id: "money", label: "Money", subtitle: "Finance decisions", strategy: .embeddedWeb, appId: "finance", productionOrigin: "https://finance.kenos.space", devPort: 5180, homePath: "/home/today", systemImage: "dollarsign.circle", aliases: ["finance", "financeos", "finance-os"], accent: .money),
+        .init(id: "library", label: "Library", subtitle: "Knowledge vault", strategy: .embeddedWeb, appId: "knowledge", productionOrigin: "https://knowledge.kenos.space", devPort: 5879, homePath: "/library", systemImage: "books.vertical", aliases: ["knowledge", "knowledgeos", "knowledge-os"], accent: .library),
+        .init(id: "music", label: "Music", subtitle: "Library and playback", strategy: .embeddedWeb, appId: "music", productionOrigin: "https://music.kenos.space", devPort: 5189, homePath: "/", systemImage: "music.note", aliases: [], accent: .music),
+        // Household Space — zh UI shows 「家」; never collide with Kenos system home.
+        .init(id: "home", label: "Home", subtitle: "Rooms · Items · Organize", strategy: .embeddedWeb, appId: "home", productionOrigin: "https://home.kenos.space", devPort: 5196, homePath: "/plan", systemImage: "house", aliases: [], accent: .home),
+        .init(id: "health", label: "Health", subtitle: "Status · Focus · Trends", strategy: .embeddedWeb, appId: "health", productionOrigin: "https://health.kenos.space", devPort: 5192, homePath: "/", systemImage: "heart.text.square", aliases: ["focus", "status"], accent: .health),
+        .init(id: "paper", label: "Paper", subtitle: "Notebooks and capture", strategy: .legacyFallback, appId: nil, productionOrigin: nil, devPort: nil, homePath: "/spaces/paper", systemImage: "pencil.and.outline", aliases: ["paperos", "paper-os"], accent: .paper),
     ]
 
-    /// Domain capsule slots only (native Kenos chip is separate → 5 chrome total).
+    /// Domain capsule destinations only (Spaces Orb separate; More lives in domain header).
     static let navigationManifests: [String: NavManifest] = [
         "plan": .init(
             domainId: "plan",
             slots: [
                 .init(title: "Tasks", systemImage: "checklist", path: "/"),
                 .init(title: "Calendar", systemImage: "calendar", path: "/calendar"),
-                .init(title: "Inbox", systemImage: "tray", path: "/inbox"),
-                .init(title: "More", systemImage: "ellipsis", opensMore: true),
+                .init(title: "Inbox", systemImage: "tray", path: "/inbox")
             ],
             more: [
                 .init(title: "Search", systemImage: "magnifyingglass", path: "/search"),
@@ -102,13 +296,13 @@ enum KenosDomainRegistry {
             slots: [
                 .init(title: "Today", systemImage: "sun.max", path: "/"),
                 .init(title: "Program", systemImage: "list.bullet.rectangle", path: "/program"),
-                .init(title: "Discover", systemImage: "sparkles", path: "/discover"),
-                .init(title: "More", systemImage: "ellipsis", opensMore: true),
+                // "Resources" avoids colliding with Knowledge/Music dock title "Library".
+                .init(title: "Resources", systemImage: "books.vertical", path: "/discover")
             ],
             more: [
                 .init(title: "Workout", systemImage: "figure.strengthtraining.traditional", path: "/session"),
                 .init(title: "History", systemImage: "clock", path: "/discover/records"),
-                .init(title: "Library", systemImage: "books.vertical", path: "/library"),
+                .init(title: "Exercises", systemImage: "dumbbell.fill", path: "/library"),
                 .init(title: "Stats", systemImage: "chart.xyaxis.line", path: "/discover/stats"),
                 .init(title: "Tools", systemImage: "wrench.and.screwdriver", path: "/discover/tools"),
                 .init(title: "Settings", systemImage: "gearshape", path: "/settings#cloud"),
@@ -119,11 +313,10 @@ enum KenosDomainRegistry {
             slots: [
                 .init(title: "Today", systemImage: "sun.max", path: "/work"),
                 .init(title: "Focus", systemImage: "target", path: "/spaces/work"),
-                .init(title: "Inbox", systemImage: "tray", path: "/inbox"),
-                .init(title: "More", systemImage: "ellipsis", opensMore: true),
+                .init(title: "Inbox", systemImage: "tray", path: "/inbox")
             ],
             more: [
-                .init(title: "Assistant", systemImage: "bubble.left", path: "/assistant?scope=work"),
+                .init(title: "Ask", systemImage: "bubble.left", path: "/assistant?scope=work"),
                 .init(title: "Spaces", systemImage: "square.grid.2x2", path: "/spaces"),
                 .init(title: "Settings", systemImage: "gearshape", path: "/settings#cloud"),
             ]
@@ -133,8 +326,7 @@ enum KenosDomainRegistry {
             slots: [
                 .init(title: "Today", systemImage: "sun.max", path: "/home/today"),
                 .init(title: "History", systemImage: "list.bullet", path: "/history/insights"),
-                .init(title: "Accounts", systemImage: "building.columns", path: "/accounts"),
-                .init(title: "More", systemImage: "ellipsis", opensMore: true),
+                .init(title: "Accounts", systemImage: "building.columns", path: "/accounts")
             ],
             more: [
                 .init(title: "Forecast", systemImage: "chart.line.uptrend.xyaxis", path: "/forecast/forecast"),
@@ -149,8 +341,7 @@ enum KenosDomainRegistry {
             slots: [
                 .init(title: "Inbox", systemImage: "tray", path: "/"),
                 .init(title: "Library", systemImage: "books.vertical", path: "/library"),
-                .init(title: "Recall", systemImage: "magnifyingglass", path: "/recall"),
-                .init(title: "More", systemImage: "ellipsis", opensMore: true),
+                .init(title: "Recall", systemImage: "magnifyingglass", path: "/recall")
             ],
             more: [
                 .init(title: "Projects", systemImage: "folder", path: "/projects"),
@@ -164,8 +355,7 @@ enum KenosDomainRegistry {
             slots: [
                 .init(title: "Home", systemImage: "house", path: "/"),
                 .init(title: "Search", systemImage: "magnifyingglass", path: "/search"),
-                .init(title: "Library", systemImage: "music.note.list", path: "/library"),
-                .init(title: "More", systemImage: "ellipsis", opensMore: true),
+                .init(title: "Library", systemImage: "music.note.list", path: "/library")
             ],
             more: [
                 .init(title: "Playlists", systemImage: "list.bullet", path: "/playlists"),
@@ -180,8 +370,7 @@ enum KenosDomainRegistry {
             slots: [
                 .init(title: "Rooms", systemImage: "square.grid.2x2", path: "/plan"),
                 .init(title: "Items", systemImage: "archivebox", path: "/storage"),
-                .init(title: "Organize", systemImage: "checklist", path: "/tidy"),
-                .init(title: "More", systemImage: "ellipsis", opensMore: true),
+                .init(title: "Organize", systemImage: "checklist", path: "/tidy")
             ],
             more: [
                 // Companion HomeScan (ios/home-scan) — RoomPlan / AR; not embedded WKWebView.
@@ -197,8 +386,7 @@ enum KenosDomainRegistry {
             slots: [
                 .init(title: "Status", systemImage: "heart.text.square", path: "/"),
                 .init(title: "Focus", systemImage: "target", path: "/focus"),
-                .init(title: "Trends", systemImage: "chart.line.uptrend.xyaxis", path: "/trends"),
-                .init(title: "More", systemImage: "ellipsis", opensMore: true),
+                .init(title: "Trends", systemImage: "chart.line.uptrend.xyaxis", path: "/trends")
             ],
             more: [
                 .init(title: "Settings", systemImage: "gearshape", path: "/settings#cloud"),
@@ -286,6 +474,23 @@ enum KenosDomainRegistry {
         definitions.filter { $0.id != "kenos" }
     }
 
+    /// Default content appearance before the Continuity page reports `data-theme`.
+    /// Mirrors brand CSS `color-scheme` defaults (planner/music/finance light; fitness/health dark).
+    static func defaultChromeAppearance(forDomainId raw: String?) -> KenosChromeAppearance {
+        switch canonicalize(raw) ?? (raw ?? "") {
+        case "plan", "money", "music", "library", "home":
+            return .light
+        case "training", "health", "work", "kenos", "paper":
+            return .dark
+        default:
+            return .dark
+        }
+    }
+
+    static func defaultChromeAppearance(forContinuity url: URL?) -> KenosChromeAppearance {
+        defaultChromeAppearance(forDomainId: domainId(fromContinuity: url))
+    }
+
     /// Continuity WKWebView Daily Beta ports (embedded_web apps only; excludes aios/work).
     static var embeddedWebDevPorts: Set<Int> {
         Set(
@@ -338,14 +543,23 @@ enum KenosDomainRegistry {
         return false
     }
 
-    static func accentColor(for spaceId: String) -> Color {
+    static func accentPalette(for spaceId: String) -> KenosDomainAccent {
         let id = canonicalize(spaceId) ?? spaceId
-        let rgb = definition(for: id)?.accentRGB ?? 0x5B8CFF
-        return Color(
-            red: Double((rgb >> 16) & 0xFF) / 255.0,
-            green: Double((rgb >> 8) & 0xFF) / 255.0,
-            blue: Double(rgb & 0xFF) / 255.0
-        )
+        return definition(for: id)?.accent ?? .kenos
+    }
+
+    /// Adaptive brand accent (shelf cards, tints) — light/dark pair, not a single hex.
+    static func accentColor(for spaceId: String) -> Color {
+        accentPalette(for: spaceId).adaptiveColor
+    }
+
+    /// Dock / Liquid Glass chrome — higher contrast than content accent.
+    static func accentOnGlass(for spaceId: String) -> Color {
+        accentPalette(for: spaceId).adaptiveOnGlass
+    }
+
+    static func selectionPlateOpacity(for spaceId: String, scheme: ColorScheme) -> Double {
+        accentPalette(for: spaceId).selectionPlateOpacity(for: scheme)
     }
 
     static func domainId(fromContinuity url: URL?) -> String {
@@ -405,7 +619,7 @@ enum KenosDomainRegistry {
                 return KenosDailyBetaConfig.pathURL(resolvedPath)
             }
             if def.id == "paper" { return nil }
-            return URL(string: "https://aios.kenos.space\(resolvedPath)")
+            return URL(string: "https://www.kenos.space\(resolvedPath)")
         }
         if KenosDailyBetaConfig.isEnabled, let port = def.devPort {
             return rewritePort(KenosDailyBetaConfig.kenOsOrigin, to: port, path: resolvedPath)
@@ -424,10 +638,10 @@ enum KenosDomainRegistry {
             return path.hasPrefix("/") ? path : "/\(path)"
         }()
         if def.id == "paper" {
-            return URL(string: "https://aios.kenos.space\(resolvedPath)")
+            return URL(string: "https://www.kenos.space\(resolvedPath)")
         }
         if def.id == "work" || def.id == "kenos" {
-            return URL(string: "https://aios.kenos.space\(resolvedPath)")
+            return URL(string: "https://www.kenos.space\(resolvedPath)")
         }
         guard let origin = def.productionOrigin else { return nil }
         return URL(string: origin + resolvedPath)

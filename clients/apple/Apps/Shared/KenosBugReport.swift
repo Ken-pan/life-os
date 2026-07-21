@@ -35,6 +35,92 @@ enum KenosActiveWebRegistry {
     }
 }
 
+/// Touches outside the prompt card fall through to the app (and any modal sheet).
+/// SwiftUI's `_UIHostingView` fills the window and would otherwise swallow every tap.
+final class KenosPassthroughWindow: UIWindow {
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        guard let hit = super.hitTest(point, with: event) else { return nil }
+        if hit === rootViewController?.view { return nil }
+        // Empty ZStack / Spacer lands on the hosting container — pass through.
+        let name = NSStringFromClass(type(of: hit))
+        if name.contains("HostingView") || name.contains("HostingScrollView") {
+            return nil
+        }
+        return hit
+    }
+}
+
+/// Hosts the quiet screenshot offer above SwiftUI sheets / alerts.
+@MainActor
+enum KenosScreenshotBugPromptPresenter {
+    private static var window: KenosPassthroughWindow?
+
+    static func sync(model: KenosAppModel) {
+        if model.showScreenshotBugPrompt {
+            present(model: model)
+        } else {
+            dismiss()
+        }
+    }
+
+    private static func present(model: KenosAppModel) {
+        guard let scene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive })
+            ?? UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first
+        else { return }
+
+        let root = KenosScreenshotBugPromptWindowRoot(model: model)
+        if let existing = window {
+            if let host = existing.rootViewController as? UIHostingController<KenosScreenshotBugPromptWindowRoot> {
+                host.rootView = root
+            }
+            existing.isHidden = false
+            return
+        }
+
+        let host = UIHostingController(rootView: root)
+        host.view.backgroundColor = .clear
+        let win = KenosPassthroughWindow(windowScene: scene)
+        win.windowLevel = .alert + 1
+        win.backgroundColor = .clear
+        win.rootViewController = host
+        // Visible but not key — keep keyboard / first-responder in the app window.
+        win.isHidden = false
+        window = win
+    }
+
+    static func dismiss() {
+        window?.isHidden = true
+        window?.rootViewController = nil
+        window = nil
+    }
+}
+
+private struct KenosScreenshotBugPromptWindowRoot: View {
+    @ObservedObject var model: KenosAppModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            if model.showScreenshotBugPrompt {
+                KenosScreenshotBugPrompt(model: model)
+                    .padding(.bottom, model.screenshotBugPromptBottomPadding)
+                    .transition(
+                        .asymmetric(
+                            insertion: reduceMotion
+                                ? .opacity
+                                : .move(edge: .bottom).combined(with: .opacity),
+                            removal: .opacity
+                        )
+                    )
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .animation(KenosMotion.chrome(reduceMotion: reduceMotion), value: model.showScreenshotBugPrompt)
+    }
+}
+
 /// Cached once — avoids uname / Bundle reads on every screenshot.
 enum KenosBugDeviceInfo {
     static let model: String = {
@@ -115,6 +201,8 @@ struct KenosBugDiagnostics: Equatable, Codable {
     var locale: String
     /// Web localStorage session present (never the token).
     var webSignedIn: Bool?
+    /// Comma-separated native chrome open at capture (settings,shelf,capture,…).
+    var chromeContext: String = ""
 }
 
 enum KenosBugReportCapture {
@@ -128,10 +216,26 @@ enum KenosBugReportCapture {
 
     @MainActor
     static func captureKeyWindowJPEG(
-        maxBytes: Int = KenosBugReportDraft.maxScreenshotBytes
+        maxBytes: Int = KenosBugReportDraft.maxScreenshotBytes,
+        webViewFallback: WKWebView? = nil
     ) async -> CaptureResult {
         let t0 = CFAbsoluteTimeGetCurrent()
-        guard let image = snapshotKeyWindow() else {
+        var image = snapshotKeyWindow(afterScreenUpdates: false)
+        // WKWebView can render blank with afterScreenUpdates:false — retry committed frame.
+        if image == nil || isVisuallyBlankCapture(image) {
+            if let retry = snapshotKeyWindow(afterScreenUpdates: true) {
+                image = retry
+            }
+        }
+        // WK-only fallback ONLY when the window hierarchy produced nothing usable.
+        // Never replace a real (even dark) window shot — that drops dock/Shelf chrome.
+        if image == nil || isVisuallyBlankCapture(image),
+           let web = webViewFallback ?? KenosActiveWebRegistry.preferred,
+           let webImage = await snapshotWebView(web)
+        {
+            image = webImage
+        }
+        guard let image else {
             return CaptureResult(jpeg: nil, elapsedMs: elapsedMs(since: t0))
         }
         // Compress off the main actor — large Retina frames hitch the prompt otherwise.
@@ -143,23 +247,93 @@ enum KenosBugReportCapture {
 
     /// Sync helper for tests / callers that already hold a UIImage.
     @MainActor
-    static func snapshotKeyWindow() -> UIImage? {
+    static func snapshotKeyWindow(afterScreenUpdates: Bool = false) -> UIImage? {
         guard let scene = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
             .first(where: { $0.activationState == .foregroundActive })
-            ?? UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first,
-            let window = scene.windows.first(where: \.isKeyWindow) ?? scene.windows.first
+            ?? UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first
         else { return nil }
+
+        // Prefer the app key window; skip our elevated bug-prompt overlay window.
+        let window = scene.windows.first(where: { $0.isKeyWindow && !($0 is KenosPassthroughWindow) })
+            ?? scene.windows.first(where: { !($0 is KenosPassthroughWindow) })
+        guard let window else { return nil }
 
         let format = UIGraphicsImageRendererFormat()
         // Faster + smaller than native 3×; still sharp enough for UI bugs.
         format.scale = min(window.screen.scale, maxPixelScale)
         format.opaque = true
         let renderer = UIGraphicsImageRenderer(bounds: window.bounds, format: format)
-        // `false`: screenshot notification fires after the frame is committed — avoid extra layout pass.
+        // Default `false`: screenshot notification fires after the frame is committed.
         return renderer.image { _ in
-            window.drawHierarchy(in: window.bounds, afterScreenUpdates: false)
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: afterScreenUpdates)
         }
+    }
+
+    /// Last-resort surface snap when window hierarchy is blank (WKWebView quirk).
+    @MainActor
+    static func snapshotWebView(_ webView: WKWebView) async -> UIImage? {
+        await withCheckedContinuation { (cont: CheckedContinuation<UIImage?, Never>) in
+            webView.takeSnapshot(with: nil) { image, _ in
+                cont.resume(returning: image)
+            }
+        }
+    }
+
+    /// True only for failed/blank captures (all-white, all-black, or zero-variance).
+    /// Must NOT fire on normal Kenos ink UI — a 4×4 average of dark chrome looks "flat"
+    /// under a loose threshold and would wrongly trigger WK-only fallback.
+    static func isVisuallyBlankCapture(_ image: UIImage?) -> Bool {
+        guard let image, let cg = image.cgImage else { return true }
+        let w = cg.width
+        let h = cg.height
+        guard w > 8, h > 8 else { return true }
+        let bytesPerPixel = 4
+        let bytesPerRow = bytesPerPixel * 8
+        var pixel = [UInt8](repeating: 0, count: bytesPerRow * 8)
+        guard let ctx = CGContext(
+            data: &pixel,
+            width: 8,
+            height: 8,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return false }
+        ctx.interpolationQuality = .low
+        ctx.draw(cg, in: CGRect(x: 0, y: 0, width: 8, height: 8))
+
+        var minL = 255
+        var maxL = 0
+        var sumR = 0
+        var sumG = 0
+        var sumB = 0
+        for i in 0..<64 {
+            let o = i * bytesPerPixel
+            let r = Int(pixel[o])
+            let g = Int(pixel[o + 1])
+            let b = Int(pixel[o + 2])
+            let l = (r + g + b) / 3
+            minL = min(minL, l)
+            maxL = max(maxL, l)
+            sumR += r
+            sumG += g
+            sumB += b
+        }
+        // Any real UI (dock, text, cards) spreads luminance; keep a tight gate.
+        if maxL - minL > 3 { return false }
+        let avgR = sumR / 64
+        let avgG = sumG / 64
+        let avgB = sumB / 64
+        // Failed WK/hierarchy snaps tend to be pure white or pure black — not Kenos ink.
+        let nearWhite = avgR > 250 && avgG > 250 && avgB > 250
+        let nearBlack = avgR < 2 && avgG < 2 && avgB < 2
+        return nearWhite || nearBlack
+    }
+
+    /// Back-compat alias for tests.
+    static func isVisuallyEmpty(_ image: UIImage?) -> Bool {
+        isVisuallyBlankCapture(image)
     }
 
     static func jpegUnderLimit(_ image: UIImage, maxBytes: Int) -> Data? {
@@ -369,7 +543,8 @@ enum KenosBugDiagnosticsFactory {
             scrapeMs: scrapeMs,
             scrapeTimedOut: snap.timedOut,
             locale: device.localeIdentifier,
-            webSignedIn: snap.webSignedIn
+            webSignedIn: snap.webSignedIn,
+            chromeContext: model.screenshotChromeContext()
         )
     }
 
@@ -631,6 +806,7 @@ enum KenosBugReportPrefill {
         if !d.heading.isEmpty { lines.append("- Heading: \(d.heading)") }
         if !d.tab.isEmpty { lines.append("- Tab: \(d.tab)") }
         if !d.domainLabel.isEmpty { lines.append("- Domain: \(d.domainLabel)") }
+        if !d.chromeContext.isEmpty { lines.append("- Chrome: \(d.chromeContext)") }
         lines.append(contentsOf: [
             "- Shell: \(d.shellMode)",
             "- Focus: \(d.focusState)",
@@ -683,13 +859,25 @@ enum KenosBugReportPrefill {
     /// Compact one-liner for the floating prompt subtitle.
     static func promptSubtitle(from d: KenosBugDiagnostics) -> String {
         var parts: [String] = [d.app]
-        if !d.domainLabel.isEmpty {
+        if d.chromeContext.contains("shelf") {
+            parts.append("Shelf")
+        } else if d.chromeContext.contains("capture") {
+            parts.append("Capture")
+        } else if d.chromeContext.contains("spaceSwitcher") {
+            parts.append("Spaces")
+        } else if d.chromeContext.contains("domainMore") {
+            parts.append("More")
+        } else if d.chromeContext.contains("settings") {
+            parts.append("Settings")
+        } else if d.chromeContext.contains("focus") {
+            parts.append("Focus")
+        } else if !d.domainLabel.isEmpty {
             parts.append(d.domainLabel)
         } else if !d.tab.isEmpty {
             parts.append(d.tab)
         }
         let route = d.route.split(separator: "?").first.map(String.init) ?? d.route
-        if !route.isEmpty { parts.append(route) }
+        if !route.isEmpty, !d.chromeContext.contains("settings") { parts.append(route) }
         return parts.joined(separator: " · ")
     }
 
@@ -1002,6 +1190,7 @@ enum KenosBugReportSubmitter {
             "scrapeMs": d.scrapeMs,
             "scrapeTimedOut": d.scrapeTimedOut,
             "locale": d.locale,
+            "chromeContext": d.chromeContext,
             "source": "kenos-ios-native",
             "logSessionId": KenosLog.shared.sessionId,
             "nativeBreadcrumbs": KenosLog.breadcrumbSummary(limit: 16),
@@ -1117,7 +1306,7 @@ struct KenosScreenshotBugPrompt: View {
                         .frame(width: 32, height: 32)
                         .background(Circle().fill(Color.primary.opacity(0.08)))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(KenosPressStyle(reduceMotion: reduceMotion))
                 .accessibilityLabel("Not now")
                 .accessibilityIdentifier("kenos.bug.prompt.dismiss")
             }

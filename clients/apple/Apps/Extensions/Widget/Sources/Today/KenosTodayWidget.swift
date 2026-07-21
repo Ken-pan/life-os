@@ -66,7 +66,7 @@ struct KenosTodayWidgetView: View {
             Spacer(minLength: 0)
             HStack(spacing: 6) {
                 if let count = glance.pendingApprovalCount {
-                    KenosWidgetBadge(text: "\(count) approvals", accentRGB: 0xC9A227)
+                    KenosWidgetBadge(text: "\(count) approvals", accentRGB: 0xD4AE2E)
                 }
                 if let inbox = glance.pendingInboxCount {
                     KenosWidgetBadge(text: "\(inbox) inbox", accentRGB: KenosWidgetChrome.brandRGB)
@@ -90,7 +90,7 @@ struct KenosTodayWidgetView: View {
                     .minimumScaleFactor(0.85)
                 HStack(spacing: 6) {
                     if let count = glance.pendingApprovalCount {
-                        KenosWidgetBadge(text: "\(count) approvals", accentRGB: 0xC9A227)
+                        KenosWidgetBadge(text: "\(count) approvals", accentRGB: 0xD4AE2E)
                     }
                     if let inbox = glance.pendingInboxCount {
                         KenosWidgetBadge(text: "\(inbox) inbox", accentRGB: KenosWidgetChrome.brandRGB)
@@ -109,7 +109,7 @@ struct KenosTodayWidgetView: View {
                 .buttonStyle(KenosWidgetActionButtonStyle(accentRGB: KenosWidgetChrome.brandRGB, prominent: true))
 
                 Button(intent: KenosWidgetOpenAssistantIntent()) {
-                    actionLabel("Assistant", systemImage: "sparkles")
+                    actionLabel("Ask", systemImage: "sparkles")
                 }
                 .buttonStyle(KenosWidgetActionButtonStyle(accentRGB: KenosWidgetChrome.brandRGB, prominent: false))
             }

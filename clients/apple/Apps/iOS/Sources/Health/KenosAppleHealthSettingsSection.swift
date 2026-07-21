@@ -20,7 +20,7 @@ struct KenosAppleHealthSettingsSection: View {
         } header: {
             Text("Apple Health")
         } footer: {
-            Text("Core metrics power Health status. Optional metrics sync when enabled — turning one on will ask Apple Health for that permission.")
+            Text("On the system Health Access sheet, tap Turn On All then Allow. Core metrics power Health status; optional metrics re-prompt when enabled.")
                 .font(KenosTypography.caption)
         }
 
