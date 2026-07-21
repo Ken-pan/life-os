@@ -1,12 +1,15 @@
 # P5 Final Audit Review — 2026-07-20
 
-## Verdict
+## Verdict (upgraded to A)
 
 ```text
 VISUAL QUALITY: PASSED
-CURRENT-HEAD REGRESSION: HOLD
-READY_FOR_OWNER_REVIEW: NO
+CURRENT-HEAD REGRESSION: PASSED
+READY_FOR_OWNER_REVIEW: YES
 ```
+
+Current-HEAD run: `continuity-e2e-2026-07-21T01-39-14-798Z`  
+Functional canonical (frozen): `continuity-e2e-2026-07-20T20-12-22-998Z`
 
 ## Start here
 
@@ -17,7 +20,6 @@ READY_FOR_OWNER_REVIEW: NO
 ## Also
 
 - [`p5-final-audit-results.json`](p5-final-audit-results.json)
-- [`BLOCKERS.md`](BLOCKERS.md) — empty P0/P1; OR blocked by regression HOLD
-- [`RESIDUAL_ISSUES.md`](RESIDUAL_ISSUES.md)
+- [`BLOCKERS.md`](BLOCKERS.md) — empty
+- [`RESIDUAL_ISSUES.md`](RESIDUAL_ISSUES.md) — P2/P3 polish only
 - [`SCREENSHOT_MANIFEST.md`](SCREENSHOT_MANIFEST.md)
-- [`audit-probes/`](audit-probes/)

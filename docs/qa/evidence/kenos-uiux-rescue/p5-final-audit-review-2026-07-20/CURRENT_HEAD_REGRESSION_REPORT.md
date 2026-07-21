@@ -1,79 +1,79 @@
 # CURRENT_HEAD_REGRESSION_REPORT
 
-Audit HEAD: `37d3af2b980c2d8466ab9865ea578702fd7a4782`
-Functional canonical (frozen, not rewritten): `continuity-e2e-2026-07-20T20-12-22-998Z`
+**Updated after Regression Recovery.**  
+Functional canonical (frozen, unchanged): `continuity-e2e-2026-07-20T20-12-22-998Z`
 
-## Verdict for this gate
+## Verdict
 
 ```text
-CURRENT-HEAD REGRESSION: HOLD
+VISUAL QUALITY: PASSED          (unchanged from Final Audit)
+CURRENT-HEAD REGRESSION: PASSED
+READY_FOR_OWNER_REVIEW: YES
 ```
 
-Not product-attributed to Knife 6 UI. Still **not PASS**, so Owner Review stays closed.
+Audit HEAD at recovery: `5b30561d562fbfdcfabe79c457a43257b3dab39f`  
+(product HEAD for Continuity still Knife 6 lineage `37d3af2b9` + docs audit commit)
 
 ---
 
-## Runs examined
+## Recovery run (authoritative for current HEAD)
 
-### A. `continuity-e2e-2026-07-21T00-40-41-010Z`
+| Field | Value |
+| ----- | ----- |
+| run_id | `continuity-e2e-2026-07-21T01-39-14-798Z` |
+| exit | **0** |
+| overall | **PASSED** |
+| Flow A | **VALIDATED** |
+| Flow B | **VALIDATED** |
+| Account isolation | **VALIDATED** |
+| Ports | AIOS `5197` (vite dev) · Planner `5188` (vite dev) · Fitness `5190` (vite dev) |
+| Preflight | `preflight-1784597941247.json` **PASS** |
 
-| Field         | Value                                                               |
-| ------------- | ------------------------------------------------------------------- |
-| Failure class | **environment**                                                     |
-| Symptom       | `page.goto net::ERR_CONNECTION_REFUSED` at `http://127.0.0.1:5188/` |
-| Stamps        | Flow A/B NOT_YET_VALIDATED · isolation PARTIAL · overall NOT_PASSED |
-| Knife 6 link  | None — planner preview/dev not accepting connections                |
+Evidence:  
+`docs/qa/evidence/kenos-space-continuity-2026-07-20/e2e-flows/continuity-e2e-2026-07-21T01-39-14-798Z/`
 
-### B. `continuity-e2e-2026-07-21T00-41-43-233Z` (primary PARTIAL)
+### Owner Review smoke coverage
 
-| Field               | Value                                                                                                                                     |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Failure class       | **environment / fixture** (domain app runtime), not Kenos Continue UI                                                                     |
-| Flow A              | PARTIAL — `Failed to fetch dynamically imported module: http://127.0.0.1:5188/src/lib/sync.js` → `#task-title` missing → cannot UI-mutate |
-| Flow B              | PARTIAL — set2 precondition failed (`onSet2=false`, CTA empty); Fitness Focus Continue missing                                            |
-| Account isolation   | **VALIDATED** (API + dual UI + account switch; B does not leak A Recent)                                                                  |
-| Continue empty copy | Present in dual-UI snippets (Knife 6 empty state language)                                                                                |
-
-Root chain:
-
-1. Planner sync seed via `/src/lib/sync.js` failed to load in the browser session.
-2. Without sync/editor hydration, Flow A mutation path aborted (`#task-title` missing).
-3. Fitness focus progression never reached set2 CTA → Flow B aborted before Continuity handoff assertions.
-4. Kenos isolation path still ran and **passed**.
-
-This is **not** evidence that Knife 6 broke descriptor schema, deep links, or account binding. It **is** insufficient proof that Planner/Fitness Continue restore still works on this HEAD.
-
----
-
-## Owner Review minimum checklist vs HEAD
-
-| Required smoke                            | HEAD status                                                                       |
-| ----------------------------------------- | --------------------------------------------------------------------------------- |
-| Planner Continue restores correct context | **UNPROVEN** (Flow A PARTIAL)                                                     |
-| Fitness Continue restores correct set     | **UNPROVEN** (Flow B PARTIAL)                                                     |
-| Account B shows no Account A Recent       | **PASS** (`…T00-41-43` isolation VALIDATED)                                       |
-| expired / deleted target degrades safely  | **UNIT / UI fixture PASS** (`productStates` + SpaceSwitcher forget); not full E2E |
-| duplicate Continue click launches once    | **CODE + unit path PASS** (`launchInFlight` 700ms guard); not full E2E            |
+| Check | Result |
+| ----- | ------ |
+| Planner Continue opens correct mutated task | PASS |
+| Reload / relogin still reads mutated task | PASS |
+| Fitness Set1 → Set2 CTA | PASS |
+| Kenos Continue shows Set 2 | PASS |
+| Continue restores Set 2 | PASS |
+| Cold Continue → Set 3 after push | PASS |
+| DB `c_fly` done=2 after cloud push | PASS |
+| Account B no A Recent | PASS |
+| No unexplained PARTIAL | PASS |
 
 ---
 
-## Targeted substitutes run at audit time
+## Prior HOLD diagnosis (preserved)
 
-| Check                                                                                      | Result                                                                                                       |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| `spaceSwitcher.core` / `productStates` / overlay mode+anchor / `domainIdentity` unit tests | **34/34 PASS**                                                                                               |
-| Live Continue Escape + focus return @ 5197                                                 | PASS                                                                                                         |
-| Live offline banner @ 5197                                                                 | PASS                                                                                                         |
-| Ports at audit                                                                             | aios 5197 · planner 5188 · fitness 5190 listening (note: PARTIAL run still failed sync module fetch earlier) |
+| Run | Class | Cause |
+| --- | ----- | ----- |
+| `…T00-40-41-010Z` | environment | Planner `5188` connection refused |
+| `…T00-41-43-233Z` | environment | Ports were **vite preview**; `/src/lib/sync.js` 404 |
+| `…T01-37-01-202Z` | fixture/harness | UTC `TODAY` vs Fitness local `session_date` → DB done=null while UI PASS |
+| Final Audit Verdict B | HOLD documented | Correct at the time |
+
+**Not** attributed to Knife 6 product UI.
 
 ---
 
-## Honesty rule applied
+## Harness / orchestration fixes (no Continuity contract change)
 
-- Old canonical `…T20-12-22-998Z` remains the frozen functional proof that the continuity **contract** once fully passed.
-- It does **not** auto-clear current-HEAD regression after Knife 6 consumer-layer changes (launch debounce, expired/empty UI, sanitize).
-- Unexplained PARTIAL would block visual-adjacent claims; **explained** PARTIAL still leaves regression **HOLD**.
+1. **Preflight** — `scripts/qa/kenos-continuity-regression-preflight.mjs`  
+   Gates full E2E until HTTP + Vite sync modules + `#task-title` + Set1→Set2 + auth/DB pass.
+2. **Startup** — Continuity requires Planner/Fitness **Vite DEV** on 5188/5190 (not `vite preview`).
+3. **Date** — E2E/preflight `TODAY` uses **local calendar date** to match Fitness `session_date`.
 
-## Recommendation (outside this audit)
+No descriptor / owner-binding / deep-link / P5 visual changes.
 
-Re-run `scripts/qa/kenos-space-continuity-e2e-flows.mjs` only after confirming planner Vite serves `/src/lib/sync.js` (or switch the harness to a preview-safe sync push path). Do not reopen Owner Review on isolation-only evidence.
+---
+
+## Gate notes
+
+- Functional canonical `…T20-12-22-998Z` remains the frozen first full Continuity proof.
+- Current-HEAD health proof is now `…T01-39-14-798Z`.
+- P5 Visual Audit Verdict B is **superseded by upgrade to A**, not rewritten as if HOLD never happened.

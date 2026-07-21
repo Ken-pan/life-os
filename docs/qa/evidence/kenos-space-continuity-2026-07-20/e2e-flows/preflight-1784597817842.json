@@ -1,0 +1,141 @@
+{
+  "startedAt": "2026-07-21T01:36:38.742Z",
+  "finishedAt": "2026-07-21T01:36:57.842Z",
+  "headHint": "run git rev-parse HEAD separately",
+  "ports": {
+    "AIOS": "http://127.0.0.1:5197",
+    "PLANNER": "http://127.0.0.1:5188",
+    "FITNESS": "http://127.0.0.1:5190"
+  },
+  "ok": true,
+  "failed": [],
+  "checks": [
+    {
+      "id": "aios.http",
+      "ok": true,
+      "class": "ok",
+      "detail": {
+        "url": "http://127.0.0.1:5197",
+        "ok": true,
+        "status": 200
+      }
+    },
+    {
+      "id": "planner.http",
+      "ok": true,
+      "class": "ok",
+      "detail": {
+        "url": "http://127.0.0.1:5188",
+        "ok": true,
+        "status": 200
+      }
+    },
+    {
+      "id": "fitness.http",
+      "ok": true,
+      "class": "ok",
+      "detail": {
+        "url": "http://127.0.0.1:5190",
+        "ok": true,
+        "status": 200
+      }
+    },
+    {
+      "id": "planner.sync_module",
+      "ok": true,
+      "class": "ok",
+      "detail": {
+        "ok": true,
+        "status": 200,
+        "contentType": "text/javascript",
+        "snippet": "import { browser } from \"/@fs/Users/kenpan/「Projects」/life-os/node_modules/@svel",
+        "mode": "vite-dev"
+      }
+    },
+    {
+      "id": "fitness.sync_module",
+      "ok": true,
+      "class": "ok",
+      "detail": {
+        "ok": true,
+        "status": 200,
+        "contentType": "text/javascript",
+        "mode": "vite-dev"
+      }
+    },
+    {
+      "id": "auth.sessions",
+      "ok": true,
+      "class": "ok",
+      "detail": {
+        "A": "c2831538-94b0-4a57-b034-5e873a53c42e",
+        "B": "8febdb83-ec49-467d-a9bf-d42620cc68fe",
+        "A_match": true,
+        "B_match": true
+      }
+    },
+    {
+      "id": "db.planner_query",
+      "ok": true,
+      "class": "ok",
+      "detail": {
+        "count": 5,
+        "error": null
+      }
+    },
+    {
+      "id": "db.fitness_sessions_today",
+      "ok": true,
+      "class": "ok",
+      "detail": {
+        "sessions": 0,
+        "ids": [],
+        "error": null
+      }
+    },
+    {
+      "id": "aios.continue_harness",
+      "ok": true,
+      "class": "ok",
+      "detail": {
+        "continueTestIdCount": 1
+      }
+    },
+    {
+      "id": "planner.task_title",
+      "ok": true,
+      "class": "ok",
+      "detail": {
+        "syncSeed": {
+          "ok": true,
+          "hasTask": true
+        },
+        "titleCount": 1,
+        "titleVal": "Preflight Continuity Probe"
+      }
+    },
+    {
+      "id": "fitness.set1_cta",
+      "ok": true,
+      "class": "ok",
+      "detail": {
+        "progressText": "0/3 组 · 还剩 3 组",
+        "ctaText": "完成第 1 组",
+        "ctaVisible": true,
+        "bodyHasFly": true,
+        "title": ""
+      }
+    },
+    {
+      "id": "fitness.set1_to_set2",
+      "ok": true,
+      "class": "ok",
+      "detail": {
+        "ok": true,
+        "progressText": "1/3 组 · 还剩 2 组",
+        "ctaText": "完成第 2 组"
+      }
+    }
+  ],
+  "next": "Safe to run: node scripts/qa/kenos-space-continuity-e2e-flows.mjs"
+}

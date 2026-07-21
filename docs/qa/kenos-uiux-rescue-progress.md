@@ -1,19 +1,20 @@
 # Kenos Visual Quality Rescue — progress
 
-| Track                         | Status                                                                        |
-| ----------------------------- | ----------------------------------------------------------------------------- |
-| Four-knife                    | Owner accepted structural wins                                                |
-| Space Continuity (function)   | **PASSED** · Planner / Fitness / Isolation **VALIDATED**                      |
-| Annotation / evidence binding | Closed in `…T20-12-22-998Z`                                                   |
-| Continuity Verification Sheet | Rebuilt from canonical run (not Owner Review)                                 |
-| **P5 Visual Quality**         | **PASSED** (Final Audit) · Owner Review still blocked by HEAD Continuity HOLD |
-| Owner Review                  | **NOT OPEN**                                                                  |
+| Track                         | Status                                                   |
+| ----------------------------- | -------------------------------------------------------- |
+| Four-knife                    | Owner accepted structural wins                           |
+| Space Continuity (function)   | **PASSED** · Planner / Fitness / Isolation **VALIDATED** |
+| Annotation / evidence binding | Closed in `…T20-12-22-998Z`                              |
+| Continuity Verification Sheet | Rebuilt from canonical run (not Owner Review)            |
+| **P5 Visual Quality**         | **PASSED**                                               |
+| Current-HEAD Continuity       | **PASSED** (`…T01-39-14-798Z`)                           |
+| Owner Review                  | **OPEN** — ready for owner                               |
 
 ```text
 KENOS OVERALL CONTINUITY GATE — PASSED (canonical …T20-12-22-998Z)
 KENOS UIUX VISUAL QUALITY — PASSED
-CURRENT-HEAD CONTINUITY REGRESSION — HOLD
-OWNER REVIEW — NOT OPEN
+CURRENT-HEAD CONTINUITY REGRESSION — PASSED (…T01-39-14-798Z)
+OWNER REVIEW — OPEN
 ```
 
 ## P5 knife 1 — SpaceSwitcher hairline (Direction A)
@@ -74,7 +75,7 @@ OWNER REVIEW — NOT OPEN
 
 ## P5 knife 6 — complete product states
 
-- Status: **PASS WITH ONE HOLD** (UI PASS; HEAD Continuity E2E environment HOLD — see Final Audit)
+- Status: **PASS** (HEAD Continuity HOLD cleared by recovery run `…T01-39-14-798Z`)
 - Loading skeletons · empty copy · offline low-noise banner · expired Continue + dismiss · launch debounce
 - Copy sanitization (no demo/entity/route leaks in Continue detail)
 - prefers-reduced-motion · Escape close · 200% zoom probe · light/dark matrix fixtures
@@ -84,13 +85,13 @@ OWNER REVIEW — NOT OPEN
 
 ## P5 Final Visual Audit — 2026-07-20/21
 
-- Status: **DONE** (audit-only) — verdict **B**
-- `VISUAL QUALITY: PASSED` · `CURRENT-HEAD REGRESSION: HOLD` · `READY_FOR_OWNER_REVIEW: NO`
+- Status: **DONE** — Verdict **B → A** after regression recovery
 - Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-final-audit-review-2026-07-20/`
-- PARTIAL Continuity on HEAD classified **environment/fixture** (`sync.js` fetch / fitness set2), not Knife 6 UI; isolation VALIDATED
-- Next: re-run Continuity E2E on healthy planner+fitness runtime → only then consider Owner Review
+- Recovery run: `continuity-e2e-2026-07-21T01-39-14-798Z` (A/B/isolation VALIDATED, exit 0)
+- Preflight: `scripts/qa/kenos-continuity-regression-preflight.mjs`
+- Harness notes: Continuity needs Vite DEV (not preview); Fitness `TODAY` = local calendar date
 
 ## Still open (later)
 
-- Clear **CURRENT-HEAD Continuity HOLD** (Planner + Fitness restore smoke PASS)
-- Do **not** open Owner Review on visual PASS alone
+- **Owner Review** (product acceptance) — gate is open; residuals P2/P3 optional polish
+- Do **not** reopen Knives for visual redesign unless Owner finds a P0/P1

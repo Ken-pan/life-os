@@ -1,74 +1,38 @@
 {
   "auditId": "p5-final-visual-audit-2026-07-20",
   "auditedAt": "2026-07-21T01:15:00.000Z",
-  "mode": "audit-only",
-  "head": "37d3af2b980c2d8466ab9865ea578702fd7a4782",
+  "recoveredAt": "2026-07-21T01:40:10.000Z",
+  "mode": "audit-then-regression-recovery",
+  "headAtAuditCommit": "5b30561d562fbfdcfabe79c457a43257b3dab39f",
   "knife6": "37d3af2b9",
-  "worktreeClean": false,
   "previewBase": "http://127.0.0.1:5197",
   "functionalCanonical": "continuity-e2e-2026-07-20T20-12-22-998Z",
-  "currentHeadRuns": [
+  "currentHeadRegressionRun": "continuity-e2e-2026-07-21T01-39-14-798Z",
+  "preflightPass": "preflight-1784597941247.json",
+  "priorHoldRunsPreserved": [
     "continuity-e2e-2026-07-21T00-40-41-010Z",
-    "continuity-e2e-2026-07-21T00-41-43-233Z"
+    "continuity-e2e-2026-07-21T00-41-43-233Z",
+    "continuity-e2e-2026-07-21T01-37-01-202Z"
   ],
   "verdict": {
     "visualQuality": "PASSED",
-    "currentHeadRegression": "HOLD",
-    "readyForOwnerReview": false,
-    "form": "B"
+    "currentHeadRegression": "PASSED",
+    "readyForOwnerReview": true,
+    "form": "A",
+    "priorForm": "B",
+    "upgradeReason": "Planner+Fitness+isolation VALIDATED on Vite DEV with local session_date harness fix; exit 0; no unexplained PARTIAL"
   },
-  "knives": {
-    "1": { "status": "PASS", "evidence": "p5-switcher-hairline" },
-    "2": {
-      "status": "PASS",
-      "evidence": "p5-knife2-sheet-hierarchy/manifest-r2.json",
-      "note": "anchored desktop canonical; early centered superseded"
-    },
-    "3": { "status": "PASS", "evidence": "p5-knife3-ipad-material" },
-    "4": { "status": "PASS", "evidence": "p5-knife4-domain-identity" },
-    "5": { "status": "PASS", "evidence": "p5-knife5-today-rhythm" },
-    "6": {
-      "status": "PASS_WITH_ONE_HOLD",
-      "evidence": "p5-knife6-complete-states",
-      "hold": "current-HEAD continuity PARTIAL classified environment"
-    }
+  "ports": {
+    "aios": "http://127.0.0.1:5197 vite-dev",
+    "planner": "http://127.0.0.1:5188 vite-dev",
+    "fitness": "http://127.0.0.1:5190 vite-dev"
   },
-  "surfaces": {
-    "today": "PASS",
-    "spaces": "PASS",
-    "continue": "PASS",
-    "inbox": "PASS_WITH_REVIEW"
-  },
-  "viewportsChecked": [
-    "390x844",
-    "430x932",
-    "768x1024",
-    "1024x768-touch",
-    "1280x800",
-    "1440x900",
-    "1440x900-dark",
-    "200pct-zoom-probe"
-  ],
-  "a11yProbes": {
-    "keyboardOpen": "PASS",
-    "escapeClose": "PASS",
-    "focusReturn": "PASS",
-    "focusVisible": "PASS",
-    "dialogName": "PASS",
-    "offlineBanner": "PASS",
-    "reducedMotionOpen": "PASS",
-    "zoom200": "PASS"
-  },
-  "unitTestsAtAudit": {
-    "files": [
-      "spaceSwitcher.core.test.js",
-      "productStates.core.test.js",
-      "continueOverlayMode.core.test.js",
-      "continueOverlayAnchor.core.test.js",
-      "domainIdentity.core.test.js"
-    ],
-    "pass": 34,
-    "fail": 0
+  "stamps": {
+    "flowA": "VALIDATED",
+    "flowB": "VALIDATED",
+    "accountIsolation": "VALIDATED",
+    "overall": "PASSED",
+    "exitCode": 0
   },
   "blockers": [],
   "residuals": [
@@ -77,7 +41,6 @@
     "P2-dark-metadata-human-squint",
     "P3-state-matrix-not-product-surface"
   ],
-  "regressionHoldReason": "Planner/Fitness Continuity not VALIDATED on current HEAD; PARTIAL runs explained as environment/fixture failures but do not equal PASS",
   "artifacts": {
     "auditMd": "P5_FINAL_VISUAL_AUDIT.md",
     "regressionReport": "CURRENT_HEAD_REGRESSION_REPORT.md",
@@ -88,7 +51,6 @@
       "boards/p5-audit-01-today-spaces.png",
       "boards/p5-audit-02-continue.png",
       "boards/p5-audit-03-inbox-states.png"
-    ],
-    "probes": "audit-probes/probe-results.json"
+    ]
   }
 }

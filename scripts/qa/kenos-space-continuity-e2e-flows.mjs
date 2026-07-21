@@ -42,7 +42,14 @@ const TASK_TITLE = `Continuity Planner Test ${RUN_ID.slice(-15)}`
 const TASK_TITLE_MUTATED = `Continuity Planner MUT ${RUN_ID.slice(-12)}`
 const TASK_NOTES_MUTATED = `Continuity E2E ${RUN_ID} · UI-mutated by owner A`
 const EXERCISE_ID = 'c_fly'
-const TODAY = new Date().toISOString().slice(0, 10)
+/** Local calendar date — must match Fitness session_date (not UTC ISO date). */
+function localDateISO(d = new Date()) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+const TODAY = localDateISO()
 
 mkdirSync(EVID, { recursive: true })
 
