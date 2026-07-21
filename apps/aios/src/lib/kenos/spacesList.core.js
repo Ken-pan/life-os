@@ -125,6 +125,7 @@ export const TODAY_SPACE_SHORTCUTS = Object.freeze(
       'music',
       'home',
       'knowledge',
+      'health',
     ].includes(space.id),
   ),
 )

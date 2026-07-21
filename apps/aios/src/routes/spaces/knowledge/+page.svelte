@@ -3,9 +3,9 @@
 </script>
 
 <DomainLaunch
-  domainId="knowledge"
-  listKey="hosted:knowledge"
-  title="Knowledge"
+  domainId="library"
+  listKey="hosted:library"
+  title="Library"
   path="/"
   filter="Notes"
 />

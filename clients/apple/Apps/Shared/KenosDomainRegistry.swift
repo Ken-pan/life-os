@@ -66,15 +66,15 @@ enum KenosDomainRegistry {
 
     static let definitions: [Definition] = [
         .init(id: "kenos", label: "Kenos", subtitle: "Today · Assistant · Inbox", strategy: .native, appId: "aios", productionOrigin: "https://aios.kenos.space", devPort: 5219, homePath: "/", systemImage: "circle.grid.2x2.fill", aliases: [], accentRGB: 0x5B8CFF),
-        .init(id: "plan", label: "Plan", subtitle: "Tasks and schedule", strategy: .embeddedWeb, appId: "planner", productionOrigin: "https://planner.kenos.space", devPort: 5188, homePath: "/", systemImage: "checklist", aliases: ["planner"], accentRGB: 0xC9A227),
-        .init(id: "training", label: "Training", subtitle: "Fitness workouts", strategy: .embeddedWeb, appId: "fitness", productionOrigin: "https://fitness.kenos.space", devPort: 5190, homePath: "/", systemImage: "figure.strengthtraining.traditional", aliases: ["fitness"], accentRGB: 0xC45C4A),
+        .init(id: "plan", label: "Plan", subtitle: "Tasks and schedule", strategy: .embeddedWeb, appId: "planner", productionOrigin: "https://planner.kenos.space", devPort: 5188, homePath: "/", systemImage: "checklist", aliases: ["planner", "planner-os"], accentRGB: 0xC9A227),
+        .init(id: "training", label: "Training", subtitle: "Fitness workouts", strategy: .embeddedWeb, appId: "fitness", productionOrigin: "https://fitness.kenos.space", devPort: 5190, homePath: "/", systemImage: "figure.strengthtraining.traditional", aliases: ["fitness", "fitnessos"], accentRGB: 0xC45C4A),
         .init(id: "work", label: "Work", subtitle: "Projects and decisions", strategy: .embeddedWeb, appId: "aios", productionOrigin: "https://aios.kenos.space", devPort: 5219, homePath: "/work", systemImage: "briefcase", aliases: ["work-focus"], accentRGB: 0x6A9BE0),
-        .init(id: "money", label: "Money", subtitle: "Finance decisions", strategy: .embeddedWeb, appId: "finance", productionOrigin: "https://finance.kenos.space", devPort: 5180, homePath: "/home/today", systemImage: "dollarsign.circle", aliases: ["finance"], accentRGB: 0x3D9B6E),
-        .init(id: "library", label: "Library", subtitle: "Knowledge vault", strategy: .embeddedWeb, appId: "knowledge", productionOrigin: "https://knowledge.kenos.space", devPort: 5879, homePath: "/", systemImage: "books.vertical", aliases: ["knowledge"], accentRGB: 0x5B6BBF),
+        .init(id: "money", label: "Money", subtitle: "Finance decisions", strategy: .embeddedWeb, appId: "finance", productionOrigin: "https://finance.kenos.space", devPort: 5180, homePath: "/home/today", systemImage: "dollarsign.circle", aliases: ["finance", "financeos", "finance-os"], accentRGB: 0x3D9B6E),
+        .init(id: "library", label: "Library", subtitle: "Knowledge vault", strategy: .embeddedWeb, appId: "knowledge", productionOrigin: "https://knowledge.kenos.space", devPort: 5879, homePath: "/", systemImage: "books.vertical", aliases: ["knowledge", "knowledgeos", "knowledge-os"], accentRGB: 0x5B6BBF),
         .init(id: "music", label: "Music", subtitle: "Library and playback", strategy: .embeddedWeb, appId: "music", productionOrigin: "https://music.kenos.space", devPort: 5189, homePath: "/", systemImage: "music.note", aliases: [], accentRGB: 0x8B7EC8),
         .init(id: "home", label: "Home", subtitle: "Spaces and items", strategy: .embeddedWeb, appId: "home", productionOrigin: "https://home.kenos.space", devPort: 5196, homePath: "/storage", systemImage: "house", aliases: [], accentRGB: 0x7AA0C8),
         .init(id: "health", label: "Health", subtitle: "Status · Focus · Trends", strategy: .embeddedWeb, appId: "health", productionOrigin: "https://health.kenos.space", devPort: 5192, homePath: "/", systemImage: "heart.text.square", aliases: ["focus", "status"], accentRGB: 0x5B6CFF),
-        .init(id: "paper", label: "Paper", subtitle: "Notebooks and capture", strategy: .legacyFallback, appId: nil, productionOrigin: nil, devPort: nil, homePath: "/spaces/paper", systemImage: "pencil.and.outline", aliases: ["paperos"], accentRGB: 0x8B7355),
+        .init(id: "paper", label: "Paper", subtitle: "Notebooks and capture", strategy: .legacyFallback, appId: nil, productionOrigin: nil, devPort: nil, homePath: "/spaces/paper", systemImage: "pencil.and.outline", aliases: ["paperos", "paper-os"], accentRGB: 0x8B7355),
     ]
 
     /// Domain capsule slots only (native Kenos chip is separate → 5 chrome total).
@@ -84,13 +84,13 @@ enum KenosDomainRegistry {
             slots: [
                 .init(title: "Tasks", systemImage: "checklist", path: "/"),
                 .init(title: "Calendar", systemImage: "calendar", path: "/calendar"),
-                .init(title: "Projects", systemImage: "folder", path: "/projects"),
+                .init(title: "Inbox", systemImage: "tray", path: "/inbox"),
                 .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
             more: [
                 .init(title: "Search", systemImage: "magnifyingglass", path: "/search"),
                 .init(title: "Upcoming", systemImage: "calendar.badge.clock", path: "/upcoming"),
-                .init(title: "Inbox", systemImage: "tray", path: "/inbox"),
+                .init(title: "Projects", systemImage: "folder", path: "/projects"),
                 .init(title: "Completed", systemImage: "checkmark.circle", path: "/completed"),
                 .init(title: "Insights", systemImage: "chart.bar", path: "/insights"),
             ]
@@ -100,12 +100,12 @@ enum KenosDomainRegistry {
             slots: [
                 .init(title: "Today", systemImage: "sun.max", path: "/"),
                 .init(title: "Workout", systemImage: "figure.strengthtraining.traditional", path: "/session"),
-                .init(title: "Library", systemImage: "books.vertical", path: "/library"),
+                .init(title: "History", systemImage: "clock", path: "/discover/records"),
                 .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
             more: [
-                .init(title: "History", systemImage: "clock", path: "/discover/records"),
                 .init(title: "Program", systemImage: "list.bullet.rectangle", path: "/program"),
+                .init(title: "Library", systemImage: "books.vertical", path: "/library"),
                 .init(title: "Discover", systemImage: "sparkles", path: "/discover"),
                 .init(title: "Stats", systemImage: "chart.xyaxis.line", path: "/discover/stats"),
                 .init(title: "Tools", systemImage: "wrench.and.screwdriver", path: "/discover/tools"),
@@ -115,63 +115,74 @@ enum KenosDomainRegistry {
             domainId: "work",
             slots: [
                 .init(title: "Today", systemImage: "sun.max", path: "/work"),
-                .init(title: "Projects", systemImage: "folder", path: "/work"),
                 .init(title: "Focus", systemImage: "target", path: "/spaces/work"),
+                .init(title: "Inbox", systemImage: "tray", path: "/inbox"),
                 .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
             more: [
                 .init(title: "Assistant", systemImage: "bubble.left", path: "/assistant?scope=work"),
-                .init(title: "Inbox", systemImage: "tray", path: "/inbox"),
                 .init(title: "Spaces", systemImage: "square.grid.2x2", path: "/spaces"),
+                .init(title: "Settings", systemImage: "gearshape", path: "/settings"),
             ]
         ),
         "money": .init(
             domainId: "money",
             slots: [
                 .init(title: "Today", systemImage: "sun.max", path: "/home/today"),
-                .init(title: "Transactions", systemImage: "list.bullet", path: "/transactions"),
-                .init(title: "Plan", systemImage: "chart.pie", path: "/plan"),
+                .init(title: "History", systemImage: "list.bullet", path: "/history/insights"),
+                .init(title: "Accounts", systemImage: "building.columns", path: "/accounts"),
                 .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
             more: [
-                .init(title: "Accounts", systemImage: "building.columns", path: "/accounts"),
-                .init(title: "Insights", systemImage: "chart.bar", path: "/insights"),
-                .init(title: "Settings", systemImage: "gearshape", path: "/settings"),
+                .init(title: "Forecast", systemImage: "chart.line.uptrend.xyaxis", path: "/forecast/forecast"),
+                .init(title: "Stocks", systemImage: "chart.bar", path: "/stocks"),
+                .init(title: "Decision", systemImage: "arrow.left.arrow.right", path: "/decision/compare"),
+                .init(title: "Review", systemImage: "checklist", path: "/review/import"),
+                .init(title: "Settings", systemImage: "gearshape", path: "/settings/assumptions"),
             ]
         ),
         "library": .init(
             domainId: "library",
             slots: [
-                .init(title: "Notes", systemImage: "note.text", path: "/"),
+                .init(title: "Inbox", systemImage: "tray", path: "/"),
                 .init(title: "Library", systemImage: "books.vertical", path: "/library"),
-                .init(title: "Capture", systemImage: "plus.circle", path: "/inbox"),
-                .init(title: "Search", systemImage: "magnifyingglass", path: "/recall"),
+                .init(title: "Recall", systemImage: "magnifyingglass", path: "/recall"),
+                .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
             more: [
                 .init(title: "Projects", systemImage: "folder", path: "/projects"),
                 .init(title: "Timeline", systemImage: "clock", path: "/timeline"),
+                .init(title: "Overview", systemImage: "chart.bar", path: "/overview"),
                 .init(title: "Settings", systemImage: "gearshape", path: "/settings"),
             ]
         ),
         "music": .init(
             domainId: "music",
             slots: [
-                .init(title: "Now Playing", systemImage: "play.circle", path: "/"),
-                .init(title: "Library", systemImage: "music.note.list", path: "/library"),
-                .init(title: "Discover", systemImage: "sparkles", path: "/discover"),
+                .init(title: "Home", systemImage: "house", path: "/"),
                 .init(title: "Search", systemImage: "magnifyingglass", path: "/search"),
+                .init(title: "Library", systemImage: "music.note.list", path: "/library"),
+                .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
-            more: []
+            more: [
+                .init(title: "Playlists", systemImage: "list.bullet", path: "/playlists"),
+                .init(title: "Liked", systemImage: "heart", path: "/liked"),
+                .init(title: "Browse", systemImage: "sparkles", path: "/browse"),
+                .init(title: "Import", systemImage: "square.and.arrow.down", path: "/import"),
+                .init(title: "Settings", systemImage: "gearshape", path: "/settings"),
+            ]
         ),
         "home": .init(
             domainId: "home",
             slots: [
-                .init(title: "Home", systemImage: "house", path: "/"),
-                .init(title: "Rooms", systemImage: "square.grid.3x3", path: "/storage"),
-                .init(title: "Items", systemImage: "shippingbox", path: "/items"),
-                .init(title: "Organize", systemImage: "arrow.triangle.2.circlepath", path: "/organize"),
+                .init(title: "平面", systemImage: "square.grid.2x2", path: "/plan"),
+                .init(title: "储藏", systemImage: "archivebox", path: "/storage"),
+                .init(title: "整理", systemImage: "checklist", path: "/tidy"),
+                .init(title: "More", systemImage: "ellipsis", opensMore: true),
             ],
-            more: []
+            more: [
+                .init(title: "Settings", systemImage: "gearshape", path: "/settings"),
+            ]
         ),
         "health": .init(
             domainId: "health",

@@ -17,14 +17,41 @@ GUI="gui/${UID_NUM}"
 AIOS_PORT="${KENOS_AIOS_PORT:-5219}"
 PLANNER_PORT="${KENOS_PLANNER_PORT:-5188}"
 FITNESS_PORT="${KENOS_FITNESS_PORT:-5190}"
+# Continuity companions (SSOT: domainIntegration.core.js / KenosDomainRegistry.swift)
+FINANCE_PORT="${KENOS_FINANCE_PORT:-5180}"
+KNOWLEDGE_PORT="${KENOS_KNOWLEDGE_PORT:-5879}"
+MUSIC_PORT="${KENOS_MUSIC_PORT:-5189}"
+HOME_PORT="${KENOS_HOME_PORT:-5196}"
+HEALTH_PORT="${KENOS_HEALTH_PORT:-5192}"
 
 AIOS_URL="http://127.0.0.1:${AIOS_PORT}"
 PLANNER_URL="http://127.0.0.1:${PLANNER_PORT}"
 FITNESS_URL="http://127.0.0.1:${FITNESS_PORT}"
+FINANCE_URL="http://127.0.0.1:${FINANCE_PORT}"
+KNOWLEDGE_URL="http://127.0.0.1:${KNOWLEDGE_PORT}"
+MUSIC_URL="http://127.0.0.1:${MUSIC_PORT}"
+HOME_URL="http://127.0.0.1:${HOME_PORT}"
+HEALTH_URL="http://127.0.0.1:${HEALTH_PORT}"
 
 LABEL_AIOS="com.kenpan.kenos-daily-beta.aios"
 LABEL_PLANNER="com.kenpan.kenos-daily-beta.planner"
 LABEL_FITNESS="com.kenpan.kenos-daily-beta.fitness"
+LABEL_FINANCE="com.kenpan.kenos-daily-beta.finance"
+LABEL_KNOWLEDGE="com.kenpan.kenos-daily-beta.knowledge"
+LABEL_MUSIC="com.kenpan.kenos-daily-beta.music"
+LABEL_HOME="com.kenpan.kenos-daily-beta.home"
+LABEL_HEALTH="com.kenpan.kenos-daily-beta.health"
+
+# Core Daily Beta release apps (snapshotted under ~/.kenos-daily-beta/current).
+CORE_LABELS=("$LABEL_AIOS" "$LABEL_PLANNER" "$LABEL_FITNESS")
+# Continuity companions serve live apps/<id>/build (not release snapshot).
+COMPANION_SPECS=(
+  "finance:${LABEL_FINANCE}:${FINANCE_PORT}:${FINANCE_URL}"
+  "knowledge:${LABEL_KNOWLEDGE}:${KNOWLEDGE_PORT}:${KNOWLEDGE_URL}"
+  "music:${LABEL_MUSIC}:${MUSIC_PORT}:${MUSIC_URL}"
+  "home:${LABEL_HOME}:${HOME_PORT}:${HOME_URL}"
+  "health:${LABEL_HEALTH}:${HEALTH_PORT}:${HEALTH_URL}"
+)
 
 NODE_BIN="${KENOS_NODE_BIN:-$(command -v node)}"
 PYTHON_BIN="${KENOS_PYTHON_BIN:-$(command -v python3)}"
@@ -49,12 +76,18 @@ sync_serve_bin() {
 }
 
 write_plist() {
-  local label="$1" app="$2" port="$3" build_rel="$4"
+  local label="$1" app="$2" port="$3" root_or_rel="$4"
   local plist="$HOME/Library/LaunchAgents/${label}.plist"
-  local root_abs="$CURRENT/apps/${build_rel}/build"
+  local root_abs
+  if [[ "$root_or_rel" == /* ]]; then
+    root_abs="$root_or_rel"
+  else
+    root_abs="$CURRENT/apps/${root_or_rel}/build"
+  fi
   local log_out="$LOG_DIR/${app}.stdout.log"
   local log_err="$LOG_DIR/${app}.stderr.log"
   # Resolve symlink so launchd does not depend on live symlink races
+  [[ -d "$root_abs" ]] || die "static root missing for $app: $root_abs"
   root_abs="$(cd "$root_abs" && pwd)"
   cat >"$plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -94,6 +127,31 @@ write_plist() {
 </dict>
 </plist>
 PLIST
+}
+
+companion_build_root() {
+  local app="$1"
+  echo "$ROOT/apps/${app}/build"
+}
+
+install_companions() {
+  local installed=0 skipped=0
+  local spec app label port url build
+  for spec in "${COMPANION_SPECS[@]}"; do
+    IFS=':' read -r app label port url <<<"$spec"
+    build="$(companion_build_root "$app")"
+    if [[ ! -d "$build" ]]; then
+      echo "  skip $app — missing $build (run npm run build -w ${app}-os or app build)"
+      skipped=$((skipped + 1))
+      continue
+    fi
+    write_plist "$label" "$app" "$port" "$build"
+    kill_port_holders "$port"
+    boot_agent "$label"
+    echo "  companion $app → :$port ($build)"
+    installed=$((installed + 1))
+  done
+  echo "✔ Continuity companions: $installed installed, $skipped skipped"
 }
 
 boot_agent() {
@@ -194,15 +252,22 @@ cmd_install() {
   boot_agent "$LABEL_AIOS"
   boot_agent "$LABEL_PLANNER"
   boot_agent "$LABEL_FITNESS"
-  echo "✔ LaunchAgents installed (RunAtLoad + KeepAlive + kickstart)"
+  echo "✔ Core LaunchAgents installed (RunAtLoad + KeepAlive + kickstart)"
+  install_companions
 }
 
 cmd_uninstall() {
-  for label in "$LABEL_AIOS" "$LABEL_PLANNER" "$LABEL_FITNESS"; do
+  local label spec
+  for label in "${CORE_LABELS[@]}"; do
     launchctl bootout "$GUI/$label" 2>/dev/null || true
     rm -f "$HOME/Library/LaunchAgents/${label}.plist"
   done
-  echo "✔ LaunchAgents removed"
+  for spec in "${COMPANION_SPECS[@]}"; do
+    IFS=':' read -r _ label _ _ <<<"$spec"
+    launchctl bootout "$GUI/$label" 2>/dev/null || true
+    rm -f "$HOME/Library/LaunchAgents/${label}.plist"
+  done
+  echo "✔ LaunchAgents removed (core + Continuity companions)"
 }
 
 cmd_start() {
@@ -211,26 +276,43 @@ cmd_start() {
     cmd_build
   fi
   cmd_install
-  # wait health
+  # wait health (core required; companions best-effort)
+  local i core_ok=0
   for i in $(seq 1 40); do
     if http_ok "$AIOS_URL/__health" && http_ok "$PLANNER_URL/__health" && http_ok "$FITNESS_URL/__health"; then
-      echo "✔ Daily Beta up"
-      echo "  Kenos  $AIOS_URL"
-      echo "  Plan   $PLANNER_URL"
-      echo "  Fit    $FITNESS_URL"
-      return 0
+      core_ok=1
+      break
     fi
     sleep 0.25
   done
-  die "services failed health — see $LOG_DIR and: $0 doctor"
+  [[ "$core_ok" -eq 1 ]] || die "core services failed health — see $LOG_DIR and: $0 doctor"
+  echo "✔ Daily Beta up"
+  echo "  Kenos     $AIOS_URL"
+  echo "  Plan      $PLANNER_URL"
+  echo "  Training  $FITNESS_URL"
+  local spec app label port url
+  for spec in "${COMPANION_SPECS[@]}"; do
+    IFS=':' read -r app label port url <<<"$spec"
+    if http_ok "$url/__health"; then
+      echo "  $app  $url"
+    else
+      echo "  $app  DOWN $url (build missing or still starting)"
+    fi
+  done
 }
 
 cmd_stop() {
-  for label in "$LABEL_AIOS" "$LABEL_PLANNER" "$LABEL_FITNESS"; do
+  local label spec
+  for label in "${CORE_LABELS[@]}"; do
+    launchctl bootout "$GUI/$label" 2>/dev/null || true
+  done
+  for spec in "${COMPANION_SPECS[@]}"; do
+    IFS=':' read -r _ label _ _ <<<"$spec"
     launchctl bootout "$GUI/$label" 2>/dev/null || true
   done
   # also stop non-launchd leftovers
   pkill -f "kenos-daily-beta/serve-static.mjs" 2>/dev/null || true
+  pkill -f "kenos-daily-beta/serve-static.py" 2>/dev/null || true
   echo "✔ Daily Beta stopped (data retained)"
 }
 
@@ -247,6 +329,7 @@ cmd_status() {
   else
     echo "  release: (none)"
   fi
+  local pair name url spec app
   for pair in "aios:$AIOS_URL" "planner:$PLANNER_URL" "fitness:$FITNESS_URL"; do
     name="${pair%%:*}"
     url="${pair#*:}"
@@ -256,6 +339,14 @@ cmd_status() {
       echo "  $name: DOWN $url"
     fi
   done
+  for spec in "${COMPANION_SPECS[@]}"; do
+    IFS=':' read -r app _ _ url <<<"$spec"
+    if http_ok "$url/__health"; then
+      echo "  $app: UP  $url"
+    else
+      echo "  $app: DOWN $url"
+    fi
+  done
 }
 
 cmd_doctor() {
@@ -263,16 +354,23 @@ cmd_doctor() {
   echo "=== kenos-doctor ==="
   cmd_status
   echo "--- ports ---"
-  for p in "$AIOS_PORT" "$PLANNER_PORT" "$FITNESS_PORT"; do
+  local p
+  for p in "$AIOS_PORT" "$PLANNER_PORT" "$FITNESS_PORT" "$FINANCE_PORT" "$KNOWLEDGE_PORT" "$MUSIC_PORT" "$HOME_PORT" "$HEALTH_PORT"; do
     if lsof -nP -iTCP:"$p" -sTCP:LISTEN >/dev/null 2>&1; then
       echo "  :$p LISTEN"
       lsof -nP -iTCP:"$p" -sTCP:LISTEN | awk 'NR==1 || /LISTEN/'
     else
-      echo "  :$p FREE (expected LISTEN when started)"
-      fail=1
+      # Companions are soft-required (need apps/*/build); core ports hard-fail.
+      if [[ "$p" == "$AIOS_PORT" || "$p" == "$PLANNER_PORT" || "$p" == "$FITNESS_PORT" ]]; then
+        echo "  :$p FREE (expected LISTEN when started)"
+        fail=1
+      else
+        echo "  :$p FREE (companion — start after app build)"
+      fi
     fi
   done
   echo "--- release identity ---"
+  local url out
   for url in "$AIOS_URL" "$PLANNER_URL" "$FITNESS_URL"; do
     if out="$(curl -sf --max-time 2 "$url/__kenos/release" 2>/dev/null)"; then
       echo "  $url → $out"
@@ -282,6 +380,7 @@ cmd_doctor() {
     fi
   done
   echo "--- app identity (HTML data-app) ---"
+  local pair name html
   for pair in "aios:$AIOS_URL" "planner:$PLANNER_URL" "fitness:$FITNESS_URL"; do
     name="${pair%%:*}"
     url="${pair#*:}"
@@ -294,6 +393,16 @@ cmd_doctor() {
     else
       echo "  $name identity FAIL"
       fail=1
+    fi
+  done
+  echo "--- Continuity companions ---"
+  local spec app label port
+  for spec in "${COMPANION_SPECS[@]}"; do
+    IFS=':' read -r app label port url <<<"$spec"
+    if http_ok "$url/__health"; then
+      echo "  $app OK $url"
+    else
+      echo "  $app DOWN $url"
     fi
   done
   echo "--- auth bootstrap (public supabase reachability) ---"
@@ -367,17 +476,20 @@ usage() {
 kenos-ctl.sh — Kenos Personal Daily Beta
 
   build      Build aios+planner+fitness into ~/.kenos-daily-beta/releases/<sha>
-  install    Install user LaunchAgents (login auto-start)
+  install    Install user LaunchAgents (core + Continuity companions)
   uninstall  Remove LaunchAgents
   start      Ensure release + start services
   stop       Stop services (keep data)
   restart    Stop + start
-  status     Health summary
+  status     Health summary (core + money/library/music/home/health)
   doctor     Deep health + identity + rollback target
   rollback   Swap to previous release and start
   open       start + open Kenos Chrome app window
   snapshot   Write pre-release safety note
 
+Core:       $AIOS_URL / $PLANNER_URL / $FITNESS_URL
+Companions: finance:$FINANCE_PORT knowledge:$KNOWLEDGE_PORT music:$MUSIC_PORT home:$HOME_PORT health:$HEALTH_PORT
+            (serve apps/<id>/build on 0.0.0.0 when build/ exists)
 Daily entry: $AIOS_URL/
 EOF
 }
