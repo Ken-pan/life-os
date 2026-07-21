@@ -35,6 +35,8 @@ CONTROLLED_PRODUCTION_CANARY
 MAC WEB DAILY BETA: READY
 IOS PERSONAL DAILY BETA: READY_LAN_DEPENDENT
 IOS DAILY BETA STABILIZATION: AUTOMATED STABILITY PASSED / OWNER 3-DAY DOGFOOD OPEN
+LAN ORIGIN: STABLE_HOSTNAME (mDNS LocalHostName.local)
+DHCP IP DEPENDENCY: CLOSED
 OVERALL PERSONAL DAILY BETA: READY_LAN_DEPENDENT
 NETWORK SCOPE (iOS): LAN-DEPENDENT
 ```
@@ -42,10 +44,11 @@ NETWORK SCOPE (iOS): LAN-DEPENDENT
 iOS 真机证据：
 
 - Daily Beta acceptance：`docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`
-- Stability closure（2026-07-21）：`docs/qa/evidence/kenos-ios-stability-2026-07-21/`（preflight/smoke/soak/doctor、Flow A/B PASS after Planner LWW fix）
-- Current native build recorded：`202607211716` / HEAD `71ad6d5f3aca78a1b7985e77061f13fac59afb10`（plus local Planner `coerceTimestamp` fix for ISO `updatedAt` LWW）
+- Stability closure：`docs/qa/evidence/kenos-ios-stability-2026-07-21/`
+- Dogfood kit：`docs/qa/evidence/kenos-ios-dogfood-2026-07/`（`DOGFOOD_CHECKLIST.md` · `npm run kenos:ios-dogfood-check`）
+- Current native build：`202607211735` / install SHA `de41869ae…` · origin `http://Kens-M5-Max-MacBook-Pro.local:5219`
 
-Phase 4 仍 `EXIT_OPEN`（App Group / APNs / 分发）。**不得**将本车道写成 `READY_LAN_DEPENDENT_STABILIZED`（三日 Owner dogfood 未完成）或 Phase 4 complete。
+Phase 4 仍 `EXIT_OPEN`。**不得**写成 `READY_LAN_DEPENDENT_STABILIZED`（三日 Owner dogfood 未完成）。
 
 ## 2. 状态词汇
 

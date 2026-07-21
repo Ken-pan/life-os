@@ -13,19 +13,19 @@ status: controlled-production-canary-legacy-cutover-open
 ## 当前快照（2026-07-21）
 
 - Formal baseline: `502d805c28b29d3d50c0efa2699ab717a301ac45`。
-- Working HEAD at stability lane: `71ad6d5f3aca78a1b7985e77061f13fac59afb10` (+ Planner `coerceTimestamp` LWW fix in working tree / Daily Beta release rebuild).
+- Working tip evolves on `master` (hostname lane after `de41869ae` install SHA).
 - Production migration tip: `20260721144405`（`kenos_app_logs`；prior Wave tip `20260720230000`）。
 - Owner cohort: Plan create/title/due/schedule/project/complete/reopen/archive、MCP complete、Capture convert 已走 Kenos command/RPC；非 cohort、未覆盖字段和 sync upsert 仍有 legacy fallback。
 - AIOS / Portal: Approval/Capture canary 与 Portal `/today` owner-limited soft redirect 已有生产证据；Portal 未退役。
 - Apple / Phase 5: 多端代码、构建、device install/open 和本地 contextual behavior 已验证；App Group/APNs/分发、ProductionExecutor 与生产主动能力仍关闭。
 - Personal Daily Beta：**Mac Web READY**；**iOS READY_LAN_DEPENDENT** on Ken’s 17 Pro。
-- **iOS Daily Beta Stabilization（2026-07-21 reliability closure）：**
+- **iOS Daily Beta Stabilization（2026-07-21 reliability + hostname）：**
   - `AUTOMATED STABILITY: PASSED`
-  - `OWNER 3-DAY DOGFOOD: OPEN`
-  - Native build `202607211716` / install SHA aligned to HEAD
-  - Preflight/smoke/soak/doctor PASS；Flow A `PASS_DEVICE_SESSION_MUTATE`；Flow B `PASS_DEVICE_DEEPLINK_SET2`
-  - Product fix: Planner LWW ISO `updatedAt` coerce（防止 Continuity sync 覆盖更新的 REST mutation）
-  - Residual P1: LAN DHCP IP origin；true Mac sleep / phone Wi‑Fi = Owner
+  - `LAN ORIGIN: STABLE_HOSTNAME` · `DHCP IP DEPENDENCY: CLOSED`
+  - `OWNER 3-DAY DOGFOOD: OPEN` · kit `docs/qa/evidence/kenos-ios-dogfood-2026-07/`
+  - Native build `202607211735` · origin `http://Kens-M5-Max-MacBook-Pro.local:5219`
+  - Product fixes: Planner LWW `coerceTimestamp`；`KenosOriginResolver` mDNS
+  - Owner-only residual: true Mac sleep / Wi‑Fi / reboot
   - Evidence: `docs/qa/evidence/kenos-ios-stability-2026-07-21/`
   - **不关 Phase 4**；**不宣称** `READY_LAN_DEPENDENT_STABILIZED`
 - Program verdict: `CONTROLLED_PRODUCTION_CANARY_WITH_OPEN_EXITS`。

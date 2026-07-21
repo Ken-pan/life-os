@@ -1,0 +1,19 @@
+{
+  "ts": "2026-07-21T17:37:32.564Z",
+  "head": "de41869aecbce0201036288bba49ebdd4b59c208",
+  "build": {
+    "iosBuildSha": "de41869aecbce0201036288bba49ebdd4b59c208",
+    "iosBuildNumber": "202607211735",
+    "releaseSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "releaseShort": "71ad6d5f3"
+  },
+  "originHost": "kens-m5-max-macbook-pro.local:5219",
+  "stableHostname": true,
+  "localHostName": "Kens-M5-Max-MacBook-Pro",
+  "deviceOnline": true,
+  "appInstalled": true,
+  "appBuild": "202607211735",
+  "rollback": true,
+  "issues": [],
+  "doctorExit": 0
+}

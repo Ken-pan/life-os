@@ -1,0 +1,35 @@
+{
+  "day": 2,
+  "kind": "OWNER_DOGFOOD",
+  "date": null,
+  "build": null,
+  "network": null,
+  "coreChecklist": {
+    "coldLaunch": null,
+    "today": null,
+    "continuePlan": null,
+    "editTestTask": null,
+    "returnKenos": null,
+    "continueTraining": null,
+    "setState": null,
+    "assistant": null,
+    "inbox": null,
+    "spaceShelf": null,
+    "quickSwitch": null,
+    "backgroundForeground": null,
+    "forceQuitRelaunch": null,
+    "unexpectedRelogin": null,
+    "whiteScreenSafariDoubleDockLeak": null
+  },
+  "fault": {
+    "name": "mac_sleep_wake",
+    "expected": "no wipe; retry works; no forced logout",
+    "actual": null,
+    "recovered": null
+  },
+  "issues": [],
+  "severity": null,
+  "userImpact": null,
+  "doctorSummary": null,
+  "notes": ""
+}

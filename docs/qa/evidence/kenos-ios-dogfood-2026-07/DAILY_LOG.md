@@ -1,6 +1,7 @@
 # DAILY_LOG — Kenos iOS Dogfood
 
 > Only real calendar days. Do not invent usage.
+> Checklist: `DOGFOOD_CHECKLIST.md` · Daily check: `npm run kenos:ios-dogfood-check`
 
 ## Day 0 — 2026-07-21 (setup)
 
@@ -12,4 +13,10 @@
 ### Owner notes
 
 - (fill after real use)
+
+## Hostname lane — 2026-07-21 (AUTOMATED)
+
+- Migrating LAN origin from DHCP IP → `LocalHostName.local` mDNS
+- Dogfood kit files added (`DOGFOOD_CHECKLIST.md`, `day-1..3.json`)
+- Counted Owner days still **0**
 
