@@ -218,7 +218,12 @@ export function openPlannerContinue({ handoffToKenos = true, descriptor } = {}) 
     /* ignore */
   }
   if (handoffToKenos && browser) {
-    const url = buildKenosContinueHandoffUrl(resolveKenosOrigin(), {
+    const kenOsOrigin = resolveKenosOrigin({
+      location: window.location,
+      VITE_KENOS_CONTINUE_ORIGIN: import.meta.env.VITE_KENOS_CONTINUE_ORIGIN,
+      VITE_KENOS_LOCAL_DAILY_BETA: import.meta.env.VITE_KENOS_LOCAL_DAILY_BETA,
+    })
+    const url = buildKenosContinueHandoffUrl(kenOsOrigin, {
       ...d,
       // Absolute route so Kenos can deep-link back
       route: new URL(

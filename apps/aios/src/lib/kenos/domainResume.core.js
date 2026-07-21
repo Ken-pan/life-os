@@ -32,8 +32,59 @@ export const DOMAIN_ORIGINS = Object.freeze({
   knowledge: LIFE_OS_APP_ORIGINS.knowledge.production,
 })
 
+/** Stable local Personal Daily Beta AIOS port (see scripts/kenos-daily-beta). */
+export const LOCAL_DAILY_BETA_AIOS_ORIGIN = 'http://127.0.0.1:5219'
+
 /**
- * Origins allowed for Continue resume (production + local Vite previews).
+ * Build-time Personal Daily Beta: deep links target local Planner/Fitness ports
+ * instead of production. Does not change descriptor schema.
+ * @param {{ VITE_KENOS_LOCAL_DAILY_BETA?: string }} [env]
+ */
+export function isLocalDailyBeta(env = import.meta.env) {
+  return String(env?.VITE_KENOS_LOCAL_DAILY_BETA || '') === '1'
+}
+
+/**
+ * @param {DomainId | string} domainId
+ * @param {{ VITE_KENOS_LOCAL_DAILY_BETA?: string }} [env]
+ */
+export function resolveDomainOrigin(domainId, env = import.meta.env) {
+  const id = /** @type {DomainId} */ (domainId)
+  const appId = DOMAIN_APP_IDS[id]
+  const cfg = appId ? LIFE_OS_APP_ORIGINS[appId] : null
+  if (isLocalDailyBeta(env) && cfg?.devPort) {
+    return `http://127.0.0.1:${cfg.devPort}`
+  }
+  return DOMAIN_ORIGINS[id] || null
+}
+
+/**
+ * Rewrite a production domain URL to the matching local daily-beta origin.
+ * @param {string} href
+ * @param {{ VITE_KENOS_LOCAL_DAILY_BETA?: string }} [env]
+ */
+export function rewriteDomainHrefForLocalDailyBeta(href, env = import.meta.env) {
+  if (!isLocalDailyBeta(env)) return href
+  try {
+    const url = new URL(String(href || '').trim())
+    for (const [domainId, appId] of Object.entries(DOMAIN_APP_IDS)) {
+      const cfg = LIFE_OS_APP_ORIGINS[appId]
+      if (!cfg) continue
+      const prod = new URL(cfg.production).origin
+      if (url.origin === prod) {
+        url.protocol = 'http:'
+        url.host = `127.0.0.1:${cfg.devPort}`
+        return url.toString()
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return href
+}
+
+/**
+ * Origins allowed for Continue resume (production + local Vite / daily-beta ports).
  * @returns {string[]}
  */
 export function knownDomainOrigins() {
@@ -92,10 +143,17 @@ export const FITNESS_ACTIVE_RESUME = Object.freeze({
  * @param {DomainId | string} domainId
  * @param {string} [path] absolute path or full URL
  */
-export function domainDeepLink(domainId, path = '/') {
-  const origin = DOMAIN_ORIGINS[/** @type {DomainId} */ (domainId)]
+/**
+ * @param {DomainId | string} domainId
+ * @param {string} [path] absolute path or full URL
+ * @param {{ VITE_KENOS_LOCAL_DAILY_BETA?: string }} [env]
+ */
+export function domainDeepLink(domainId, path = '/', env = import.meta.env) {
+  const origin = resolveDomainOrigin(domainId, env)
   if (!origin) return path
-  if (/^https?:\/\//i.test(path)) return path
+  if (/^https?:\/\//i.test(path)) {
+    return rewriteDomainHrefForLocalDailyBeta(path, env)
+  }
   const normalized = path.startsWith('/') ? path : `/${path}`
   return `${origin}${normalized === '/' ? '' : normalized}`
 }

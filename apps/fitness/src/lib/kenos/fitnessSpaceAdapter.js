@@ -276,7 +276,12 @@ export function openFitnessContinue({ handoffToKenos = true, dayId, exIndex } = 
       { ...d, route: pathOnly },
       { origin: window.location.origin },
     )
-    const url = buildKenosContinueHandoffUrl(resolveKenosOrigin(), {
+    const kenOsOrigin = resolveKenosOrigin({
+      location: window.location,
+      VITE_KENOS_CONTINUE_ORIGIN: import.meta.env.VITE_KENOS_CONTINUE_ORIGIN,
+      VITE_KENOS_LOCAL_DAILY_BETA: import.meta.env.VITE_KENOS_LOCAL_DAILY_BETA,
+    })
+    const url = buildKenosContinueHandoffUrl(kenOsOrigin, {
       ...d,
       route: openUrl.startsWith('http')
         ? openUrl

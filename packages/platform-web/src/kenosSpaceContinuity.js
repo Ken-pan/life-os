@@ -252,6 +252,23 @@ export function buildKenosContinueHandoffUrl(
  * @param {{ location?: { hostname?: string, protocol?: string } }} [env]
  */
 export function resolveKenosOrigin(env = globalThis) {
+  const override = String(
+    env?.VITE_KENOS_CONTINUE_ORIGIN ||
+      (typeof import.meta !== 'undefined' &&
+        import.meta.env?.VITE_KENOS_CONTINUE_ORIGIN) ||
+      '',
+  ).trim()
+  if (override) return override.replace(/\/$/, '')
+
+  const dailyBeta =
+    String(
+      env?.VITE_KENOS_LOCAL_DAILY_BETA ||
+        (typeof import.meta !== 'undefined' &&
+          import.meta.env?.VITE_KENOS_LOCAL_DAILY_BETA) ||
+        '',
+    ) === '1'
+  if (dailyBeta) return 'http://127.0.0.1:5219'
+
   const cfg = LIFE_OS_APP_ORIGINS.aios
   try {
     const host = env?.location?.hostname || ''

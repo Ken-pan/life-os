@@ -10,6 +10,7 @@
 
 import {
   knownDomainOrigins,
+  rewriteDomainHrefForLocalDailyBeta,
 } from './domainResume.core.js'
 import { buildSpacesList, spaceListKey } from './spacesList.core.js'
 import {
@@ -396,11 +397,14 @@ export function resolveSpaceOpenHref(space, state, { now = Date.now() } = {}) {
     })
     if (openUrl.startsWith('/') && !space.external) return openUrl
     if (space.external && isAllowedExternalResume(space.href, openUrl))
-      return openUrl
-    if (!space.external && isKnownDomainResume(openUrl)) return openUrl
+      return rewriteDomainHrefForLocalDailyBeta(openUrl)
+    if (!space.external && isKnownDomainResume(openUrl))
+      return rewriteDomainHrefForLocalDailyBeta(openUrl)
     if (route.startsWith('/') && !space.external) return route
-    if (space.external && isAllowedExternalResume(space.href, route)) return route
-    if (!space.external && isKnownDomainResume(route)) return route
+    if (space.external && isAllowedExternalResume(space.href, route))
+      return rewriteDomainHrefForLocalDailyBeta(route)
+    if (!space.external && isKnownDomainResume(route))
+      return rewriteDomainHrefForLocalDailyBeta(route)
   } catch {
     /* fall through */
   }
