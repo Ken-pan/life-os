@@ -30,7 +30,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>20260721</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>KENOS_DAILY_BETA_ORIGIN</key>
 	<string>$(KENOS_DAILY_BETA_ORIGIN)</string>
 	<key>NSAppTransportSecurity</key>

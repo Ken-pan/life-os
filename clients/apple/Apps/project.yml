@@ -41,7 +41,7 @@ targets:
       properties:
         CFBundleDisplayName: Kenos
         CFBundleShortVersionString: "1.0.0"
-        CFBundleVersion: "20260721"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait

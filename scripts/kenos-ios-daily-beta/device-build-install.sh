@@ -12,9 +12,9 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 APPS="$ROOT/clients/apple/Apps"
 DERIVED="${KENOS_IOS_DERIVED:-$APPS/build-device}"
 TEAM="${KENOS_IOS_TEAM:-93NJ4CAU8B}"
-DEVICE="${KENOS_IOS_DEVICE:-DB1122B8-C6A8-5DB2-958B-637D01E25BF5}"
-# Default: Ken’s iPhone 15 Pro (wired daily-beta target). Override for 17 Pro:
-#   KENOS_IOS_DEVICE=8097F071-CAB6-5AF0-8258-BCD985E9D79E
+DEVICE="${KENOS_IOS_DEVICE:-8097F071-CAB6-5AF0-8258-BCD985E9D79E}"
+# Default: Ken’s 17 Pro (formal Daily Beta acceptance device).
+# 15 Pro (wired assist only): KENOS_IOS_DEVICE=DB1122B8-C6A8-5DB2-958B-637D01E25BF5
 BUNDLE_ID="space.kenos.app.ios"
 
 LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
@@ -59,7 +59,7 @@ xcodebuild \
   -project Kenos.xcodeproj \
   -scheme KenosIOS \
   -configuration Debug \
-  -destination "id=${DEVICE}" \
+  -destination "generic/platform=iOS" \
   -derivedDataPath "$DERIVED" \
   -allowProvisioningUpdates \
   DEVELOPMENT_TEAM="$TEAM" \
@@ -76,13 +76,16 @@ fi
 
 APP="$DERIVED/Build/Products/Debug-iphoneos/KenosIOS.app"
 [[ -d "$APP" ]] || { echo "ERROR: missing $APP" >&2; exit 1; }
+echo "==> CFBundleVersion=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist" 2>/dev/null || echo unknown)"
 
 echo "==> Installing $APP"
 xcrun devicectl device install app --device "$DEVICE" "$APP"
 
 echo "==> Launching $BUNDLE_ID (unlock phone if needed)"
 set +e
-xcrun devicectl device process launch --device "$DEVICE" "$BUNDLE_ID"
+xcrun devicectl device process launch --device "$DEVICE" --terminate-existing \
+  --payload-url "${ORIGIN}/?iosNativeShell=1" \
+  "$BUNDLE_ID"
 LAUNCH_EC=$?
 set -e
 
