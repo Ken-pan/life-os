@@ -14,16 +14,18 @@
    */
   let {
     title = '',
-    domainLabel = 'Plan',
+    domainLabel = '',
     showCompose = false,
     showListsMenu = false,
     showBack = false,
   } = $props()
+  // Product Space name — keep “Plan” in both locales (like Spaces).
+  const resolvedDomainLabel = $derived(domainLabel || 'Plan')
 </script>
 
 <DomainMusicHeader
   {title}
-  {domainLabel}
+  domainLabel={resolvedDomainLabel}
   {showCompose}
   {showListsMenu}
   {showBack}
@@ -31,5 +33,4 @@
   listsMenuAriaLabel={t('nav.openLists')}
   onListsMenu={openTaskDrawer}
   backLabel={t('common.back')}
-  quickSwitchLabel={t('nav.quickSwitch')}
 />

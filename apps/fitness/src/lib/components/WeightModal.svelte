@@ -26,7 +26,12 @@
   } from '$lib/tools/calculators.js';
   import { recommendNextWeight } from '$lib/progression.js';
   import { equipLabel, equipHint } from '$lib/tools/calculators.js';
+  import { useSheetEnterShown } from '@life-os/platform-web/svelte/overlay';
   import { t } from '$lib/i18n/index.js';
+
+  const modalEnter = useSheetEnterShown(() =>
+    Boolean(weightModal.open && weightModal.ex),
+  );
 
   let val = $state(0);
   let bar = $state(45);
@@ -221,7 +226,8 @@
 
 {#if weightModal.open && weightModal.ex}
 <div
-  class="modal-bg show"
+  class="modal-bg"
+  class:show={modalEnter.shown}
   onclick={onBgClick}
   role="presentation"
 >

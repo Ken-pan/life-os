@@ -34,5 +34,4 @@
   backHref={resolvedBack}
   backLabel={backLabel || t('common.back')}
   composeAriaLabel={t('import.title')}
-  quickSwitchLabel={t('nav.quickSwitch')}
 />

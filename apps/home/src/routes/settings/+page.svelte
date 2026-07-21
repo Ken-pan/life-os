@@ -11,6 +11,7 @@
   import SettingsSyncBlock from '@life-os/platform-web/svelte/settings/sync-block'
   import SettingsAppearanceBlock from '@life-os/platform-web/svelte/settings/appearance-block'
   import { scrollToSettingsHash } from '@life-os/platform-web/settings-hash'
+  import { publishShellTheme } from '@life-os/platform-web/kenos-shell-settings'
   import {
     S,
     setTheme,
@@ -112,7 +113,7 @@
 
   /** @param {import('@life-os/contracts/appearance').ColorSchemePreference} value */
   function onTheme(value) {
-    setTheme(value)
+    void publishShellTheme(value, setTheme)
   }
 
   /** @param {SubmitEvent} e */

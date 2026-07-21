@@ -377,7 +377,7 @@ export function buildFitnessNavManifest() {
   const setHint = progress?.exId
     ? `Training · ${progress.done}/${progress.total}`
     : 'Training'
-  // Align with KenosDomainRegistry Training dock: Today · Program · Discover · More
+  // Align with KenosDomainRegistry Training dock: Today · Program · Library · More
   const pathname = browser ? window.location.pathname : '/'
   let activeTab = 'today'
   if (onFocus || pathname.includes('/session')) activeTab = 'more'
@@ -427,8 +427,10 @@ export function installKenosFitnessBridge() {
     },
     discard() {},
     compose() {
+      // Deep-link / dock "Workout" entry — land on today's focus (skip /session flash).
       void sensory('soft')
-      void goto('/session')
+      const dayId = todayDayId()
+      void goto(dayId ? `/day/${dayId}/focus` : '/program')
       void publishFitnessNavManifest()
     },
   }

@@ -5,7 +5,6 @@
   import { todayDayId, lastSessionForDay, estMinutes, ORDER } from '$lib/state.svelte.js';
   import { reveal } from '$lib/actions/reveal.js';
   import Icon from '@life-os/platform-web/svelte/icon';
-  import KnowledgeTrigger from '$lib/components/KnowledgeTrigger.svelte';
   import { t } from '$lib/i18n/index.js';
   import { dayDisplayFull } from '$lib/i18n/programLabels.js';
 
@@ -14,25 +13,36 @@
   const m = $derived(program.meta);
   const extras = $derived(Object.keys(program.days).filter((id) => program.days[id].supp));
   const rotLabel = $derived(rotationLabel(program));
+  const daysPerWeek = $derived(
+    Number(m.daysPerWeek) > 0 ? Number(m.daysPerWeek) : ORDER().length,
+  );
+  const dayOrder = $derived.by(() => {
+    const ids = ORDER();
+    if (!recId || ids[0] === recId) return ids;
+    return [recId, ...ids.filter((id) => id !== recId)];
+  });
 </script>
 
 <section class="view">
   <div class="wrap">
-    <div class="sec-header" use:reveal>
+    <div class="prog-plan-summary" use:reveal>
       <span class="tag" data-ui-decor="tag">{t('program.tag')}</span>
-      <span class="sec-note">{m.name}</span>
-      <KnowledgeTrigger entryId="volume-landmarks" />
-      <KnowledgeTrigger entryId="mesocycle" />
+      <div class="prog-plan-line">
+        {t('program.cycleLabel')} · {m.name}
+      </div>
+      <div class="prog-plan-line">
+        {t('program.frequencyLabel')} · {t('program.frequencyValue', { n: daysPerWeek })}
+      </div>
+      <a class="btn-link prog-plan-manage" href="/program/edit">
+        {t('program.managePlan')}
+        <Icon name="chevron-right" size={11} />
+      </a>
     </div>
-    <p class="lib-intro">
-      {t('program.intro', { rotation: rotLabel })}
-      <KnowledgeTrigger entryId="rotation" />
-      <KnowledgeTrigger entryId="frequency" />
-      <a class="btn-link" href="/program/edit" style="margin-left:8px">{t('program.customEdit')} <Icon name="chevron-right" size={11} /></a>
-    </p>
+
+    <p class="lib-intro">{t('program.intro', { rotation: rotLabel })}</p>
 
     <div class="prog-list">
-      {#each ORDER() as did (did)}
+      {#each dayOrder as did (did)}
         {@const d = program.days[did]}
         {@const ls = lastSessionForDay(did)}
         {@const isNext = did === recId}
@@ -97,3 +107,26 @@
     {/if}
   </div>
 </section>
+
+<style>
+  .prog-plan-summary {
+    margin: 0 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .prog-plan-line {
+    font-size: 0.92rem;
+    color: var(--text-2, inherit);
+    opacity: 0.9;
+  }
+
+  .prog-plan-manage {
+    align-self: flex-start;
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+</style>

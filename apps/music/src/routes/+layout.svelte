@@ -29,8 +29,14 @@
   import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
   import { ICONS } from '$lib/iconRegistry.js'
   import { subscribeSyncError } from '$lib/syncNotify.js'
-  import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
-  import { applyLocale, t } from '$lib/i18n/index.js'
+  import {
+    S,
+    save,
+    applyTheme,
+    bindAppThemeSystemChange,
+  } from '$lib/state.svelte.js'
+  import { applyLocale, setLocale, t } from '$lib/i18n/index.js'
+  import { bindKenosShellSettings } from '@life-os/platform-web/kenos-shell-settings'
   import {
     resolvePageTitle,
     resolvePageBack,
@@ -174,6 +180,16 @@
   onMount(() => {
     markIosNativeShellDom()
     const continuity = isIosNativeShell()
+    const cleanupShellSettings = bindKenosShellSettings({
+      getTheme: () => S.settings.theme,
+      setTheme: (theme) => {
+        S.settings.theme = theme
+        save()
+      },
+      applyTheme,
+      getLocale: () => S.settings.locale,
+      setLocale,
+    })
     /** @type {{ kind: 'ric' | 'timeout'; id: number }[]} */
     const idleHandles = []
     /** @param {() => void} fn */
@@ -251,6 +267,7 @@
         if (handle.kind === 'ric') cancelIdleCallback(handle.id)
         else clearTimeout(handle.id)
       }
+      cleanupShellSettings()
       cleanupShortcuts()
       cleanupTheme()
       cleanupAuth()
@@ -424,7 +441,7 @@
   }
   :global(html[data-ios-native-shell='true'] .life-os-app-shell__main),
   :global(html[data-ios-native-shell='true'] #main-content) {
-    padding-top: 54px !important;
+    padding-top: var(--kenos-chrome-top-inset, 54px) !important;
     padding-bottom: calc(
       var(--kenos-domain-dock-h) + env(safe-area-inset-bottom, 0px)
     ) !important;
@@ -448,8 +465,8 @@
   }
   :global(html[data-ios-native-shell='true'] .domain-music-header) {
     padding-top: 0;
-    padding-bottom: 8px;
-    padding-inline: 16px;
+    padding-bottom: var(--kenos-chrome-header-pad-bottom, 8px);
+    padding-inline: var(--kenos-chrome-inline, 16px);
   }
   :global(html[data-ios-native-shell='true'] .page-header),
   :global(html[data-ios-native-shell='true'] .topbar),

@@ -26,12 +26,17 @@
     noteSpaceVisit,
     syncSpaceSwitcherOwner,
     openContinueSheet,
-    openQuickSwitchSheet,
     openSwitchSpaceSheet,
   } from '$lib/kenos/spaceSwitcher.svelte.js'
   import { ICONS } from '$lib/iconRegistry.js'
-  import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
+  import {
+    S,
+    save,
+    applyTheme,
+    bindAppThemeSystemChange,
+  } from '$lib/state.svelte.js'
   import { refreshGateway } from '$lib/chat.svelte.js'
+  import { takeLayoutBoot } from '$lib/kenos/layoutBoot.core.js'
   import {
     backfillVectors,
     dreamMemories,
@@ -53,7 +58,8 @@
   } from '$lib/proactive.svelte.js'
   import { CLOUD_BUILD } from '$lib/env.js'
   import CloudGate from '$lib/components/CloudGate.svelte'
-  import { t, applyLocale } from '$lib/i18n/index.js'
+  import { t, applyLocale, setLocale } from '$lib/i18n/index.js'
+  import { bindKenosShellSettings } from '@life-os/platform-web/kenos-shell-settings'
   import { refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
   import {
     canRetryReconnect,
@@ -174,8 +180,12 @@
       captureOpen = true
       return
     }
-    // Continue — Cmd/Ctrl + .  ·  Quick Switch — Cmd/Ctrl + Shift + .
-    if ((event.metaKey || event.ctrlKey) && event.key === '.') {
+    // Continue — Cmd/Ctrl + . (Space switching is Shelf-only; no Quick Switch shortcut)
+    if (
+      (event.metaKey || event.ctrlKey) &&
+      event.key === '.' &&
+      !event.shiftKey
+    ) {
       const tag = /** @type {HTMLElement | null} */ (event.target)?.tagName
       if (
         tag === 'INPUT' ||
@@ -185,8 +195,7 @@
         return
       }
       event.preventDefault()
-      if (event.shiftKey) openQuickSwitchSheet()
-      else openContinueSheet()
+      openContinueSheet()
     }
   }
 
@@ -237,11 +246,23 @@
 
   onMount(() => {
     markIosNativeShellDom()
+    const cleanupShellSettings = bindKenosShellSettings({
+      getTheme: () => S.settings.theme,
+      setTheme: (theme) => {
+        S.settings.theme = theme
+        save()
+      },
+      applyTheme,
+      getLocale: () => S.settings.locale,
+      setLocale,
+    })
     hydrateFocusStore()
     hydrateSpaceSwitcher()
     applyTheme()
     applyLocale()
-    refreshGateway()
+    // Cached ping — safe on remount; avoids Today↔Ask /v1/models storms.
+    void refreshGateway()
+    const firstBoot = takeLayoutBoot()
     // 云同步恢复后：自动写入 Life OS MCP 舰队，再发现工具
     initCloud().then(() => {
       syncSpaceSwitcherOwner()
@@ -249,6 +270,7 @@
         // Auth wall: do not seed/hydrate prior-user memory
         return
       }
+      if (!firstBoot) return
       if (!CLOUD_BUILD) hydrateMemoryFromLocalStorage()
       seedDefaultMemories()
       backfillVectors()
@@ -257,10 +279,12 @@
         .catch(() => {})
     })
     // 记忆 dreaming:启动稳定后空闲整理(内部限 24h 一次)
-    const dreamTimer = setTimeout(() => {
-      if (CLOUD_BUILD && !isCloudAuthorized()) return
-      dreamMemories()
-    }, 30000)
+    const dreamTimer = firstBoot
+      ? setTimeout(() => {
+          if (CLOUD_BUILD && !isCloudAuthorized()) return
+          dreamMemories()
+        }, 30000)
+      : null
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupViewport = bindViewportHeight()
     // 回到前台时拉一次云端:让别的设备的改动无需手动/刷新就收敛过来
@@ -288,6 +312,7 @@
     return () => {
       clearTimeout(dreamTimer)
       clearReconnectTimer()
+      cleanupShellSettings()
       cleanupTheme()
       cleanupViewport()
       cleanupVisibility()
@@ -359,17 +384,7 @@
       >
         {#snippet trailing()}
           {#if !hideGlobalNav}
-            <!-- Desktop AppBar — Continue + Quick Switch (Switch Space lives in sidebar All) -->
-            <button
-              type="button"
-              class="space-switcher-trigger desktop-only-continue"
-              data-testid="kenos-quick-switch-trigger"
-              aria-label="Quick Switch"
-              title="Quick Switch (⌘⇧.)"
-              onclick={openQuickSwitchSheet}
-            >
-              Search
-            </button>
+            <!-- Desktop AppBar — Continue only (Switch Space is Shelf-only) -->
             <button
               type="button"
               class="space-switcher-trigger desktop-only-continue"
@@ -469,7 +484,7 @@
   :global(html[data-ios-native-shell='true']) {
     --kenos-system-bar-h: 0px;
     --kenos-mobile-bottom-pad: 0px;
-    --kenos-space-inline: 16px;
+    --kenos-space-inline: var(--kenos-chrome-inline, 16px);
     --kenos-space-page-top: 0px;
     --mobile-tabbar-total-h: 0px;
     --mobile-content-inset: 0px;
@@ -480,13 +495,21 @@
   }
   :global(html[data-ios-native-shell='true'] body) {
     min-height: 100dvh;
+    background: var(--bg, #f5f3f0);
+  }
+  :global(html[data-ios-native-shell='true'][data-theme='dark'] body) {
     background: var(--bg, #08090a);
   }
   /* Status-bar clearance only (was 72px for fixed floating tools). */
   :global(html[data-ios-native-shell='true'] .life-os-app-shell__main),
   :global(html[data-ios-native-shell='true'] #main-content) {
-    padding-top: 54px !important;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-top: var(--kenos-chrome-top-inset, 54px) !important;
+    padding-bottom: calc(
+      env(safe-area-inset-bottom, 0px) + var(--kenos-dock-scroll-end-pad, 78px)
+    ) !important;
+    scroll-padding-bottom: calc(
+      env(safe-area-inset-bottom, 0px) + var(--kenos-dock-scroll-end-pad, 78px)
+    ) !important;
     box-sizing: border-box !important;
   }
   :global(html[data-ios-native-shell='true'] .today-page) {
@@ -523,7 +546,7 @@
   :global(html[data-ios-native-shell='true'] .control-page-header),
   :global(html[data-ios-native-shell='true'] .spaces-header) {
     padding-top: 0 !important;
-    padding-bottom: 8px !important;
+    padding-bottom: var(--kenos-chrome-title-to-content, 8px) !important;
     border-bottom: 0 !important;
   }
   :global(html[data-ios-native-shell='true'] .today-actions) {

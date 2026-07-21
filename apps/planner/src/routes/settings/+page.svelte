@@ -12,6 +12,11 @@
   import SettingsSyncBlock from '@life-os/platform-web/svelte/settings/sync-block'
   import SettingsBackupBlock from '$lib/components/settings/SettingsBackupBlock.svelte'
   import { scrollToSettingsHash } from '@life-os/platform-web/settings-hash'
+  import {
+    publishShellTheme,
+    publishShellLocale,
+    publishNotificationCategoryEnabled,
+  } from '@life-os/platform-web/kenos-shell-settings'
   import { toast } from '$lib/ui.svelte.js'
   import { userLists } from '$lib/state.svelte.js'
   import { auth, signOut } from '$lib/auth.svelte.js'
@@ -193,8 +198,10 @@
       title={t('settings.appearance')}
       theme={S.settings.theme || 'auto'}
       onThemeChange={(theme) => {
-        updateSettings({ theme })
-        applyTheme()
+        void publishShellTheme(theme, (next) => {
+          updateSettings({ theme: next })
+          applyTheme()
+        })
       }}
       themeOptions={[
         { value: 'light', label: t('settings.themeLight') },
@@ -204,7 +211,9 @@
       themeLabel={t('settings.theme')}
       themeDesc={t('settings.themeDesc')}
       locale={S.settings.locale}
-      onLocaleChange={setLocale}
+      onLocaleChange={(locale) => {
+        void publishShellLocale(locale, setLocale)
+      }}
       localeOptions={[
         { value: 'zh', label: t('settings.langZh') },
         { value: 'en', label: t('settings.langEn') },
@@ -239,6 +248,7 @@
           return
         }
         updateSettings({ notificationsEnabled: checked })
+        void publishNotificationCategoryEnabled('plan_reminder', checked)
         if (checked) await ensurePushSubscription()
         else await unsubscribePlannerPushNotifications()
         await syncRemindersToServiceWorker()

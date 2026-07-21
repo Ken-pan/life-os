@@ -103,33 +103,51 @@
       .filter(Boolean),
   )
   const coach = $derived(coachBrief())
+  const coachTips = $derived(coach.slice(0, 2))
   const totalSets = $derived(day.ex.reduce((a, e) => a + e.sets, 0))
   const deload = $derived(deloadAdvice())
+
+  function coachStatusLabel(tone) {
+    if (tone === 'success') return t('coach.statusGood')
+    if (tone === 'warn') return t('coach.statusWarn')
+    if (tone === 'action') return t('coach.statusAction')
+    return t('coach.statusInfo')
+  }
+
+  const todayInHistory = $derived(
+    (S.rotation.history || []).some(
+      (h) => h.date === todayKey() && h.dayId === recId,
+    ),
+  )
+  const todayFullyDone = $derived(dd.total > 0 && dd.done >= dd.total)
+  const primaryCta = $derived.by(() => {
+    if (todayInHistory || todayFullyDone) {
+      return {
+        href: `/day/${recId}/summary`,
+        label: todayInHistory
+          ? t('home.viewSummary')
+          : t('home.finishWorkout'),
+      }
+    }
+    if (dd.done > 0) {
+      return {
+        href: `/day/${recId}/focus`,
+        label: t('home.continueWorkout'),
+      }
+    }
+    return {
+      href: `/day/${recId}/focus`,
+      label: t('home.startWorkout'),
+    }
+  })
 </script>
 
 <section class="view">
   <div class="wrap">
     <div class="life-os-grid life-os-grid--split hero">
       <div class="life-os-grid__main hero-copy" use:reveal>
-        <p class="eyebrow">
-          {dateLabel}<span data-ui-decor="meta-strip"> · {m.name}</span>
-        </p>
-        <div class="hero-kicker" data-ui-decor="kicker">
-          {t('home.todayPick')}
-        </div>
-        <h1 class="hero-title">
-          {#if dayDecorEn(day)}
-            {dayDisplayName(day)}
-            <span
-              class="accent decor-en"
-              data-ui-decor="en-accent"
-              aria-hidden="true">{dayDecorEn(day)}</span
-            >
-          {:else}
-            <span class="accent">{dayDisplayName(day)}</span>
-          {/if}
-        </h1>
-        <p class="hero-sub">{day.subtitle}</p>
+        <h1 class="sr-only">{dayDisplayName(day)}</h1>
+        <p class="eyebrow">{dateLabel}</p>
         <div class="hero-status">
           {t('home.lastSession')} <b>{lastLabel}</b> · {t('home.weekCount', {
             n: stats.week7,
@@ -146,12 +164,12 @@
         />
         <div class="hm-label">
           <div>
-            <div class="hm-kicker" data-ui-decor="kicker">
-              {t('home.todayWorkout')}
-            </div>
             <div class="hm-title">{dayDisplayName(day)}</div>
+            <div class="hm-meta">
+              {t('home.exercisesCount', { n: day.ex.length })} · ≈ {estMinutes(day)}
+              {t('common.min')}
+            </div>
           </div>
-          <div class="hm-time">≈ {estMinutes(day)} {t('common.min')}</div>
         </div>
       </div>
     </div>
@@ -171,7 +189,7 @@
       </div>
     {/if}
 
-    {#if coach.length}
+    {#if coachTips.length}
       <div class="coach-panel" use:reveal>
         <div class="coach-head">
           <div class="coach-head-copy">
@@ -179,15 +197,25 @@
             <div class="coach-sub">{t('home.coachSub')}</div>
           </div>
         </div>
-        {#each coach as tip (tip.id)}
+        {#each coachTips as tip (tip.id)}
           <div
             class="coach-tip"
             class:warn={tip.tone === 'warn'}
             class:success={tip.tone === 'success'}
             class:action={tip.tone === 'action'}
           >
-            <div class="coach-tip-title">{tip.title}</div>
-            <div class="coach-tip-body">{tip.body}</div>
+            <div class="coach-tip-row">
+              <span class="coach-k">{t('coach.statusLabel')}</span>
+              <span>{coachStatusLabel(tip.tone)}</span>
+            </div>
+            <div class="coach-tip-row">
+              <span class="coach-k">{t('coach.adviceLabel')}</span>
+              <span>{tip.title}</span>
+            </div>
+            <div class="coach-tip-row">
+              <span class="coach-k">{t('coach.reasonLabel')}</span>
+              <span class="coach-tip-body">{tip.body}</span>
+            </div>
           </div>
         {/each}
       </div>
@@ -252,11 +280,9 @@
             })}
           </div>
         </div>
-        <a class="btn-start" href="/day/{recId}/focus"
+        <a class="btn-start" href={primaryCta.href}
           ><Icon name="play" size={14} />
-          {dd.done > 0
-            ? t('home.continueWorkout')
-            : t('home.startWorkout', { day: day.cn })}</a
+          {primaryCta.label}</a
         >
       </div>
     </div>

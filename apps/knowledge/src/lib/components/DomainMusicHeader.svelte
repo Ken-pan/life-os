@@ -3,7 +3,7 @@
   import { t } from '$lib/i18n/index.js'
 
   /**
-   * compact: note detail keeps Quick Switch, hides large title (editor has its own back).
+   * compact: note detail hides large title (editor has its own back); More stays in overlay bubble.
    * @type {{
    *   title?: string,
    *   domainLabel?: string,
@@ -27,5 +27,4 @@
   {showCompose}
   {compact}
   composeAriaLabel={composeLabel || t('common.newNote')}
-  quickSwitchLabel={t('nav.quickSwitch')}
 />

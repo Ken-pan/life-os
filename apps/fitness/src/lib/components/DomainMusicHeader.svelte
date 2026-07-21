@@ -9,13 +9,17 @@
    *   showCompose?: boolean,
    * }}
    */
-  let { title = '', domainLabel = 'Training', showCompose = false } = $props()
+  let {
+    title = '',
+    domainLabel = '',
+    showCompose = false,
+  } = $props()
+  const resolvedDomainLabel = $derived(domainLabel || t('nav.groupMore'))
 </script>
 
 <DomainMusicHeader
   {title}
-  {domainLabel}
+  domainLabel={resolvedDomainLabel}
   {showCompose}
   composeAriaLabel={t('nav.workout')}
-  quickSwitchLabel={t('nav.quickSwitch')}
 />

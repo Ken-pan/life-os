@@ -41,6 +41,10 @@
   } from '$lib/tagReview.js'
   import { toast } from '$lib/ui.svelte.js'
   import { setLocale } from '$lib/i18n/index.js'
+  import {
+    publishShellTheme,
+    publishShellLocale,
+  } from '@life-os/platform-web/kenos-shell-settings'
   import SettingsRow from '@life-os/platform-web/svelte/settings/row'
   import SettingsSegment from '@life-os/platform-web/svelte/settings/segment'
   import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group'
@@ -172,8 +176,10 @@
   )
 
   function setTheme(theme) {
-    patchCloudSettings({ theme })
-    applyTheme()
+    void publishShellTheme(theme, (next) => {
+      patchCloudSettings({ theme: next })
+      applyTheme()
+    })
   }
 
   /** @param {boolean} enabled */
@@ -509,7 +515,9 @@
     themeLabel={t('settings.theme')}
     locale={S.settings.locale}
     onLocaleChange={(locale) => {
-      if (locale === 'zh' || locale === 'en') setLocale(locale)
+      if (locale === 'zh' || locale === 'en') {
+        void publishShellLocale(locale, setLocale)
+      }
     }}
     localeOptions={[
       { value: 'zh', label: t('settings.languageZh') },

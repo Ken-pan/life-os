@@ -14,15 +14,20 @@
   import { bindViewportHeight, bindPwaForegroundResume } from '@life-os/theme'
   import { registerServiceWorker } from '@life-os/platform-web/sw-lifecycle'
   import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
-  import { ensureNativeUnlock } from '@life-os/platform-web/kenos-native-bridge'
+  import { createNativeUnlockController } from '@life-os/platform-web/kenos-native-bridge'
   import { dev } from '$app/environment'
   import { setPurchaseImageBaseUrl } from '$lib/engine/purchaseEnrichment'
   import { supabase, supabaseUrl } from '$lib/supabase.js'
-  import { t, initLocale } from '$lib/i18n.svelte.js'
+  import { t, initLocale, setLocale, locale } from '$lib/i18n.svelte.js'
+  import {
+    themePreference,
+    setThemePreference,
+  } from '$lib/themePreference.svelte.js'
   import {
     markIosNativeShellDom,
     isIosNativeShell,
   } from '@life-os/platform-web/ios-native-shell'
+  import { bindKenosShellSettings } from '@life-os/platform-web/kenos-shell-settings'
   import {
     installMoneyLeaveGuard,
     persistMoneyContinue,
@@ -34,6 +39,10 @@
   let { children } = $props()
 
   let unlockState = $state(/** @type {'pending'|'open'|'locked'} */ ('open'))
+  const moneyUnlock = createNativeUnlockController({
+    storageKey: 'kenos.unlock.money',
+    reason: 'Unlock Money',
+  })
 
   const pageTitle = $derived.by(() => {
     const p = page.url.pathname
@@ -52,22 +61,38 @@
     return t('nav.todayTitle')
   })
 
+  function requestMoneyUnlock({ force = false, prompt = true } = {}) {
+    // Remount restore (prompt:false) stays on locked UI — never flash Face ID wait.
+    if (prompt || force) unlockState = 'pending'
+    void moneyUnlock.unlock({ force, prompt }).then((next) => {
+      unlockState = next
+    })
+  }
+
+  function cancelMoneyUnlock() {
+    void moneyUnlock.cancel().then(() => {
+      unlockState = 'locked'
+    })
+  }
+
   onMount(() => {
     markIosNativeShellDom()
     if (isIosNativeShell()) {
-      unlockState = 'pending'
       installMoneyLeaveGuard()
       persistMoneyContinue(suspendMoneySpace())
-      void ensureNativeUnlock({
-        storageKey: 'kenos.unlock.money',
-        reason: 'Unlock Money',
-      }).then((r) => {
-        unlockState = r.ok || r.skipped ? 'open' : 'locked'
-      })
+      // Restore grant only — never auto-present Face ID on remount.
+      unlockState = 'locked'
+      requestMoneyUnlock({ prompt: false })
     }
 
     const cleanupLocale = initLocale({
-      onLocaleChange: (locale) => notifyLocalePersist(locale),
+      onLocaleChange: (next) => notifyLocalePersist(next),
+    })
+    const cleanupShellSettings = bindKenosShellSettings({
+      getTheme: () => themePreference(),
+      setTheme: (theme) => setThemePreference(theme),
+      getLocale: () => locale(),
+      setLocale,
     })
 
     // migrateLegacyRouteUrl() rewrites `#/tab/section` and bare `/` via history.replaceState;
@@ -94,6 +119,8 @@
     })
 
     return () => {
+      moneyUnlock.dispose()
+      cleanupShellSettings()
       cleanupLocale()
       cleanupViewport()
       cleanupForeground()
@@ -105,33 +132,35 @@
 
 <DocumentHead appId="finance" {pageTitle} />
 
-{#if unlockState === 'locked'}
-  <main class="money-unlock-gate" data-testid="money-native-unlock-gate">
-    <h1>Money locked</h1>
-    <p>Use Face ID or passcode to open Money in Kenos.</p>
-    <button
-      type="button"
-      onclick={() => {
-        unlockState = 'pending'
-        void ensureNativeUnlock({
-          storageKey: 'kenos.unlock.money',
-          reason: 'Unlock Money',
-          force: true,
-        }).then((r) => {
-          unlockState = r.ok || r.skipped ? 'open' : 'locked'
-        })
-      }}
-    >
-      Unlock
-    </button>
-  </main>
-{:else if unlockState === 'pending'}
+{#if unlockState === 'locked' || unlockState === 'pending'}
   <main
     class="money-unlock-gate"
-    data-testid="money-native-unlock-pending"
-    aria-busy="true"
+    data-testid={unlockState === 'pending'
+      ? 'money-native-unlock-pending'
+      : 'money-native-unlock-gate'}
+    aria-busy={unlockState === 'pending'}
   >
-    <p>Unlocking Money…</p>
+    <h1>Money locked</h1>
+    <p>
+      {unlockState === 'pending'
+        ? 'Waiting for Face ID or passcode…'
+        : 'Use Face ID or passcode to open Money in Kenos.'}
+    </p>
+    <div class="money-unlock-actions">
+      {#if unlockState === 'pending'}
+        <button type="button" class="secondary" onclick={cancelMoneyUnlock}>Cancel</button>
+      {/if}
+      <button
+        type="button"
+        onclick={() =>
+          requestMoneyUnlock(
+            unlockState === 'pending' ? { force: true } : { prompt: true },
+          )
+        }
+      >
+        {unlockState === 'pending' ? 'Try again' : 'Unlock'}
+      </button>
+    </div>
   </main>
 {:else}
   <AuthGate>
@@ -170,8 +199,15 @@
     color: #b8b4ae;
   }
 
-  .money-unlock-gate button {
+  .money-unlock-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
     margin-top: 0.5rem;
+  }
+
+  .money-unlock-gate button {
     padding: 0.65rem 1.25rem;
     border: 1px solid #3a3a3a;
     border-radius: 0.5rem;
@@ -179,6 +215,11 @@
     color: #e8e6e3;
     font: inherit;
     cursor: pointer;
+  }
+
+  .money-unlock-gate button.secondary {
+    background: transparent;
+    color: #b8b4ae;
   }
 
   .money-unlock-gate button:hover {

@@ -17,5 +17,4 @@
   {domainLabel}
   {showCompose}
   composeAriaLabel={t('focus.title')}
-  quickSwitchLabel={t('nav.quickSwitch')}
 />

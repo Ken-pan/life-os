@@ -22,10 +22,11 @@
     save,
     flushSave,
     bindAppThemeSystemChange,
+    updateSettings,
     S,
     getListById,
   } from '$lib/state.svelte.js'
-  import { applyLocale, listLabel, t } from '$lib/i18n/index.js'
+  import { applyLocale, listLabel, setLocale, t } from '$lib/i18n/index.js'
   import { auth, initAuth } from '$lib/auth.svelte.js'
   import {
     bindViewportHeight,
@@ -42,6 +43,7 @@
     markIosNativeShellDom,
     isIosNativeShell,
   } from '@life-os/platform-web/ios-native-shell'
+  import { bindKenosShellSettings } from '@life-os/platform-web/kenos-shell-settings'
   import {
     syncRemindersToServiceWorker,
     ensurePushSubscription,
@@ -143,6 +145,13 @@
 
   onMount(() => {
     markIosNativeShellDom()
+    const cleanupShellSettings = bindKenosShellSettings({
+      getTheme: () => S.settings.theme,
+      setTheme: (theme) => updateSettings({ theme }),
+      applyTheme,
+      getLocale: () => S.settings.locale,
+      setLocale,
+    })
     const cachedUserId = peekSessionUserId()
     if (cachedUserId) {
       const cached = readCache(CACHE_SCOPES.state, cachedUserId)
@@ -186,6 +195,7 @@
       getSupabase: () => supabase,
     })
     return () => {
+      cleanupShellSettings()
       cleanupTheme()
       cleanupViewport()
       cleanupForeground()
@@ -301,6 +311,7 @@
   :global(html[data-ios-native-shell='true']) {
     --mobile-tabbar-total-h: 0px;
     --bottom-chrome-h: 0px;
+    --mobile-content-inset: 0px;
     --mobile-content-inset-tabbar: 0px;
   }
   /*
@@ -308,11 +319,16 @@
     Nested .app-shell / .life-os-page-workspace must stay 0 (avoid 54+54 stacking).
   */
   :global(html[data-ios-native-shell='true'] .main-col) {
-    padding-top: 54px !important;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-top: var(--kenos-chrome-top-inset, 54px) !important;
+    padding-bottom: calc(
+      env(safe-area-inset-bottom, 0px) + var(--kenos-dock-scroll-end-pad, 78px)
+    ) !important;
+    scroll-padding-bottom: calc(
+      env(safe-area-inset-bottom, 0px) + var(--kenos-dock-scroll-end-pad, 78px)
+    ) !important;
     box-sizing: border-box !important;
   }
-  /* Overlays hide Domain dock — reclaim the 80px capsule reserve. */
+  /* Overlays hide Domain dock — reclaim the capsule reserve. */
   :global(
       html[data-ios-native-shell='true'][data-kenos-live-state='editing']
         .main-col
@@ -326,6 +342,7 @@
         .main-col
     ) {
     padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+    scroll-padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important;
   }
   /* iPad desktop breakpoint would otherwise resurface the web sidebar under Continuity. */
   :global(html[data-ios-native-shell='true'] .sidebar) {
@@ -338,8 +355,8 @@
   }
   :global(html[data-ios-native-shell='true'] .domain-music-header) {
     padding-top: 0;
-    padding-bottom: 8px;
-    padding-inline: 16px;
+    padding-bottom: var(--kenos-chrome-header-pad-bottom, 8px);
+    padding-inline: var(--kenos-chrome-inline, 16px);
   }
   /* Domain dock owns bottom; compose is DomainMusicHeader + — hide Material FAB. */
   :global(html[data-ios-native-shell='true'] .fab) {

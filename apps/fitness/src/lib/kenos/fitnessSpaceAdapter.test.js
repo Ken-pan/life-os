@@ -25,4 +25,12 @@ describe('fitnessSpaceAdapter liveState chrome contract', () => {
     assert.match(uiSrc, /openFitnessToolSheet[\s\S]*publishFitnessChromeSoon/)
     assert.match(uiSrc, /closeFitnessToolSheet[\s\S]*publishFitnessChromeSoon/)
   })
+
+  it('compose lands on today focus (not /session flash)', () => {
+    assert.match(adapterSrc, /compose\(\)\s*\{[\s\S]*?goto\(dayId \? `\/day\/\$\{dayId\}\/focus` : '\/program'\)/)
+    assert.doesNotMatch(
+      adapterSrc,
+      /compose\(\)\s*\{[\s\S]*?goto\('\/session'\)/,
+    )
+  })
 })

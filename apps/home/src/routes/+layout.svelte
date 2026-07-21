@@ -24,11 +24,13 @@
   import {
     applyTheme,
     bindAppThemeSystemChange,
+    setTheme,
     S,
     getActiveProject,
     getPlanSubtitle,
     getPlanImmersiveEdit,
   } from '$lib/state.svelte.js'
+  import { bindKenosShellSettings } from '@life-os/platform-web/kenos-shell-settings'
 
   import { bindViewportHeight } from '@life-os/theme'
   import { bindNetworkResume } from '@life-os/platform-web/network-resume'
@@ -113,6 +115,11 @@
 
   onMount(() => {
     markIosNativeShellDom()
+    const cleanupShellSettings = bindKenosShellSettings({
+      getTheme: () => S.settings.theme,
+      setTheme,
+      applyTheme,
+    })
     if (isIosNativeShell()) {
       installHomeLeaveGuard()
       persistHomeContinue(suspendHomeSpace())
@@ -144,6 +151,7 @@
       getSupabase: () => supabase,
     })
     return () => {
+      cleanupShellSettings()
       cleanupAuth()
       cleanupViewport()
       cleanupTheme()
@@ -233,14 +241,14 @@
   }
   :global(html[data-ios-native-shell='true'] .life-os-app-shell__main),
   :global(html[data-ios-native-shell='true'] #main-content) {
-    padding-top: 54px !important;
+    padding-top: var(--kenos-chrome-top-inset, 54px) !important;
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
     box-sizing: border-box !important;
   }
   :global(html[data-ios-native-shell='true'] .domain-music-header) {
     padding-top: 0;
-    padding-bottom: 8px;
-    padding-inline: 16px;
+    padding-bottom: var(--kenos-chrome-header-pad-bottom, 8px);
+    padding-inline: var(--kenos-chrome-inline, 16px);
   }
   :global(html[data-ios-native-shell='true'] .page-header),
   :global(html[data-ios-native-shell='true'] .topbar),

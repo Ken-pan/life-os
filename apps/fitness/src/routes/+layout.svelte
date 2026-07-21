@@ -23,7 +23,12 @@
   import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
   import { ICONS } from '$lib/iconRegistry.js'
   import { subscribeSyncError } from '$lib/syncNotify.js'
-  import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
+  import {
+    S,
+    save,
+    applyTheme,
+    bindAppThemeSystemChange,
+  } from '$lib/state.svelte.js'
   import { auth, initAuth } from '$lib/auth.svelte.js'
   import { bindViewportHeight, resetScrollLock } from '@life-os/theme'
   import { bindNetworkResume } from '@life-os/platform-web/network-resume'
@@ -41,13 +46,14 @@
     markIosNativeShellDom,
     isIosNativeShell,
   } from '@life-os/platform-web/ios-native-shell'
+  import { bindKenosShellSettings } from '@life-os/platform-web/kenos-shell-settings'
   import { installKenosFitnessBridge } from '$lib/kenos/fitnessSpaceAdapter.js'
   import { bindFitnessAudioCleanup } from '$lib/audio.js'
   import { getProgram } from '$lib/programRuntime.js'
   import { finalizeStaleSessions } from '$lib/session.js'
   import { todayDayId } from '$lib/state.svelte.js'
   import { toast } from '$lib/ui.svelte.js'
-  import { t, applyLocale } from '$lib/i18n/index.js'
+  import { t, applyLocale, setLocale } from '$lib/i18n/index.js'
 
   let { children } = $props()
 
@@ -141,6 +147,16 @@
 
   onMount(() => {
     markIosNativeShellDom()
+    const cleanupShellSettings = bindKenosShellSettings({
+      getTheme: () => S.settings.theme,
+      setTheme: (theme) => {
+        S.settings.theme = theme
+        save()
+      },
+      applyTheme,
+      getLocale: () => S.settings.locale,
+      setLocale,
+    })
     installKenosFitnessBridge()
     applyTheme()
     applyLocale()
@@ -167,6 +183,7 @@
     })
 
     return () => {
+      cleanupShellSettings()
       cleanupTheme()
       cleanupViewport()
       cleanupTimer()
@@ -238,10 +255,11 @@
 
   {#snippet main()}
     {#if isIosNativeShell() && !immersiveRoute}
+      <!-- Training primary action is the Today CTA; space switching is Shelf-only — no add/search affordances in domain header. -->
       <DomainMusicHeader
         title={appBarTitle}
         domainLabel="Training"
-        showCompose={page.url.pathname === '/'}
+        showCompose={false}
       />
     {/if}
     {@render children()}
@@ -288,6 +306,7 @@
   :global(html[data-ios-native-shell='true']) {
     --mobile-tabbar-total-h: 0px;
     --bottom-chrome-h: 0px;
+    --mobile-content-inset: 0px;
     --mobile-content-inset-tabbar: 0px;
     /* Status clearance comes from shell padding-top:54 — don't also inflate safe-top. */
     --safe-top-effective: 0px;
@@ -301,8 +320,13 @@
   /* ONE scroll-root pad — match KenosWebChrome; never also pad nested .page. */
   :global(html[data-ios-native-shell='true'] .life-os-app-shell__main),
   :global(html[data-ios-native-shell='true'] #main-content) {
-    padding-top: 54px !important;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-top: var(--kenos-chrome-top-inset, 54px) !important;
+    padding-bottom: calc(
+      env(safe-area-inset-bottom, 0px) + var(--kenos-dock-scroll-end-pad, 78px)
+    ) !important;
+    scroll-padding-bottom: calc(
+      env(safe-area-inset-bottom, 0px) + var(--kenos-dock-scroll-end-pad, 78px)
+    ) !important;
     box-sizing: border-box !important;
   }
   :global(
@@ -322,8 +346,8 @@
   }
   :global(html[data-ios-native-shell='true'] .domain-music-header) {
     padding-top: 0;
-    padding-bottom: 8px;
-    padding-inline: 16px;
+    padding-bottom: var(--kenos-chrome-header-pad-bottom, 8px);
+    padding-inline: var(--kenos-chrome-inline, 16px);
   }
   :global(html[data-ios-native-shell='true'] .page-header),
   :global(html[data-ios-native-shell='true'] .topbar),

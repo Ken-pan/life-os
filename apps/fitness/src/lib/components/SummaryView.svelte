@@ -99,7 +99,7 @@
   }
 </script>
 
-<section class="view">
+<section class="view kenos-anim-focus-enter">
   <div class="wrap">
     <div class="page-head" use:reveal>
       <BackButton href="/day/{dayId}" />

@@ -20,13 +20,20 @@
   import { toast } from '$lib/ui.svelte.js'
   import {
     notificationCapability,
+    refreshNotificationCapability,
     requestNotifyPermission,
     previewTimerChime,
+    applyNotifyRestSetting,
   } from '$lib/timer.svelte.js'
   import { exportBackup, importBackup } from '$lib/backup.js'
   import { auth, signOut, authErrorMessage } from '$lib/auth.svelte.js'
   import { pushToCloud, pullFromCloud, withSyncNotify } from '$lib/sync.js'
   import { t, setLocale } from '$lib/i18n/index.js'
+  import {
+    publishShellTheme,
+    publishShellLocale,
+    publishNotificationCategoryEnabled,
+  } from '@life-os/platform-web/kenos-shell-settings'
   import Icon from '@life-os/platform-web/svelte/icon'
   import SettingsSection from '@life-os/platform-web/svelte/settings/section'
   import SettingsAppearanceBlock from '@life-os/platform-web/svelte/settings/appearance-block'
@@ -40,7 +47,14 @@
   let importInput
   let syncing = $state(false)
 
-  onMount(() => scrollToSettingsHash('cloud'))
+  let notifyCapVersion = $state(0)
+
+  onMount(() => {
+    scrollToSettingsHash('cloud')
+    void refreshNotificationCapability().then(() => {
+      notifyCapVersion += 1
+    })
+  })
 
   const rec = $derived(todayDayId())
   const program = $derived(getProgram())
@@ -93,29 +107,41 @@
   function setNotifyRest(checked) {
     S.settings.notifyRest = checked
     save()
+    applyNotifyRestSetting(checked)
+    void publishNotificationCategoryEnabled('training_rest_end', checked)
   }
 
   async function enableNotifications() {
     const result = await requestNotifyPermission()
+    notifyCapVersion += 1
     if (result === true || result === 'granted') {
       S.settings.notifyRest = true
       save()
+      void publishNotificationCategoryEnabled('training_rest_end', true)
       toast(t('settings.toastNotifyOn'))
     } else if (result === 'denied') {
       toast(t('settings.toastNotifyDenied'))
     }
   }
 
-  const notifyCap = $derived(notificationCapability())
+  const notifyCap = $derived.by(() => {
+    notifyCapVersion
+    return notificationCapability()
+  })
   const notifyPerm = $derived(notifyCap.kind)
+  const notifyNative = $derived(notifyCap.channel === 'native')
 
   function notifyDesc() {
-    if (notifyPerm === 'granted') return t('settings.notifyGranted')
-    if (notifyPerm === 'denied') return t('settings.notifyDenied')
+    if (notifyPerm === 'granted') {
+      return notifyNative ? t('settings.notifyGrantedNative') : t('settings.notifyGranted')
+    }
+    if (notifyPerm === 'denied') {
+      return notifyNative ? t('settings.notifyDeniedNative') : t('settings.notifyDenied')
+    }
     if (notifyPerm === 'ios-browser') return t('settings.notifyIos')
     if (notifyPerm === 'in-app') return t('settings.notifyInApp')
     if (notifyPerm === 'unsupported') return t('settings.notifyUnsupported')
-    return t('settings.notifyDefault')
+    return notifyNative ? t('settings.notifyDefaultNative') : t('settings.notifyDefault')
   }
 
   function setLogDetail(mode) {
@@ -283,16 +309,18 @@
       title={t('settings.appearance')}
       theme={S.settings.theme || 'auto'}
       onThemeChange={(theme) => {
-        S.settings.theme = theme
-        save()
-        applyTheme()
-        const key =
-          theme === 'auto'
-            ? 'settings.toastThemeAuto'
-            : theme === 'light'
-              ? 'settings.toastThemeLight'
-              : 'settings.toastThemeDark'
-        toast(t(key))
+        void publishShellTheme(theme, (next) => {
+          S.settings.theme = next
+          save()
+          applyTheme()
+          const key =
+            next === 'auto'
+              ? 'settings.toastThemeAuto'
+              : next === 'light'
+                ? 'settings.toastThemeLight'
+                : 'settings.toastThemeDark'
+          toast(t(key))
+        })
       }}
       themeOptions={[
         { value: 'light', label: t('settings.themeLight') },
@@ -303,12 +331,14 @@
       themeDesc={t('settings.themeDesc')}
       locale={S.settings.locale}
       onLocaleChange={(locale) => {
-        setLocale(locale)
-        toast(
-          locale === 'en'
-            ? t('settings.toastLocaleEn')
-            : t('settings.toastLocaleZh'),
-        )
+        void publishShellLocale(locale, (next) => {
+          setLocale(next)
+          toast(
+            next === 'en'
+              ? t('settings.toastLocaleEn')
+              : t('settings.toastLocaleZh'),
+          )
+        })
       }}
       localeOptions={[
         { value: 'zh', label: t('settings.langZh') },

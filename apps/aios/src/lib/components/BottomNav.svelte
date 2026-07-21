@@ -59,7 +59,6 @@
   >
     <a
       class="nav-item spaces-chip"
-      class:on={spacesItem.active}
       href={spacesItem.href}
       data-sveltekit-noscroll
       aria-current={spacesItem.active ? 'page' : undefined}
@@ -67,11 +66,7 @@
       data-testid="kenos-nav-spaces"
       title={spacesItem.label}
     >
-      <Icon
-        name="chevron-right"
-        size={14}
-        strokeWidth={spacesItem.active ? 2.4 : 2.1}
-      />
+      <Icon name="chevron-right" size={14} strokeWidth={2.1} />
     </a>
 
     <div class="nav-inner capsule" role="presentation">
@@ -213,12 +208,6 @@
 
   :global(.kenos-split-nav.kenos-icon-nav a.spaces-chip.nav-item:active) {
     transform: scale(0.96);
-  }
-
-  :global(.kenos-split-nav.kenos-icon-nav a.spaces-chip.nav-item.on) {
-    color: var(--accent, #5b8cff);
-    background: var(--kenos-dock-sel) !important;
-    opacity: 1;
   }
 
   :global(.kenos-split-nav.kenos-icon-nav .nav-item.on svg),

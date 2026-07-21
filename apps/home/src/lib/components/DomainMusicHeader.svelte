@@ -16,5 +16,4 @@
   {domainLabel}
   {showCompose}
   composeAriaLabel="整理"
-  quickSwitchLabel="快速切换"
 />

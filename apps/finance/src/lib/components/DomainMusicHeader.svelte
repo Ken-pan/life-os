@@ -23,5 +23,4 @@
   {domainLabel}
   {showCompose}
   composeAriaLabel={composeAriaLabel || t('nav.fabLogTxn')}
-  quickSwitchLabel={t('nav.quickSwitch')}
 />

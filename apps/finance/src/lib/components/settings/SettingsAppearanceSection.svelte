@@ -5,6 +5,10 @@
   } from '@life-os/finance-core/i18n/types'
   import SettingsAppearanceBlock from '@life-os/platform-web/svelte/settings/appearance-block'
   import { t, locale, setLocale } from '$lib/i18n.svelte.js'
+  import {
+    publishShellTheme,
+    publishShellLocale,
+  } from '@life-os/platform-web/kenos-shell-settings'
 
   /** @typedef {import('../../../lib/themePreference').ThemePreference} ThemePreference */
 
@@ -41,13 +45,14 @@
 
   /** @param {string} next */
   function pickLocale(next) {
-    if (isAppLocale(next)) setLocale(next)
+    if (!isAppLocale(next)) return
+    void publishShellLocale(next, setLocale)
   }
 
   /** @param {string} value */
   function pickTheme(value) {
     if (value === 'light' || value === 'dark' || value === 'auto') {
-      onThemePreferenceChange(value)
+      void publishShellTheme(value, onThemePreferenceChange)
     }
   }
 </script>

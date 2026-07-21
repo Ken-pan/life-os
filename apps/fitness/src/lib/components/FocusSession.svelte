@@ -544,7 +544,7 @@
 
 <svelte:window onkeydown={onWindowKeydown} />
 
-<section class="view focus-view">
+<section class="view focus-view kenos-anim-focus-enter">
   <div class="focus-stage">
     {#if currentEx}
       {@const wi = weightInfo(currentEx)}

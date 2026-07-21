@@ -5,6 +5,10 @@
   import { S, save, applyTheme } from '$lib/state.svelte.js'
   import { t, setLocale } from '$lib/i18n/index.js'
   import {
+    publishShellTheme,
+    publishShellLocale,
+  } from '$lib/kenos/iosNativeShell.js'
+  import {
     MODELS,
     TTS_VOICES,
     GATEWAY,
@@ -21,12 +25,22 @@
   } from '$lib/memory.svelte.js'
   import {
     CLOUD,
+    isCloudAuthorized,
     signInCloud,
     signOutCloud,
     syncNow,
     getCloudAccessToken,
   } from '$lib/cloud.svelte.js'
+  import {
+    CONTROL,
+    refreshControlCenter,
+  } from '$lib/kenos/controlCenter.svelte.js'
+  import {
+    productSessionLabels,
+    resolveProductSessionState,
+  } from '$lib/kenos/productSessionState.core.js'
   import { isNative } from '$lib/native.js'
+  import { dailyBriefDeliveryAvailable } from '$lib/proactive.svelte.js'
   import {
     loadServers,
     saveServers,
@@ -64,9 +78,15 @@
   ])
 
   function setTheme(value) {
-    S.settings.theme = value
-    save()
-    applyTheme()
+    void publishShellTheme(value, (theme) => {
+      S.settings.theme = theme
+      save()
+      applyTheme()
+    })
+  }
+
+  function setShellLocale(value) {
+    void publishShellLocale(value, setLocale)
   }
 
   function setModel(value) {
@@ -260,10 +280,34 @@
     return new Date(at).toLocaleTimeString()
   }
 
+  const session = $derived(
+    resolveProductSessionState({
+      cloudReady: CLOUD.ready,
+      cloudUser: CLOUD.user,
+      cloudAuthorized: isCloudAuthorized(),
+      cloudSyncing: CLOUD.syncing,
+      cloudLastSyncAt: CLOUD.lastSyncAt,
+      controlLoading: CONTROL.loading,
+      sources: CONTROL.sources,
+    }),
+  )
+  const sessionLabels = $derived(productSessionLabels(session))
+  const accountSignedInDesc = $derived.by(() => {
+    const status = sessionLabels.accountStatus
+    if (session.accountSyncState === 'syncing') return status
+    if (session.accountSyncState === 'synced') {
+      return `${status} · ${t('settings.cloudLastSync')}: ${lastSyncLabel(CLOUD.lastSyncAt)}`
+    }
+    if (session.accountSyncState === 'partial') return status
+    if (session.accountSyncState === 'error') return status
+    return `${status} · ${t('settings.cloudLastSync')}: ${CLOUD.syncing ? t('settings.cloudSyncing') : lastSyncLabel(CLOUD.lastSyncAt)}`
+  })
+
   /* —— 权限中心(仅原生壳)——
      挂载即静默探测;窗口重新聚焦时复查,用户从系统设置回来对勾会自动变绿。 */
   let permBusy = $state('') // 正在请求的权限 key,禁用按钮防重复点
   onMount(() => {
+    void refreshControlCenter()
     const disposeScroll = scrollToSettingsHash('cloud')
     if (!isNative) return disposeScroll
     refreshPermissions()
@@ -306,8 +350,8 @@
     title={t('settings.cloud')}
     signedOutDesc={t('settings.cloudDesc')}
     ssoHint={t('settings.cloudSsoHint')}
-    signedInDesc={`${t('settings.cloudLastSync')}: ${CLOUD.syncing ? t('settings.cloudSyncing') : lastSyncLabel(CLOUD.lastSyncAt)}`}
-    email={CLOUD.user?.email}
+    signedInDesc={accountSignedInDesc}
+    email={CLOUD.user ? `${CLOUD.user.email} · ${sessionLabels.accountStatus}` : ''}
     configured={CLOUD.configured}
     signedIn={!!CLOUD.user}
     unavailableDesc={t('settings.cloudDesc')}
@@ -400,7 +444,8 @@
       <span class="field-label">{t('settings.gatewayUrl')}</span>
       <div class="memory-add">
         <input
-          type="url"
+          type="text"
+          inputmode="url"
           placeholder={DEFAULT_GATEWAY}
           bind:value={gatewayInput}
           onkeydown={(e) =>
@@ -577,7 +622,7 @@
     </div>
   </section>
 
-  {#if isNative}
+  {#if dailyBriefDeliveryAvailable()}
     <section class="card">
       <h2>{t('settings.proactive')}</h2>
       <p class="note">{t('settings.proactiveDesc')}</p>
@@ -805,7 +850,7 @@
     themeLabel={t('settings.theme')}
     themeDesc={t('settings.themeDesc')}
     locale={S.settings.locale}
-    onLocaleChange={setLocale}
+    onLocaleChange={setShellLocale}
     localeOptions={[
       { value: 'zh', label: t('settings.langZh') },
       { value: 'en', label: t('settings.langEn') },
