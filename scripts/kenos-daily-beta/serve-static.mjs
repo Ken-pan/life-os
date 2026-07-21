@@ -100,6 +100,8 @@ const server = createServer(async (req, res) => {
   }
 })
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(`[kenos-static:${APP}] ${ROOT} → http://127.0.0.1:${PORT}`)
+// KENOS_STATIC_BIND: 127.0.0.1 (Mac-only) or 0.0.0.0 (LAN for iPhone Daily Beta)
+const BIND = process.env.KENOS_STATIC_BIND || '0.0.0.0'
+server.listen(PORT, BIND, () => {
+  console.log(`[kenos-static:${APP}] ${ROOT} → http://${BIND}:${PORT}`)
 })

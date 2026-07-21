@@ -27,7 +27,11 @@ LABEL_PLANNER="com.kenpan.kenos-daily-beta.planner"
 LABEL_FITNESS="com.kenpan.kenos-daily-beta.fitness"
 
 NODE_BIN="${KENOS_NODE_BIN:-$(command -v node)}"
-SERVE_BIN="$STATE_DIR/bin/serve-static.mjs"
+PYTHON_BIN="${KENOS_PYTHON_BIN:-$(command -v python3)}"
+# Prefer Python static server — Node LAN bind is blocked by macOS Application Firewall
+# on this host (TCP accept, empty HTTP). Mac loopback still works with either.
+SERVE_BIN="$STATE_DIR/bin/serve-static.py"
+SERVE_JS="$STATE_DIR/bin/serve-static.mjs"
 
 mkdir -p "$STATE_DIR" "$RELEASES" "$LOG_DIR" "$STATE_DIR/bin"
 
@@ -39,7 +43,9 @@ http_ok() {
 }
 
 sync_serve_bin() {
-  cp "$CTL_DIR/serve-static.mjs" "$SERVE_BIN"
+  cp "$CTL_DIR/serve-static.py" "$SERVE_BIN"
+  cp "$CTL_DIR/serve-static.mjs" "$SERVE_JS"
+  chmod +x "$SERVE_BIN"
 }
 
 write_plist() {
@@ -59,7 +65,7 @@ write_plist() {
   <string>${label}</string>
   <key>ProgramArguments</key>
   <array>
-    <string>${NODE_BIN}</string>
+    <string>${PYTHON_BIN}</string>
     <string>${SERVE_BIN}</string>
   </array>
   <key>EnvironmentVariables</key>
@@ -70,6 +76,8 @@ write_plist() {
     <string>${port}</string>
     <key>KENOS_STATIC_APP</key>
     <string>${app}</string>
+    <key>KENOS_STATIC_BIND</key>
+    <string>${KENOS_STATIC_BIND:-0.0.0.0}</string>
     <key>KENOS_RELEASE_META</key>
     <string>${META}</string>
     <key>PATH</key>
