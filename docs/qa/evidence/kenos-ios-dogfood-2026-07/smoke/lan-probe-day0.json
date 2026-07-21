@@ -1,0 +1,46 @@
+{
+  "results": [
+    {
+      "label": "kenos_health",
+      "urlHost": "10.20.202.15:5219",
+      "ok": true,
+      "httpCode": "200",
+      "ms": 11,
+      "class": "backend"
+    },
+    {
+      "label": "kenos_loopback_health",
+      "urlHost": "127.0.0.1:5219",
+      "ok": true,
+      "httpCode": "200",
+      "ms": 8,
+      "class": "backend"
+    },
+    {
+      "label": "planner",
+      "urlHost": "10.20.202.15:5188",
+      "ok": true,
+      "httpCode": "200",
+      "ms": 27,
+      "class": "backend"
+    },
+    {
+      "label": "fitness",
+      "urlHost": "10.20.202.15:5190",
+      "ok": true,
+      "httpCode": "200",
+      "ms": 23,
+      "class": "backend"
+    },
+    {
+      "label": "bogus_port",
+      "urlHost": "10.20.202.15:5999",
+      "ok": false,
+      "httpCode": "000",
+      "ms": 8,
+      "class": "network",
+      "note": "expected_fail_for_classification"
+    }
+  ],
+  "allCriticalOk": true
+}

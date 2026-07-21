@@ -182,3 +182,22 @@ func appGroupSharedSuitePath() {
     #expect(store.string(forKey: "training.nextSet") == nil)
 }
 
+@Test("Runtime health snapshot round-trips without secrets")
+func runtimeHealthRoundTrip() {
+    let store = KenosAppGroupStore(ownerId: UUID(), suiteFactory: { _ in nil })
+    let snap = KenosRuntimeHealthSnapshot(
+        buildSha: "abc1234",
+        originHost: "10.20.202.15:5219",
+        originReachable: true,
+        authState: "signed_in",
+        continueDescriptorCount: 2
+    )
+    KenosRuntimeHealth.save(snap, store: store)
+    let loaded = KenosRuntimeHealth.load(store: store)
+    #expect(loaded?.buildSha == "abc1234")
+    #expect(loaded?.originHost == "10.20.202.15:5219")
+    #expect(loaded?.authState == "signed_in")
+    #expect(loaded?.phase4 == "EXIT_OPEN")
+    #expect(KenosRuntimeHealth.host(from: URL(string: "http://10.20.202.15:5219/assistant?x=1")!) == "10.20.202.15:5219")
+}
+

@@ -18,6 +18,7 @@ status: controlled-production-canary-legacy-cutover-open
 - AIOS / Portal: Approval/Capture canary 与 Portal `/today` owner-limited soft redirect 已有生产证据；Portal 未退役。
 - Apple / Phase 5: 多端代码、构建、device install/open 和本地 contextual behavior 已验证；App Group/APNs/分发、ProductionExecutor 与生产主动能力仍关闭。
 - Personal Daily Beta（2026-07-21）：**Mac Web READY**；**iOS READY (LAN-DEPENDENT)** on Ken’s 17 Pro — Flow A PASS (`ios-fa-mru7x8jx` user JWT) + Flow B PASS (Set1→Set2 no URL pin) + isolation PASS；Assistant=IN-APP WEB；Continuity=in-app WKWebView；Phase 4 仍 `EXIT_OPEN`。证据 `docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`。
+- **iOS Daily Beta Stabilization**（2026-07-21）：状态冻结 READY_LAN_DEPENDENT；dogfood 证据包 `docs/qa/evidence/kenos-ios-dogfood-2026-07/`；低噪 `KenosRuntimeHealth`；**不关 Phase 4**。
 - Phase 4 next slice（2026-07-21 post-READY）：title writer + `KenosAppGroupStore` local foundation；IA lock + web Continue parity + native unlock launch **PASS_LAUNCH_NO_USB_SHOT**；Focus timer Dynamic Type display font；**PHASE 4 仍 EXIT_OPEN**。证据 `PHASE4_NEXT_SLICE.md` / `IA_WEB_PARITY.md`。
 - Program verdict: `CONTROLLED_PRODUCTION_CANARY_WITH_OPEN_EXITS`。不能继续使用早期 `phase-2-partial-read-only-integration-no-production-cutover` 作为当前总状态。
 - Verification debt: Phase 2 正式基线 guard 失败；Phase 3 正式 HEAD 通过但当前本地 WIP 破坏既有合同；Phase 6 输出仍含过期 apply 状态；Phase 0 必须在干净 Git checkout 验证。详见 implementation status 第 6 节。

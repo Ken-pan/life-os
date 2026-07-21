@@ -1,0 +1,44 @@
+{
+  "coldLaunch": {
+    "ok": true,
+    "class": "product",
+    "reason": "launched"
+  },
+  "forceQuitRelaunch": {
+    "ok": true,
+    "class": "product",
+    "reason": "launched"
+  },
+  "tabs": [
+    {
+      "tab": "today",
+      "ok": true,
+      "class": "product",
+      "reason": "launched"
+    },
+    {
+      "tab": "assistant",
+      "ok": true,
+      "class": "product",
+      "reason": "launched"
+    },
+    {
+      "tab": "spaces",
+      "ok": true,
+      "class": "product",
+      "reason": "launched"
+    },
+    {
+      "tab": "inbox",
+      "ok": true,
+      "class": "product",
+      "reason": "launched"
+    },
+    {
+      "tab": "continue",
+      "ok": true,
+      "class": "product",
+      "reason": "launched"
+    }
+  ]
+}

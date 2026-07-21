@@ -135,6 +135,8 @@ final class KenosAppModel: ObservableObject {
     let notifications: MockNotificationProvider
     let approvalsActionsEnabled = false
     private let ownerId = UUID(uuidString: "20000000-0000-4000-8000-000000000001")!
+    /// Stabilization health bag (no UI). Falls back process-local until App Group entitlement.
+    private lazy var runtimeHealthStore = KenosAppGroupStore(ownerId: ownerId)
     private var cancellables = Set<AnyCancellable>()
 
     struct AssistantMessage: Identifiable, Equatable {
@@ -200,6 +202,7 @@ final class KenosAppModel: ObservableObject {
         if let sessionOwner = try? await session.ownerId() {
             spaceSwitcherStore.bindOwner(sessionOwner)
         }
+        recordRuntimeHealth()
         try? await notifications.schedule(KenosNotificationFixtures.planReminder())
         try? await notifications.schedule(KenosNotificationFixtures.approvalRequested())
         notificationInbox = await notifications.pending()
@@ -208,6 +211,32 @@ final class KenosAppModel: ObservableObject {
         if let link = handoff.lastReceivedDeepLink {
             open(urlString: link)
         }
+    }
+
+    /// Low-noise health for dogfood — never writes tokens / emails / bodies; never shown in ordinary UI.
+    private func recordRuntimeHealth() {
+        #if os(iOS)
+        let build =
+            Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+            ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+            ?? "unknown"
+        let origin = KenosDailyBetaConfig.isEnabled ? KenosDailyBetaConfig.kenOsOrigin : URL(string: "https://kenos.space")!
+        let auth: String
+        if (try? sessionStore.loadToken()) != nil {
+            auth = "session_present"
+        } else {
+            auth = "session_absent"
+        }
+        let snap = KenosRuntimeHealthSnapshot(
+            buildSha: build,
+            originHost: KenosRuntimeHealth.host(from: origin),
+            originReachable: nil,
+            authState: auth,
+            continueDescriptorCount: spaceSwitcherStore.recentSpaceIds.count,
+            phase4: "EXIT_OPEN"
+        )
+        KenosRuntimeHealth.save(snap, store: runtimeHealthStore)
+        #endif
     }
 
     var hideGlobalNavForFocus: Bool { focusStore.hidesGlobalNavigation }

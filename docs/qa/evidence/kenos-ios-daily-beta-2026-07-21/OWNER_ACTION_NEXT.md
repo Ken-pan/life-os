@@ -1,8 +1,16 @@
 # OWNER_ACTION_NEXT — iOS Daily Beta
 
-**Status:** No hard Owner Action for Personal Daily Beta READY gate.
+**Status:** Personal Daily Beta READY_LAN_DEPENDENT. Enter **dogfood / stabilization** — do not close Phase 4.
+
+## Now (Owner)
+
+- Use Kenos on **17 Pro** as daily driver for 3–7 real days
+- Log notes in `docs/qa/evidence/kenos-ios-dogfood-2026-07/DAILY_LOG.md`
+- Prefer fixing only real P0/P1 from use
 
 ## Optional soft residuals
+
+
 
 - Optional: plug **17 Pro USB** + unlock so `scripts/kenos-ios-daily-beta/wait-usb-native-shot.sh` can capture `04-ios-native-shell.png` (Wi‑Fi CoreDevice launch already PASS).
 - Full Dynamic Type / VoiceOver OS Settings sweep (Focus timer font now scales; OS Settings still manual)

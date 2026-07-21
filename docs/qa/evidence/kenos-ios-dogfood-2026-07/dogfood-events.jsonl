@@ -1,0 +1,15 @@
+{"ts":"2026-07-21T11:17:35.081Z","type":"stabilization_smoke_start","gitSha":"a8703a3cc","dailyBetaRelease":"ac1101604e6b","hasLanIp":true}
+{"ts":"2026-07-21T11:17:35.092Z","type":"lan_probe","label":"kenos_health","urlHost":"10.20.202.15:5219","ok":true,"httpCode":"200","ms":11,"class":"backend"}
+{"ts":"2026-07-21T11:17:35.100Z","type":"lan_probe","label":"kenos_loopback_health","urlHost":"127.0.0.1:5219","ok":true,"httpCode":"200","ms":8,"class":"backend"}
+{"ts":"2026-07-21T11:17:35.127Z","type":"lan_probe","label":"planner","urlHost":"10.20.202.15:5188","ok":true,"httpCode":"200","ms":27,"class":"backend"}
+{"ts":"2026-07-21T11:17:35.150Z","type":"lan_probe","label":"fitness","urlHost":"10.20.202.15:5190","ok":true,"httpCode":"200","ms":23,"class":"backend"}
+{"ts":"2026-07-21T11:17:35.158Z","type":"lan_probe","label":"bogus_port","urlHost":"10.20.202.15:5999","ok":false,"httpCode":"000","ms":8,"class":"network","note":"expected_fail_for_classification"}
+{"ts":"2026-07-21T11:17:35.164Z","type":"usb_probe","present":true,"count":1}
+{"ts":"2026-07-21T11:17:35.909Z","type":"cold_launch","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-21T11:17:38.153Z","type":"force_quit_relaunch","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-21T11:17:38.669Z","type":"tab_launch","tab":"today","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-21T11:17:39.922Z","type":"tab_launch","tab":"assistant","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-21T11:17:41.164Z","type":"tab_launch","tab":"spaces","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-21T11:17:42.405Z","type":"tab_launch","tab":"inbox","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-21T11:17:43.660Z","type":"tab_launch","tab":"continue","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-21T11:17:44.666Z","type":"stabilization_smoke_end","lanOk":true,"coldLaunchOk":true}
