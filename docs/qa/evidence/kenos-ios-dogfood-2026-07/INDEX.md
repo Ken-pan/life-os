@@ -20,6 +20,7 @@ MACOS NATIVE CLIENT: FOUNDATION / EXIT_OPEN
 
 - Observability + LAN / entry reliability only
 - No IA redesign, no APNs / TestFlight / App Group cutover, no push/deploy
+- **Shell Navigation v2** (Domain dock replace + Space Shelf) = `APPROVED_DIRECTION` only — `docs/qa/kenos-shell-navigation-v2-2026-07-21.md`. Do not implement during dogfood.
 
 ## Artifacts
 
@@ -35,4 +36,5 @@ MACOS NATIVE CLIENT: FOUNDATION / EXIT_OPEN
 
 ## Next Owner action
 
-Dogfood on 17 Pro for 3–7 real days. Agent only fixes P0/P1 from real use.
+Dogfood on 17 Pro for 3–7 real days. Agent only fixes P0/P1 from real use.  
+After Stabilization: prefer LAN → TestFlight → App Group/APNs, **or** schedule Navigation v2 if dual-bottom-nav pain dominates.
