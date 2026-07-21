@@ -169,20 +169,35 @@ struct KenosRootView: View {
             .tag(KenosAppModel.Tab.inbox)
         }
         .accessibilityIdentifier("kenos.tabs")
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if let live = model.liveAccessory {
+                KenosLiveAccessoryBar(accessory: live) {
+                    model.activateLiveAccessory(live)
+                }
+            }
+        }
     }
 
     private var spaceSwitcherToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
             Button {
-                model.openSpaceSwitcher()
+                model.openContinue()
             } label: {
-                // Explicit Label + stable SF Symbols (iOS 26 Liquid Glass can blank some glyphs)
                 Label("Continue", systemImage: "clock.arrow.circlepath")
             }
             .labelStyle(.iconOnly)
             .accessibilityLabel("Continue")
-            .accessibilityHint("Opens recent Spaces and resume targets")
+            .accessibilityHint("Opens recent resume targets only")
             .accessibilityIdentifier("kenos.continue.trigger")
+            Button {
+                model.openQuickSwitch()
+            } label: {
+                Label("Quick Switch", systemImage: "magnifyingglass")
+            }
+            .labelStyle(.iconOnly)
+            .accessibilityLabel("Quick Switch")
+            .accessibilityHint("Search and jump to Spaces or recent objects")
+            .accessibilityIdentifier("kenos.quickSwitch.trigger")
             Button {
                 model.openSpaceSwitcher()
             } label: {
@@ -190,7 +205,7 @@ struct KenosRootView: View {
             }
             .labelStyle(.iconOnly)
             .accessibilityLabel("Switch Space")
-            .accessibilityHint("Opens recent and pinned Spaces without adding a fifth tab")
+            .accessibilityHint("Opens pinned and all Spaces without adding a fifth tab")
             .accessibilityIdentifier("kenos.spaceSwitcher.trigger")
         }
     }
@@ -259,6 +274,41 @@ struct KenosRootView: View {
         case .spaces: SpacesHubView(model: model)
         case .inbox: InboxView(model: model)
         }
+    }
+}
+
+struct KenosLiveAccessoryBar: View {
+    let accessory: KenosAppModel.LiveAccessory
+    let onActivate: () -> Void
+
+    var body: some View {
+        Button(action: onActivate) {
+            HStack(spacing: KenosSpacing.sm) {
+                Image(systemName: accessory.kind == .focus ? "target" : "play.circle.fill")
+                    .foregroundStyle(.primary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(accessory.title)
+                        .font(KenosTypography.caption.weight(.semibold))
+                        .lineLimit(1)
+                    Text(accessory.subtitle)
+                        .font(KenosTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.up")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, KenosSpacing.md)
+            .padding(.vertical, KenosSpacing.sm)
+            .frame(maxWidth: .infinity)
+            .background(.ultraThinMaterial)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("kenos.liveAccessory")
+        .accessibilityLabel("\(accessory.title), \(accessory.subtitle)")
+        .accessibilityHint("Returns to the running activity")
     }
 }
 
@@ -584,91 +634,181 @@ struct SpacesHubView: View {
 
 struct SpaceSwitcherSheet: View {
     @ObservedObject var model: KenosAppModel
+    @State private var query = ""
 
     var body: some View {
         NavigationStack {
             List {
-                Section("System") {
-                    Button("Today") { model.returnToSystem(.today) }
-                    Button("Assistant") { model.returnToSystem(.assistant) }
-                    Button("Inbox") { model.returnToSystem(.inbox) }
-                }
-                if !continueEntries.isEmpty {
-                    Section("Continue") {
-                        ForEach(continueEntries, id: \.key) { item in
-                            Button {
-                                model.continueSpace(listKey: item.key)
-                            } label: {
-                                KenosRow(
-                                    title: item.descriptor.displayTitle,
-                                    subtitle: item.descriptor.displaySubtitle
-                                        ?? item.descriptor.spaceId,
-                                    meta: item.descriptor.isExpired ? "expired → home" : "resume"
-                                )
-                            }
-                            .accessibilityIdentifier("kenos.continue.\(item.descriptor.spaceId)")
-                        }
-                    }
-                }
-                if !model.recentSpaceIds.isEmpty {
-                    Section("Recent") {
-                        ForEach(recentEntries) { entry in
-                            Button {
-                                model.openSpace(entry)
-                            } label: {
-                                KenosRow(title: entry.title, subtitle: entry.subtitle, meta: "recent")
-                            }
-                        }
-                    }
-                }
-                if !model.pinnedSpaceIds.isEmpty {
-                    Section("Pinned") {
-                        ForEach(pinnedEntries) { entry in
-                            Button {
-                                model.openSpace(entry)
-                            } label: {
-                                KenosRow(title: entry.title, subtitle: entry.subtitle, meta: "pinned")
-                            }
-                        }
-                    }
-                }
-                Section("All Spaces") {
-                    ForEach(KenosAppModel.spaceCatalog) { entry in
-                        HStack {
-                            Button {
-                                model.openSpace(entry)
-                            } label: {
-                                HStack {
-                                    KenosRow(title: entry.title, subtitle: entry.subtitle, meta: meta(for: entry))
-                                    if model.recentSpaceIds.first == entry.id || model.spacesDestination?.rawValue == entry.id {
-                                        Image(systemName: "checkmark")
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                            }
-                            .accessibilityAddTraits(model.recentSpaceIds.first == entry.id ? .isSelected : [])
-                            Button {
-                                model.togglePinnedSpace(id: entry.id)
-                            } label: {
-                                Image(systemName: model.pinnedSpaceIds.contains(entry.id) ? "star.fill" : "star")
-                            }
-                            .buttonStyle(.borderless)
-                            .accessibilityLabel(model.pinnedSpaceIds.contains(entry.id) ? "Unpin \(entry.title)" : "Pin \(entry.title)")
-                        }
-                    }
+                switch model.spaceChromeMode {
+                case .continueRecent:
+                    continueSections
+                case .switchSpace:
+                    switchSections
+                case .quickSwitch:
+                    quickSwitchSections
                 }
             }
-            .navigationTitle("Switch Space")
+            .navigationTitle(title)
+            .searchable(text: $query, prompt: searchPrompt)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") { model.showSpaceSwitcher = false }
+                    Button("Close") { model.dismissSpaceChrome() }
                 }
             }
-            .accessibilityIdentifier("kenos.spaceSwitcher")
+            .accessibilityIdentifier(accessibilityId)
         }
         #if os(iOS)
-        .presentationDetents([.medium, .large])
+        .presentationDetents(model.spaceChromeMode == .continueRecent ? [.medium, .large] : [.large, .medium])
         #endif
+    }
+
+    private var title: String {
+        switch model.spaceChromeMode {
+        case .continueRecent: return "Continue"
+        case .switchSpace: return "Switch Space"
+        case .quickSwitch: return "Quick Switch"
+        }
+    }
+
+    private var searchPrompt: String {
+        switch model.spaceChromeMode {
+        case .continueRecent: return "Filter recent"
+        case .switchSpace: return "Filter Spaces"
+        case .quickSwitch: return "Search Spaces and resumes"
+        }
+    }
+
+    private var accessibilityId: String {
+        switch model.spaceChromeMode {
+        case .continueRecent: return "kenos.continue.sheet"
+        case .switchSpace: return "kenos.spaceSwitcher"
+        case .quickSwitch: return "kenos.quickSwitch"
+        }
+    }
+
+    @ViewBuilder
+    private var continueSections: some View {
+        if filteredContinue.isEmpty && filteredRecent.isEmpty {
+            Section {
+                Text("Nothing to continue yet. Open a Space from the Spaces tab, then come back here.")
+                    .font(KenosTypography.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        if !filteredContinue.isEmpty {
+            Section("Resume") {
+                ForEach(filteredContinue, id: \.key) { item in
+                    resumeButton(item)
+                }
+            }
+        }
+        if !filteredRecent.isEmpty {
+            Section("Recent Spaces") {
+                ForEach(filteredRecent) { entry in
+                    spaceButton(entry, meta: "recent")
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var switchSections: some View {
+        Section("System") {
+            Button("Today") { model.returnToSystem(.today) }
+        }
+        if !filteredPinned.isEmpty {
+            Section("Pinned") {
+                ForEach(filteredPinned) { entry in
+                    spaceRowWithPin(entry, meta: "pinned")
+                }
+            }
+        }
+        if !filteredRecent.isEmpty {
+            Section("Recent") {
+                ForEach(filteredRecent) { entry in
+                    spaceButton(entry, meta: "recent")
+                }
+            }
+        }
+        Section("All Domains") {
+            ForEach(filteredCatalog) { entry in
+                spaceRowWithPin(entry, meta: meta(for: entry))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var quickSwitchSections: some View {
+        if !filteredContinue.isEmpty {
+            Section("Recent objects") {
+                ForEach(filteredContinue, id: \.key) { item in
+                    resumeButton(item)
+                }
+            }
+        }
+        if !filteredPinned.isEmpty {
+            Section("Pinned") {
+                ForEach(filteredPinned) { entry in
+                    spaceButton(entry, meta: "pinned")
+                }
+            }
+        }
+        Section("Spaces") {
+            ForEach(filteredCatalog) { entry in
+                spaceButton(entry, meta: meta(for: entry))
+            }
+        }
+        Section("System") {
+            ForEach(KenosAppModel.Tab.allCases) { tab in
+                if matches(tab.title) {
+                    Button(tab.title) { model.returnToSystem(tab) }
+                }
+            }
+        }
+    }
+
+    private func resumeButton(_ item: (key: String, descriptor: KenosSpaceSwitcherStore.ResumeDescriptor)) -> some View {
+        Button {
+            model.continueSpace(listKey: item.key)
+        } label: {
+            KenosRow(
+                title: item.descriptor.displayTitle,
+                subtitle: item.descriptor.displaySubtitle ?? item.descriptor.spaceId,
+                meta: item.descriptor.isExpired ? "expired → home" : "resume"
+            )
+        }
+        .accessibilityIdentifier("kenos.continue.\(item.descriptor.spaceId)")
+    }
+
+    private func spaceButton(_ entry: KenosAppModel.SpaceCatalogEntry, meta: String) -> some View {
+        Button {
+            model.openSpace(entry)
+        } label: {
+            KenosRow(title: entry.title, subtitle: entry.subtitle, meta: meta)
+        }
+    }
+
+    private func spaceRowWithPin(_ entry: KenosAppModel.SpaceCatalogEntry, meta: String) -> some View {
+        HStack {
+            Button {
+                model.openSpace(entry)
+            } label: {
+                HStack {
+                    KenosRow(title: entry.title, subtitle: entry.subtitle, meta: meta)
+                    if model.recentSpaceIds.first == entry.id || model.spacesDestination?.rawValue == entry.id {
+                        Image(systemName: "checkmark")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            Button {
+                model.togglePinnedSpace(id: entry.id)
+            } label: {
+                Image(systemName: model.pinnedSpaceIds.contains(entry.id) ? "star.fill" : "star")
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(model.pinnedSpaceIds.contains(entry.id) ? "Unpin \(entry.title)" : "Pin \(entry.title)")
+        }
     }
 
     private var continueEntries: [(key: String, descriptor: KenosSpaceSwitcherStore.ResumeDescriptor)] {
@@ -687,6 +827,32 @@ struct SpaceSwitcherSheet: View {
         model.pinnedSpaceIds.compactMap { id in
             KenosAppModel.spaceCatalog.first { $0.id == id }
         }
+    }
+
+    private var filteredContinue: [(key: String, descriptor: KenosSpaceSwitcherStore.ResumeDescriptor)] {
+        continueEntries.filter {
+            matches($0.descriptor.displayTitle)
+                || matches($0.descriptor.displaySubtitle ?? "")
+                || matches($0.descriptor.spaceId)
+        }
+    }
+
+    private var filteredRecent: [KenosAppModel.SpaceCatalogEntry] {
+        recentEntries.filter { matches($0.title) || matches($0.subtitle) }
+    }
+
+    private var filteredPinned: [KenosAppModel.SpaceCatalogEntry] {
+        pinnedEntries.filter { matches($0.title) || matches($0.subtitle) }
+    }
+
+    private var filteredCatalog: [KenosAppModel.SpaceCatalogEntry] {
+        KenosAppModel.spaceCatalog.filter { matches($0.title) || matches($0.subtitle) }
+    }
+
+    private func matches(_ text: String) -> Bool {
+        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return true }
+        return text.localizedCaseInsensitiveContains(q)
     }
 
     private func meta(for entry: KenosAppModel.SpaceCatalogEntry) -> String {

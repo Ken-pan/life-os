@@ -77,3 +77,7 @@ Reasons (evidence-based, not preference):
 - Direction prototypes themselves are not the product — production pages must catch up with screenshots.
 
 **Status:** Direction locked. Visual quality remains **NOT Owner-accepted**.
+
+## iOS IA (post-direction)
+
+Interaction / navigation structure for iPhone is locked in [`kenos-ios-ia-model-2026-07-21.md`](./kenos-ios-ia-model-2026-07-21.md) (Tabs + Live Accessory + Continue + Quick Switch). Visual Direction A remains the surface grammar.

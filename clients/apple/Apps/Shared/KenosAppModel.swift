@@ -53,10 +53,21 @@ final class KenosAppModel: ObservableObject {
     @Published var showCaptureSheet = false
     /// Temporary Space Switcher layer (not a 5th tab).
     @Published var showSpaceSwitcher = false
+    /// Which chrome sheet is open — Continue (Recent) vs Switch Space vs Quick Switch.
+    @Published var spaceChromeMode: SpaceChromeMode = .switchSpace
     /// Native settings (origin / auth) — used when Inbox is a Web surface.
     @Published var showSettingsSheet = false
     /// Daily Beta Continuity: Plan / Training load in-app WKWebView (not Safari).
     @Published var continuityURL: URL?
+
+    enum SpaceChromeMode: String, Equatable {
+        /// Recent resumes + recent Spaces only (Things-style Continue).
+        case continueRecent
+        /// Pinned + All Domains + System Today (Spaces directory).
+        case switchSpace
+        /// Searchable Quick Switch (Things Quick Find).
+        case quickSwitch
+    }
     let focusStore: KenosFocusStore
     let spaceSwitcherStore: KenosSpaceSwitcherStore
 
@@ -405,8 +416,75 @@ final class KenosAppModel: ObservableObject {
         presentInboxDestination(.capture)
     }
 
-    func openSpaceSwitcher() {
+    /// Continue = Recent resumes only (not the full domain directory).
+    func openContinue() {
+        spaceChromeMode = .continueRecent
         showSpaceSwitcher = true
+    }
+
+    /// Switch Space = Pinned / All Domains directory.
+    func openSpaceSwitcher() {
+        spaceChromeMode = .switchSpace
+        showSpaceSwitcher = true
+    }
+
+    /// Quick Switch = searchable recent + spaces (Things Quick Find).
+    func openQuickSwitch() {
+        spaceChromeMode = .quickSwitch
+        showSpaceSwitcher = true
+    }
+
+    func dismissSpaceChrome() {
+        showSpaceSwitcher = false
+    }
+
+    /// Live accessory above Tab Bar — Music MiniPlayer pattern for mid-domain Continuity.
+    /// Focus leave still uses the top `FocusReturnBanner` (no duplicate chrome).
+    var liveAccessory: LiveAccessory? {
+        let resumes = spaceSwitcherStore.resumeByListKey
+            .map { (key: $0.key, descriptor: $0.value) }
+            .filter { !$0.descriptor.isExpired }
+            .sorted { $0.descriptor.updatedAt > $1.descriptor.updatedAt }
+        if let live = resumes.first(where: { item in
+            let space = "\(item.key) \(item.descriptor.spaceId)".lowercased()
+            let sub = (item.descriptor.displaySubtitle ?? "").lowercased()
+            let isTraining = space.contains("training") || space.contains("fitness")
+            let isPlan = space.contains("plan")
+            let looksLive = sub.contains("set ") || sub.contains("mid") || sub.contains("focus") || sub.contains("timer")
+            return isTraining || (isPlan && looksLive)
+        }) {
+            return LiveAccessory(
+                kind: .continuity(listKey: live.key),
+                title: live.descriptor.displayTitle,
+                subtitle: live.descriptor.displaySubtitle ?? live.descriptor.spaceId
+            )
+        }
+        return nil
+    }
+
+    func activateLiveAccessory(_ accessory: LiveAccessory) {
+        switch accessory.kind {
+        case .focus:
+            returnToFocus()
+        case .continuity(let listKey):
+            continueSpace(listKey: listKey)
+        }
+    }
+
+    struct LiveAccessory: Equatable, Identifiable {
+        enum Kind: Equatable {
+            case focus
+            case continuity(listKey: String)
+        }
+        var id: String {
+            switch kind {
+            case .focus: return "focus"
+            case .continuity(let k): return "continuity:\(k)"
+            }
+        }
+        var kind: Kind
+        var title: String
+        var subtitle: String
     }
 
     func touchRecentSpace(id: String) {

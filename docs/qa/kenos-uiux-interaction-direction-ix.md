@@ -16,6 +16,18 @@
 
 ## Direction locked
 
+## Industry lock-in (2026-07-21)
+
+Canonical model: [`kenos-ios-ia-model-2026-07-21.md`](./kenos-ios-ia-model-2026-07-21.md).
+
+Upgrades vs this Round IX pass:
+
+1. **Continue split** — Live Accessory (running) vs Continue sheet (Recent-only)
+2. **Global Quick Switch** — Things Quick Find path (native toolbar search)
+3. **Spaces Pin** — customize inside Spaces / Switch Space; **do not** retarget the four Tabs
+
+Native binding shipped in `KenosRootView` / `KenosAppModel` (`spaceChromeMode`, `KenosLiveAccessoryBar`).
+
 | 入口 | 职责 |
 |---|---|
 | **Spaces Tab** | 领域目录 |

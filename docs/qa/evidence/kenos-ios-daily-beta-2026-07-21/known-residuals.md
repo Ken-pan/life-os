@@ -15,6 +15,14 @@ NETWORK SCOPE: LAN-DEPENDENT
 PHASE 4: EXIT_OPEN
 ```
 
+## IA upgrades (foundation shipped 2026-07-21)
+
+See `docs/qa/kenos-ios-ia-model-2026-07-21.md`:
+
+- Continue vs Switch Space vs Quick Switch **modes** (native)
+- Live Accessory bar above Tab Bar for mid-Training Continuity
+- Web AIOS Switcher Recent-only parity still open (Daily Beta uses native chrome)
+
 ## Soft residuals
 
 1. Full OS Dynamic Type / VoiceOver Settings sweep (DOM labels + 44px probed).
