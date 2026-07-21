@@ -11,22 +11,43 @@ import {
   messagesHaveImageParts,
   resolveChatBackendKind,
 } from '$lib/cloudChat.core.js'
+import {
+  DEFAULT_GATEWAY,
+  SAME_ORIGIN_GATEWAY,
+  isBuiltinGatewayUrl,
+  isLoopbackHost,
+  resolveGatewayUrl,
+  shouldUseSameOriginLocalAiProxy,
+} from '$lib/localaiGateway.core.js'
+import { isHeavyLocalModel } from '$lib/localaiHeavy.core.js'
 
-/** 网关地址是**设备本地**配置(不进云同步):本地形态用 127.0.0.1,
- *  云端版可在设置里填你暴露出来的公网网关。改这里不会覆盖别的设备。
+export { isHeavyLocalModel }
+
+/** 网关地址是**设备本地**配置(不进云同步)。
+ *  Mac loopback → 127.0.0.1:18888；iPhone / Tailscale Daily Beta → 同域 `/__localai`
+ *  （Mac 上 serve-static 反代到本机网关，LocalAI 仍只绑 loopback）。
  *  live binding:consumers 以 `${GATEWAY}/...` 在调用时读取最新值。 */
 const GATEWAY_KEY = 'aios_gateway_url_v1'
-export const DEFAULT_GATEWAY = 'http://127.0.0.1:18888'
+export { DEFAULT_GATEWAY, SAME_ORIGIN_GATEWAY }
 export { mapUiModelToKimi, resolveChatBackendKind }
+
+function pageHostname() {
+  if (!browser) return ''
+  try {
+    return String(window.location?.hostname || '')
+  } catch {
+    return ''
+  }
+}
 
 function initGateway() {
   if (!browser) return DEFAULT_GATEWAY
   try {
-    return (
-      localStorage.getItem(GATEWAY_KEY) ||
-      import.meta.env.VITE_AIOS_GATEWAY ||
-      DEFAULT_GATEWAY
-    )
+    return resolveGatewayUrl({
+      override: localStorage.getItem(GATEWAY_KEY),
+      envGateway: import.meta.env.VITE_AIOS_GATEWAY,
+      hostname: pageHostname(),
+    })
   } catch {
     return DEFAULT_GATEWAY
   }
@@ -34,13 +55,27 @@ function initGateway() {
 
 export let GATEWAY = initGateway()
 
-/** 设置网关地址(设备本地持久化;空/等于默认则清掉覆盖) */
+/** 设置网关地址(设备本地持久化;空/内置值则清掉覆盖并恢复自动解析) */
 export function setGateway(url) {
-  GATEWAY = (url || '').trim() || DEFAULT_GATEWAY
+  const trimmed = (url || '').trim()
+  if (!trimmed || isBuiltinGatewayUrl(trimmed)) {
+    if (browser) {
+      try {
+        localStorage.removeItem(GATEWAY_KEY)
+      } catch {
+        /* ignore */
+      }
+    }
+    GATEWAY = resolveGatewayUrl({
+      envGateway: browser ? import.meta.env.VITE_AIOS_GATEWAY : '',
+      hostname: pageHostname(),
+    })
+    return
+  }
+  GATEWAY = trimmed.replace(/\/$/, '')
   if (!browser) return
   try {
-    if (GATEWAY === DEFAULT_GATEWAY) localStorage.removeItem(GATEWAY_KEY)
-    else localStorage.setItem(GATEWAY_KEY, GATEWAY)
+    localStorage.setItem(GATEWAY_KEY, GATEWAY)
   } catch {
     /* localStorage 不可用时仅本次会话生效 */
   }
@@ -73,24 +108,52 @@ export function modelById(id) {
   return MODELS.find((m) => m.id === id) ?? MODELS[0]
 }
 
-/** Short-lived ping cache — avoid a 3s stall on every message when the gateway is down. */
+/**
+ * Ping cache — success lasts longer (phone Today↔Ask remounts must not storm
+ * /v1/models). Failures stay short so recovery is snappy.
+ */
 let pingCache = { at: 0, ok: false }
-const PING_CACHE_MS = 5000
+/** @type {Promise<boolean> | null} */
+let pingInflight = null
+const PING_OK_CACHE_MS = 45_000
+const PING_FAIL_CACHE_MS = 8_000
 
-/** @returns {Promise<boolean>} 网关是否可达 */
-export async function pingGateway() {
+/** @param {{ force?: boolean }} [opts] */
+export async function pingGateway(opts = {}) {
+  const force = Boolean(opts.force)
   const now = Date.now()
-  if (now - pingCache.at < PING_CACHE_MS) return pingCache.ok
-  try {
-    const res = await fetch(`${GATEWAY}/v1/models`, {
-      signal: AbortSignal.timeout(3000),
-    })
-    pingCache = { at: now, ok: res.ok }
-    return pingCache.ok
-  } catch {
-    pingCache = { at: now, ok: false }
-    return false
-  }
+  const ttl = pingCache.ok ? PING_OK_CACHE_MS : PING_FAIL_CACHE_MS
+  if (!force && now - pingCache.at < ttl) return pingCache.ok
+  if (!force && pingInflight) return pingInflight
+
+  pingInflight = (async () => {
+    try {
+      const res = await fetch(`${GATEWAY}/v1/models`, {
+        signal: AbortSignal.timeout(3000),
+      })
+      pingCache = { at: Date.now(), ok: res.ok }
+      return pingCache.ok
+    } catch {
+      pingCache = { at: Date.now(), ok: false }
+      return false
+    } finally {
+      pingInflight = null
+    }
+  })()
+  return pingInflight
+}
+
+/** True when GATEWAY is the Daily Beta same-origin LocalAI proxy. */
+export function isPairedLocalAiGateway() {
+  const g = String(GATEWAY || '')
+  return g === SAME_ORIGIN_GATEWAY || g.includes('/__localai')
+}
+
+/** i18n key for gateway-down copy (loopback vs paired Mac). */
+export function gatewayDownMessageKey() {
+  return isPairedLocalAiGateway()
+    ? 'chat.gatewayDownPaired'
+    : 'chat.gatewayDown'
 }
 
 /**
@@ -98,9 +161,54 @@ export async function pingGateway() {
  * @returns {Promise<{ kind: 'local'|'kimi', gatewayOk: boolean }>}
  */
 export async function resolveChatBackend() {
+  // Hosted cloud shell cannot reach Mac loopback — skip the 3s dead ping.
+  if (CLOUD_BUILD && browser) {
+    const host = pageHostname()
+    if (
+      isBuiltinGatewayUrl(GATEWAY) &&
+      !isPairedLocalAiGateway() &&
+      host &&
+      !shouldUseSameOriginLocalAiProxy(host) &&
+      !isLoopbackHost(host)
+    ) {
+      return { kind: 'kimi', gatewayOk: false }
+    }
+  }
   const gatewayOk = await pingGateway()
   const kind = resolveChatBackendKind({ cloudBuild: CLOUD_BUILD, gatewayOk })
   return { kind, gatewayOk }
+}
+
+/** @type {Promise<unknown>} */
+let heavyChatTail = Promise.resolve()
+let heavyChatActive = 0
+
+/** True while a heavy local chat/completions request owns the Mac worker. */
+export function isHeavyChatBusy() {
+  return heavyChatActive > 0
+}
+
+/**
+ * Serialize heavy LocalAI chat so phone Ask / tools don't wedge mlx by stacking
+ * llm-fast with titles/suggestions that fell back to the same model.
+ * @template T
+ * @param {() => Promise<T>} fn
+ * @returns {Promise<T>}
+ */
+function withHeavyChatSlot(fn) {
+  const run = heavyChatTail.then(async () => {
+    heavyChatActive += 1
+    try {
+      return await fn()
+    } finally {
+      heavyChatActive = Math.max(0, heavyChatActive - 1)
+    }
+  })
+  heavyChatTail = run.then(
+    () => undefined,
+    () => undefined,
+  )
+  return run
 }
 
 /**
@@ -170,41 +278,47 @@ export async function streamChat({
     return parseChatCompletionStream(res, onDelta)
   }
 
-  const spec = modelById(model)
-  const body = {
-    model,
-    messages,
-    stream: true,
-    temperature,
-    max_tokens: maxTokens,
-    // Qwen 官方采样建议(mlx_lm 忽略不认识的字段):非思考 top_p 0.8 / top_k 20
-    top_p: 0.8,
-    top_k: 20,
-    // 轻度重复惩罚兜底所有通道:该模型(思考与非思考都)偶发整句/整词复读循环直到烧光 token,
-    // 1.05 很轻不伤质量,实测显著降低发生率。原先只加在思考通道,快速模式复读因此漏网。
-    repetition_penalty: 1.05,
-    repetition_context_size: 512,
-  }
-  if (spec.thinkingSwitch) {
-    body.chat_template_kwargs = { enable_thinking: Boolean(thinking) }
-    if (thinking) {
-      // 思考模式按官方推荐锁定采样(temp 0.6 / top_p 0.95)
-      body.temperature = Math.min(temperature, 0.6)
-      body.top_p = 0.95
+  const runLocal = async () => {
+    const spec = modelById(model)
+    const body = {
+      model,
+      messages,
+      stream: true,
+      temperature,
+      max_tokens: maxTokens,
+      // Qwen 官方采样建议(mlx_lm 忽略不认识的字段):非思考 top_p 0.8 / top_k 20
+      top_p: 0.8,
+      top_k: 20,
+      // 轻度重复惩罚兜底所有通道:该模型(思考与非思考都)偶发整句/整词复读循环直到烧光 token,
+      // 1.05 很轻不伤质量,实测显著降低发生率。原先只加在思考通道,快速模式复读因此漏网。
+      repetition_penalty: 1.05,
+      repetition_context_size: 512,
     }
-  }
-  if (tools?.length) body.tools = tools
+    if (spec.thinkingSwitch) {
+      body.chat_template_kwargs = { enable_thinking: Boolean(thinking) }
+      if (thinking) {
+        // 思考模式按官方推荐锁定采样(temp 0.6 / top_p 0.95)
+        body.temperature = Math.min(temperature, 0.6)
+        body.top_p = 0.95
+      }
+    }
+    if (tools?.length) body.tools = tools
 
-  const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal,
-  })
-  if (!res.ok || !res.body) {
-    throw new Error(`gateway ${res.status}`)
+    const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal,
+    })
+    if (!res.ok || !res.body) {
+      throw new Error(`gateway ${res.status}`)
+    }
+    return parseChatCompletionStream(res, onDelta)
   }
-  return parseChatCompletionStream(res, onDelta)
+
+  // Serialize heavy models on the phone→Mac path (tiny stays free).
+  if (isHeavyLocalModel(model)) return withHeavyChatSlot(runLocal)
+  return runLocal()
 }
 
 /**
@@ -721,14 +835,28 @@ export const TINY_MODEL = 'llm-tiny'
 
 /**
  * 小模型短任务通用入口(非流式,思考关闭,失败静默返回 null)。
- * 网关里 llm-tiny 常驻,通常亚秒级返回;若不可用(旧网关配置)自动回退主力模型。
+ * 网关里 llm-tiny 常驻,通常亚秒级返回;默认在 tiny 失败且主力空闲时回退 llm-fast。
+ * 手机 Ask 进行中请传 `allowFastFallback: false`,避免和用户对话抢 35B。
  * @param {string} prompt
- * @param {{ maxTokens?: number, temperature?: number, timeoutMs?: number }} [opts]
+ * @param {{
+ *   maxTokens?: number,
+ *   temperature?: number,
+ *   timeoutMs?: number,
+ *   allowFastFallback?: boolean,
+ * }} [opts]
  * @returns {Promise<string | null>}
  */
 export async function tinyComplete(prompt, opts = {}) {
-  const { maxTokens = 64, temperature = 0.3, timeoutMs = 20000 } = opts
-  for (const model of [TINY_MODEL, 'llm-fast']) {
+  const {
+    maxTokens = 64,
+    temperature = 0.3,
+    timeoutMs = 20000,
+    allowFastFallback = true,
+  } = opts
+  /** @type {string[]} */
+  const models = [TINY_MODEL]
+  if (allowFastFallback && !isHeavyChatBusy()) models.push('llm-fast')
+  for (const model of models) {
     try {
       const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
         method: 'POST',
@@ -754,6 +882,52 @@ export async function tinyComplete(prompt, opts = {}) {
 }
 
 /**
+ * Keep the always-on 4B worker warm after Ask opens (no heavy-model swap).
+ * Fire-and-forget; safe to call on idle.
+ */
+export async function warmLocalAiAssist() {
+  if (!browser) return
+  if (!(await pingGateway())) return
+  await tinyComplete('ok', {
+    maxTokens: 1,
+    temperature: 0,
+    timeoutMs: 8000,
+    allowFastFallback: false,
+  })
+}
+
+/**
+ * Optional idle ping for llm-fast after Ask opens — fights 35B TTL cold-start
+ * without competing with an in-flight user turn (heavy slot + busy checks).
+ */
+export async function warmLocalAiHeavy() {
+  if (!browser) return
+  if (isHeavyChatBusy()) return
+  if (!(await pingGateway())) return
+  if (isHeavyChatBusy()) return
+  try {
+    await withHeavyChatSlot(async () => {
+      const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llm-fast',
+          messages: [{ role: 'user', content: 'ok' }],
+          chat_template_kwargs: { enable_thinking: false },
+          max_tokens: 1,
+          temperature: 0,
+        }),
+        signal: AbortSignal.timeout(25000),
+      })
+      if (!res.ok) throw new Error(`warm_heavy ${res.status}`)
+      await res.json().catch(() => null)
+    })
+  } catch {
+    /* cold-start warm is best-effort */
+  }
+}
+
+/**
  * 用常驻小模型给对话起一个短标题(fire-and-forget,失败静默)。
  * @returns {Promise<string | null>}
  */
@@ -764,7 +938,7 @@ export async function generateTitle(userText, assistantText, locale = 'zh') {
       : 'Summarize the topic of this conversation in at most 6 words. Output only the title, no quotes or punctuation.'
   const title = await tinyComplete(
     `${instruction}\n\n用户: ${userText.slice(0, 500)}\n助手: ${assistantText.slice(0, 500)}`,
-    { maxTokens: 32 },
+    { maxTokens: 32, allowFastFallback: false },
   )
   if (!title) return null
   return title.replaceAll(/["'「」《》。,]/g, '').slice(0, 24) || null

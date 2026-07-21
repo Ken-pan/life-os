@@ -1,50 +1,66 @@
 /**
- * Kenos product-state copy — loading / empty / error / offline / Continuity edges.
+ * Kenos product-state copy — Loading / Empty / Locked / Error / Action-required.
  * Presentation only; does not change Continuity contracts.
  */
 
 export const PRODUCT_COPY = Object.freeze({
   continueEmptyRecent: Object.freeze({
     title: '还没有可以继续的内容',
-    body: '这是正常的。进入任一 Space 后，会在这里出现。',
-    action: '浏览全部 Spaces',
+    body: '这是正常的。进入任一空间后，会在这里出现。',
+    action: '浏览全部空间',
   }),
   continueSearchEmpty: Object.freeze({
-    title: '没有匹配的 Space',
+    title: '没有匹配的空间',
     body: '保留搜索词，或清除后重试。',
     action: '清除搜索',
   }),
   continueExpired: Object.freeze({
     badge: '已过期',
-    detail: '位置已过期 · 将打开 Space 入口',
+    detail: '位置已过期 · 将打开空间入口',
     actionOpen: '打开入口',
     actionRemove: '移除记录',
   }),
   continueMissing: Object.freeze({
     badge: '已不存在',
-    detail: '该内容已不存在 · 可打开 Space 或移除记录',
-    actionOpen: '打开 Space',
+    detail: '该内容已不存在 · 可打开空间或移除记录',
+    actionOpen: '打开空间',
     actionRemove: '移除记录',
   }),
   todayEmptyUrgent: Object.freeze({
-    title: '今天没有需要立即处理的事',
-    body: '这是正常状态。可以从 Inbox 整理，或继续刚才的工作。',
+    title: '今天没有需要处理的事项',
+    body: '可以从收件箱整理，或继续刚才的工作。',
     actionContinue: '继续刚才的事',
-    actionAssistant: '问 Assistant',
+    actionAssistant: '问助手',
   }),
   todayNeedSignIn: Object.freeze({
-    title: '登录后查看今日摘要',
-    body: '云端 Today / Inbox 需要 Life OS 账户。Spaces 仍可先打开使用。',
+    title: '连接 Kenos 账户',
+    body: '同步今日摘要、收件箱与跨设备状态。各空间仍可独立使用。',
     actionContinue: '继续刚才的事',
-    actionSettings: '去设置登录',
+    actionSettings: '连接账户',
   }),
   todayLoading: Object.freeze({
-    label: '正在汇总各 Space 状态…',
+    label: '正在同步今天的计划',
   }),
   todayPartialError: Object.freeze({
-    title: '部分内容暂时无法更新',
-    body: '已保留上次可用数据。可重试该区域。',
+    title: '暂时无法更新',
+    body: '已保留上次可用数据。可重试。',
     action: '重试',
+  }),
+  todayInboxClear: Object.freeze({
+    title: '全部处理完毕',
+    detail: '当前没有需要你确认的事项',
+    action: '查看',
+  }),
+  todayInboxPending: Object.freeze({
+    /** @param {number} n */
+    title: (n) => (n === 1 ? '1 项等待处理' : `${n} 项等待处理`),
+    detail: '需要确认分类或批准',
+    action: '查看',
+  }),
+  todayInboxUnavailable: Object.freeze({
+    title: '收件箱暂不可用',
+    detail: '连接账户后即可同步',
+    action: '连接账户',
   }),
   offlineBanner: Object.freeze({
     title: '当前离线',
@@ -59,13 +75,19 @@ export const PRODUCT_COPY = Object.freeze({
     action: '重新登录',
   }),
   permissionDenied: Object.freeze({
-    title: '没有访问权限',
-    body: '这不是网络问题，重试不会改变结果。',
+    title: '连接 Kenos 账户',
+    body: '同步今日摘要、收件箱与跨设备状态。',
+    action: '连接账户',
   }),
   domainUnavailable: Object.freeze({
-    title: '该 Space 暂时不可用',
-    body: '可稍后再试，或从 Spaces 进入其他领域。',
-    action: '返回 Spaces',
+    title: '该空间暂时不可用',
+    body: '可稍后再试，或从空间列表进入其他领域。',
+    action: '返回空间',
+  }),
+  lockedWork: Object.freeze({
+    title: '连接工作空间',
+    body: '连接后即可在今日看到工作摘要。',
+    action: '去设置',
   }),
 })
 

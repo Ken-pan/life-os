@@ -1,9 +1,11 @@
 import ArrowDown from '@lucide/svelte/icons/arrow-down'
+import ArrowLeftRight from '@lucide/svelte/icons/arrow-left-right'
 import ArrowUp from '@lucide/svelte/icons/arrow-up'
 import Activity from '@lucide/svelte/icons/activity'
 import Brain from '@lucide/svelte/icons/brain'
 import Briefcase from '@lucide/svelte/icons/briefcase'
 import Download from '@lucide/svelte/icons/download'
+import Ellipsis from '@lucide/svelte/icons/ellipsis'
 import ExternalLink from '@lucide/svelte/icons/external-link'
 import Eye from '@lucide/svelte/icons/eye'
 import FileText from '@lucide/svelte/icons/file-text'
@@ -18,6 +20,7 @@ import Check from '@lucide/svelte/icons/check'
 import ChevronDown from '@lucide/svelte/icons/chevron-down'
 import ChevronLeft from '@lucide/svelte/icons/chevron-left'
 import ChevronRight from '@lucide/svelte/icons/chevron-right'
+import CircleUser from '@lucide/svelte/icons/circle-user'
 import Clock from '@lucide/svelte/icons/clock'
 import CloudUpload from '@lucide/svelte/icons/cloud-upload'
 import CloudCheck from '@lucide/svelte/icons/cloud-check'
@@ -57,11 +60,13 @@ import X from '@lucide/svelte/icons/x'
 /** App 图标注册表：经 platform-web ICON_REGISTRY_CONTEXT_KEY 注入 Icon 组件 */
 export const ICONS = {
   'arrow-down': ArrowDown,
+  'arrow-left-right': ArrowLeftRight,
   'arrow-up': ArrowUp,
   activity: Activity,
   brain: Brain,
   briefcase: Briefcase,
   download: Download,
+  'more-horizontal': Ellipsis,
   external: ExternalLink,
   eye: Eye,
   file: FileText,
@@ -76,6 +81,7 @@ export const ICONS = {
   'chevron-down': ChevronDown,
   'chevron-left': ChevronLeft,
   'chevron-right': ChevronRight,
+  user: CircleUser,
   clock: Clock,
   'cloud-upload': CloudUpload,
   'cloud-check': CloudCheck,

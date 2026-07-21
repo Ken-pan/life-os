@@ -339,13 +339,22 @@ function lexicalScore(q, text) {
   return (hit / qg.size) * 0.55 // 上限 0.55:够过 search_memory 的 0.2 门槛,不越过被动注入的 0.5
 }
 
-export async function searchMemories(query, k = 5) {
+/**
+ * @param {string} query
+ * @param {number} [k]
+ * @param {{ skipBackfill?: boolean }} [opts]
+ */
+export async function searchMemories(query, k = 5, opts = {}) {
   if (!M.items.length) return []
+  const skipBackfill = opts.skipBackfill === true
   // 先补齐缺失向量:刚保存却 embed 失败(网关繁忙/冷启动)的记忆若只剩词法分,和 cosine 的
   // 高基线不可比,会永远沉底——"刚说完立刻问"因此召回失败。查询时顺带把它们(通常就一两条)
   // 一起 embed,拉回同一量纲公平竞争,并落盘自愈。网关彻底不可用时才退回下面的词法兜底。
+  // Ask 首 token 路径请 skipBackfill:避免 embeddings 换模卡死 35B 对话。
   let queryVector = null
-  const missing = M.items.filter((m) => !m.vector).slice(0, 16)
+  const missing = skipBackfill
+    ? []
+    : M.items.filter((m) => !m.vector).slice(0, 16)
   try {
     if (missing.length) {
       const vectors = await embed([query, ...missing.map((m) => m.text)])
@@ -373,19 +382,49 @@ export async function searchMemories(query, k = 5) {
   return scored.sort((a, b) => b.score - a.score).slice(0, k)
 }
 
+function lexicalRecall(query, k, threshold) {
+  const q = query.toLowerCase()
+  return M.items
+    .map((item) => ({
+      item,
+      score: lexicalScore(q, item.text.toLowerCase()),
+    }))
+    .filter((r) => r.score >= Math.min(threshold, 0.35))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, k)
+    .map((r) => r.item.text)
+}
+
 /**
  * 为本轮对话召回相关记忆(注入 system prompt 用)。
  * 注入端阈值偏高(重精度):无关记忆混进 prompt 会误导小模型;
  * 需要广召回时模型自己会调 search_memory(工具端阈值 0.2,重召回)。
  * 0.5 来自实测:无关问题对记忆库的相似度上限 ~0.45,相关记忆下限 ~0.53。
+ * @param {string} query
+ * @param {number} [k]
+ * @param {number} [threshold]
+ * @param {{ timeoutMs?: number, skipBackfill?: boolean }} [opts]
  * @returns {Promise<string[]>}
  */
-export async function recallRelevant(query, k = 4, threshold = 0.5) {
+export async function recallRelevant(query, k = 4, threshold = 0.5, opts = {}) {
   if (!M.items.length) return []
-  try {
-    const results = await searchMemories(query, k)
-    return results.filter((r) => r.score >= threshold).map((r) => r.item.text)
-  } catch {
-    return []
-  }
+  const timeoutMs = Number(opts.timeoutMs || 0)
+  const skipBackfill = opts.skipBackfill !== false
+  const work = (async () => {
+    try {
+      const results = await searchMemories(query, k, { skipBackfill })
+      return results
+        .filter((r) => r.score >= threshold)
+        .map((r) => r.item.text)
+    } catch {
+      return []
+    }
+  })()
+  if (!timeoutMs || timeoutMs <= 0) return work
+  return Promise.race([
+    work,
+    new Promise((resolve) => {
+      setTimeout(() => resolve(lexicalRecall(query, k, threshold)), timeoutMs)
+    }),
+  ])
 }

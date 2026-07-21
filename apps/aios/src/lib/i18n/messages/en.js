@@ -14,7 +14,7 @@ export default {
   nav: {
     mainAria: 'Main navigation',
     today: 'Today',
-    assistant: 'Assistant',
+    assistant: 'Ask',
     spaces: 'Spaces',
     inbox: 'Inbox',
     approvals: 'Approvals',
@@ -27,20 +27,28 @@ export default {
     captureToAssistant: 'Send to Assistant',
     inboxCaptured: 'Captured',
     inboxNeedsReview: 'Needs review',
+    inboxAllPending: 'All',
+    inboxNeedsConfirm: 'Needs confirm',
+    inboxNeedsApprove: 'Needs approve',
+    inboxFilter: 'Filter',
     chat: 'Chat',
     history: 'History',
     settings: 'Settings',
     quickSwitch: 'Quick Switch',
     continue: 'Continue',
     spaceTraining: 'Training',
-    spaceWork: 'Deep Work',
+    spaceWork: 'Work',
     spacePlan: 'Plan',
     spaceMoney: 'Money',
     spaceMusic: 'Music',
     spaceHome: 'Home',
     spaceKnowledge: 'Knowledge',
+    spacePaper: 'Paper',
     focus: 'Focus',
     work: 'Work',
+    shelfCurrent: 'Current',
+    shelfRecent: 'Recent',
+    shelfAll: 'Other Spaces',
   },
   chat: {
     title: 'Chat',
@@ -48,11 +56,18 @@ export default {
     tagline: 'Ask Kenos',
     placeholder: 'Ask anything',
     hintLocal: 'Local model · your data never leaves this device',
+    hintLocalPaired:
+      'Local AI on your paired Mac · data stays on your devices',
+    hintLocalDown:
+      'Local AI unavailable · confirm Mac Tailscale + LocalAI are running',
     hintCloud:
       'Local AI first · falls back to cloud Kenos assistant when offline',
     hintCloudKimi:
       'Cloud Kenos assistant · Plan/Money/Today available · notes/images need local AI',
     hintCloudLocal: 'Local AI connected · full tools',
+    emptyTrust: 'Kenos can read current context; every write needs your confirm.',
+    suggestionsLabel: 'Quick start',
+    attentionLabel: 'Worth attention today',
     send: 'Send',
     stop: 'Stop',
     loading: 'Generating',
@@ -73,6 +88,8 @@ export default {
     retry: 'Retry',
     gatewayDown:
       'Cannot reach the local gateway (127.0.0.1:18888). Make sure LocalAI is running, then retry.',
+    gatewayDownPaired:
+      'Cannot reach LocalAI on your paired Mac. Confirm Tailscale is up on iPhone + Mac, Daily Beta is running, and the LocalAI gateway is healthy — then retry.',
     kimiNotConfigured:
       'Cloud Kimi is not configured (missing KIMI_API_KEY on the site). Connect local LocalAI, or ask an admin to set the key.',
     kimiVisionUnsupported:
@@ -181,13 +198,14 @@ export default {
     page: 'current page',
   },
   model: {
-    label: 'Model',
-    fastName: 'Fast',
-    fastDesc: 'Qwen3.6 35B · low-latency everyday chat',
-    qualityName: 'Deep',
-    qualityDesc: 'Qwen3-Next 80B · complex and long-form tasks',
+    label: 'Answer mode',
+    modePrefix: 'Mode: ',
+    fastName: 'Fast answer',
+    fastDesc: 'Low-latency everyday chat',
+    qualityName: 'Deep answer',
+    qualityDesc: 'Complex and long-form tasks',
     thinking: 'Thinking mode',
-    thinkingDesc: 'Reason before answering — smarter but slower (fast model)',
+    thinkingDesc: 'Reason before answering — smarter but slower',
   },
   ttsVoice: {
     dylan: 'Dylan · Beijing youthful',
@@ -225,11 +243,11 @@ export default {
     gatewayUrl: 'Gateway URL',
     gatewayApply: 'Apply',
     gatewayUrlNote:
-      'Local AI gateway URL (this device only, not synced). Default 127.0.0.1:18888 — only change for a different port/machine.',
+      'Local AI gateway (this device only, not synced). Mac defaults to 127.0.0.1:18888; iPhone uses the Daily Beta / Tailscale same-origin proxy /__localai — usually leave blank.',
     gatewayUrlCloudNote:
       'Enter your publicly-exposed local AI gateway URL (HTTPS) for full tools. If empty or unreachable, the cloud build falls back to Kimi (requires site KIMI_API_KEY). Stored in this browser only, not synced.',
     gatewayNote:
-      'Local builds always use LocalAI; the cloud build prefers your gateway and falls back to Kimi when it is offline.',
+      'LocalAI stays on Mac loopback; the phone reaches it via the paired Daily Beta same-origin proxy (prefer Tailscale MagicDNS). Cloud builds prefer that gateway and fall back to Kimi when offline.',
     defaultModel: 'Default model',
     ttsVoice: 'Read-aloud voice',
     ttsRate: 'Read-aloud speed',
@@ -255,7 +273,7 @@ export default {
       'Let AI.OS reach out instead of waiting to be asked. Fires a native notification at your set time while the app is open; if it was closed then, it catches up the first time you open it that day.',
     dailyBrief: 'Morning brief',
     dailyBriefDesc:
-      "One a day: today's tasks, this month's cash flow, whether you should train",
+      "One a day: today's tasks, this month's cash flow, whether you should train (Kenos Continuity uses system local notifications; Mac shell uses desktop alerts)",
     briefTime: 'Delivery time',
     briefTimeDesc:
       'Fires once after this time, the first time conditions are met that day (requires sign-in)',

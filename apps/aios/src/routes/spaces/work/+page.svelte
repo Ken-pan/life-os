@@ -4,7 +4,7 @@
   import { page } from '$app/state'
   import { FOCUS, startDeepWork } from '$lib/kenos/focusStore.svelte.js'
   import {
-    ensureNativeUnlock,
+    createNativeUnlockController,
     isIosNativeShell,
     NATIVE_UNLOCK_KEYS,
     requestNativeSpaceShelf,
@@ -16,19 +16,25 @@
   } from '$lib/kenos/workSpaceAdapter.js'
 
   let unlockState = $state(/** @type {'pending'|'open'|'locked'} */ ('open'))
+  const workUnlock = createNativeUnlockController({
+    storageKey: NATIVE_UNLOCK_KEYS.work,
+    reason: 'Unlock Work',
+  })
 
   const nativeShell = $derived(
     page.url.searchParams.get('iosNativeShell') === '1' || isIosNativeShell(),
   )
 
-  function requestWorkUnlock({ force = false } = {}) {
-    unlockState = 'pending'
-    void ensureNativeUnlock({
-      storageKey: NATIVE_UNLOCK_KEYS.work,
-      reason: 'Unlock Work',
-      force,
-    }).then((result) => {
-      unlockState = result.ok || result.skipped ? 'open' : 'locked'
+  function requestWorkUnlock({ force = false, prompt = true } = {}) {
+    if (prompt || force) unlockState = 'pending'
+    void workUnlock.unlock({ force, prompt }).then((next) => {
+      unlockState = next
+    })
+  }
+
+  function cancelWorkUnlock() {
+    void workUnlock.cancel().then(() => {
+      unlockState = 'locked'
     })
   }
 
@@ -43,8 +49,11 @@
       }),
     )
     if (isIosNativeShell()) {
-      requestWorkUnlock()
+      // Restore grant only — never auto-present Face ID on remount.
+      unlockState = 'locked'
+      requestWorkUnlock({ prompt: false })
     }
+    return () => workUnlock.dispose()
   })
 
   function begin() {
@@ -69,12 +78,22 @@
       <h1 class="kenos-page-title">Work locked</h1>
       <p class="intro">
         {unlockState === 'pending'
-          ? 'Unlocking Work…'
+          ? 'Waiting for Face ID or passcode…'
           : 'Use Face ID or passcode to open Work in Kenos.'}
       </p>
-      {#if unlockState === 'locked'}
-        <button type="button" onclick={() => requestWorkUnlock({ force: true })}>Unlock</button>
+      {#if unlockState === 'pending'}
+        <button type="button" onclick={cancelWorkUnlock}>Cancel</button>
       {/if}
+      <button
+        type="button"
+        onclick={() =>
+          requestWorkUnlock(
+            unlockState === 'pending' ? { force: true } : { prompt: true },
+          )
+        }
+      >
+        {unlockState === 'pending' ? 'Try again' : 'Unlock'}
+      </button>
     </section>
   {:else}
     <h1 class="kenos-page-title">Deep Work</h1>

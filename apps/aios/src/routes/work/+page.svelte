@@ -21,7 +21,7 @@
   import { launchSpace } from '$lib/kenos/spaceSwitcher.svelte.js'
   import { domainDeepLink } from '$lib/kenos/domainResume.core.js'
   import {
-    ensureNativeUnlock,
+    createNativeUnlockController,
     isIosNativeShell,
     NATIVE_UNLOCK_KEYS,
     requestNativeSpaceShelf,
@@ -34,6 +34,10 @@
   } from '$lib/kenos/workSpaceAdapter.js'
 
   let unlockState = $state(/** @type {'pending'|'open'|'locked'} */ ('open'))
+  const workUnlock = createNativeUnlockController({
+    storageKey: NATIVE_UNLOCK_KEYS.work,
+    reason: 'Unlock Work',
+  })
 
   const nativeShell = $derived(
     page.url.searchParams.get('iosNativeShell') === '1' || isIosNativeShell(),
@@ -65,14 +69,16 @@
     })
   }
 
-  function requestWorkUnlock({ force = false } = {}) {
-    unlockState = 'pending'
-    void ensureNativeUnlock({
-      storageKey: NATIVE_UNLOCK_KEYS.work,
-      reason: 'Unlock Work',
-      force,
-    }).then((result) => {
-      unlockState = result.ok || result.skipped ? 'open' : 'locked'
+  function requestWorkUnlock({ force = false, prompt = true } = {}) {
+    if (prompt || force) unlockState = 'pending'
+    void workUnlock.unlock({ force, prompt }).then((next) => {
+      unlockState = next
+    })
+  }
+
+  function cancelWorkUnlock() {
+    void workUnlock.cancel().then(() => {
+      unlockState = 'locked'
     })
   }
 
@@ -88,8 +94,11 @@
       }),
     )
     if (isIosNativeShell()) {
-      requestWorkUnlock()
+      // Restore grant only — never auto-present Face ID on remount.
+      unlockState = 'locked'
+      requestWorkUnlock({ prompt: false })
     }
+    return () => workUnlock.dispose()
   })
 
   function openSpacesShelf(event) {
@@ -109,16 +118,25 @@
       <h2>Work locked</h2>
       <p>
         {unlockState === 'pending'
-          ? 'Unlocking Work…'
+          ? 'Waiting for Face ID or passcode…'
           : 'Use Face ID or passcode to open Work in Kenos.'}
       </p>
-      {#if unlockState === 'locked'}
-        <div class="state-actions">
-          <button type="button" class="primary" onclick={() => requestWorkUnlock({ force: true })}>
-            Unlock
-          </button>
-        </div>
-      {/if}
+      <div class="state-actions">
+        {#if unlockState === 'pending'}
+          <button type="button" class="quiet" onclick={cancelWorkUnlock}>Cancel</button>
+        {/if}
+        <button
+          type="button"
+          class="primary"
+          onclick={() =>
+            requestWorkUnlock(
+              unlockState === 'pending' ? { force: true } : { prompt: true },
+            )
+          }
+        >
+          {unlockState === 'pending' ? 'Try again' : 'Unlock'}
+        </button>
+      </div>
     </section>
   {:else}
   <header class="work-header">

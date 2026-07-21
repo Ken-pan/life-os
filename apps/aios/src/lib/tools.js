@@ -1,4 +1,4 @@
-import { GATEWAY } from '$lib/localai.js'
+import { GATEWAY, tinyComplete } from '$lib/localai.js'
 import { addMemory, searchMemories } from '$lib/memory.svelte.js'
 import {
   startImageProgress,
@@ -1523,26 +1523,13 @@ async function enhancePrompt(prompt) {
     '严格保持用户的原意和主体,不要新增用户没暗示的核心元素。用中文输出(可保留必要的英文风格术语),' +
     '80-150 字,只输出提示词本身,不要任何解释、前缀、编号或引号。'
   try {
-    const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llm-fast',
-        messages: [
-          { role: 'system', content: sys },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 400,
-        stream: false,
-        // instruct 式单轮扩写,关思考省时
-        chat_template_kwargs: { enable_thinking: false },
-      }),
-      signal: AbortSignal.timeout(60000),
+    // Prefer always-on 4B — do not swap llm-fast before image gen on the phone path.
+    let out = await tinyComplete(`${sys}\n\n用户描述:\n${prompt}`, {
+      maxTokens: 400,
+      temperature: 0.7,
+      timeoutMs: 45000,
+      allowFastFallback: false,
     })
-    if (!res.ok) return null
-    const json = await res.json()
-    let out = json.choices?.[0]?.message?.content?.trim()
     if (!out) return null
     out = out
       .replace(/^["“「『]+/, '')

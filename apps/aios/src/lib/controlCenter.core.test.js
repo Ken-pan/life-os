@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
+  buildAssistantAttentionBrief,
+  buildTodayOverviewLine,
   buildTodayReadModel,
   buildLegacyTodayShadowProjection,
   buildTodayShadowProjection,
+  resolveSpaceLiveDetail,
+  selectTodayDynamicSpaces,
   sortActivityNewestFirst,
   summarizeControlQueue,
 } from './kenos/controlCenter.core.js'
@@ -35,11 +39,13 @@ describe('Kenos Phase 2 control center read model', () => {
     )
     assert.deepEqual(
       model.signals.map((signal) => signal.id),
-      ['training', 'money'],
+      ['plan', 'training', 'money'],
     )
     assert.equal(model.priorities[0].ownerDomain, 'plan')
-    assert.equal(model.signals[1].source, 'portal_today_summary.finance')
-    assert.equal(model.signals[1].futureActionAllowed, false)
+    assert.equal(model.signals.find((s) => s.id === 'money')?.source, 'portal_today_summary.finance')
+    assert.equal(model.signals.find((s) => s.id === 'plan')?.value, '2 项逾期')
+    assert.equal(model.signals[0].futureActionAllowed, false)
+    assert.match(String(model.overview || ''), /逾期/)
     assert.equal(model.status, 'ready')
   })
 
@@ -48,10 +54,52 @@ describe('Kenos Phase 2 control center read model', () => {
       asOf: null,
       priorities: [],
       signals: [],
-      emptyReason: '今日读模型尚未连接。各 Space 仍可独立使用。',
+      overview: null,
+      emptyReason: '今日摘要尚未连接。各空间仍可独立使用。',
       source: 'public.portal_today_summary',
       status: 'unavailable',
     })
+  })
+
+  it('prefers live Plan copy on Today space rows and filters to changed spaces', () => {
+    const model = buildTodayReadModel(
+      {
+        ok: true,
+        asOf: '2026-07-19T12:00:00Z',
+        planner: { todayOpen: 3, overdue: 0 },
+        fitness: { workedOutToday: false, lastSessionDate: '2026-07-18' },
+      },
+      { now: Date.parse('2026-07-19T12:05:00Z') },
+    )
+    assert.equal(
+      resolveSpaceLiveDetail('plan', {
+        signals: model.signals,
+        fallback: '任务 · 日程 · 即将到期',
+      }),
+      '3 项今天到期 · 从最重要的一项开始',
+    )
+    assert.deepEqual(
+      selectTodayDynamicSpaces(
+        [{ id: 'plan' }, { id: 'training' }, { id: 'knowledge' }],
+        { signals: model.signals },
+      ).map((s) => s.id),
+      ['plan', 'training'],
+    )
+    assert.deepEqual(
+      selectTodayDynamicSpaces(
+        [{ id: 'plan' }, { id: 'training' }],
+        { signals: [] },
+      ),
+      [],
+    )
+    assert.match(
+      buildTodayOverviewLine({
+        priorities: model.priorities,
+        signals: model.signals,
+        queue: { inboxOpen: 1, approvalsOpen: 0 },
+      }),
+      /今天到期/,
+    )
   })
 
   it('surfaces Health readiness without vitals when Portal summary is offline', () => {
@@ -140,6 +188,71 @@ describe('Kenos Phase 2 control center read model', () => {
       records.map((item) => item.id),
       ['old', 'new'],
     )
+  })
+
+  it('builds an Assistant steward brief from Plan / Training / Inbox', () => {
+    const brief = buildAssistantAttentionBrief({
+      summary: {
+        ok: true,
+        planner: { overdue: 1, todayOpen: 0 },
+        fitness: { workedOutToday: true, todayCompleted: false },
+      },
+      queue: { inboxOpen: 2, approvalsOpen: 0 },
+      session: {
+        authenticationState: 'signed_in',
+        accountSyncState: 'synced',
+        inboxSyncState: 'ready',
+        crossSpaceSummaryState: 'ready',
+        needsSignIn: false,
+        showTodaySkeleton: false,
+        cloudAuthorized: true,
+      },
+    })
+    assert.deepEqual(brief.bullets, [
+      '1 项计划任务已逾期',
+      '训练进行中，还未收尾',
+      '收件箱有 2 项待确认',
+    ])
+    assert.equal(brief.ask, '你想先处理哪一项？')
+    assert.equal(brief.availability, 'ready')
+    assert.equal(brief.prompts.length, 3)
+  })
+
+  it('does not claim empty attention when summary / inbox are unread', () => {
+    const brief = buildAssistantAttentionBrief({
+      summary: null,
+      queue: { inboxOpen: null, approvalsOpen: null, inboxAvailable: false },
+      session: {
+        authenticationState: 'signed_out',
+        accountSyncState: 'disconnected',
+        inboxSyncState: 'locked',
+        crossSpaceSummaryState: 'locked',
+        needsSignIn: true,
+        showTodaySkeleton: false,
+        cloudAuthorized: false,
+      },
+    })
+    assert.match(brief.bullets[0], /连接 Kenos 账户/)
+    assert.doesNotMatch(brief.bullets.join(' '), /没有急需|没有需要立即/)
+    assert.equal(brief.availability, 'unavailable')
+  })
+
+  it('shows syncing copy while cross-space state is still loading', () => {
+    const brief = buildAssistantAttentionBrief({
+      summary: null,
+      queue: { inboxOpen: null, approvalsOpen: null },
+      session: {
+        authenticationState: 'signed_in',
+        accountSyncState: 'syncing',
+        inboxSyncState: 'syncing',
+        crossSpaceSummaryState: 'syncing',
+        needsSignIn: false,
+        showTodaySkeleton: true,
+        cloudAuthorized: true,
+      },
+    })
+    assert.match(brief.bullets[0], /正在检查/)
+    assert.equal(brief.availability, 'syncing')
   })
 
   it('normalizes legacy and Today cards to the same shadow comparison shape', () => {

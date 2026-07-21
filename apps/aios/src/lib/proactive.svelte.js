@@ -4,16 +4,20 @@ import { isCloudAuthorized } from '$lib/cloud.svelte.js'
 import { lifeOsTodayRaw } from '$lib/lifeos.js'
 import { S } from '$lib/state.svelte.js'
 import { buildBriefText } from '$lib/lifeos.core.js'
+import {
+  canHostDailyBrief,
+  nativeLocalAlertsReady,
+  scheduleDailyBriefAlert,
+} from '$lib/kenos/nativeLocalAlerts.js'
 
 export { buildBriefText }
 
 /**
  * 主动性:早晨今日简报。
- * app 开着时定时/追让式送一条 macOS 原生通知 —— 到了设定时间(默认 08:00)、
- * 当天还没送过,就用跨 app 今日快照拼一句摘要推给用户。若那时 app 没开,
- * 用户当天首次打开/切回 AIOS 时补送(追让)。纯 JS,不碰 Rust。
- *
- * 触发点(见 +layout):挂载时、窗口重新可见/聚焦时、以及运行时每 5 分钟一次。
+ * - Tauri Mac：osascript display notification
+ * - Kenos Continuity：UN 本地通知（kenos_daily_brief）
+ * 到了设定时间(默认 08:00)、当天还没送过,就用跨 app 今日快照拼一句摘要。
+ * 若那时 app 没开,用户当天首次打开/切回时补送(追赶)。
  */
 
 const STATE_KEY = 'aios_daily_brief_v1'
@@ -49,6 +53,26 @@ function markShown(date) {
   }
 }
 
+/** Tauri shell or Kenos Continuity can deliver the brief. */
+export function dailyBriefDeliveryAvailable() {
+  return isNative || canHostDailyBrief()
+}
+
+async function deliverBrief(brief) {
+  if (await nativeLocalAlertsReady()) {
+    const result = await scheduleDailyBriefAlert({
+      title: brief.title,
+      body: brief.body,
+      dayKey: todayStr(),
+    })
+    return Boolean(result?.ok)
+  }
+  if (isNative) {
+    return notify(brief.title, brief.body)
+  }
+  return false
+}
+
 let running = false
 
 /**
@@ -57,7 +81,7 @@ let running = false
  * @returns {Promise<'sent'|'skipped'|'no-data'|'disabled'>}
  */
 export async function maybeSendDailyBrief(opts = {}) {
-  if (!browser || !isNative) return 'disabled'
+  if (!browser || !dailyBriefDeliveryAvailable()) return 'disabled'
   const force = opts.force === true
   const cfg = S.settings.dailyBrief
   if (!force) {
@@ -72,7 +96,7 @@ export async function maybeSendDailyBrief(opts = {}) {
     const data = await lifeOsTodayRaw()
     const brief = buildBriefText(data)
     if (!brief) return 'no-data'
-    const ok = await notify(brief.title, brief.body)
+    const ok = await deliverBrief(brief)
     if (ok && !force) markShown(todayStr())
     return ok ? 'sent' : 'no-data'
   } finally {
@@ -84,7 +108,7 @@ let timer = null
 
 /** 启动运行时轮询(每 5 分钟);重复调用安全。返回停止函数。 */
 export function startDailyBriefScheduler() {
-  if (!browser || !isNative) return () => {}
+  if (!browser || !dailyBriefDeliveryAvailable()) return () => {}
   maybeSendDailyBrief()
   if (timer) return () => stopDailyBriefScheduler()
   timer = setInterval(() => {

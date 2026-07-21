@@ -78,6 +78,14 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5197,
       strictPort: true,
+      // Phone Daily Beta / LAN Vite: LocalAI stays on 127.0.0.1 — proxy same-origin.
+      proxy: {
+        '/__localai': {
+          target: 'http://127.0.0.1:18888',
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/__localai/, '') || '/',
+        },
+      },
     },
     preview: {
       port: 4173,

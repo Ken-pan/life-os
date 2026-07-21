@@ -1,6 +1,7 @@
 /**
  * Reactive Space Switcher store — wraps spaceSwitcher.core for AIOS shell.
- * Chrome modes mirror Apple SpaceChromeMode (Continue / Switch Space / Quick Switch).
+ * Chrome modes: Continue / Switch Space. Quick Switch UI is retired — space
+ * switching is Shelf-only; openQuickSwitchSheet redirects to Switch Space.
  */
 import { CLOUD } from '$lib/cloud.svelte.js'
 import {
@@ -151,15 +152,12 @@ export function openSwitchSpaceSheet(opts = {}) {
   openSpaceSwitcherSheet({ ...opts, mode: SPACE_CHROME_MODES.switchSpace })
 }
 
-/** Quick Switch = searchable resumes + spaces + system. */
+/**
+ * Legacy API: Quick Switch UI is retired (Shelf-only space switching).
+ * Redirects to Switch Space so leftover callers stay safe.
+ */
 export function openQuickSwitchSheet(opts = {}) {
-  if (opts instanceof Event) {
-    captureTrigger(opts)
-    chromeMode = SPACE_CHROME_MODES.quickSwitch
-    sheetOpen = true
-    return
-  }
-  openSpaceSwitcherSheet({ ...opts, mode: SPACE_CHROME_MODES.quickSwitch })
+  openSwitchSpaceSheet(opts)
 }
 
 export function closeSpaceSwitcherSheet() {

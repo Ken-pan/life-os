@@ -2,7 +2,8 @@
 @import '@life-os/theme/brands/aios.css';
 
 /*
-  Kenos Assistant 品牌层 — ink-black + clear accent (not muddy mid-gray).
+  Kenos shell brand — Life OS family materials + Kenos blue accent.
+  Light: warm paper canvas (#f5f3f0) + white raised groups (same family as Plan).
   Dark: near-black canvas (#08090a) + luminance stacking + Kenos blue accent.
   Brand token 真源: packages/design-tokens/tokens/brands/aios.json
 */
@@ -10,27 +11,52 @@
 /*
   Visual Quality Rescue — Direction A foundation (aios-local).
   Roles must differ by weight / leading / tracking, not size alone.
-  Materials: nav/controls/overlays only — never content cards.
+  Materials: chrome + raised content groups (Continuity-aligned cards).
 */
 :root {
-  /* Knife 4 — domain identity (≠ --critical status) */
+  /* Knife 4 — domain identity semantic pairs (≠ --critical status) */
   --kenos-domain-training: #c45c4a;
-  --kenos-domain-plan: #c9a227;
+  --kenos-domain-training-light: #a8483a;
+  --kenos-domain-training-dark: #c45c4a;
+  --kenos-domain-training-on-glass-light: #943c30;
+  --kenos-domain-training-on-glass-dark: #e0705c;
+  --kenos-domain-plan: #d4ae2e;
+  --kenos-domain-plan-light: #c47a08;
+  --kenos-domain-plan-dark: #d4ae2e;
+  --kenos-domain-plan-on-glass-light: #9a6410;
+  --kenos-domain-plan-on-glass-dark: #e0b83a;
   --kenos-domain-money: #3d9b6e;
+  --kenos-domain-money-light: #2f7a52;
+  --kenos-domain-money-dark: #3d9b6e;
+  --kenos-domain-money-on-glass-light: #276645;
+  --kenos-domain-money-on-glass-dark: #4db882;
   --kenos-domain-music: #8b7ec8;
-  --kenos-domain-home: #6b7c8f;
+  --kenos-domain-home: #8aadc8;
+  --kenos-domain-home-light: #5a7088;
+  --kenos-domain-home-dark: #8aadc8;
+  --kenos-domain-home-on-glass-light: #4a5f74;
+  --kenos-domain-home-on-glass-dark: #9bbdd4;
   --kenos-domain-knowledge: #5b6bbf;
-  --kenos-domain-work: #5b7c99;
+  --kenos-domain-work: #6a9be0;
+  --kenos-domain-paper: #8b7355;
+  --kenos-domain-paper-light: #6e5a42;
+  --kenos-domain-paper-dark: #8b7355;
+  --kenos-domain-paper-on-glass-light: #5a4834;
+  --kenos-domain-paper-on-glass-dark: #c4a882;
 
   --kenos-type-display: var(--text-display-sm);
-  --kenos-type-page: clamp(28px, 4.5vw, 36px);
+  /* Align with Continuity Music large title (--kenos-chrome-title-size). */
+  --kenos-type-page: var(--kenos-chrome-title-size, 24px);
   --kenos-type-section: var(--text-title);
   --kenos-type-list: var(--text-lg);
-  --kenos-type-body: var(--text-base);
-  --kenos-type-secondary: var(--text-md);
-  --kenos-type-meta: var(--text-sm);
-  --kenos-type-button: var(--text-md);
+  /* Round 2: body ≥15, caption ≥12, secondary not below ~60% emphasis */
+  --kenos-type-body: 15px;
+  --kenos-type-secondary: 14px;
+  --kenos-type-meta: 12px;
+  --kenos-type-button: 14px;
   --kenos-type-numeric: var(--text-2xl);
+  --kenos-emphasis-secondary: 0.68;
+  --kenos-emphasis-tertiary: 0.5;
 
   --kenos-weight-display: 650;
   --kenos-weight-page: 650;
@@ -53,10 +79,11 @@
   --kenos-space-xl: var(--space-8);
   --kenos-space-section: var(--space-7);
   --kenos-space-page-top: var(--space-6);
-  /* Apple Music–like page gutter — SSOT for SystemBar + content (16pt). */
-  --kenos-space-inline: var(--space-4, 16px);
-  --kenos-title-to-body: var(--space-2-5);
-  --kenos-section-gap: clamp(28px, 4vw, 40px);
+  /* Scroll chrome gutter / title→body — aliases of shared --kenos-chrome-*. */
+  --kenos-space-inline: var(--kenos-chrome-inline, var(--space-4, 16px));
+  --kenos-title-to-body: var(--kenos-chrome-title-to-content, var(--space-2-5));
+  --kenos-section-gap: 24px;
+  --kenos-row-h: 54px;
   --kenos-system-bar-h: 48px;
 
   /* Continuity motion tokens: @life-os/theme kenos-motion.css (KenosMotion mirror). */
@@ -71,7 +98,9 @@
   --kenos-chrome-border: color-mix(in srgb, var(--border) 90%, transparent);
 
   --kenos-radius-control: var(--radius-control);
-  --kenos-radius-group: 0;
+  /* Round 2 audit: group 16 / sheet 22–24 */
+  --kenos-radius-group: 16px;
+  --kenos-radius-sheet: 22px;
   --kenos-radius-overlay: var(--radius-overlay);
 
   --kenos-content-max: 820px;
@@ -88,12 +117,20 @@
   [data-app='aios'] {
     --kenos-type-body: 16px;
     --kenos-type-list: 16px;
-    --kenos-type-secondary: 14px;
+    --kenos-type-secondary: 15px;
     --kenos-type-meta: 13px;
     --kenos-type-section: 18px;
     --kenos-type-button: 14px;
     --sidebar-w: 240px;
   }
+}
+
+/* Secondary / tertiary text — never wash out below readable contrast */
+.kenos-text-secondary {
+  color: color-mix(in srgb, var(--t1) calc(var(--kenos-emphasis-secondary) * 100%), transparent);
+}
+.kenos-text-tertiary {
+  color: color-mix(in srgb, var(--t1) calc(var(--kenos-emphasis-tertiary) * 100%), transparent);
 }
 
 /* Dark: ink void + tinted elevation (Linear-style luminance stacking). */
@@ -109,15 +146,17 @@
   --kenos-chrome-border: rgba(255, 255, 255, 0.1);
 }
 
-/* Light: warmer canvas + clearer chrome separation (not pure paper white wash). */
+/* Light: warm paper canvas + white raised groups (Life OS Continuity family). */
 :root[data-theme='light'],
 [data-app='aios'][data-theme='light'],
 [data-app='aios']:not([data-theme='dark']) {
-  --kenos-surface-canvas: color-mix(in srgb, var(--bg) 88%, #e8e4dc 12%);
-  --kenos-chrome-bg: color-mix(in srgb, var(--bg) 68%, #f7f5f1 32%);
-  --kenos-chrome-border: color-mix(in srgb, var(--border) 70%, #cfc9bf 30%);
-  --kenos-surface-overlay: color-mix(in srgb, var(--bg) 82%, #f3f1ec 18%);
-  --kenos-surface-raised: color-mix(in srgb, var(--t1) 4.5%, var(--bg));
+  --kenos-surface-canvas: var(--bg);
+  --kenos-chrome-bg: color-mix(in srgb, var(--bg) 72%, transparent);
+  --kenos-chrome-border: color-mix(in srgb, var(--border) 88%, transparent);
+  --kenos-surface-overlay: color-mix(in srgb, var(--bg) 86%, transparent);
+  --kenos-surface-raised: var(--card);
+  --kenos-surface-group: var(--card);
+  --kenos-surface-interactive: var(--card-h);
 }
 
 /* Mobile chrome materials — system bar + bottom tab */
@@ -230,7 +269,7 @@
   width: min(100% - (2 * var(--kenos-space-inline, 16px)), var(--kenos-content-max, 880px));
   margin-inline: auto;
   padding: var(--kenos-space-page-top, 24px) 0 var(--kenos-mobile-bottom-pad, 96px);
-  background: var(--kenos-surface-canvas, var(--bg));
+  background: transparent;
 }
 
 .control-page-header {
@@ -282,39 +321,55 @@
 
 .inbox-subnav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 20px 0 8px;
+  flex-wrap: nowrap;
+  gap: 0;
+  margin: 16px 0 4px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
 }
 
 .inbox-subnav a {
-  min-height: 34px;
+  min-height: 40px;
   padding: 0 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border-l);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
   color: var(--t2);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   font-size: var(--text-sm);
+  font-weight: 520;
+  white-space: nowrap;
+  background: transparent;
 }
 
 .inbox-subnav a.active {
   color: var(--t1);
-  border-color: color-mix(in srgb, var(--t1) 35%, var(--border-l));
-  background: color-mix(in srgb, var(--t1) 6%, transparent);
+  border-bottom-color: var(--t1);
+  background: transparent;
+  font-weight: 620;
 }
 
+/* Raised content groups — same family as Continuity cards. */
+.kenos-group,
 .control-list {
-  border-top: 1px solid var(--border);
+  background: var(--kenos-surface-group, var(--card));
+  border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+  border-radius: var(--kenos-radius-group, var(--radius-lg, 12px));
+  overflow: hidden;
 }
 
 .control-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 18px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 16px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+}
+
+.control-row:last-child {
+  border-bottom: 0;
 }
 
 .control-row-main {
@@ -326,44 +381,78 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 7px;
-  color: var(--t3);
-  font-size: var(--text-xs);
+  margin-bottom: 6px;
+  color: color-mix(in srgb, var(--t1) 62%, var(--t2));
+  font-size: 12px;
+  font-weight: 560;
+}
+
+.control-row-source {
+  color: var(--t1);
+  font-weight: 680;
+  letter-spacing: 0.02em;
+}
+
+.control-row-why {
+  margin: 5px 0 0;
+  color: color-mix(in srgb, var(--t1) 70%, var(--t2));
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .control-row h3 {
   margin: 0;
   color: var(--t1);
-  font-size: var(--text-xl);
-  font-weight: 580;
-  line-height: 1.4;
+  font-size: clamp(1.05rem, 2.4vw, 1.2rem);
+  font-weight: 650;
+  line-height: 1.3;
 }
 
 .control-row-detail {
   margin: 6px 0 0;
-  color: var(--t3);
-  font-size: var(--text-md);
-  line-height: 1.5;
+  color: var(--t2);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.control-row-impact {
+  margin: 4px 0 0;
+  color: color-mix(
+    in srgb,
+    var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+    transparent
+  );
+  font-size: var(--kenos-type-meta, 12px);
+  line-height: 1.4;
 }
 
 .control-row-actions {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 6px;
+  min-width: 7.5rem;
+}
+
+.control-row-actions .control-button--secondary {
+  border-color: transparent;
+  color: var(--t2);
+  min-height: 30px;
 }
 
 .control-badge {
   display: inline-flex;
   align-items: center;
-  min-height: 21px;
-  padding: 0 7px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   color: var(--t2);
   font-size: var(--text-2xs);
   font-weight: 650;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .control-badge--critical,
@@ -396,6 +485,9 @@
   border-color: var(--t1);
   background: var(--t1);
   color: var(--bg);
+  min-height: 38px;
+  font-size: 14px;
+  font-weight: 650;
 }
 
 .control-button--primary:hover {

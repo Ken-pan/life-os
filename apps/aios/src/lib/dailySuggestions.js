@@ -1,5 +1,5 @@
 import { browser } from '$app/environment'
-import { GATEWAY, pingGateway } from '$lib/localai.js'
+import { GATEWAY, pingGateway, tinyComplete } from '$lib/localai.js'
 import { S } from '$lib/state.svelte.js'
 import { isCloudAuthorized } from '$lib/cloud.svelte.js'
 import { lifeOsToday } from '$lib/lifeos.js'
@@ -8,33 +8,11 @@ import { lifeOsToday } from '$lib/lifeos.js'
  * 首页动态建议:基于「今日感知」素材(今天的 Obsidian 日报 + 近期项目动态 +
  * 所在地)让常驻小模型想 4 个用户此刻可能想问的,替代写死的静态建议。
  * 按 日期+所在地 每天缓存一次;网关不可达或素材不足时返回 null,页面退回静态。
+ *
+ * 重要:走 llm-tiny,绝不抢手机 Ask 的 llm-fast / 35B 槽位。
  */
 
 const CACHE_KEY = 'aios_daily_suggestions_v1'
-
-/** 直接调 llm-fast(关思考)。llm-tiny 指令跟随太弱、常只吐一条,这里用主力模型;
- *  每天仅一次,值得。失败返回空串。 */
-async function complete(prompt) {
-  try {
-    const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llm-fast',
-        messages: [{ role: 'user', content: prompt }],
-        chat_template_kwargs: { enable_thinking: false },
-        max_tokens: 220,
-        temperature: 0.85,
-      }),
-      signal: AbortSignal.timeout(40000),
-    })
-    if (!res.ok) return ''
-    const json = await res.json()
-    return json.choices?.[0]?.message?.content?.trim() || ''
-  } catch {
-    return ''
-  }
-}
 
 /** 经网关 vault upstream 读一篇笔记正文(短超时,失败返回空串) */
 async function readNote(vault, path) {
@@ -59,7 +37,8 @@ export async function generateDailySuggestions() {
   const cacheId = `${today}|${loc}`
   try {
     const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
-    if (c?.id === cacheId && Array.isArray(c.items) && c.items.length >= 3) return c.items
+    if (c?.id === cacheId && Array.isArray(c.items) && c.items.length >= 3)
+      return c.items
   } catch {
     /* 缓存损坏则重算 */
   }
@@ -70,7 +49,8 @@ export async function generateDailySuggestions() {
   const lifeOs = isCloudAuthorized()
     ? await lifeOsToday().catch(() => '')
     : ''
-  const hasLifeOs = lifeOs && !lifeOs.startsWith('需要') && !lifeOs.startsWith('暂无')
+  const hasLifeOs =
+    lifeOs && !lifeOs.startsWith('需要') && !lifeOs.startsWith('暂无')
 
   const [brief, pulse] = await Promise.all([
     readNote('memory', `${today}.md`),
@@ -87,12 +67,19 @@ export async function generateDailySuggestions() {
     .filter(Boolean)
     .join('\n\n')
 
-  const raw = await complete(
+  const raw = await tinyComplete(
     `今天是 ${today}。下面是用户的近况。据此想 4 个「用户此刻可能想让 AI 帮忙的事」,` +
       '做成首页可点击的建议:每个不超过 14 字、口语化、点了能直接发送,尽量具体到' +
       '用户的会议/项目/所在地/待办/花销(不要泛泛的"帮我头脑风暴";有逾期待办或' +
       '异常花销时可以直接点出来)。只输出 4 行,每行一个,' +
       `不要编号或解释。\n\n${ctx}`,
+    {
+      maxTokens: 220,
+      temperature: 0.85,
+      timeoutMs: 25000,
+      // Never steal the phone Ask 35B lane for homepage chips.
+      allowFastFallback: false,
+    },
   )
   if (!raw) return null
   const items = raw

@@ -22,7 +22,8 @@ describe('mapToKimiModel', () => {
 describe('isAllowedOrigin', () => {
   it('allows empty and known hosts', () => {
     assert.equal(isAllowedOrigin(''), true)
-    assert.equal(isAllowedOrigin('https://aios-kenos.netlify.app'), true)
+    assert.equal(isAllowedOrigin('https://kenos-www.netlify.app'), true)
+    assert.equal(isAllowedOrigin('https://www.kenos.space'), true)
     assert.equal(isAllowedOrigin('http://localhost:5197'), true)
   })
   it('rejects unknown hosts', () => {
@@ -111,7 +112,7 @@ describe('handleAiChat', () => {
       'sk-test',
       { model: 'llm-quality', messages: [{ role: 'user', content: 'hi' }] },
       {
-        origin: 'https://aios-kenos.netlify.app',
+        origin: 'https://www.kenos.space',
         fetchImpl: async (_url, init) => {
           const body = JSON.parse(String(init.body))
           assert.equal(body.model, 'kimi-k2.6')

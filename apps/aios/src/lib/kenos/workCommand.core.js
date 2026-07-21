@@ -710,6 +710,7 @@ export function buildWorkTodayProjection(store, ownerId, options = {}) {
       classification: row.dataClassification,
       deepLink: `/work/deliverables/${row.id}`,
       actionCapability: 'open_work_deliverable',
+      dueAt: row.targetAt || null,
     }))
   }
   for (const row of blocked) {

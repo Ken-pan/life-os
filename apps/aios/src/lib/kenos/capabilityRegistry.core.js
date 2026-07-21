@@ -268,7 +268,7 @@ export function buildCapabilityRegistry(options = {}) {
         operation: 'read',
         surface: workFoundation ? 'legacy-backed' : 'unavailable',
         sourceOfTruth: workFoundation ? 'kenos_work_local_projection' : 'unset',
-        userSafeLabel: workFoundation ? '本地 Work 草稿' : 'Work 读取未开启',
+        userSafeLabel: workFoundation ? '本地工作草稿' : '工作空间未连接',
         userSafeDetail: workFoundation
           ? '仅本机草稿，尚未接入生产 Work 读模型。'
           : '不会显示为零条 Work。',
@@ -395,33 +395,33 @@ export function capabilityEmptyCopy(capability) {
   if (capability.surface === 'unavailable' || capability.surface === 'shadow-only') {
     return {
       kind: 'unavailable',
-      title: capability.userSafeLabel || '尚未开启',
-      body: capability.userSafeDetail || '当前能力尚未开启；不会用空数量冒充「没有事项」。',
+      title: capability.userSafeLabel || '暂未连接',
+      body: capability.userSafeDetail || '连接后即可查看相关内容。',
     }
   }
   if (capability.surface === 'unauthorized') {
     return {
       kind: 'unauthorized',
-      title: '需要登录',
-      body: capability.userSafeDetail || '登录后才能读取你的数据。可在设置中登录。',
+      title: '连接 Kenos 账户',
+      body: capability.userSafeDetail || '登录后即可同步你的数据。',
     }
   }
   if (capability.surface === 'error') {
     return {
       kind: 'error',
-      title: capability.userSafeLabel || '读取失败',
-      body: capability.userSafeDetail || '请稍后重试；不会伪造数据。',
+      title: capability.userSafeLabel || '暂时无法更新',
+      body: capability.userSafeDetail || '请稍后重试。',
     }
   }
   if (capability.surface === 'degraded') {
     return {
       kind: 'degraded',
-      title: capability.userSafeLabel || '部分来源异常',
-      body: capability.userSafeDetail || '仍可查看已成功加载的部分；不会把异常显示成空列表。',
+      title: capability.userSafeLabel || '部分内容暂不可用',
+      body: capability.userSafeDetail || '仍可查看已成功加载的部分。',
     }
   }
   if (capability.surface === 'loading') {
-    return { kind: 'loading', title: '正在更新', body: '' }
+    return { kind: 'loading', title: '正在同步', body: '' }
   }
   return { kind: 'ready', title: '', body: '' }
 }

@@ -15,8 +15,8 @@ import { domainAccent, domainIcon } from './domainIdentity.core.js'
 export const HOSTED_SPACES = Object.freeze([
   {
     id: 'training',
-    label: 'Training',
-    detail: 'Fitness · 今日训练',
+    label: '训练',
+    detail: '今日训练 · 记录与计划',
     href: domainDeepLink('training', '/'),
     domainId: 'training',
     accent: domainAccent('training'),
@@ -25,7 +25,7 @@ export const HOSTED_SPACES = Object.freeze([
   },
   {
     id: 'work-focus',
-    label: 'Work · Deep Work',
+    label: '工作 · 专注',
     detail: '进入当前项目专注',
     href: '/spaces/work',
     accent: domainAccent('work-focus'),
@@ -34,8 +34,8 @@ export const HOSTED_SPACES = Object.freeze([
   },
   {
     id: 'work',
-    label: 'Work',
-    detail: 'Projects · Decisions · Deep Work',
+    label: '工作',
+    detail: '项目 · 决策 · 深度工作',
     href: '/work',
     domainId: 'work',
     accent: domainAccent('work'),
@@ -44,8 +44,8 @@ export const HOSTED_SPACES = Object.freeze([
   },
   {
     id: 'plan',
-    label: 'Plan',
-    detail: 'Upcoming · 任务与时间',
+    label: '计划',
+    detail: '任务 · 日程 · 即将到期',
     href: domainDeepLink('plan', '/upcoming'),
     domainId: 'plan',
     accent: domainAccent('plan'),
@@ -54,8 +54,8 @@ export const HOSTED_SPACES = Object.freeze([
   },
   {
     id: 'money',
-    label: 'Money',
-    detail: 'Finance · Today',
+    label: '财务',
+    detail: '收支 · 结余 · 今日',
     href: domainDeepLink('money', '/home/today'),
     domainId: 'money',
     accent: domainAccent('money'),
@@ -64,8 +64,8 @@ export const HOSTED_SPACES = Object.freeze([
   },
   {
     id: 'music',
-    label: 'Music',
-    detail: '播放与收藏',
+    label: '音乐',
+    detail: '正在播放 · 收藏',
     href: domainDeepLink('music', '/'),
     domainId: 'music',
     accent: domainAccent('music'),
@@ -74,8 +74,8 @@ export const HOSTED_SPACES = Object.freeze([
   },
   {
     id: 'home',
-    label: 'Home',
-    detail: '空间与物品',
+    label: '家',
+    detail: '房间 · 收纳 · 物品',
     href: domainDeepLink('home', '/plan'),
     domainId: 'home',
     accent: domainAccent('home'),
@@ -84,8 +84,8 @@ export const HOSTED_SPACES = Object.freeze([
   },
   {
     id: 'knowledge',
-    label: 'Library',
-    detail: '笔记与资料 · Knowledge vault',
+    label: '知识库',
+    detail: '笔记 · 资料 · 知识库',
     href: domainDeepLink('knowledge', '/'),
     domainId: 'library',
     accent: domainAccent('knowledge'),
@@ -94,8 +94,8 @@ export const HOSTED_SPACES = Object.freeze([
   },
   {
     id: 'health',
-    label: 'Health',
-    detail: 'Status · Focus · Trends',
+    label: '健康',
+    detail: '准备度 · 专注 · 趋势',
     href: domainDeepLink('health', '/'),
     domainId: 'health',
     accent: '#5B6CFF',
@@ -105,7 +105,7 @@ export const HOSTED_SPACES = Object.freeze([
   {
     id: 'paper',
     label: 'Paper',
-    detail: 'Notebooks · legacy fallback（PaperOS 外置）',
+    detail: '笔记与捕获',
     href: '/spaces/paper',
     domainId: 'paper',
     accent: '#8B7355',
@@ -215,7 +215,7 @@ export function buildLegacyExternalSpaces() {
     },
     {
       id: 'home',
-      label: 'Home',
+      label: '家',
       detail: '空间与物品',
       href: DOMAIN_ORIGINS.home,
     },

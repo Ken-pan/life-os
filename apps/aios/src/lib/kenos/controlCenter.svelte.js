@@ -51,18 +51,26 @@ const DEMO_INBOX = Object.freeze([
   {
     id: 'inbox-demo-1',
     status: 'open',
-    source: 'Capture',
+    ownerDomain: 'plan',
+    source: 'plan',
     title: '整理 Phase 2 用户反馈',
-    detail: '等待选择归属 Space',
-    receivedAt: '今天 09:42',
+    safeSummary: '捕获内容等待确认归属后，才会写入计划任务。',
+    detail: '等待选择归属空间',
+    receivedAt: new Date(Date.now() - 12 * 60_000).toISOString(),
+    actionHints: ['open_owner'],
+    deepLink: 'https://planner.kenos.space/inbox',
   },
   {
     id: 'inbox-demo-2',
     status: 'open',
-    source: 'Assistant',
-    title: '确认下周训练安排',
-    detail: '建议归入 Plan，并引用 Training',
-    receivedAt: '昨天 20:18',
+    ownerDomain: 'training',
+    source: 'training',
+    title: '确认今晚训练调整',
+    safeSummary: '训练根据恢复状态建议将腿部训练调整为上肢。',
+    detail: '建议归入计划，并引用训练记录',
+    receivedAt: new Date(Date.now() - 3 * 60 * 60_000).toISOString(),
+    actionHints: ['open_owner'],
+    deepLink: 'https://fitness.kenos.space/',
   },
 ])
 
@@ -494,6 +502,11 @@ export async function refreshControlCenter({ force = false } = {}) {
         ),
       })
       CONTROL.refreshedAt = Date.now()
+      void import('./nativeLocalAlerts.js')
+        .then((m) =>
+          m.syncApprovalAlerts(CONTROL.approvals || [], { demo: CONTROL.demo }),
+        )
+        .catch(() => {})
     } catch (error) {
       CONTROL.error =
         error instanceof Error ? error.message : 'Today 暂时无法刷新'

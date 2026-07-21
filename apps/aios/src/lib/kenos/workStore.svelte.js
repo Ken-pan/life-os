@@ -156,6 +156,11 @@ export function refreshWorkSurface({ force = false } = {}) {
   WORK.projection = buildWorkTodayProjection(WORK.store, DEMO_OWNER)
   WORK.status = WORK.projection.cards.length ? 'ready' : 'empty'
   WORK.error = null
+  void import('./nativeLocalAlerts.js')
+    .then((m) =>
+      m.syncDeliverableDueAlerts(WORK.projection.cards || [], { demo: WORK.demo }),
+    )
+    .catch(() => {})
   return WORK
 }
 

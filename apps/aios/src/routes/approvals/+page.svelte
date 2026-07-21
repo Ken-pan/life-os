@@ -125,7 +125,7 @@
     aria-labelledby="approvals-pending-title"
   >
     <h2 id="approvals-pending-title">
-      等待你的决定 · {countAvailable ? pending.length : '—'}
+      等待你的决定 · {countAvailable ? pending.length : '暂不可用'}
     </h2>
     {#if pending.length}
       <div class="control-list">

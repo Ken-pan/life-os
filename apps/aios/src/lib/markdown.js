@@ -335,6 +335,23 @@ export function renderMarkdown(src, opts = {}) {
 }
 
 /**
+ * Streaming-friendly lite render — escape + paragraphs only (no KaTeX / tables).
+ * Full `renderMarkdown` runs once the stream finishes.
+ * @param {string} src
+ * @param {{ caret?: boolean }} [opts]
+ */
+export function renderMarkdownStreaming(src, opts = {}) {
+  if (!src) return opts.caret ? '<p><span class="md-caret" aria-hidden="true"></span></p>' : ''
+  const escaped = escapeHtml(String(src).replaceAll('\r\n', '\n'))
+  const body = escaped
+    .split(/\n{2,}/)
+    .map((block) => `<p>${block.replaceAll('\n', '<br>')}</p>`)
+    .join('')
+  if (!opts.caret) return body
+  return body.replace(/<\/p>$/, '<span class="md-caret" aria-hidden="true"></span></p>')
+}
+
+/**
  * 拆出 <think> 思考块(qwen 思考模式防御;流式中未闭合也可用)。
  * 三种形态:<think>…</think>…;流式未闭合的 <think>…;
  * 孤立 </think>(开标签被模板吃掉,或 mlx-lm 在工具调用轮把闭合标签漏进 content)——

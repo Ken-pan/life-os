@@ -1,6 +1,7 @@
 /**
  * Visible Assistant scope labels (Global vs Context).
  * Same model for Global Assistant and Work/Focus Context Assistant.
+ * Round 1: Chinese product UI (品牌名 Kenos 保留).
  */
 
 /**
@@ -34,22 +35,26 @@ export function resolveAssistantScopeLabel(input = {}) {
         '',
     ).trim()
     const spaceLabel =
-      space === 'deep_work'
-        ? 'Work'
+      space === 'deep_work' || space === 'work'
+        ? '工作'
         : space === 'training'
-          ? 'Training'
-          : capitalize(space)
+          ? '训练'
+          : space === 'plan'
+            ? '计划'
+            : space === 'Focus' || space === 'focus'
+              ? '专注'
+              : capitalize(space)
     if (entity && entity.toLowerCase() !== spaceLabel.toLowerCase()) {
       return {
         kind: 'context',
-        label: `Scope: ${spaceLabel} · ${entity}`,
+        label: `范围：${spaceLabel} · ${entity}`,
         space: spaceLabel,
         entity,
       }
     }
     return {
       kind: 'context',
-      label: `Scope: ${spaceLabel}`,
+      label: `范围：${spaceLabel}`,
       space: spaceLabel,
       entity: '',
     }
@@ -59,16 +64,16 @@ export function resolveAssistantScopeLabel(input = {}) {
     const entity = String(input.workContext.title || '').trim()
     return {
       kind: 'context',
-      label: entity ? `Scope: Work · ${entity}` : 'Scope: Work',
-      space: 'Work',
+      label: entity ? `范围：工作 · ${entity}` : '范围：工作',
+      space: '工作',
       entity,
     }
   }
 
   return {
     kind: 'global',
-    label: 'Scope: All Kenos',
-    space: 'All Kenos',
+    label: '范围：全部空间',
+    space: '全部空间',
     entity: '',
   }
 }

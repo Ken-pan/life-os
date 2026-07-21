@@ -45,7 +45,7 @@ export function aggregateTodaySummaries(opts = {}) {
 }
 
 /**
- * Shelf structure: Kenos Home / ACTIVE / RECENT / ALL
+ * Shelf structure: Current / Recent / Other Spaces
  * @param {{
  *   activeDomainId?: string | null,
  *   recentIds?: string[],
@@ -59,7 +59,7 @@ export function projectSpaceShelf(opts = {}) {
     .filter(Boolean)
   const kenos = projectShelfCard('kenos', {
     isCurrent: !activeId,
-    subtitle: 'Today · Assistant · Inbox',
+    subtitle: 'Today · Ask · Inbox',
   })
   const all = listShelfDomainDefinitions().map((d) =>
     projectShelfCard(d.id, {
@@ -73,10 +73,17 @@ export function projectSpaceShelf(opts = {}) {
     .filter((id) => id !== activeId)
     .map((id) => all.find((c) => c.id === id))
     .filter(Boolean)
+  // Other Spaces — excludes Current + Recent (matches native Shelf IA).
+  const hide = new Set([
+    ...(activeId ? [activeId] : []),
+    ...recentCards.map((c) => c.id),
+  ])
+  const other = all.filter((c) => !hide.has(c.id))
   return {
     kenosHome: kenos,
     active,
     recent: recentCards,
+    other,
     all,
     privacy: {
       money: 'hide_amounts',

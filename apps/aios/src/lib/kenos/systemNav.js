@@ -1,6 +1,7 @@
 /**
  * Kenos System top-level IA:
- * Leading Spaces chip + capsule (Today · Assistant · Inbox · Settings) = 5.
+ * Leading Spaces Orb + capsule (Today · Ask · Inbox).
+ * Settings is Today account chrome — not a capsule destination.
  */
 
 export const SYSTEM_NAV_HREFS = Object.freeze({
@@ -38,7 +39,7 @@ export function isSystemNavActive(pathname, href) {
 export function systemNavSpacesItem(t) {
   return {
     href: SYSTEM_NAV_HREFS.spaces,
-    // layout-grid ↔ iOS `square.grid.2x2` (KenosGlobalDock Spaces chip)
+    // layout-grid ↔ iOS `square.grid.2x2` (KenosGlobalDock Spaces Orb)
     icon: 'layout-grid',
     label: t('nav.spaces'),
     key: 'spaces',
@@ -46,7 +47,7 @@ export function systemNavSpacesItem(t) {
 }
 
 /**
- * Capsule items (four) — paired with leading Spaces.
+ * Capsule items (three) — paired with leading Spaces Orb.
  * @param {(key: string) => string} t
  */
 export function systemNavCapsuleItems(t) {
@@ -70,17 +71,11 @@ export function systemNavCapsuleItems(t) {
       label: t('nav.inbox'),
       key: 'inbox',
     },
-    {
-      href: SYSTEM_NAV_HREFS.settings,
-      icon: 'settings',
-      label: t('nav.settings'),
-      key: 'settings',
-    },
   ]
 }
 
 /**
- * Flat five for sidebar / tests (Spaces first).
+ * Flat four for sidebar / tests (Spaces first).
  * @param {(key: string) => string} t i18n helper
  */
 export function systemNavItems(t) {

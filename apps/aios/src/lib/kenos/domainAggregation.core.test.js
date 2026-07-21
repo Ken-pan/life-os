@@ -16,15 +16,19 @@ describe('domainAggregation.core', () => {
     assert.ok(!rows.some((r) => r.domainId === 'paper'))
   })
 
-  it('projects shelf Kenos / ACTIVE / RECENT / ALL', () => {
+  it('projects shelf Current / Recent / Other Spaces', () => {
     const shelf = projectSpaceShelf({
       activeDomainId: 'money',
       recentIds: ['plan', 'finance'],
     })
     assert.equal(shelf.kenosHome.isKenos, true)
+    assert.equal(shelf.kenosHome.title, 'Kenos')
+    assert.equal(shelf.kenosHome.subtitle, 'Today · Ask · Inbox')
     assert.equal(shelf.active[0]?.id, 'money')
     assert.ok(shelf.recent.some((c) => c.id === 'plan'))
     assert.ok(shelf.all.length >= 7)
+    assert.ok(shelf.other.every((c) => c.id !== 'money' && c.id !== 'plan'))
+    assert.ok(!shelf.other.some((c) => c.id === 'money'))
     assert.equal(shelf.privacy.money, 'hide_amounts')
     assert.equal(shelf.privacy.home, 'hide_interior_images')
   })

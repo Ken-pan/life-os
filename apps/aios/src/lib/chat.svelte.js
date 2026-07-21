@@ -21,7 +21,14 @@ import {
   autoExtractMemories,
   M as MEM,
 } from '$lib/memory.svelte.js'
-import { isNative } from '$lib/native.js'
+import { isNative, NATIVE_DEFS } from '$lib/native.js'
+import {
+  buildLocalToolHandbookLines,
+  detectLocalAssistNeeds,
+  filterToolsByNeeds,
+  priorToolNamesFromConversation,
+  toolNamesForNeeds,
+} from '$lib/chatPromptBudget.core.js'
 import { dataChanged } from '$lib/syncBus.js'
 import { isCloudAuthorized } from '$lib/cloud.svelte.js'
 import { areProductionWritesBlocked } from '$lib/kenos/prodWriteGuard.core.js'
@@ -381,6 +388,7 @@ function createStreamReveal(target, startedAt) {
   let raf = null
   let pendingReason = ''
   let pendingContent = ''
+  let primed = false
   const hasRaf = typeof requestAnimationFrame !== 'undefined'
 
   const markThinking = () => {
@@ -428,6 +436,12 @@ function createStreamReveal(target, startedAt) {
     push(chunk) {
       if (chunk.reasoning) pendingReason += chunk.reasoning
       if (chunk.content) pendingContent += chunk.content
+      // First token: paint immediately (TTFT), then rAF-smooth the rest.
+      if (!primed && (pendingReason || pendingContent)) {
+        primed = true
+        drainAll()
+        return
+      }
       if (hasRaf) schedule()
       else drainAll()
     },
@@ -554,7 +568,11 @@ async function buildSystemPrompt(conversation, { backend = 'local' } = {}) {
         let memories
         if (recallCache.key === key) memories = recallCache.memories
         else {
-          memories = await recallRelevant(query)
+          // Cap wait so embeddings cold-start never blocks first cloud token.
+          memories = await recallRelevant(query, 4, 0.5, {
+            timeoutMs: 900,
+            skipBackfill: true,
+          })
           recallCache = { key, memories }
         }
         if (memories.length) {
@@ -611,42 +629,24 @@ async function buildSystemPrompt(conversation, { backend = 'local' } = {}) {
     )
   }
   if (S.settings.tools) {
+    // Intent-gated handbooks: long Obsidian/browser/image manuals inflate 35B
+    // prefill on every phone Ask turn — only inject when the turn needs them.
+    const lastUserForTools = [...conversation.messages]
+      .reverse()
+      .find((m) => m.role === 'user')
+    const assistNeeds = detectLocalAssistNeeds(lastUserForTools?.content ?? '', {
+      priorToolNames: priorToolNamesFromConversation(conversation),
+    })
     lines.push(
-      '工具选择速查(需要事实时先用工具,不要凭记忆编造):\n' +
-        '- 联网查资料:browser_search(结果自带摘要,先筛选)→ 挑 1-3 篇 open_browser_page(直接返回正文)→ 长文按结果尾部提示用 read_browser_page(part=text, offset=N) 续读 → 汇总并附来源链接\n' +
-        '- 用户说"当前页面/我打开的这个网页":read_browser_page(不要 open)\n' +
-        '- 页面上点击/填表/触发"加载更多":browser_interact;看页面里的图片/图表/布局:look_at_browser_page\n' +
-        '- browser 工具偶发报错:先直接重试一次(工具会自动后台唤起 Chrome 让扩展重连);仍失败再 browser_status 诊断并把提示转告用户\n' +
-        '- 算数 calculate;跑代码 run_javascript;日期时间 get_time' +
-        (S.settings.webAccess
-          ? '\n- 浏览器工具不可用时才退回 web_search / fetch_url(公共代理,较不稳定)'
-          : '') +
-        '\n不要:在同一页面反复滚动重读(用 offset 续读);编造网页内容或链接。',
+      ...buildLocalToolHandbookLines(assistNeeds, {
+        toolsEnabled: true,
+        memoryEnabled: S.settings.memory,
+        cloudAuthorized,
+        writesBlocked,
+        isNative,
+        webAccess: S.settings.webAccess,
+      }),
     )
-    if (isNative) {
-      lines.push(
-        '本机原生能力(只有这台 Mac 上可用,按需伸手,别为简单问答滥用):\n' +
-          '- 改代码/修 bug/写脚本/跑测试/多文件工程:delegate_task 派给本机 Claude Code(默认)或 cursor,异步执行——派发后回复用户并用 check_task 跟进,别原地干等\n' +
-          '- 看桌面上有什么、某个原生 Mac 应用界面长什么样:look_at_screen(网页内容/网页里的图仍走 look_at_browser_page,别混用)\n' +
-          '- 打开/前置某个 Mac 应用 open_mac_app;往它输入文字 type_into_app\n' +
-          '- 把任务转交本机其它 AI 桌面应用(Claude/ChatGPT/Cursor/Codex)并取回复:ai_app_send 发出、隔十几秒到一分钟再 ai_app_read 读\n' +
-          '- GitHub 操作(PR/issue/仓库)github_cli;更底层的 macOS 自动化 run_applescript',
-      )
-    }
-    if (cloudAuthorized) {
-      const writeHint = writesBlocked
-        ? '- 当前生产写关闭:不要调用 planner_add_task,也不要假装已写入。用户要加待办/记事时,引导打开 Plan Space 手动添加,并说明助手此刻只读'
-        : '- 用户明确要记一件事/加待办/提醒自己 → planner_add_task(投递到 Planner 收件箱);仅意图明确时调,调用后复述加了什么'
-      lines.push(
-        'Life OS 数据(用户自己的真实数据,涉及时必须用工具读、不要猜也不要说"看不到"):\n' +
-          '- 花销/收入/结余/某分类或商家花多少 → finance_summary(可传 period 或 from/to、category、merchant)\n' +
-          '- 待办/今天要做什么/有没有逾期/今天完成了什么 → planner_tasks(scope: today/overdue/open/completed_today)\n' +
-          '- "今天怎么样/我的近况" 这类综合近况 → life_os_today(一次拿到待办·财务·健身·音乐·Health 准备度摘要)\n' +
-          writeHint +
-          '\n- 开始/结束 Focus(计划会话) → start_focus / end_focus;状态 → focus_status\n' +
-          '- 打开 Space → open_space;写 Library 笔记 → compose_library_note(用户明确要求时)',
-      )
-    }
     // Health readiness may be present on-device without cloud login (HealthKit inject).
     try {
       const { healthReadinessAssistantBlock } =
@@ -661,27 +661,6 @@ async function buildSystemPrompt(conversation, { backend = 'local' } = {}) {
     } catch {
       /* ignore */
     }
-    if (S.settings.memory) {
-      // 刻意精简:小模型(尤其思考模式)会逐句反刍长指令,曾因此陷入复读循环;细节纪律在工具描述里
-      lines.push(
-        '记忆:用户说出值得长期记住的新事实(偏好、背景变化、纠正)时,直接调一次 save_memory;状态/时间纠正、以及今天联网确认到的重要时效事实,都保存为“截至当前日期,…”的带日期事实,没给完成日期就不要猜。问到用户历史而上下文里没有答案时,先 search_memory。记忆操作不要反复斟酌,一次调用、顺带确认即可。',
-      )
-    }
-    lines.push(
-      '用户有 Obsidian 笔记库(已全文索引):涉及他过往写下的判断、框架、决策、评审、项目细节或日常记录时,先 search_notes 检索,需要展开再 read_note;回答时给出笔记路径。若用户就某个事实/决策/进展直接发问(如"我上次定的X是什么""关于Y我的结论"),用 ask_notes 一步拿到基于笔记、带 [n] 引用的综合答案。',
-    )
-    lines.push(
-      '策展笔记(每晚/每周自动生成,信号高,优先参考):Work/Digests/daily-summary-日期.md 每日工作摘要;Work/Topics/<主题>.md 跨天演进的主题线(含时间线与状态),_未决看板.md 汇总未决与停滞项;Work/People/<人名>.md 每个人涉及的主题;Work/Rollups/weekly-*.md、monthly-*.md 周报月报。问工作进展/某件事的来龙去脉/某人相关时,这些比原始 Work Log 更好用。',
-    )
-    lines.push(
-      '今日动态:插件每天把用户的 Teams 消息、Outlook 邮件、Jira、RSS 聚合成日报,写进 memory 库根目录的“YYYY-MM-DD.md”。用户问及今天/某天的会议、邮件、工作进展或“今天怎么样/有什么事”时,用 read_note(vault="memory", path="当天日期.md") 读那天的日报(结合上面注入的当前日期填日期);要更细的原始记录再看主库 Work/Work Log/ 下的 teams-chat-digest-日期.md、outlook-mail-digest-日期.md。',
-    )
-    lines.push(
-      '近期项目:memory 库的 project-git-pulse.md 是脚本汇总的用户近几天各代码仓库的 git 提交(按活跃度排序)。用户问及最近在忙什么、在做哪些项目、开发/代码进展时,read_note(vault="memory", path="project-git-pulse.md") 读它再答。',
-    )
-    lines.push(
-      '生图:用户要画图/生成图片时用 generate_image,prompt 写具体(主体+细节+场景+光线+风格)。人物、写实、图中含文字用 quality="quality"。创建可复用角色加 save_character="名字";之后 character="名字" 让同一角色进入新场景;已有角色用 list_characters 查。生成结果自动展示,不要编造图片链接。',
-    )
   }
   const custom = S.settings.customPrompt?.trim()
   if (custom) lines.push(`用户的自定义指令:\n${custom}`)
@@ -741,7 +720,11 @@ async function buildSystemPrompt(conversation, { backend = 'local' } = {}) {
       if (recallCache.key === key) {
         memories = recallCache.memories
       } else {
-        memories = await recallRelevant(query)
+        // Phone→Mac: never let embeddings swap wedge llm-fast before first token.
+        memories = await recallRelevant(query, 4, 0.5, {
+          timeoutMs: 900,
+          skipBackfill: true,
+        })
         recallCache = { key, memories }
       }
       if (memories.length) {
@@ -877,6 +860,7 @@ export async function sendMessage(text, images = [], files = []) {
   }
   conversation.model = S.settings.model
   conversation.messages.push({
+    id: crypto.randomUUID(),
     role: 'user',
     content: trimmed,
     images: images.length ? images : undefined,
@@ -1068,16 +1052,32 @@ async function streamAssistantReply(conversation) {
       ?.content ?? ''
   const model = resolveModel(conversation)
   const useTools = S.settings.tools
+  const assistNeeds = detectLocalAssistNeeds(lastUserText, {
+    priorToolNames: priorToolNamesFromConversation(conversation),
+  })
   const rawTools = useTools
     ? toolDefinitionsForBackend(backend.kind, {
         webAccess: S.settings.webAccess,
       })
     : undefined
-  const tools = filterToolsForVision(rawTools, useVision)
+  const visionTools = filterToolsForVision(rawTools, useVision)
+  const allowedToolNames =
+    backend.kind === 'local' && visionTools
+      ? toolNamesForNeeds(assistNeeds, {
+          webAccess: S.settings.webAccess,
+          includeNativeNames: isNative
+            ? NATIVE_DEFS.map((t) => t.key)
+            : [],
+        })
+      : null
+  const tools = allowedToolNames
+    ? filterToolsByNeeds(visionTools, allowedToolNames)
+    : visionTools
 
   // 先挂占位消息再组装 prompt:记忆召回(嵌入模型冷启动)可能耗时几十秒,
   // 这段时间界面必须有等待反馈,不能空白
   const firstAssistant = $state({
+    id: crypto.randomUUID(),
     role: 'assistant',
     content: '',
     reasoning: '',
@@ -1111,7 +1111,12 @@ async function streamAssistantReply(conversation) {
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
       let assistant = firstAssistant
       if (round > 0) {
-        const next = $state({ role: 'assistant', content: '', reasoning: '' })
+        const next = $state({
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: '',
+          reasoning: '',
+        })
         conversation.messages.push(next)
         assistant = next
       }
@@ -1331,11 +1336,39 @@ async function streamAssistantReply(conversation) {
     persist()
   }
 
-  // 回复落定后的小模型辅助任务,全部 fire-and-forget,不阻塞交互
-  maybeTitle(conversation)
-  maybeSuggest(conversation)
-  maybeCompact(conversation)
-  maybeExtractMemories(conversation)
+  // 回复落定后的小模型辅助:串行 + idle,且用户开新一轮时让路(不抢 35B / chat 槽)
+  enqueuePostTurn(async () => {
+    await maybeTitle(conversation)
+    if (C.streaming) return
+    await maybeSuggest(conversation)
+    if (C.streaming) return
+    await maybeCompact(conversation)
+    if (C.streaming) return
+    maybeExtractMemories(conversation)
+  })
+}
+
+/** @type {Promise<void>} */
+let postTurnChain = Promise.resolve()
+
+/** @param {() => Promise<void> | void} task */
+function enqueuePostTurn(task) {
+  postTurnChain = postTurnChain
+    .then(async () => {
+      while (C.streaming) {
+        await new Promise((r) => setTimeout(r, 180))
+      }
+      await new Promise((resolve) => {
+        if (typeof requestIdleCallback === 'function') {
+          requestIdleCallback(() => resolve(undefined), { timeout: 1800 })
+        } else {
+          setTimeout(resolve, 80)
+        }
+      })
+      if (C.streaming) return
+      await task()
+    })
+    .catch(() => {})
 }
 
 /** 回复完成后被动萃取用户稳定事实(补模型忘了 save_memory 的情况) */
@@ -1392,7 +1425,7 @@ async function maybeSuggest(conversation) {
       : '基于这轮对话,替用户想 3 个自然的追问(用户视角、可直接发送),每行一个,每个不超过 16 个字。只输出 3 行问题本身,不要编号和其他内容。'
   const raw = await tinyComplete(
     `${instruction}\n\n用户: ${lastUser.content.slice(0, 400)}\n助手: ${answer.slice(0, 800)}`,
-    { maxTokens: 96, temperature: 0.7 },
+    { maxTokens: 96, temperature: 0.7, allowFastFallback: false },
   )
   if (!raw) return
   const suggestions = raw
@@ -1474,7 +1507,12 @@ async function maybeCompact(conversation) {
   try {
     const merged = await tinyComplete(
       `把以下对话内容压缩成不超过 400 字的要点摘要,保留:关键事实与数据、做出的决定、用户偏好、未解决的问题。只输出摘要本身。\n\n${conversation.summary ? `【已有摘要】\n${conversation.summary}\n\n` : ''}【新增对话】\n${chunk.slice(0, 8000)}`,
-      { maxTokens: 800, temperature: 0.3, timeoutMs: 60000 },
+      {
+        maxTokens: 800,
+        temperature: 0.3,
+        timeoutMs: 60000,
+        allowFastFallback: false,
+      },
     )
     if (merged) {
       conversation.summary = merged.slice(0, 1200)

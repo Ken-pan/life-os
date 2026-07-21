@@ -5,12 +5,12 @@
     refreshControlCenter,
     retryDemoActivity,
   } from '$lib/kenos/controlCenter.svelte.js'
-  import { sortActivityNewestFirst, summarizeControlQueue, formatQueueCount } from '$lib/kenos/controlCenter.core.js'
+  import { sortActivityNewestFirst, summarizeControlQueue, formatQueueCountLabel } from '$lib/kenos/controlCenter.core.js'
   import ReadSourceState from '$lib/components/ReadSourceState.svelte'
 
   const activities = $derived(sortActivityNewestFirst(CONTROL.activities))
   const queue = $derived(summarizeControlQueue(CONTROL))
-  const failureCountLabel = $derived(formatQueueCount(queue.activityFailures))
+  const failureCountLabel = $derived(formatQueueCountLabel(queue.activityFailures))
 
   onMount(() => {
     void refreshControlCenter()

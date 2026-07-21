@@ -3,10 +3,10 @@ import { describe, it } from 'node:test'
 import { resolveAssistantScopeLabel } from './assistantScopeLabel.core.js'
 
 describe('assistantScopeLabel.core', () => {
-  it('labels Global Assistant as All Kenos', () => {
+  it('labels Global Assistant as all spaces (zh)', () => {
     const scope = resolveAssistantScopeLabel({})
     assert.equal(scope.kind, 'global')
-    assert.equal(scope.label, 'Scope: All Kenos')
+    assert.equal(scope.label, '范围：全部空间')
   })
 
   it('labels Focus context with entity', () => {
@@ -19,7 +19,7 @@ describe('assistantScopeLabel.core', () => {
       },
     })
     assert.equal(scope.kind, 'context')
-    assert.equal(scope.label, 'Scope: Work · Q3 launch')
+    assert.equal(scope.label, '范围：工作 · Q3 launch')
   })
 
   it('labels Work hub context without inventing Focus', () => {
@@ -27,7 +27,7 @@ describe('assistantScopeLabel.core', () => {
       workContext: { title: 'Alpha' },
     })
     assert.equal(scope.kind, 'context')
-    assert.equal(scope.label, 'Scope: Work · Alpha')
+    assert.equal(scope.label, '范围：工作 · Alpha')
   })
 
   it('labels Work hub context without project title', () => {
@@ -35,12 +35,12 @@ describe('assistantScopeLabel.core', () => {
       workContext: { title: '' },
     })
     assert.equal(scope.kind, 'context')
-    assert.equal(scope.label, 'Scope: Work')
+    assert.equal(scope.label, '范围：工作')
   })
 
   it('does not fabricate Work context when empty', () => {
     const scope = resolveAssistantScopeLabel({ workContext: null, focus: null })
     assert.equal(scope.kind, 'global')
-    assert.equal(scope.label, 'Scope: All Kenos')
+    assert.equal(scope.label, '范围：全部空间')
   })
 })

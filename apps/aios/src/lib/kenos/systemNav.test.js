@@ -8,20 +8,20 @@ import {
 } from './systemNav.js'
 
 describe('systemNav', () => {
-  it('exposes five top-level entries with Spaces first', () => {
+  it('exposes four top-level entries with Spaces first (Settings off-capsule)', () => {
     const items = systemNavItems((k) => k)
     assert.deepEqual(
       items.map((i) => i.href),
-      ['/spaces', '/', '/assistant', '/inbox', '/settings'],
+      ['/spaces', '/', '/assistant', '/inbox'],
     )
   })
 
-  it('splits Spaces chip from four-item capsule', () => {
+  it('splits Spaces Orb from three-item capsule', () => {
     const t = (k) => k
     assert.equal(systemNavSpacesItem(t).href, '/spaces')
     assert.deepEqual(
       systemNavCapsuleItems(t).map((i) => i.href),
-      ['/', '/assistant', '/inbox', '/settings'],
+      ['/', '/assistant', '/inbox'],
     )
   })
 

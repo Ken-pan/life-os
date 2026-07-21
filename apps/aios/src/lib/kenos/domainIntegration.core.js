@@ -168,10 +168,10 @@ export const DOMAIN_REGISTRY = Object.freeze({
   kenos: defineDomain({
     id: 'kenos',
     label: 'Kenos',
-    subtitle: 'Today · Assistant · Inbox',
+    subtitle: 'Today · Ask · Inbox',
     strategy: 'native',
     appId: 'aios',
-    productionOrigin: 'https://aios.kenos.space',
+    productionOrigin: 'https://www.kenos.space',
     devPort: 5219,
     homePath: '/',
     listKey: 'kenos',
@@ -218,7 +218,7 @@ export const DOMAIN_REGISTRY = Object.freeze({
     subtitle: 'Projects and decisions',
     strategy: 'embedded_web',
     appId: 'aios',
-    productionOrigin: 'https://aios.kenos.space',
+    productionOrigin: 'https://www.kenos.space',
     devPort: 5219,
     homePath: '/work',
     systemImage: 'briefcase',
@@ -306,6 +306,7 @@ export const DOMAIN_REGISTRY = Object.freeze({
   home: defineDomain({
     id: 'home',
     label: 'Home',
+    /** Household Space — never "Kenos Home". zh UI maps to 家 via i18n / shelf. */
     subtitle: 'Rooms · Items · Organize',
     strategy: 'embedded_web',
     appId: 'home',
@@ -371,8 +372,8 @@ export const DOMAIN_REGISTRY = Object.freeze({
 })
 
 /**
- * Domain Mode capsule slots (max 4 after leading Kenos chip = 5 total).
- * Slot semantics: native shell prepends Kenos return chip; these are domain slots only.
+ * Domain Mode capsule destinations (max 3; Spaces Orb is separate).
+ * More destinations live in domain header / More sheet — not on the dock.
  * @type {Readonly<Record<string, DomainNavigationManifest>>}
  */
 export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
@@ -385,12 +386,7 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
         systemImage: 'calendar',
         path: '/calendar',
       }),
-      Object.freeze({ title: 'Inbox', systemImage: 'tray', path: '/inbox' }),
-      Object.freeze({
-        title: 'More',
-        systemImage: 'ellipsis',
-        opensMore: true,
-      }),
+      Object.freeze({ title: 'Inbox', systemImage: 'tray', path: '/inbox' })
     ]),
     more: Object.freeze([
       Object.freeze({
@@ -430,10 +426,23 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
       }),
     ]),
   }),
+  // Keep in sync with KenosDomainRegistry.swift navigationManifests["training"].
   training: Object.freeze({
     domainId: 'training',
     slots: Object.freeze([
       Object.freeze({ title: 'Today', systemImage: 'sun.max', path: '/' }),
+      Object.freeze({
+        title: 'Program',
+        systemImage: 'list.bullet.rectangle',
+        path: '/program',
+      }),
+      Object.freeze({
+        title: 'Explore',
+        systemImage: 'sparkles',
+        path: '/discover',
+      }),
+    ]),
+    more: Object.freeze([
       Object.freeze({
         title: 'Workout',
         systemImage: 'figure.strengthtraining.traditional',
@@ -445,26 +454,9 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
         path: '/discover/records',
       }),
       Object.freeze({
-        title: 'More',
-        systemImage: 'ellipsis',
-        opensMore: true,
-      }),
-    ]),
-    more: Object.freeze([
-      Object.freeze({
-        title: 'Program',
-        systemImage: 'list.bullet.rectangle',
-        path: '/program',
-      }),
-      Object.freeze({
         title: 'Library',
         systemImage: 'books.vertical',
         path: '/library',
-      }),
-      Object.freeze({
-        title: 'Discover',
-        systemImage: 'sparkles',
-        path: '/discover',
       }),
       Object.freeze({
         title: 'Stats',
@@ -492,16 +484,11 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
         systemImage: 'target',
         path: '/spaces/work',
       }),
-      Object.freeze({ title: 'Inbox', systemImage: 'tray', path: '/inbox' }),
-      Object.freeze({
-        title: 'More',
-        systemImage: 'ellipsis',
-        opensMore: true,
-      }),
+      Object.freeze({ title: 'Inbox', systemImage: 'tray', path: '/inbox' })
     ]),
     more: Object.freeze([
       Object.freeze({
-        title: 'Assistant',
+        title: 'Ask',
         systemImage: 'bubble.left',
         path: '/assistant?scope=work',
       }),
@@ -534,12 +521,7 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
         title: 'Accounts',
         systemImage: 'building.columns',
         path: '/accounts',
-      }),
-      Object.freeze({
-        title: 'More',
-        systemImage: 'ellipsis',
-        opensMore: true,
-      }),
+      })
     ]),
     more: Object.freeze([
       Object.freeze({
@@ -582,12 +564,7 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
         title: 'Recall',
         systemImage: 'magnifyingglass',
         path: '/recall',
-      }),
-      Object.freeze({
-        title: 'More',
-        systemImage: 'ellipsis',
-        opensMore: true,
-      }),
+      })
     ]),
     more: Object.freeze([
       Object.freeze({
@@ -625,12 +602,7 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
         title: 'Library',
         systemImage: 'music.note.list',
         path: '/library',
-      }),
-      Object.freeze({
-        title: 'More',
-        systemImage: 'ellipsis',
-        opensMore: true,
-      }),
+      })
     ]),
     more: Object.freeze([
       Object.freeze({
@@ -673,12 +645,7 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
         title: 'Organize',
         systemImage: 'checklist',
         path: '/tidy',
-      }),
-      Object.freeze({
-        title: 'More',
-        systemImage: 'ellipsis',
-        opensMore: true,
-      }),
+      })
     ]),
     more: Object.freeze([
       // Companion ios/home-scan (RoomPlan / AR) — Kenos opens via homescan://
@@ -722,12 +689,7 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
         title: 'Trends',
         systemImage: 'chart.line.uptrend.xyaxis',
         path: '/trends',
-      }),
-      Object.freeze({
-        title: 'More',
-        systemImage: 'ellipsis',
-        opensMore: true,
-      }),
+      })
     ]),
     more: Object.freeze([
       Object.freeze({
@@ -737,37 +699,24 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
       }),
     ]),
   }),
+  // Legacy fallback — single honest slot (no fake multi-tab dock).
   paper: Object.freeze({
     domainId: 'paper',
     slots: Object.freeze([
       Object.freeze({
-        title: 'Recent',
-        systemImage: 'clock',
-        path: '/spaces/paper',
-      }),
-      Object.freeze({
-        title: 'Notebooks',
-        systemImage: 'books.vertical',
-        path: '/spaces/paper',
-      }),
-      Object.freeze({
-        title: 'Capture',
-        systemImage: 'plus.circle',
-        path: '/spaces/paper',
-      }),
-      Object.freeze({
-        title: 'Search',
-        systemImage: 'magnifyingglass',
+        title: 'Paper',
+        systemImage: 'pencil.and.outline',
         path: '/spaces/paper',
       }),
     ]),
+    more: Object.freeze([]),
   }),
 })
 
-/** Max domain capsule slots (native Kenos chip is separate → 5 on screen). */
-export const MAX_DOMAIN_DOCK_SLOTS = 4
-/** Total dock chrome including Kenos return chip. */
-export const MAX_DOCK_CHROME_SLOTS = 5
+/** Max domain capsule destinations (Spaces Orb separate; More is header-only). */
+export const MAX_DOMAIN_DOCK_SLOTS = 3
+/** Total dock chrome including Spaces Orb. */
+export const MAX_DOCK_CHROME_SLOTS = 4
 
 /**
  * Normalize any id / alias / listKey → canonical domain id.
@@ -810,7 +759,7 @@ export function getDomainNavigationManifest(raw) {
 }
 
 /**
- * Validate manifest slot budget (domain slots ≤ 4; Kenos chip is external).
+ * Validate manifest slot budget (domain destinations ≤ 3; Spaces Orb is external).
  * @param {DomainNavigationManifest | null | undefined} manifest
  */
 export function assertManifestSlotBudget(manifest) {

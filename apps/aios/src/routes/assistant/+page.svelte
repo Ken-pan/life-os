@@ -17,6 +17,13 @@
   import { openArtifact } from '$lib/panel.svelte.js'
   import { CLOUD_BUILD } from '$lib/env.js'
   import { generateDailySuggestions } from '$lib/dailySuggestions.js'
+  import {
+    isPairedLocalAiGateway,
+    isHeavyChatBusy,
+    warmLocalAiAssist,
+    warmLocalAiHeavy,
+  } from '$lib/localai.js'
+  import { isIosNativeShell } from '$lib/kenos/iosNativeShell.js'
   import { page } from '$app/state'
   import { FOCUS } from '$lib/kenos/focusStore.svelte.js'
   import { resolveAssistantScopeLabel } from '$lib/kenos/assistantScopeLabel.core.js'
@@ -24,6 +31,16 @@
     ASSISTANT_CTX,
     enterWorkAssistantContext,
   } from '$lib/kenos/assistantContext.svelte.js'
+  import {
+    CONTROL,
+    refreshControlCenter,
+  } from '$lib/kenos/controlCenter.svelte.js'
+  import {
+    buildAssistantAttentionBrief,
+    summarizeControlQueue,
+  } from '$lib/kenos/controlCenter.core.js'
+  import { resolveProductSessionState } from '$lib/kenos/productSessionState.core.js'
+  import { CLOUD, isCloudAuthorized } from '$lib/cloud.svelte.js'
 
   // Soft Work context (ASSISTANT_CTX / ?scope=work) — not Focus/prod writes.
   // Global nav clears ASSISTANT_CTX; staying on /assistant with work ctx keeps Scope: Work.
@@ -38,15 +55,17 @@
     }),
   )
 
-  const chatHint = $derived(
-    !CLOUD_BUILD
-      ? t('chat.hintLocal')
-      : C.chatBackend === 'kimi'
-        ? t('chat.hintCloudKimi')
-        : C.chatBackend === 'local' && C.gatewayOk
-          ? t('chat.hintCloudLocal')
-          : t('chat.hintCloud'),
-  )
+  const chatHint = $derived.by(() => {
+    if (!CLOUD_BUILD) {
+      if (C.gatewayOk === false) return t('chat.hintLocalDown')
+      if (isPairedLocalAiGateway()) return t('chat.hintLocalPaired')
+      return t('chat.hintLocal')
+    }
+    if (C.chatBackend === 'kimi') return t('chat.hintCloudKimi')
+    if (C.chatBackend === 'local' && C.gatewayOk) return t('chat.hintCloudLocal')
+    return t('chat.hintCloud')
+  })
+  const composerAutofocus = $derived(!isIosNativeShell())
 
   $effect(() => {
     if (page.url.searchParams.get('scope') !== 'work') return
@@ -60,32 +79,78 @@
   )
   const isEmpty = $derived(!conversation || conversation.messages.length === 0)
 
-  // 首页建议:默认静态四个;「今日感知」素材可用时,后台用小模型生成随近况
-  // 变化的动态建议(会议/项目/所在地),算好后无缝替换,不出现加载态。
-  const STATIC_SUGGESTIONS = $derived([
-    { icon: 'image', text: t('chat.suggestImage') },
-    { icon: 'search', text: t('chat.suggestSearch') },
-    { icon: 'code', text: t('chat.suggestCode') },
-    { icon: 'lightbulb', text: t('chat.suggestBrainstorm') },
-  ])
-  const DYN_ICONS = ['notebook', 'code', 'search', 'lightbulb']
-  let dynamicSuggestions = $state(null)
-  onMount(() => {
-    generateDailySuggestions()
-      .then((items) => {
-        if (items?.length) dynamicSuggestions = items
-      })
-      .catch(() => {})
-  })
-  const suggestions = $derived(
-    (dynamicSuggestions
-      ? dynamicSuggestions.map((text, i) => ({
-          icon: DYN_ICONS[i % DYN_ICONS.length],
-          text,
-        }))
-      : STATIC_SUGGESTIONS
-    ).slice(0, 4),
+  const queue = $derived(summarizeControlQueue(CONTROL))
+  const session = $derived(
+    resolveProductSessionState({
+      cloudReady: CLOUD.ready,
+      cloudUser: CLOUD.user,
+      cloudAuthorized: isCloudAuthorized(),
+      cloudSyncing: CLOUD.syncing,
+      cloudLastSyncAt: CLOUD.lastSyncAt,
+      controlLoading: CONTROL.loading,
+      sources: CONTROL.sources,
+    }),
   )
+  const attention = $derived(
+    buildAssistantAttentionBrief({
+      summary: CONTROL.summary,
+      queue,
+      session,
+    }),
+  )
+
+  // Prefer Kenos steward prompts from Today/Inbox/Training; fall back to daily / static.
+  const STATIC_SUGGESTIONS = $derived([
+    { icon: 'notebook', text: t('chat.suggestBrainstorm') },
+    { icon: 'search', text: t('chat.suggestSearch') },
+    { icon: 'lightbulb', text: t('chat.suggestCode') },
+  ])
+  const DYN_ICONS = ['notebook', 'search', 'lightbulb', 'code']
+  let dynamicSuggestions = $state(/** @type {string[]|null} */ (null))
+  onMount(() => {
+    void refreshControlCenter()
+    // Idle: warm 4B + daily chips — never compete with the user's first Ask turn.
+    const runIdle = (fn) => {
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(fn, { timeout: 2800 })
+      } else {
+        setTimeout(fn, 450)
+      }
+    }
+    runIdle(() => {
+      void warmLocalAiAssist().catch(() => {})
+      void generateDailySuggestions()
+        .then((items) => {
+          if (items?.length) dynamicSuggestions = items
+        })
+        .catch(() => {})
+      // After tiny + chips settle: nudge 35B so the first Ask avoids cold TTL.
+      const warmHeavy = () => {
+        if (isHeavyChatBusy()) return
+        void warmLocalAiHeavy().catch(() => {})
+      }
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(warmHeavy, { timeout: 6000 })
+      } else {
+        setTimeout(warmHeavy, 2200)
+      }
+    })
+  })
+  const suggestions = $derived.by(() => {
+    if (attention.prompts.length) {
+      return attention.prompts.map((text, i) => ({
+        icon: DYN_ICONS[i % DYN_ICONS.length],
+        text,
+      }))
+    }
+    if (dynamicSuggestions?.length) {
+      return dynamicSuggestions.slice(0, 3).map((text, i) => ({
+        icon: DYN_ICONS[i % DYN_ICONS.length],
+        text,
+      }))
+    }
+    return STATIC_SUGGESTIONS.slice(0, 3)
+  })
 
   // 追问建议(小模型生成,挂在最后一条助手消息上,空闲时展示)
   const followUps = $derived.by(() => {
@@ -275,42 +340,61 @@
               >
                 <Icon
                   name={exported ? 'check' : 'download'}
-                  size={16}
+                  size={15}
                   strokeWidth={1.75}
                 />
               </button>
+              <button
+                type="button"
+                class="top-btn"
+                title={t('chat.newChat')}
+                aria-label={t('chat.newChat')}
+                onclick={startNewChat}
+              >
+                <Icon name="compose" size={15} strokeWidth={1.75} />
+              </button>
             {/if}
-            <button
-              type="button"
-              class="top-btn"
-              title={t('chat.newChat')}
-              aria-label={t('chat.newChat')}
-              onclick={startNewChat}
-            >
-              <Icon name="compose" size={16} strokeWidth={1.75} />
-            </button>
           </div>
         </div>
       </div>
 
       {#if isEmpty}
-        <div class="hero">
-          <p class="hero-kicker">{t('chat.tagline')}</p>
-          <Composer autofocus />
-          <div class="suggestions">
+        <!-- Round 1.2: flatten attention + suggestions; Composer in dock for keyboard inset -->
+        <div class="hero hero--conversation">
+          <section
+            class="attention-brief"
+            aria-label={t('chat.attentionLabel')}
+          >
+            <p class="attention-ask">{attention.ask}</p>
+            {#if attention.bullets.length}
+              <ul class="attention-list">
+                {#each attention.bullets as bullet (bullet)}
+                  <li>{bullet}</li>
+                {/each}
+              </ul>
+            {/if}
+          </section>
+          <div class="suggestions" aria-label={t('chat.suggestionsLabel')}>
+            <p class="suggestions-label">{t('chat.suggestionsLabel')}</p>
             {#each suggestions as item (item.text)}
               <button
                 type="button"
                 class="assistant-chip"
                 onclick={() => sendMessage(item.text)}
               >
-                <Icon name={item.icon} size={15} strokeWidth={1.75} />
+                <Icon name={item.icon} size={14} strokeWidth={1.75} />
                 <span>{item.text}</span>
-                <Icon name="chevron-right" size={14} strokeWidth={1.75} />
+                <Icon name="chevron-right" size={13} strokeWidth={1.75} />
               </button>
             {/each}
           </div>
           <p class="hint hint--empty">{chatHint}</p>
+          <p class="hint hint--trust">{t('chat.emptyTrust')}</p>
+        </div>
+        <div class="dock dock--empty">
+          <div class="dock-col">
+            <Composer autofocus={composerAutofocus} />
+          </div>
         </div>
       {:else}
         <div
@@ -319,7 +403,7 @@
           onscroll={onScroll}
         >
           <div class="thread-col">
-            {#each conversation.messages as message, i (i)}
+            {#each conversation.messages as message, i (message.id || `${message.role}-${i}`)}
               <Message
                 {message}
                 index={i}
@@ -361,6 +445,7 @@
               </button>
             {/if}
             <Composer />
+            <p class="hint hint--dock">{chatHint}</p>
           </div>
         </div>
       {/if}
@@ -389,6 +474,7 @@
 
   /* Floating chrome — veil only; controls stay light like Claude/ChatGPT. */
   .chat-top {
+    /* Toolbar geometry shares --kenos-chrome-* with SystemBar / Domain headers. */
     position: absolute;
     inset: 0 0 auto 0;
     z-index: 20;
@@ -396,7 +482,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: calc(var(--safe-top-effective, 0px) + 10px) 14px 12px;
+    padding: calc(var(--safe-top-effective, 0px) + 10px)
+      var(--kenos-chrome-inline, 16px) var(--kenos-chrome-header-pad-bottom, 8px);
     pointer-events: none;
     background: linear-gradient(
       to bottom,
@@ -430,8 +517,12 @@
     border: 0;
     border-radius: 999px;
     padding: 3px 8px;
-    color: color-mix(in srgb, var(--t3) 95%, transparent);
-    font-size: 11px;
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+    font-size: var(--kenos-type-meta, 12px);
     font-weight: 500;
     letter-spacing: 0.02em;
     background: color-mix(in srgb, var(--t1) 4%, transparent);
@@ -440,79 +531,107 @@
     display: inline-flex;
     align-items: center;
     gap: 0;
-    padding: 1px;
-    border-radius: 999px;
+    padding: 0;
+    border-radius: var(--kenos-chrome-cluster-radius, 10px);
     background: color-mix(in srgb, var(--bg) 78%, transparent);
     border: 1px solid color-mix(in srgb, var(--t1) 8%, transparent);
-    backdrop-filter: blur(18px) saturate(1.3);
-    -webkit-backdrop-filter: blur(18px) saturate(1.3);
-    box-shadow: 0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset;
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    box-shadow: none;
   }
   .top-btn {
     display: grid;
     place-items: center;
-    width: 32px;
-    height: 32px;
+    width: max(44px, var(--kenos-chrome-control-h, 32px));
+    height: max(44px, var(--kenos-chrome-control-h, 32px));
+    min-width: 44px;
+    min-height: 44px;
     border: none;
-    border-radius: 999px;
+    border-radius: var(--kenos-chrome-control-radius, 8px);
     background: transparent;
     color: var(--t2);
     cursor: pointer;
     transition:
       background 160ms ease,
       color 160ms ease;
+  }
+  .top-btn :global(svg) {
+    width: var(--kenos-chrome-icon-size, 15px);
+    height: var(--kenos-chrome-icon-size, 15px);
   }
   .top-btn:hover {
     background: color-mix(in srgb, var(--t1) 8%, transparent);
     color: var(--t1);
   }
 
-  /* Starter prompts — single-column quiet rows (Claude/ChatGPT) */
+  /* Starter prompts — light rows, no white card (Composer owns the surface) */
   .suggestions {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: 4px;
     width: 100%;
-    border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+    margin-top: 2px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    padding: 0;
+  }
+  .suggestions-label {
+    margin: 0 2px 2px;
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: none;
   }
   .assistant-chip {
     display: flex;
     align-items: center;
     gap: 10px;
     min-height: 44px;
-    border: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-    border-radius: 0;
-    background: transparent;
-    color: var(--t2);
-    padding: 11px 2px;
-    font-size: 14px;
+    border: 1px solid color-mix(in srgb, var(--t1) 7%, transparent);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--t1) 3%, transparent);
+    color: color-mix(in srgb, var(--t1) 82%, var(--t2));
+    padding: 10px 12px;
+    font-size: 13px;
     line-height: 1.35;
     text-align: start;
     cursor: pointer;
     transition:
       background 160ms ease,
-      color 160ms ease;
+      color 160ms ease,
+      border-color 160ms ease;
   }
   .assistant-chip :global(svg:first-child) {
     flex: 0 0 auto;
-    color: var(--t3);
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
   }
   .assistant-chip :global(svg:last-child) {
     flex: 0 0 auto;
     margin-left: auto;
-    color: color-mix(in srgb, var(--t3) 70%, transparent);
+    color: color-mix(in srgb, var(--t3) 80%, transparent);
   }
   .assistant-chip span {
     min-width: 0;
     flex: 1;
   }
   .assistant-chip:hover {
-    background: color-mix(in srgb, var(--t1) 4%, transparent);
+    background: color-mix(in srgb, var(--t1) 6%, transparent);
+    border-color: color-mix(in srgb, var(--t1) 12%, transparent);
     color: var(--t1);
   }
   .assistant-chip:active {
-    background: color-mix(in srgb, var(--t1) 6%, transparent);
+    background: color-mix(in srgb, var(--t1) 8%, transparent);
   }
 
   .to-bottom {
@@ -538,25 +657,74 @@
     background: var(--card);
   }
 
-  /* Empty state — composer-first: kicker → input → quiet rows */
+  /* Attention — plain text block, no card chrome */
+  .attention-brief {
+    display: grid;
+    gap: 6px;
+    padding: 0 2px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+  .attention-list {
+    margin: 0;
+    padding: 0 0 0 1.05rem;
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+    font-size: var(--kenos-type-secondary, 14px);
+    line-height: 1.45;
+  }
+  .attention-list li {
+    margin: 0 0 4px;
+  }
+  .attention-list li:last-child {
+    margin-bottom: 0;
+  }
+  .attention-ask {
+    margin: 0;
+    color: var(--t1);
+    font-size: var(--kenos-type-body, 15px);
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+  :global(html[data-ios-native-shell='true'] .attention-brief) {
+    gap: 4px;
+  }
+  :global(html[data-ios-native-shell='true'] .hero) {
+    justify-content: flex-start;
+    padding-top: 8px;
+    gap: 14px;
+  }
+  :global(html[data-ios-native-shell='true'] .assistant-chip) {
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, #fff 12%, transparent);
+    background: color-mix(in srgb, #fff 6%, transparent);
+  }
+  :global(
+      html[data-ios-native-shell='true'][data-theme='light'] .assistant-chip
+    ),
+  :global(
+      html[data-ios-native-shell='true']:not([data-theme='dark'])
+        .assistant-chip
+    ) {
+    border-color: color-mix(in srgb, var(--t1) 8%, transparent);
+    background: color-mix(in srgb, var(--t1) 3.5%, transparent);
+  }
+
+  /* Empty state — attention → composer (primary) → quiet suggestions */
   .hero {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    gap: 14px;
+    gap: 16px;
     width: min(100% - 32px, 680px);
     margin-inline: auto;
-    padding: calc(var(--safe-top-effective, 0px) + 52px) 0 6vh;
-  }
-  .hero-kicker {
-    margin: 0;
-    color: color-mix(in srgb, var(--t1) 55%, transparent);
-    font-size: 13px;
-    font-weight: 550;
-    letter-spacing: -0.01em;
-    line-height: 1.3;
+    padding: calc(var(--safe-top-effective, 0px) + 48px) 0 3vh;
   }
   .hero :global(.composer) {
     box-shadow:
@@ -569,17 +737,14 @@
     padding: 44px 0 2vh;
     justify-content: flex-start;
   }
-  :global(html[data-ios-native-shell='true'] .hero-kicker) {
-    font-size: 12px;
-    color: color-mix(in srgb, var(--t1) 48%, transparent);
-  }
   :global(html[data-ios-native-shell='true'] .hero) :global(.composer) {
     box-shadow:
       0 1px 0 color-mix(in srgb, #fff 40%, transparent) inset,
       0 2px 10px color-mix(in srgb, #000 7%, transparent);
   }
   :global(html[data-ios-native-shell='true'] .chat-top) {
-    padding: 6px 16px 8px;
+    padding: 6px var(--kenos-chrome-inline, 16px)
+      var(--kenos-chrome-header-pad-bottom, 8px);
     background: linear-gradient(
       to bottom,
       color-mix(in srgb, var(--bg) 92%, transparent) 20%,
@@ -605,11 +770,10 @@
       html[data-ios-native-shell='true']:not([data-theme='dark'])
         .chat-top-actions
     ) {
-    background: color-mix(in srgb, var(--bg) 72%, transparent);
+    /* Match DomainMusicHeader / KenosSystemBar light cluster */
+    background: color-mix(in srgb, var(--card, #fff) 82%, transparent);
     border-color: color-mix(in srgb, var(--t1) 10%, transparent);
-    box-shadow:
-      0 0 0 0.5px color-mix(in srgb, var(--t1) 6%, transparent),
-      0 1px 0 color-mix(in srgb, #fff 75%, transparent) inset;
+    box-shadow: none;
   }
   :global(html[data-ios-native-shell='true'][data-theme='light'] .scope-chip),
   :global(
@@ -704,6 +868,10 @@
       transparent
     );
   }
+  .dock--empty {
+    /* Keep empty-state Composer in the keyboard-safe dock column */
+    padding-top: 4px;
+  }
   .dock-col {
     position: relative;
     width: min(100% - 32px, 680px);
@@ -721,13 +889,34 @@
   .hint {
     margin: 4px 0 0;
     text-align: start;
-    font-size: 11px;
+    font-size: var(--kenos-type-meta, 12px);
     letter-spacing: 0.01em;
-    color: color-mix(in srgb, var(--t3) 80%, transparent);
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
   }
   .hint--empty {
+    margin-top: 4px;
+    opacity: 1;
+    /* Secondary body — stronger than tertiary/disabled gray */
+    font-size: var(--kenos-type-secondary, 13px);
+    line-height: 1.4;
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+  }
+  .hint--trust {
     margin-top: 2px;
-    opacity: 0.85;
+    font-size: var(--kenos-type-meta, 12px);
+    opacity: 0.9;
+  }
+  .hint--dock {
+    margin: 6px 2px 0;
+    text-align: center;
   }
 
   :global(html[data-ios-native-shell='true'] .thread-col) {
@@ -742,8 +931,8 @@
     );
   }
   :global(html[data-ios-native-shell='true'] .hint--empty) {
-    font-size: 10px;
-    opacity: 0.65;
+    font-size: var(--kenos-type-secondary, 13px);
+    opacity: 1;
   }
   :global(html[data-ios-native-shell='true'] .chat-top-right) {
     gap: 4px;

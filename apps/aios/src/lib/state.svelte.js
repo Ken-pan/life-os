@@ -121,7 +121,7 @@ export function applyDeviceOnlySettings(nextSettings) {
 }
 
 const THEME_APPLY_OPTIONS = {
-  themeColorFallback: { light: '#ffffff', dark: '#212121' },
+  themeColorFallback: { light: '#f5f3f0', dark: '#08090a' },
 }
 
 /** @returns {'light'|'dark'} */

@@ -17,7 +17,7 @@ describe('workSpaceAdapter', () => {
 
   it('reads resume query params', () => {
     const q = readWorkResumeQuery(
-      'https://aios.kenos.space/work?kenosProject=p1&kenosFocus=1',
+      'https://www.kenos.space/work?kenosProject=p1&kenosFocus=1',
     )
     assert.equal(q.projectId, 'p1')
     assert.equal(q.focus, true)

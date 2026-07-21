@@ -39,10 +39,14 @@ describe('domainIntegration.core — registry', () => {
       assert.ok(DOMAIN_REGISTRY[id], `missing ${id}`)
       assert.equal(DOMAIN_REGISTRY[id].id, id)
     }
+    // Shelf Current title = Space name only (destination lives in subtitle).
+    assert.equal(DOMAIN_REGISTRY.kenos.label, 'Kenos')
+    assert.equal(DOMAIN_REGISTRY.kenos.subtitle, 'Today · Ask · Inbox')
   })
 
   it('reuses domainIdentity accents for plan/training/money', () => {
-    assert.equal(DOMAIN_REGISTRY.plan.accent, '#C9A227')
+    // Dark brand channel (legacy `accent`); light/glass pairs live on domainIdentity.
+    assert.equal(DOMAIN_REGISTRY.plan.accent, '#D4AE2E')
     assert.equal(DOMAIN_REGISTRY.training.accent, '#C45C4A')
     assert.equal(DOMAIN_REGISTRY.money.accent, '#3D9B6E')
   })
@@ -70,11 +74,12 @@ describe('domainIntegration.core — registry', () => {
 })
 
 describe('domainIntegration.core — navigation manifests', () => {
-  it('keeps domain capsule slots ≤ 4 (Kenos chip is separate)', () => {
+  it('keeps domain capsule destinations ≤ 3 (Spaces Orb is separate)', () => {
     for (const [id, manifest] of Object.entries(DOMAIN_NAVIGATION_MANIFESTS)) {
       const budget = assertManifestSlotBudget(manifest)
       assert.equal(budget.ok, true, `${id}: ${budget.reason}`)
       assert.ok(manifest.slots.length <= MAX_DOMAIN_DOCK_SLOTS)
+      assert.ok(manifest.slots.every((s) => !s.opensMore), `${id}: More must be header-only`)
       assert.equal(getDomainNavigationManifest(id)?.domainId, id)
     }
   })
@@ -83,12 +88,18 @@ describe('domainIntegration.core — navigation manifests', () => {
     const plan = getDomainNavigationManifest('plan')
     assert.equal(plan.slots[0].title, 'Tasks')
     assert.equal(plan.slots[2].path, '/inbox')
-    assert.equal(plan.slots[3].opensMore, true)
+    assert.equal(plan.slots.length, 3)
+    assert.ok(plan.slots.every((s) => !s.opensMore))
     assert.ok(plan.more.some((m) => m.path === '/settings#cloud'))
     assert.ok(plan.more.some((m) => m.path === '/triage'))
     const training = getDomainNavigationManifest('training')
-    assert.equal(training.slots[1].path, '/session')
-    assert.equal(training.slots[2].path, '/discover/records')
+    assert.equal(training.slots[1].title, 'Program')
+    assert.equal(training.slots[1].path, '/program')
+    assert.equal(training.slots[2].title, 'Explore')
+    assert.equal(training.slots[2].path, '/discover')
+    assert.equal(training.slots.length, 3)
+    assert.ok(training.more.some((m) => m.path === '/session'))
+    assert.ok(training.more.some((m) => m.path === '/discover/records'))
     assert.ok(training.more.some((m) => m.path === '/settings#cloud'))
   })
 
@@ -114,7 +125,7 @@ describe('domainIntegration.core — navigation manifests', () => {
     )
     assert.deepEqual(
       home.slots.map((s) => s.title),
-      ['Rooms', 'Items', 'Organize', 'More'],
+      ['Rooms', 'Items', 'Organize'],
     )
     assert.ok(home.more.some((m) => m.path === 'homescan://scan'))
     assert.ok(home.more.some((m) => m.path === 'homescan://find'))

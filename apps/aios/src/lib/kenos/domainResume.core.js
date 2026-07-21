@@ -126,11 +126,18 @@ export function rewriteDomainHrefForLocalDailyBeta(href, env = import.meta.env) 
  * @param {string} hostname
  */
 export function isPrivateOrLoopbackHost(hostname) {
-  const h = String(hostname || '')
+  const h = String(hostname || '').toLowerCase()
   if (h === '127.0.0.1' || h === 'localhost') return true
+  if (h.endsWith('.local') || h.endsWith('.ts.net')) return true
   if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true
   if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true
   if (/^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h)) return true
+  // Tailscale CGNAT 100.64.0.0/10
+  const m = /^100\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/.exec(h)
+  if (m) {
+    const second = Number(m[1])
+    return second >= 64 && second <= 127
+  }
   return false
 }
 

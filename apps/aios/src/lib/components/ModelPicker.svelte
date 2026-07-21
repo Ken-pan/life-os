@@ -38,7 +38,7 @@
     aria-label={t('model.label')}
     onclick={() => (open = !open)}
   >
-    <span class="trigger-model">{t(current.nameKey)}</span>
+    <span class="trigger-model">{t('model.modePrefix')}{t(current.nameKey)}</span>
     <Icon name="chevron-down" size={14} strokeWidth={2} />
   </button>
 

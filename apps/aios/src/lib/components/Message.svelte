@@ -2,7 +2,12 @@
   import Icon from '@life-os/platform-web/svelte/icon'
   import { createImeGuard } from '@life-os/theme'
   import { t } from '$lib/i18n/index.js'
-  import { renderMarkdown, splitThinking } from '$lib/markdown.js'
+  import {
+    renderMarkdown,
+    renderMarkdownStreaming,
+    splitThinking,
+  } from '$lib/markdown.js'
+  import { gatewayDownMessageKey } from '$lib/localai.js'
   import {
     C,
     regenerate,
@@ -64,12 +69,18 @@
   })
   const answerHtml = $derived(
     message.role === 'assistant'
-      ? renderMarkdown(parts.answer, {
-          previewLabel: t('panel.preview'),
-          caret: streamingThis && !!parts.answer, // 流式时结尾显示打字光标
-        })
+      ? streamingThis
+        ? // Stream path: lite escape+paragraphs only — full markdown after finish.
+          renderMarkdownStreaming(parts.answer, {
+            caret: !!parts.answer,
+          })
+        : renderMarkdown(parts.answer, {
+            previewLabel: t('panel.preview'),
+            caret: false,
+          })
       : '',
   )
+  const gatewayDownKey = $derived(gatewayDownMessageKey())
   /** 工具调用产出的图片(生图等),在正文上方以画廊展示。
       本地有 dataURL(src)就直接显示;别的设备同步来的只有云端 path,则懒加载。 */
   const genImages = $derived(
@@ -727,7 +738,7 @@
           {:else if message.error === 'kimi_vision_unsupported' || message.error === 'vision_unsupported'}
             {t('chat.kimiVisionUnsupported')}
           {:else if C.gatewayOk === false && C.chatBackend !== 'kimi'}
-            {t('chat.gatewayDown')}
+            {t(gatewayDownKey)}
           {:else}
             {t('chat.genError')}
           {/if}

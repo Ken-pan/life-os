@@ -1,7 +1,6 @@
 <script>
   import { onMount } from 'svelte'
   import Icon from '@life-os/platform-web/svelte/icon'
-  import ReadSourceState from '$lib/components/ReadSourceState.svelte'
   import {
     CONTROL,
     refreshControlCenter,
@@ -18,11 +17,15 @@
   } from '$lib/kenos/spacesList.core.js'
   import { goto } from '$app/navigation'
   import {
+    buildTodayOverviewLine,
     buildTodayReadModel,
+    resolveSpaceLiveDetail,
+    selectTodayDynamicSpaces,
     sortActivityNewestFirst,
     summarizeControlQueue,
-    formatQueueCount,
+    formatQueueCountLabel,
   } from '$lib/kenos/controlCenter.core.js'
+  import { t } from '$lib/i18n/index.js'
   import { WORK, refreshWorkSurface } from '$lib/kenos/workStore.svelte.js'
   import { capabilityEmptyCopy } from '$lib/kenos/capabilityRegistry.core.js'
   import {
@@ -30,6 +33,11 @@
     isProdWorkReadEnabled,
   } from '$lib/kenos/prodReadFlags.core.js'
   import { PRODUCT_COPY } from '$lib/kenos/productStates.core.js'
+  import {
+    productSessionLabels,
+    resolveProductSessionState,
+  } from '$lib/kenos/productSessionState.core.js'
+  import { CLOUD, isCloudAuthorized } from '$lib/cloud.svelte.js'
   import { requestNativeSpaceShelf } from '$lib/kenos/iosNativeShell.js'
   import { loadHealthReadiness } from '$lib/kenos/healthReadiness.host.js'
 
@@ -45,14 +53,62 @@
     buildTodayReadModel(CONTROL.summary, { healthReadiness }),
   )
   const queue = $derived(summarizeControlQueue(CONTROL))
+  const session = $derived(
+    resolveProductSessionState({
+      cloudReady: CLOUD.ready,
+      cloudUser: CLOUD.user,
+      cloudAuthorized: isCloudAuthorized(),
+      cloudSyncing: CLOUD.syncing,
+      cloudLastSyncAt: CLOUD.lastSyncAt,
+      controlLoading: CONTROL.loading,
+      sources: CONTROL.sources,
+    }),
+  )
+  const sessionLabels = $derived(productSessionLabels(session))
+  const overviewLine = $derived.by(() => {
+    if (
+      session.crossSpaceSummaryState === 'syncing' ||
+      session.crossSpaceSummaryState === 'locked' ||
+      session.crossSpaceSummaryState === 'unavailable' ||
+      session.crossSpaceSummaryState === 'offline' ||
+      session.crossSpaceSummaryState === 'error'
+    ) {
+      return sessionLabels.todayOverview
+    }
+    return (
+      today.overview ||
+      buildTodayOverviewLine({
+        priorities: today.priorities,
+        signals: today.signals,
+        queue,
+      })
+    )
+  })
+  const TODAY_SPACES_PREVIEW = 4
+  const WORK_CARDS_PREVIEW = 6
+  const ACTIVITY_PREVIEW = 3
+  const todaySpaces = $derived(
+    selectTodayDynamicSpaces(TODAY_SPACE_SHORTCUTS, {
+      signals: today.signals,
+      workCards: CONTROL.workCards,
+      limit: TODAY_SPACES_PREVIEW,
+    }),
+  )
   const recentActivity = $derived(
     sortActivityNewestFirst(CONTROL.activities).slice(0, 3),
   )
   const workCapability = $derived(CONTROL.capabilities?.byId?.['work.read'])
   const workCapabilityCopy = $derived(capabilityEmptyCopy(workCapability))
-  const todayNeedsSignIn = $derived(
-    CONTROL.sources?.today?.status === 'permission_denied',
+  const todayNeedsSignIn = $derived(session.needsSignIn)
+  const showTodaySkeleton = $derived(session.showTodaySkeleton)
+  const showSpacesSection = $derived(
+    !todayNeedsSignIn && todaySpaces.length > 0,
   )
+  const showActivitySection = $derived(
+    !todayNeedsSignIn && recentActivity.length > 0,
+  )
+  const showSpacesAll = $derived(todaySpaces.length >= TODAY_SPACES_PREVIEW)
+  const showActivityAll = $derived(recentActivity.length >= ACTIVITY_PREVIEW)
   const prodWorkReadOn = $derived(
     isProdWorkReadEnabled(import.meta.env) ||
       isProdTodayKenosOverlayEnabled(import.meta.env),
@@ -66,9 +122,10 @@
   const workCards = $derived(
     (useProdWorkCards ? CONTROL.workCards : WORK.projection?.cards || []).slice(
       0,
-      6,
+      WORK_CARDS_PREVIEW,
     ),
   )
+  const showWorkAll = $derived(workCards.length >= WORK_CARDS_PREVIEW)
   const dateLabel = new Intl.DateTimeFormat('zh-CN', {
     month: 'long',
     day: 'numeric',
@@ -117,14 +174,25 @@
       { goto },
     )
   }
+
+  /** Prefer live signal line over static catalog detail. */
+  function spaceLiveDetail(space) {
+    return resolveSpaceLiveDetail(space.id, {
+      signals: today.signals,
+      workCards: CONTROL.workCards,
+      fallback: space.detail,
+    })
+  }
 </script>
 
 <div class="today-page">
   <header class="today-header">
     <div class="today-header-main">
+      <h1 class="kenos-page-title">{t('nav.today')}</h1>
       <p class="today-date">{dateLabel}</p>
-      <h1 class="kenos-page-title">Today</h1>
-      <p class="today-intro">真正重要的事先处理。</p>
+      {#if overviewLine}
+        <p class="today-overview">{overviewLine}</p>
+      {/if}
     </div>
     <div class="today-actions">
       <button
@@ -142,20 +210,16 @@
 
   {#if CONTROL.error}
     <p class="status-line status-line--error" role="status">
-      部分内容暂时无法更新。{CONTROL.error}
+      {PRODUCT_COPY.todayPartialError.title}
+      <button
+        type="button"
+        class="text-action"
+        onclick={() => refreshControlCenter({ force: true })}
+      >
+        {PRODUCT_COPY.todayPartialError.action}
+      </button>
     </p>
-  {:else if CONTROL.loading}
-    <p class="status-line status-line--quiet" aria-live="polite">正在汇总…</p>
   {/if}
-
-  <div class="today-sync-quiet">
-    {#if !todayNeedsSignIn && CONTROL.sources?.today?.status !== 'ready'}
-      <ReadSourceState
-        state={CONTROL.sources.today}
-        onRetry={() => refreshControlCenter({ force: true })}
-      />
-    {/if}
-  </div>
 
   <main class="today-workspace">
     <div class="today-level-1">
@@ -169,7 +233,7 @@
             type="button"
             class="text-action text-action--continue today-continue-inline"
             data-testid="kenos-today-continue"
-            aria-label="Continue to a recent Space"
+            aria-label="继续最近的空间"
             onclick={openContinueSheet}
           >
             继续
@@ -177,15 +241,14 @@
           </button>
         </div>
 
-        {#if CONTROL.loading && !today.priorities.length && !CONTROL.summary}
+        {#if showTodaySkeleton && !today.priorities.length}
           <div
             class="priority-skeleton"
             aria-busy="true"
             aria-label={PRODUCT_COPY.todayLoading.label}
           >
-            <div class="skeleton skeleton--title"></div>
-            <div class="skeleton skeleton--text"></div>
-            <div class="skeleton skeleton--text"></div>
+            <div class="skeleton skeleton--hero"></div>
+            <div class="skeleton skeleton--line"></div>
           </div>
         {:else if today.priorities.length}
           <div class="priority-list">
@@ -211,7 +274,15 @@
                   }
                 }}
               >
-                <span class="priority-marker" aria-hidden="true"></span>
+                <span
+                  class={[
+                    'priority-badge',
+                    `priority-badge--${item.tone}`,
+                    (index === 0 || item.tone === 'critical') &&
+                      'priority-badge--hero',
+                  ]}
+                  aria-hidden="true"
+                ></span>
                 <span class="priority-copy">
                   <span class="row-eyebrow">{item.eyebrow}</span>
                   <strong>{item.title}</strong>
@@ -277,93 +348,154 @@
         class="decisions-section kenos-anim-chrome-enter"
         aria-labelledby="today-decisions-title"
       >
-        <div class="section-heading section-heading--meta">
-          <h2 id="today-decisions-title">需要你</h2>
+        <div class="section-heading">
+          <h2 id="today-decisions-title">{t('nav.inbox')}</h2>
         </div>
         <div class="queue-list">
-          <a href="/inbox" class="queue-row kenos-anim-list-enter">
-            <div class="queue-copy">
-              <span class="queue-label">Inbox</span>
-              <small>
-                待归位 {formatQueueCount(queue.inboxOpen)} · 待批准 {formatQueueCount(
-                  queue.approvalsOpen,
-                )}
-              </small>
+          {#if session.inboxSyncState === 'syncing'}
+            <div class="queue-row queue-row--primary kenos-anim-list-enter" role="status">
+              <div class="queue-copy">
+                <span class="queue-label">正在同步收件箱</span>
+                <small>同步完成后会显示待处理事项</small>
+              </div>
             </div>
-            <strong
-              class="queue-count"
-              aria-label={queue.inboxAvailable
-                ? `${queue.inboxOpen} 条待分类`
-                : 'Inbox 数量暂不可用'}
+          {:else if session.inboxSyncState === 'locked' || todayNeedsSignIn}
+            <a
+              href="/settings#cloud"
+              class="queue-row queue-row--primary kenos-anim-list-enter"
             >
-              {formatQueueCount(queue.inboxOpen)}
-            </strong>
-            <Icon name="chevron-right" size={16} strokeWidth={1.75} />
-          </a>
+              <div class="queue-copy">
+                <span class="queue-label"
+                  >{PRODUCT_COPY.todayInboxUnavailable.title}</span
+                >
+                <small>{PRODUCT_COPY.todayInboxUnavailable.detail}</small>
+              </div>
+              <span class="queue-action-label"
+                >{PRODUCT_COPY.todayInboxUnavailable.action}</span
+              >
+              <Icon name="chevron-right" size={16} strokeWidth={1.75} />
+            </a>
+          {:else if !queue.inboxAvailable}
+            <div class="queue-row queue-row--primary kenos-anim-list-enter" role="status">
+              <div class="queue-copy">
+                <span class="queue-label">收件箱暂不可用</span>
+                <small>可稍后重试；各空间仍可独立使用</small>
+              </div>
+            </div>
+          {:else if (queue.inboxOpen ?? 0) === 0 && (queue.approvalsOpen ?? 0) === 0}
+            <a href="/inbox" class="queue-row queue-row--primary kenos-anim-list-enter">
+              <div class="queue-copy">
+                <span class="queue-label">{PRODUCT_COPY.todayInboxClear.title}</span>
+                <small>{PRODUCT_COPY.todayInboxClear.detail}</small>
+              </div>
+              <span class="queue-action-label"
+                >{PRODUCT_COPY.todayInboxClear.action}</span
+              >
+              <Icon name="chevron-right" size={16} strokeWidth={1.75} />
+            </a>
+          {:else}
+            <a href="/inbox" class="queue-row queue-row--primary kenos-anim-list-enter">
+              <div class="queue-copy">
+                <span class="queue-label"
+                  >{PRODUCT_COPY.todayInboxPending.title(
+                    Number(queue.inboxOpen || 0) + Number(queue.approvalsOpen || 0),
+                  )}</span
+                >
+                <small>{PRODUCT_COPY.todayInboxPending.detail}</small>
+              </div>
+              <strong class="queue-count">
+                {formatQueueCountLabel(
+                  Number(queue.inboxOpen || 0) + Number(queue.approvalsOpen || 0),
+                )}
+              </strong>
+              <Icon name="chevron-right" size={16} strokeWidth={1.75} />
+            </a>
+          {/if}
         </div>
       </section>
     </div>
 
     <div class="today-level-2">
+      {#if workCapabilityCopy.kind === 'unauthorized'}
+        <section
+          class="kenos-anim-chrome-enter"
+          aria-labelledby="today-work-title"
+        >
+          <div class="section-heading section-heading--meta">
+            <h2 id="today-work-title">{t('nav.work')}</h2>
+          </div>
+          <div class="empty-block" role="status">
+            <p class="empty-block-title">{PRODUCT_COPY.lockedWork.title}</p>
+            <p class="empty-block-body">{PRODUCT_COPY.lockedWork.body}</p>
+            <div class="empty-block-actions">
+              <a href="/settings#cloud" class="text-action"
+                >{PRODUCT_COPY.lockedWork.action}</a
+              >
+            </div>
+          </div>
+        </section>
+      {:else if !todayNeedsSignIn && workCards.length > 0}
       <section
         class="kenos-anim-chrome-enter"
         aria-labelledby="today-work-title"
       >
         <div class="section-heading section-heading--meta">
-          <h2 id="today-work-title">Work</h2>
-          <a href="/spaces" class="text-action" onclick={onAllSpacesClick}>
-            全部
-            <Icon name="chevron-right" size={15} strokeWidth={1.75} />
-          </a>
+          <h2 id="today-work-title">{t('nav.work')}</h2>
+          {#if showWorkAll}
+            <a href="/spaces" class="text-action" onclick={onAllSpacesClick}>
+              全部
+              <Icon name="chevron-right" size={15} strokeWidth={1.75} />
+            </a>
+          {/if}
         </div>
-        {#if workCapabilityCopy.kind === 'unavailable' || workCapabilityCopy.kind === 'unauthorized' || workCapabilityCopy.kind === 'error'}
-          <p class="empty-copy" role="status">
-            {workCapabilityCopy.title}
-            {#if workCapabilityCopy.kind === 'unauthorized'}
-              <a class="empty-copy-action" href="/settings#cloud">去设置登录</a>
-            {/if}
-          </p>
-        {:else if workCapabilityCopy.kind === 'empty' || (prodWorkReadOn && ['empty', 'ready', 'partial', 'stale'].includes(CONTROL.sources?.work?.status) && !workCards.length)}
-          <p class="empty-copy empty-copy--quiet" role="status">
-            {workCapabilityCopy.kind === 'empty'
-              ? workCapabilityCopy.title
-              : '暂无 Work 卡片'}
-          </p>
-        {:else if workCards.length}
-          <div class="signal-list">
-            {#each workCards as card (card.id)}
-              <a
-                href={card.deepLink || '/work'}
-                class="signal-row kenos-anim-list-enter"
-                owner={card.ownerDomain}
-                data-owner-domain={card.ownerDomain}
-              >
-                <span class="signal-rail" aria-hidden="true"></span>
-                <span class="signal-copy">
-                  <span class="signal-label"
-                    >{workKindLabel[card.kind] || card.kind}</span
-                  >
-                  <strong>{card.title}</strong>
-                  <span class="signal-detail">{card.summary}</span>
-                </span>
-                <Icon name="chevron-right" size={14} strokeWidth={1.75} />
-              </a>
-            {/each}
-          </div>
-        {:else if WORK.status === 'unsupported' && !prodWorkReadOn}
-          <p class="empty-copy empty-copy--quiet" role="status">Work 准备中</p>
-        {:else}
-          <p class="empty-copy empty-copy--quiet">暂无 Work 卡片</p>
-        {/if}
+        <div class="signal-list">
+          {#each workCards as card (card.id)}
+            <a
+              href={card.deepLink || '/work'}
+              class="signal-row kenos-anim-list-enter"
+              owner={card.ownerDomain}
+              data-owner-domain={card.ownerDomain}
+            >
+              <span class="signal-copy">
+                <span class="signal-label"
+                  >{workKindLabel[card.kind] || card.kind}</span
+                >
+                <strong>{card.title}</strong>
+                <span class="signal-detail">{card.summary}</span>
+              </span>
+              <Icon name="chevron-right" size={14} strokeWidth={1.75} />
+            </a>
+          {/each}
+        </div>
       </section>
+      {:else if !todayNeedsSignIn && workCapabilityCopy.kind === 'error'}
+        <section
+          class="kenos-anim-chrome-enter"
+          aria-labelledby="today-work-title"
+        >
+          <div class="section-heading section-heading--meta">
+            <h2 id="today-work-title">{t('nav.work')}</h2>
+          </div>
+          <p class="empty-copy" role="status">
+            {PRODUCT_COPY.todayPartialError.title}
+            <button
+              type="button"
+              class="empty-copy-action"
+              onclick={() => refreshControlCenter({ force: true })}
+            >
+              {PRODUCT_COPY.todayPartialError.action}
+            </button>
+          </p>
+        </section>
+      {/if}
 
-      {#if today.signals.length}
+      {#if !todayNeedsSignIn && today.signals.length}
         <section
           class="kenos-anim-chrome-enter"
           aria-labelledby="today-signals-title"
         >
           <div class="section-heading section-heading--meta">
-            <h2 id="today-signals-title">来自 Spaces</h2>
+            <h2 id="today-signals-title">来自空间</h2>
           </div>
           <div class="signal-list">
             {#each today.signals as signal (signal.id)}
@@ -382,7 +514,6 @@
                   }
                 }}
               >
-                <span class="signal-rail" aria-hidden="true"></span>
                 <span class="signal-copy">
                   <span class="signal-label">{signal.label}</span>
                   <strong>{signal.value}</strong>
@@ -397,65 +528,64 @@
         </section>
       {/if}
 
-      <section
-        class="kenos-anim-chrome-enter"
-        aria-labelledby="today-spaces-title"
-      >
-        <div class="section-heading section-heading--meta">
-          <h2 id="today-spaces-title">Spaces</h2>
-          <a href="/spaces" class="text-action" onclick={onAllSpacesClick}
-            >全部</a
-          >
-        </div>
-        <nav class="space-list" aria-label="Kenos Spaces">
-          {#each TODAY_SPACE_SHORTCUTS as space (space.id)}
-            <a
-              class="space-shortcut kenos-anim-list-enter"
-              href={space.href}
-              data-space-id={space.id}
-              style:--space-accent={space.accent || 'transparent'}
-              onclick={(e) => onTodaySpace(space, e)}
-            >
-              <span
-                class="space-shortcut-rail"
-                style:background={space.accent || 'var(--border)'}
-                aria-hidden="true"
-              ></span>
-              {#if space.icon}
-                <span
-                  class="space-shortcut-icon"
-                  style:color={space.accent
-                    ? `color-mix(in srgb, ${space.accent} 78%, var(--t2))`
-                    : 'var(--t2)'}
-                  aria-hidden="true"
-                >
-                  <Icon name={space.icon} size={16} strokeWidth={1.75} />
+      {#if showSpacesSection}
+        <section
+          class="kenos-anim-chrome-enter"
+          aria-labelledby="today-spaces-title"
+        >
+          <div class="section-heading section-heading--meta">
+            <h2 id="today-spaces-title">空间动态</h2>
+            {#if showSpacesAll}
+              <a href="/spaces" class="text-action" onclick={onAllSpacesClick}
+                >全部</a
+              >
+            {/if}
+          </div>
+          <nav class="space-list" aria-label="今天有变化的空间">
+            {#each todaySpaces as space (space.id)}
+              <a
+                class="space-shortcut kenos-anim-list-enter"
+                href={space.href}
+                data-space-id={space.id}
+                style:--space-accent={space.accent || 'transparent'}
+                onclick={(e) => onTodaySpace(space, e)}
+              >
+                {#if space.icon}
+                  <span
+                    class="space-shortcut-icon"
+                    style:--space-accent={space.accent || 'var(--t3)'}
+                    aria-hidden="true"
+                  >
+                    <Icon name={space.icon} size={16} strokeWidth={1.75} />
+                  </span>
+                {/if}
+                <span class="space-shortcut-text">
+                  <strong>{space.label}</strong>
+                  <span>{spaceLiveDetail(space)}</span>
                 </span>
-              {/if}
-              <span class="space-shortcut-text">
-                <strong>{space.label}</strong>
-                <span>{space.detail}</span>
-              </span>
-            </a>
-          {/each}
-        </nav>
-      </section>
+              </a>
+            {/each}
+          </nav>
+        </section>
+      {/if}
     </div>
 
-    <div class="today-level-3">
-      <section
-        class="kenos-anim-chrome-enter"
-        aria-labelledby="today-activity-title"
-      >
-        <div
-          class="section-heading section-heading--meta section-heading--quiet"
+    {#if showActivitySection}
+      <div class="today-level-3">
+        <section
+          class="kenos-anim-chrome-enter"
+          aria-labelledby="today-activity-title"
         >
-          <h2 id="today-activity-title">系统已处理</h2>
-          <a href="/inbox#activity" class="text-action text-action--quiet"
-            >全部</a
+          <div
+            class="section-heading section-heading--meta section-heading--quiet"
           >
-        </div>
-        {#if recentActivity.length}
+            <h2 id="today-activity-title">系统已处理</h2>
+            {#if showActivityAll}
+              <a href="/inbox#activity" class="text-action text-action--quiet"
+                >全部</a
+              >
+            {/if}
+          </div>
           <div class="activity-list">
             {#each recentActivity as item (item.id)}
               <div class="activity-row kenos-anim-list-enter">
@@ -475,13 +605,9 @@
               </div>
             {/each}
           </div>
-        {:else}
-          <p class="empty-copy empty-copy--quiet">
-            最近没有需要展示的系统处理记录。
-          </p>
-        {/if}
-      </section>
-    </div>
+        </section>
+      </div>
+    {/if}
   </main>
 </div>
 
@@ -500,14 +626,13 @@
   :global(html[data-ios-native-shell='true'] .today-page) {
     --today-level-gap: 20px;
     --today-section-gap: 14px;
+    /* Scroll-end clearance lives on #main-content (dock SSOT) — don't double-pad. */
     padding-top: 0;
+    padding-bottom: 0;
   }
   :global(html[data-ios-native-shell='true'] .today-header) {
     padding-bottom: 2px;
     align-items: center;
-  }
-  :global(html[data-ios-native-shell='true'] .today-intro) {
-    display: none;
   }
   /* SystemBar already owns Continue — don't duplicate in content. */
   :global(html[data-ios-native-shell='true'] .today-continue-inline) {
@@ -524,12 +649,20 @@
     opacity: 0.5;
   }
   :global(html[data-ios-native-shell='true'] .today-date) {
-    color: color-mix(in srgb, var(--t1) 48%, transparent);
-    font-size: 12px;
-    letter-spacing: 0.03em;
-    margin-bottom: 0;
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+    font-size: var(--kenos-type-meta, 12px);
+    letter-spacing: 0.02em;
+    margin: 8px 0 0;
     text-transform: none;
-    font-weight: 500;
+    font-weight: 520;
+  }
+  :global(html[data-ios-native-shell='true'] .today-overview) {
+    margin-top: 6px;
+    font-size: var(--kenos-type-secondary, 14px);
   }
   /* SystemBar owns "今天" — focus title becomes quiet meta. */
   :global(html[data-ios-native-shell='true'] .section-heading--focus h2) {
@@ -559,7 +692,28 @@
     padding-top: 4px;
   }
   :global(html[data-ios-native-shell='true'] .today-level-1) {
+    gap: 10px;
+  }
+  :global(html[data-ios-native-shell='true'] .today-level-2) {
     gap: 14px;
+  }
+  :global(html[data-ios-native-shell='true'] .section-heading--meta h2) {
+    color: var(--t2);
+  }
+  :global(html[data-ios-native-shell='true'] .row-eyebrow),
+  :global(html[data-ios-native-shell='true'] .row-detail),
+  :global(html[data-ios-native-shell='true'] .queue-row small),
+  :global(html[data-ios-native-shell='true'] .signal-detail),
+  :global(html[data-ios-native-shell='true'] .space-shortcut-text span) {
+    color: var(--t2);
+    opacity: 1;
+  }
+  :global(html[data-ios-native-shell='true'] .priority-row--hero .priority-copy strong) {
+    font-size: clamp(1.2rem, 4.2vw, 1.4rem);
+    font-weight: 680;
+  }
+  :global(html[data-ios-native-shell='true'] .queue-row) {
+    min-height: 64px;
   }
   .today-header {
     display: flex;
@@ -588,29 +742,33 @@
     }
   }
   .today-date {
-    margin: 0 0 4px;
-    color: var(--t3);
-    font-size: var(--kenos-type-meta, var(--text-sm));
-    font-weight: 650;
-    letter-spacing: var(--kenos-tracking-meta, 0.06em);
-    text-transform: uppercase;
+    margin: 10px 0 0;
+    color: var(--t2);
+    font-size: var(--text-sm);
+    font-weight: 520;
+    letter-spacing: 0.01em;
+    text-transform: none;
+  }
+  .today-overview {
+    margin: 8px 0 0;
+    max-width: 36rem;
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+    font-size: var(--kenos-type-secondary, 14px);
+    font-weight: 520;
+    line-height: 1.45;
   }
   h1,
   :global(.kenos-page-title) {
     margin: 0;
     color: var(--t1);
-    font-size: var(--kenos-type-page);
-    font-weight: 680;
-    letter-spacing: var(--kenos-tracking-page);
-    line-height: var(--kenos-leading-page);
-  }
-  .today-intro {
-    margin: 6px 0 0;
-    color: var(--t2);
-    font-size: var(--kenos-type-secondary, var(--text-md));
-    font-weight: var(--kenos-weight-body);
-    line-height: 1.4;
-    max-width: 28rem;
+    font-size: var(--kenos-type-page, var(--kenos-chrome-title-size, 24px));
+    font-weight: var(--kenos-weight-page, 650);
+    letter-spacing: var(--kenos-tracking-page, -0.03em);
+    line-height: var(--kenos-leading-page, 1.15);
   }
   .today-actions {
     display: flex;
@@ -711,19 +869,23 @@
   .today-level-1 {
     display: grid;
     gap: 16px;
+    padding-bottom: 4px;
+    border-bottom: 0;
   }
   .section-heading--focus {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   .today-level-2 {
     display: grid;
-    gap: var(--today-section-gap);
-    padding-top: 4px;
+    gap: calc(var(--today-section-gap, 20px) * 0.85);
+    padding-top: 2px;
   }
   .today-level-3 {
     display: grid;
     gap: 12px;
-    opacity: 0.88;
+    opacity: 0.9;
+    padding-top: 2px;
+    border-top: 0;
   }
   @media (min-width: 1024px) {
     .today-page {
@@ -750,7 +912,7 @@
   }
   .section-heading--meta h2 {
     margin: 0;
-    color: var(--t3);
+    color: var(--t2);
     font-size: var(--kenos-type-meta, var(--text-xs));
     font-weight: 650;
     letter-spacing: var(--kenos-tracking-meta, 0.06em);
@@ -760,64 +922,121 @@
   .priority-list,
   .queue-list,
   .signal-list,
-  .activity-list {
-    border-top: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  .activity-list,
+  .space-list {
+    background: var(--kenos-surface-group, var(--card));
+    border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+    border-radius: var(--kenos-radius-group, var(--radius-lg, 12px));
+    overflow: hidden;
   }
   .priority-row {
     display: grid;
-    grid-template-columns: 3px minmax(0, 1fr) auto;
+    grid-template-columns: 8px minmax(0, 1fr) auto;
     gap: 12px;
-    align-items: center;
-    padding: 18px 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    align-items: start;
+    padding: 16px 14px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
     color: inherit;
     text-decoration: none;
     transition:
       opacity var(--dur-fast) var(--ease-standard),
-      transform var(--dur-fast) var(--ease-standard);
+      transform var(--dur-fast) var(--ease-standard),
+      background var(--dur-fast) var(--ease-standard);
+  }
+  .priority-row:last-child,
+  .queue-row:last-child,
+  .signal-row:last-child,
+  .activity-row:last-child,
+  .space-shortcut:last-child {
+    border-bottom: 0;
   }
   .priority-row:not(.priority-row--hero) {
-    padding: 14px 0;
-    opacity: 0.9;
+    padding: 12px 14px;
+    opacity: 0.96;
   }
   .priority-row:not(.priority-row--hero) .priority-copy strong {
     font-size: var(--kenos-type-list, var(--text-lg));
-    font-weight: 560;
+    font-weight: 600;
+  }
+  .priority-row--hero {
+    padding: 18px 14px;
   }
   .priority-row:hover {
-    transform: translateX(2px);
+    background: color-mix(in srgb, var(--card-h, var(--bg-2)) 70%, transparent);
   }
-  .priority-marker {
-    align-self: stretch;
-    min-height: 40px;
-    border-radius: 999px;
+  /* Round 2: tone as badge, not colored vertical rail */
+  .priority-badge {
+    width: 8px;
+    height: 8px;
+    margin-top: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
     background: var(--t3);
   }
-  .priority-row--critical .priority-marker {
+  .priority-badge--hero {
+    width: 9px;
+    height: 9px;
+    margin-top: 5px;
+  }
+  .priority-badge--critical {
     background: var(--critical);
   }
-  .priority-row--attention .priority-marker {
+  .priority-badge--attention {
     background: var(--accent);
+  }
+  .priority-badge--info,
+  .priority-badge--neutral {
+    background: color-mix(in srgb, var(--t1) 28%, transparent);
   }
   .priority-copy {
     display: grid;
-    gap: 3px;
+    gap: 4px;
     min-width: 0;
   }
   .priority-copy strong {
     color: var(--t1);
-    font-size: clamp(18px, 2.6vw, 22px);
-    font-weight: 620;
+    font-size: clamp(17px, 2.4vw, 20px);
+    font-weight: 650;
     letter-spacing: -0.02em;
     line-height: 1.25;
+  }
+  .priority-skeleton {
+    display: grid;
+    gap: 10px;
+    padding: 8px 0 4px;
+  }
+  .skeleton-caption {
+    margin: 0;
+    color: var(--t2);
+    font-size: 13px;
+    font-weight: 520;
+  }
+  .skeleton {
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--t1) 8%, transparent);
+  }
+  .skeleton--hero {
+    height: 52px;
+    width: 100%;
+  }
+  .skeleton--line {
+    height: 14px;
+    width: 72%;
+  }
+  .skeleton--line-short {
+    width: 48%;
   }
   .row-detail,
   .signal-detail,
   .activity-row span,
   .empty-copy,
   .empty-block {
-    color: var(--t3);
-    font-size: var(--text-sm);
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+    font-size: var(--kenos-type-meta, 12px);
   }
   .row-detail {
     font-weight: 450;
@@ -826,8 +1045,12 @@
   .empty-copy-detail {
     display: block;
     margin-top: 4px;
-    color: var(--t3);
-    font-size: var(--text-sm);
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-tertiary, 0.5) * 100%),
+      transparent
+    );
+    font-size: var(--kenos-type-meta, 12px);
   }
   .empty-copy-action {
     display: inline-flex;
@@ -847,12 +1070,16 @@
     opacity: 0.85;
   }
   .row-eyebrow {
-    color: var(--t3);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+    font-size: var(--kenos-type-meta, 12px);
+    font-weight: 650;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    opacity: 0.8;
+    opacity: 1;
   }
   .row-action {
     display: inline-flex;
@@ -875,37 +1102,49 @@
     }
   }
   .queue-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 12px;
-    min-height: 56px;
-    padding: 10px 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    min-height: 64px;
+    padding: 14px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
     color: var(--t1);
     text-decoration: none;
   }
+  .queue-action-label {
+    color: var(--t2);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .queue-row--primary .queue-label {
+    font-weight: 680;
+  }
   .queue-copy {
-    flex: 1;
     min-width: 0;
     display: grid;
-    gap: 2px;
+    gap: 3px;
   }
   .queue-label {
-    font-weight: 600;
+    font-weight: 650;
     font-size: var(--kenos-type-list, var(--text-lg));
   }
   .queue-count {
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
-    font-size: clamp(22px, 3.2vw, 28px);
+    font-size: clamp(20px, 2.8vw, 26px);
     font-weight: 680;
     letter-spacing: -0.03em;
     line-height: 1;
   }
   .queue-row small {
-    color: var(--t3);
-    font-size: 12px;
-    opacity: 0.85;
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+    font-size: var(--kenos-type-secondary, 14px);
+    opacity: 1;
   }
   .queue-row :global(svg) {
     flex-shrink: 0;
@@ -916,18 +1155,10 @@
     align-items: center;
     gap: 12px;
     min-height: 52px;
-    padding: 10px 4px;
-    border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+    padding: 12px 14px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
     color: inherit;
     text-decoration: none;
-  }
-  .signal-rail {
-    width: 3px;
-    align-self: stretch;
-    min-height: 28px;
-    border-radius: 2px;
-    flex-shrink: 0;
-    background: color-mix(in srgb, var(--t3) 55%, transparent);
   }
   .signal-copy {
     flex: 1;
@@ -936,9 +1167,13 @@
     gap: 2px;
   }
   .signal-label {
-    color: var(--t3);
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
     font-weight: 600;
-    font-size: 11px;
+    font-size: var(--kenos-type-meta, 12px);
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }
@@ -959,8 +1194,8 @@
     grid-template-columns: 8px minmax(0, 1fr) auto;
     gap: 10px;
     align-items: start;
-    padding: 9px 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+    padding: 12px 14px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
   }
   .activity-row > div {
     display: grid;
@@ -992,44 +1227,40 @@
   .activity-state--failed {
     background: var(--critical);
   }
-  /* Narrow: vertical hairline list (Spaces page language) */
+  /* Narrow: raised vertical list (Continuity family) */
   .space-list {
     display: grid;
     gap: 0;
-    border: 0;
   }
   .space-shortcut {
     display: flex;
     align-items: center;
     gap: 12px;
     min-height: 52px;
-    padding: 10px 4px;
+    padding: 12px 14px;
     border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
     color: inherit;
     text-decoration: none;
     background: transparent;
-  }
-  .space-shortcut + .space-shortcut {
-    border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   }
   .space-shortcut:hover {
     background: color-mix(
       in srgb,
       var(--space-accent, transparent) 7%,
-      transparent
+      var(--card-h)
     );
-  }
-  .space-shortcut-rail {
-    width: 3px;
-    align-self: stretch;
-    min-height: 28px;
-    border-radius: 2px;
-    flex-shrink: 0;
   }
   .space-shortcut-icon {
     display: inline-flex;
     flex-shrink: 0;
-    opacity: 0.9;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--space-accent, var(--t3)) 14%, transparent);
+    color: color-mix(in srgb, var(--space-accent, var(--t2)) 82%, var(--t1));
   }
   .space-shortcut-text {
     display: grid;
@@ -1042,25 +1273,23 @@
     font-weight: 600;
   }
   .space-shortcut-text span {
-    color: var(--t3);
-    font-size: var(--kenos-type-meta, var(--text-sm));
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+    font-size: var(--kenos-type-meta, 12px);
   }
   @media (min-width: 900px) {
     .space-list {
       grid-template-columns: repeat(5, minmax(0, 1fr));
-      border-block: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
     }
     .space-shortcut {
       align-items: flex-start;
       min-height: 0;
       padding: 14px 12px;
-      border-right: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-    }
-    .space-shortcut + .space-shortcut {
-      border-top: 0;
-    }
-    .space-shortcut:first-child {
-      padding-left: 0;
+      border-bottom: 0;
+      border-right: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
     }
     .space-shortcut:last-child {
       border-right: 0;
@@ -1074,8 +1303,10 @@
     }
   }
   .empty-block {
-    padding: 18px 0;
-    border-block: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    padding: 16px 14px;
+    background: var(--kenos-surface-group, var(--card));
+    border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+    border-radius: var(--kenos-radius-group, var(--radius-lg, 12px));
   }
   .empty-block-title {
     margin: 0 0 6px;
@@ -1088,19 +1319,6 @@
     color: var(--t3);
     font-size: var(--text-md);
     max-width: 36rem;
-  }
-  .priority-skeleton {
-    display: grid;
-    gap: 10px;
-    padding: 14px 0;
-  }
-  .priority-skeleton .skeleton {
-    min-height: 14px;
-    border-radius: 6px;
-  }
-  .priority-skeleton .skeleton--title {
-    min-height: 20px;
-    width: 55%;
   }
   .empty-block-actions {
     display: flex;
