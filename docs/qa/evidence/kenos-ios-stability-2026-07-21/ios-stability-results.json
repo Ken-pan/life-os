@@ -1,0 +1,81 @@
+{
+  "head": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+  "formalBaseline": "502d805c28b29d3d50c0efa2699ab717a301ac45",
+  "build": {
+    "iosBuildSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "iosBuildNumber": "202607211716",
+    "releaseSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "releaseShort": "71ad6d5f3"
+  },
+  "appVersion": "1.0.0",
+  "device": "iPhone 17 Pro",
+  "ios": "27.0",
+  "startedAt": "2026-07-21T17:25:20.892Z",
+  "endedAt": "2026-07-21T17:26:39.624Z",
+  "durationMs": 78732,
+  "runIds": {
+    "smoke": "smoke-2026-07-21T17-25-21-888Z",
+    "soak": "soak-2026-07-21T17-26-01-078Z"
+  },
+  "attempts": 26,
+  "passCount": 26,
+  "failureCount": 0,
+  "recoveredCount": 0,
+  "latency": {
+    "count": 25,
+    "median": 245,
+    "p50": 245,
+    "p95": 517,
+    "min": 11,
+    "max": 676
+  },
+  "authFailures": 0,
+  "navigationFailures": 0,
+  "webViewFailures": 0,
+  "networkRecoveries": 10,
+  "continueFailures": 0,
+  "dataLossCount": 0,
+  "isolationLeakCount": 0,
+  "crashes": 0,
+  "p0": 0,
+  "p1": 1,
+  "openGates": [
+    "OWNER_3_DAY_DOGFOOD",
+    "PHASE_4_EXIT_OPEN",
+    "TRUE_MAC_SLEEP_WAKE",
+    "IPHONE_WIFI_TOGGLE",
+    "APNS_TESTFLIGHT_DISTRIBUTION",
+    "PAPER_PARTIAL"
+  ],
+  "steps": [
+    {
+      "step": "rebuild",
+      "status": 0,
+      "note": "skipped via KENOS_STABILITY_SKIP_REBUILD"
+    },
+    {
+      "status": 0,
+      "script": "preflight.mjs"
+    },
+    {
+      "status": 0,
+      "script": "smoke.mjs"
+    },
+    {
+      "status": 0,
+      "script": "soak.mjs"
+    },
+    {
+      "status": 0,
+      "script": "doctor.sh"
+    },
+    {
+      "status": 0,
+      "script": "log-export.mjs"
+    }
+  ],
+  "preflight": "PASS",
+  "smoke": "PASS",
+  "soak": "PASS",
+  "doctor": "PASS"
+}

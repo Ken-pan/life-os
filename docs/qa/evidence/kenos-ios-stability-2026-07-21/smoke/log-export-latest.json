@@ -1,0 +1,243 @@
+{
+  "ts": "2026-07-21T17:26:39.612Z",
+  "head": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+  "build": {
+    "iosBuildSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "iosBuildNumber": "202607211716",
+    "releaseSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "releaseShort": "71ad6d5f3"
+  },
+  "sourceDir": "/Users/kenpan/Library/Logs/KenosDailyBeta",
+  "retention": {
+    "policy": "export_tail_512KiB_per_file",
+    "note": "dogfood must not unbounded-grow evidence; rotate exports each run"
+  },
+  "files": [
+    {
+      "name": "aios.stderr.log",
+      "bytes": 1114743,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-aios.stderr.log",
+      "truncated": true
+    },
+    {
+      "name": "aios.stdout.log",
+      "bytes": 23516,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-aios.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "domain-finance.stderr.log",
+      "bytes": 9929,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-domain-finance.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "domain-finance.stdout.log",
+      "bytes": 117,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-domain-finance.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "domain-health.stderr.log",
+      "bytes": 1203,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-domain-health.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "domain-health.stdout.log",
+      "bytes": 115,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-domain-health.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "domain-home.stderr.log",
+      "bytes": 1142,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-domain-home.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "domain-home.stdout.log",
+      "bytes": 111,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-domain-home.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "domain-knowledge.stderr.log",
+      "bytes": 1413,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-domain-knowledge.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "domain-knowledge.stdout.log",
+      "bytes": 121,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-domain-knowledge.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "domain-music.stderr.log",
+      "bytes": 1408,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-domain-music.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "domain-music.stdout.log",
+      "bytes": 113,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-domain-music.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "finance-linkcheck.stderr.log",
+      "bytes": 183,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-finance-linkcheck.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "finance-linkcheck.stdout.log",
+      "bytes": 117,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-finance-linkcheck.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "finance.stderr.log",
+      "bytes": 116126,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-finance.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "finance.stdout.log",
+      "bytes": 3276,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-finance.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "fitness.stderr.log",
+      "bytes": 372312,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-fitness.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "fitness.stdout.log",
+      "bytes": 24670,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-fitness.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "health-linkcheck.stderr.log",
+      "bytes": 43,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-health-linkcheck.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "health-linkcheck.stdout.log",
+      "bytes": 115,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-health-linkcheck.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "health.stderr.log",
+      "bytes": 7056,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-health.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "health.stdout.log",
+      "bytes": 3220,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-health.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "home-linkcheck.stderr.log",
+      "bytes": 43,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-home-linkcheck.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "home-linkcheck.stdout.log",
+      "bytes": 111,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-home-linkcheck.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "home.stderr.log",
+      "bytes": 35007,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-home.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "home.stdout.log",
+      "bytes": 3108,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-home.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "knowledge-linkcheck.stderr.log",
+      "bytes": 43,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-knowledge-linkcheck.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "knowledge-linkcheck.stdout.log",
+      "bytes": 121,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-knowledge-linkcheck.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "knowledge.stderr.log",
+      "bytes": 5230,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-knowledge.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "knowledge.stdout.log",
+      "bytes": 3388,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-knowledge.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "music-linkcheck.stderr.log",
+      "bytes": 43,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-music-linkcheck.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "music-linkcheck.stdout.log",
+      "bytes": 113,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-music-linkcheck.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "music.stderr.log",
+      "bytes": 60572,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-music.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "music.stdout.log",
+      "bytes": 3164,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-music.stdout.log",
+      "truncated": false
+    },
+    {
+      "name": "planner.stderr.log",
+      "bytes": 265343,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-planner.stderr.log",
+      "truncated": false
+    },
+    {
+      "name": "planner.stdout.log",
+      "bytes": 24536,
+      "exported": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/export-planner.stdout.log",
+      "truncated": false
+    }
+  ],
+  "privacy": {
+    "jwt": "redacted",
+    "email": "redacted",
+    "tokens": "redacted",
+    "userPayloads": "not_exported"
+  },
+  "kenosAppLogsTable": {
+    "status": "schema_exists_production",
+    "claim": "NOT claiming outbox delivery closed"
+  }
+}

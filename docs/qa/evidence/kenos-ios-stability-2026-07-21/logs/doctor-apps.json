@@ -1,0 +1,56 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "apps",
+      "--device",
+      "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+      "--json-output",
+      "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21/logs/doctor-apps.json"
+    ],
+    "commandType" : "devicectl.device.info.apps",
+    "environment" : {
+      "TERM" : "dumb"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "success",
+    "version" : "518.33"
+  },
+  "result" : {
+    "apps" : [
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "space.kenos.app.ios",
+        "bundleVersion" : "202607211716",
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "Kenos",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/DFCBDE27-EFDE-4264-A3FA-454EA3FF1F5D/KenosIOS.app/",
+        "version" : "1.0.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.example.macremote.client",
+        "bundleVersion" : "1",
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "Mac Remote",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/6389DC9E-E755-4CD3-9515-70B53F98BD8A/Mac%20Remote.app/",
+        "version" : "1.0"
+      }
+    ],
+    "defaultAppsIncluded" : false,
+    "deviceIdentifier" : "8097F071-CAB6-5AF0-8258-BCD985E9D79E",
+    "hiddenAppsIncluded" : false,
+    "internalAppsIncluded" : false,
+    "removableAppsIncluded" : true
+  }
+}

@@ -1,7 +1,7 @@
 ---
 title: Kenos 重构实施状态审计
 owner: kenpan
-last_verified: 2026-07-21T04:20:00Z
+last_verified: 2026-07-21T17:26:00Z
 doc_role: implementation-status-audit
 status: controlled-production-canary-legacy-cutover-open
 formal_baseline: 502d805c28b29d3d50c0efa2699ab717a301ac45
@@ -12,7 +12,7 @@ review_cadence: after-each-production-or-retirement-slice
 
 > 本文回答“现在到底实现到哪里”。目标架构仍以 [`kenos-target-architecture.md`](./kenos-target-architecture.md) 为准，阶段出口仍以 [`../qa/kenos-refactor-gates.md`](../qa/kenos-refactor-gates.md) 为准，生产实时事实仍以 [`../qa/kenos-current-production-baseline-live-revalidated.md`](../qa/kenos-current-production-baseline-live-revalidated.md) 为准。
 >
-> 本次审计以与 `origin/master` 同步的 `502d805c28b29d3d50c0efa2699ab717a301ac45` 为正式代码基线，并单独记录本地未提交工作。**已写代码、已部署 canary、通过阶段出口、完成旧系统退役是四件不同的事。**
+> 正式代码基线仍记 `502d805c28b29d3d50c0efa2699ab717a301ac45`；iOS Daily Beta 稳定性车道当前工作树 HEAD 见下（不得只引用 formal baseline 而忽略实际 build SHA）。**已写代码、已部署 canary、通过阶段出口、完成旧系统退役是四件不同的事。**
 
 ## 1. 结论
 
@@ -33,13 +33,19 @@ CONTROLLED_PRODUCTION_CANARY
 + EXECUTOR_AND_DISTRIBUTION_GATES_OPEN
 
 MAC WEB DAILY BETA: READY
-IOS PERSONAL DAILY BETA: READY (LAN-DEPENDENT)  # strict close 2026-07-21T05:45Z — Flow A user-JWT + Flow B no-URL-pin + isolation PASS; Assistant=IN-APP WEB; Continuity=in-app WKWebView; build 202607210524
+IOS PERSONAL DAILY BETA: READY_LAN_DEPENDENT
+IOS DAILY BETA STABILIZATION: AUTOMATED STABILITY PASSED / OWNER 3-DAY DOGFOOD OPEN
 OVERALL PERSONAL DAILY BETA: READY_LAN_DEPENDENT
 NETWORK SCOPE (iOS): LAN-DEPENDENT
 ```
 
-iOS 真机证据：`docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`（含 `logs/ios-flow-ab-latest.json`）。
-Phase 4 仍 `EXIT_OPEN`（App Group / APNs / 分发）；`KenosAppGroupStore` 仅 LOCAL_FOUNDATION；Daily Beta Owner title writer 已 bake；无硬 Owner Action — 见 `OWNER_ACTION_NEXT.md` / `PHASE4_NEXT_SLICE.md`。
+iOS 真机证据：
+
+- Daily Beta acceptance：`docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`
+- Stability closure（2026-07-21）：`docs/qa/evidence/kenos-ios-stability-2026-07-21/`（preflight/smoke/soak/doctor、Flow A/B PASS after Planner LWW fix）
+- Current native build recorded：`202607211716` / HEAD `71ad6d5f3aca78a1b7985e77061f13fac59afb10`（plus local Planner `coerceTimestamp` fix for ISO `updatedAt` LWW）
+
+Phase 4 仍 `EXIT_OPEN`（App Group / APNs / 分发）。**不得**将本车道写成 `READY_LAN_DEPENDENT_STABILIZED`（三日 Owner dogfood 未完成）或 Phase 4 complete。
 
 ## 2. 状态词汇
 

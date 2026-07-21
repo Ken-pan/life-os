@@ -1,0 +1,40 @@
+{
+  "startedAt": "2026-07-21T17:25:20.892Z",
+  "endedAt": "2026-07-21T17:26:39.624Z",
+  "head": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+  "steps": [
+    {
+      "step": "rebuild",
+      "status": 0,
+      "note": "skipped via KENOS_STABILITY_SKIP_REBUILD"
+    },
+    {
+      "status": 0,
+      "script": "preflight.mjs"
+    },
+    {
+      "status": 0,
+      "script": "smoke.mjs"
+    },
+    {
+      "status": 0,
+      "script": "soak.mjs"
+    },
+    {
+      "status": 0,
+      "script": "doctor.sh"
+    },
+    {
+      "status": 0,
+      "script": "log-export.mjs"
+    }
+  ],
+  "scripts": [
+    "preflight.mjs",
+    "smoke.mjs",
+    "soak.mjs",
+    "doctor.sh",
+    "log-export.mjs",
+    "run-closure.mjs"
+  ]
+}

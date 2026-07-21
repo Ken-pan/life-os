@@ -1,0 +1,185 @@
+{
+  "ts": "2026-07-21T17:25:21.171Z",
+  "head": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+  "headShort": "",
+  "formalBaseline": "502d805c28b29d3d50c0efa2699ab717a301ac45",
+  "mac": {
+    "model": "Mac17,6",
+    "macos": "27.0",
+    "build": "26A5378j",
+    "arch": "arm64"
+  },
+  "lanIpPresent": true,
+  "lanIpMasked": "10.20.*.*",
+  "origin": "http://10.20.202.15:5219",
+  "build": {
+    "iosBuildSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "iosBuildNumber": "202607211716",
+    "releaseSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "releaseShort": "71ad6d5f3"
+  },
+  "localApp": {
+    "path": "/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/Info.plist",
+    "bundleId": "space.kenos.app.ios",
+    "version": "1.0.0",
+    "build": "202607211716",
+    "origin": "http://10.20.202.15:5219"
+  },
+  "checks": [
+    {
+      "name": "17_pro_connected",
+      "category": "device",
+      "ok": true,
+      "class": "device",
+      "reason": "online",
+      "line": "Ken’s 17 Pro 🤏🏻  🌊 🌲          Kens-17-Pro-.coredevice.local           8097F071-CAB6-5AF0-8258-BCD985E9D79E   connected     iPhone 17 Pro (iPhone18,1)"
+    },
+    {
+      "name": "Kenos",
+      "category": "product",
+      "ok": true,
+      "class": "product",
+      "reason": "installed",
+      "version": "1.0.0",
+      "bundleVersion": "202607211716"
+    },
+    {
+      "name": "lan_origin_reachable",
+      "category": "service",
+      "ok": true,
+      "class": "service",
+      "reason": "health_200",
+      "ms": 11
+    },
+    {
+      "name": "service_aios",
+      "category": "service",
+      "ok": true,
+      "class": "service",
+      "reason": "up",
+      "ms": 10
+    },
+    {
+      "name": "service_planner",
+      "category": "service",
+      "ok": true,
+      "class": "service",
+      "reason": "up",
+      "ms": 10
+    },
+    {
+      "name": "service_fitness",
+      "category": "service",
+      "ok": true,
+      "class": "service",
+      "reason": "up",
+      "ms": 9
+    },
+    {
+      "name": "service_finance",
+      "category": "service",
+      "ok": true,
+      "class": "service",
+      "reason": "up",
+      "ms": 10
+    },
+    {
+      "name": "service_knowledge",
+      "category": "service",
+      "ok": true,
+      "class": "service",
+      "reason": "up",
+      "ms": 9
+    },
+    {
+      "name": "service_music",
+      "category": "service",
+      "ok": true,
+      "class": "service",
+      "reason": "up",
+      "ms": 10
+    },
+    {
+      "name": "service_home",
+      "category": "service",
+      "ok": true,
+      "class": "service",
+      "reason": "up",
+      "ms": 9
+    },
+    {
+      "name": "service_health",
+      "category": "service",
+      "ok": true,
+      "class": "service",
+      "reason": "up",
+      "ms": 10
+    },
+    {
+      "name": "build_sha_recorded",
+      "category": "product",
+      "ok": true,
+      "class": "product",
+      "reason": "ios=71ad6d5f3 release=71ad6d5f3"
+    },
+    {
+      "name": "head_vs_installed_drift",
+      "category": "product",
+      "ok": true,
+      "class": "product",
+      "reason": "aligned"
+    },
+    {
+      "name": "app_launchable",
+      "category": "product",
+      "ok": true,
+      "class": "product",
+      "reason": "launched",
+      "ms": 309
+    },
+    {
+      "name": "wkwebview_payload",
+      "category": "product",
+      "ok": true,
+      "class": "product",
+      "reason": "payload_launch_accepted"
+    },
+    {
+      "name": "auth_bootstrap_surface",
+      "category": "product",
+      "ok": true,
+      "class": "product",
+      "reason": "deferred_to_smoke_flow_a (no token in preflight)"
+    },
+    {
+      "name": "continue_store_readable",
+      "category": "product",
+      "ok": true,
+      "class": "product",
+      "reason": "native_store_assumed; verified in continuity soak"
+    },
+    {
+      "name": "app_log_path",
+      "category": "product",
+      "ok": true,
+      "class": "product",
+      "reason": "kenos_app_logs schema exists; export in log-export"
+    },
+    {
+      "name": "legacy_fallback_available",
+      "category": "product",
+      "ok": true,
+      "class": "product",
+      "reason": "production_fallback_retained_in_settings"
+    },
+    {
+      "name": "rollback_target",
+      "category": "service",
+      "ok": true,
+      "class": "service",
+      "reason": "previous_release_present"
+    }
+  ],
+  "repairs": [],
+  "verdict": "PASS"
+}

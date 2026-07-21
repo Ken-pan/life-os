@@ -1,0 +1,402 @@
+
+==> Rebuild Daily Beta release + iOS device install (HEAD drift)
+B
+.svelte-kit/output/server/entries/pages/auth/_page.svelte.js                   2.41 kB │ gzip:  0.81 kB
+.svelte-kit/output/server/chunks/state.js                                      2.48 kB │ gzip:  1.05 kB
+.svelte-kit/output/server/chunks/fitnessSpaceAdapter.js                        3.41 kB │ gzip:  1.30 kB
+.svelte-kit/output/server/chunks/TimerWidget.js                                3.71 kB │ gzip:  1.23 kB
+.svelte-kit/output/server/chunks/index-server.js                               4.58 kB │ gzip:  1.70 kB
+.svelte-kit/output/server/chunks/ui.svelte.js                                  4.75 kB │ gzip:  1.95 kB
+.svelte-kit/output/server/entries/pages/discover/tools/_page.svelte.js         4.83 kB │ gzip:  1.36 kB
+.svelte-kit/output/server/entries/pages/program/_page.svelte.js                5.18 kB │ gzip:  1.52 kB
+.svelte-kit/output/server/entries/pages/discover/records/_page.svelte.js       7.52 kB │ gzip:  2.44 kB
+.svelte-kit/output/server/chunks/coach.js                                      7.81 kB │ gzip:  2.79 kB
+.svelte-kit/output/server/entries/pages/day/_id_/_page.svelte.js               8.15 kB │ gzip:  2.31 kB
+.svelte-kit/output/server/entries/pages/library/_page.svelte.js                8.25 kB │ gzip:  2.30 kB
+.svelte-kit/output/server/chunks/auth.svelte.js                               10.44 kB │ gzip:  3.87 kB
+.svelte-kit/output/server/chunks/shared.js                                    10.62 kB │ gzip:  3.39 kB
+.svelte-kit/output/server/entries/pages/day/_id_/summary/_page.svelte.js      11.31 kB │ gzip:  2.84 kB
+.svelte-kit/output/server/chunks/progression.js                               12.93 kB │ gzip:  4.25 kB
+.svelte-kit/output/server/chunks/exports.js                                   13.07 kB │ gzip:  4.18 kB
+.svelte-kit/output/server/entries/pages/program/edit/_page.svelte.js          14.61 kB │ gzip:  3.58 kB
+.svelte-kit/output/server/entries/pages/_page.svelte.js                       17.25 kB │ gzip:  4.33 kB
+.svelte-kit/output/server/chunks/coachMetrics.js                              17.66 kB │ gzip:  6.48 kB
+.svelte-kit/output/server/entries/pages/day/_id_/focus/_page.svelte.js        22.95 kB │ gzip:  5.86 kB
+.svelte-kit/output/server/chunks/sync.js                                      24.44 kB │ gzip:  8.21 kB
+.svelte-kit/output/server/chunks/internal2.js                                 24.44 kB │ gzip:  7.60 kB
+.svelte-kit/output/server/entries/pages/settings/_page.svelte.js              25.16 kB │ gzip:  4.95 kB
+.svelte-kit/output/server/chunks/timer.svelte.js                              25.67 kB │ gzip:  7.95 kB
+.svelte-kit/output/server/chunks/utils.js                                     31.90 kB │ gzip:  9.38 kB
+.svelte-kit/output/server/chunks/PlateToolPanel.js                            34.96 kB │ gzip:  7.99 kB
+.svelte-kit/output/server/entries/pages/discover/stats/_page.svelte.js        46.11 kB │ gzip: 11.92 kB
+.svelte-kit/output/server/chunks/client.js                                    51.38 kB │ gzip: 15.06 kB
+.svelte-kit/output/server/remote-entry.js                                     54.51 kB │ gzip: 12.02 kB
+.svelte-kit/output/server/chunks/session.js                                   57.33 kB │ gzip: 17.38 kB
+.svelte-kit/output/server/chunks/libraryHelpers.js                            84.87 kB │ gzip: 30.55 kB
+.svelte-kit/output/server/entries/pages/_layout.svelte.js                     94.62 kB │ gzip: 19.91 kB
+.svelte-kit/output/server/index.js                                           123.91 kB │ gzip: 31.42 kB
+.svelte-kit/output/server/chunks/server.js                                   130.48 kB │ gzip: 33.93 kB
+.svelte-kit/output/server/chunks/i18n.js                                     194.58 kB │ gzip: 61.42 kB
+
+✓ built in 1.78s
+
+Run npm run preview to preview your production build locally.
+
+> Using @sveltejs/adapter-static
+  Wrote site to "build"
+  ✔ done
+✔ Release staged → /Users/kenpan/.kenos-daily-beta/current
+  SHA 71ad6d5f3aca78a1b7985e77061f13fac59afb10
+/Products/Debug-iphoneos/KenosIOS.app/Metadata.appintents/
+Archiving all locales.
+[------------------------------------------------------------] 0% archiving en[🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢] 100% archived en[🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢🁢] 100% archived 1 locales/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/Metadata.appintents/nlu
+/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/Metadata.appintents/nlu/254674148dd1408fc9c2ee1bb3b0e502.version
+
+
+CodeSign /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/KenosIOS.debug.dylib (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    
+    Signing Identity:     "Apple Development: Pan Juncheng (24LGFN37R4)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (77e07e5d-9450-4db6-b5e2-cec750d384ae)
+    
+    /usr/bin/codesign --force --sign F7385C5C70C48A70F15EC9766E38D99812BDDA10 --timestamp\=none --generate-entitlement-der /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/KenosIOS.debug.dylib
+
+CodeSign /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/__preview.dylib (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    
+    Signing Identity:     "Apple Development: Pan Juncheng (24LGFN37R4)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (77e07e5d-9450-4db6-b5e2-cec750d384ae)
+    
+    /usr/bin/codesign --force --sign F7385C5C70C48A70F15EC9766E38D99812BDDA10 --timestamp\=none --generate-entitlement-der /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/__preview.dylib
+/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/__preview.dylib: replacing existing signature
+
+CodeSign /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    
+    Signing Identity:     "Apple Development: Pan Juncheng (24LGFN37R4)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (77e07e5d-9450-4db6-b5e2-cec750d384ae)
+    
+    /usr/bin/codesign --force --sign F7385C5C70C48A70F15EC9766E38D99812BDDA10 --entitlements /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS.app.xcent --timestamp\=none --generate-entitlement-der /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app
+
+ValidateEmbeddedBinary /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/PlugIns/KenosWidget.appex (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    /Applications/Xcode.app/Contents/Developer/usr/bin/embeddedBinaryValidationUtility /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/PlugIns/KenosWidget.appex -signing-cert F7385C5C70C48A70F15EC9766E38D99812BDDA10 -info-plist-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/Info.plist
+
+ValidateEmbeddedBinary /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/Watch/KenosWatch.app (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    /Applications/Xcode.app/Contents/Developer/usr/bin/embeddedBinaryValidationUtility /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/Watch/KenosWatch.app -signing-cert F7385C5C70C48A70F15EC9766E38D99812BDDA10 -info-plist-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/Info.plist
+
+Validate /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    builtin-validationUtility /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app -shallow-bundle -infoplist-subpath Info.plist
+warning: All interface orientations must be supported unless the app requires full screen. (in target 'KenosIOS' from project 'Kenos')
+
+** BUILD SUCCEEDED **
+
+==> CFBundleVersion=202607211716
+==> Installing /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app
+10:16:15  Acquired tunnel connection to device.
+10:16:15  Enabling developer disk image services.
+10:16:15  Acquired usage assertion.
+App installed:
+• bundleID: space.kenos.app.ios
+• installationURL: file:///private/var/containers/Bundle/Application/DFCBDE27-EFDE-4264-A3FA-454EA3FF1F5D/KenosIOS.app/
+• launchServicesIdentifier: unknown
+• databaseUUID: 6A2B1109-D682-4C35-A1A8-E9B4FFD80DA7
+• databaseSequenceNumber: 4836
+• options: 
+==> Launching space.kenos.app.ios (unlock phone if needed)
+10:16:19  Acquired tunnel connection to device.
+10:16:20  Enabling developer disk image services.
+10:16:20  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+INSTALL_OK origin=http://10.20.202.15:5219 sha=71ad6d5f3aca78a1b7985e77061f13fac59afb10 build=202607211716 launch_ec=0
+
+==> preflight.mjs
+PASS [device] 17_pro_connected: online
+PASS [product] app_installed: installed
+PASS [service] lan_origin_reachable: health_200
+PASS [service] service_aios: up
+PASS [service] service_planner: up
+PASS [service] service_fitness: up
+PASS [service] service_finance: up
+PASS [service] service_knowledge: up
+PASS [service] service_music: up
+PASS [service] service_home: up
+PASS [service] service_health: up
+PASS [product] build_sha_recorded: ios=71ad6d5f3 release=71ad6d5f3
+PASS [product] head_vs_installed_drift: aligned
+PASS [product] app_launchable: launched
+PASS [product] wkwebview_payload: payload_launch_accepted
+PASS [product] auth_bootstrap_surface: deferred_to_smoke_flow_a (no token in preflight)
+PASS [product] continue_store_readable: native_store_assumed; verified in continuity soak
+PASS [product] app_log_path: kenos_app_logs schema exists; export in log-export
+PASS [product] legacy_fallback_available: production_fallback_retained_in_settings
+PASS [service] rollback_target: previous_release_present
+{
+  "verdict": "PASS",
+  "fails": []
+}
+
+==> smoke.mjs
+PASS A_cold_launch/home_screen_relaunch launched 795ms
+PASS A_cold_launch/second_cold launched 291ms
+PASS A_cold_launch/no_external_safari_claim launch_stays_in_bundle (Safari escape requires visual Owner confirm) ms
+PASS B_plan/planner_service  12ms
+PASS B_plan/continue_plan_launch launched 515ms
+PASS B_plan/return_kenos launched 303ms
+PASS C_training/fitness_service  12ms
+PASS C_training/continue_training_launch launched 470ms
+PASS C_training/return_kenos launched 297ms
+PASS D_domains/work launched 509ms
+PASS D_domains/work_return_kenos launched 207ms
+PASS D_domains/money launched 237ms
+PASS D_domains/money_return_kenos launched 298ms
+PASS D_domains/library launched 235ms
+PASS D_domains/library_return_kenos launched 297ms
+PASS D_domains/music launched 224ms
+PASS D_domains/music_return_kenos launched 238ms
+PASS D_domains/home launched 226ms
+PASS D_domains/home_return_kenos launched 267ms
+PASS D_domains/health launched 210ms
+PASS D_domains/health_return_kenos launched 220ms
+PASS D_domains/paper partial_ok_not_fully_integrated 252ms
+PASS D_domains/paper_return_kenos launched 224ms
+PASS E_assistant_inbox/assistant_in_app in_app_webview_payload (Safari chrome = Owner visual) 266ms
+FAIL E_assistant_inbox/inbox device_unreachable 205ms
+PASS E_assistant_inbox/spaces launched 176ms
+PASS B_plan/flow_a_harness PASS ms
+PASS C_training/flow_b_harness PASS ms
+{
+  "verdict": "FAIL",
+  "summary": {
+    "attempts": 28,
+    "passed": 27,
+    "failed": 1,
+    "recovered": 0,
+    "latency": {
+      "count": 25,
+      "median": 238,
+      "p50": 238,
+      "p95": 515,
+      "min": 12,
+      "max": 795
+    },
+    "p0": 0,
+    "p1": "see_cases"
+  }
+}
+
+==> soak.mjs
+PASS CASE_1_normal_lan — core paths healthy
+PASS CASE_2_mac_sleep_proxy — services down; native launch may still open; no white-screen claim without screenshot
+PASS CASE_3_mac_wake_proxy — services restored after stop
+PASS CASE_4_restart_aios — single-domain restart must not brick shell
+PASS CASE_4_restart_planner — single-domain restart must not brick shell
+PASS CASE_4_restart_fitness — single-domain restart must not brick shell
+PASS CASE_5_wifi_proxy — classification-only; real Wi-Fi toggle needs Owner
+PASS CASE_6_lan_identity — P1 residual: origin uses LAN IP (not stable hostname); DHCP change risk
+PASS CASE_7_mac_reboot_proxy — true reboot OWNER_DOGFOOD; agents verify launchd boot path via ctl start
+PASS CASE_8_partial_fitness_down — other domains must stay up; Training unavailable honest
+{
+  "verdict": "PASS",
+  "summary": {
+    "total": 10,
+    "pass": 10,
+    "fail": 0,
+    "dataLossTotal": 0,
+    "ownerDogfoodOpen": [
+      "true_mac_sleep_wake",
+      "iphone_wifi_off_on",
+      "true_mac_reboot",
+      "visual_no_white_screen",
+      "visual_auth_not_cleared",
+      "visual_continue_retained"
+    ]
+  }
+}
+
+==> doctor.sh /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21
+==> kenos-ios-doctor 2026-07-21T17:18:05Z
+HEAD=71ad6d5f3aca78a1b7985e77061f13fac59afb10
+ios_build_sha=71ad6d5f3aca78a1b7985e77061f13fac59afb10
+ios_build_number=202607211716
+origin=http://10.20.202.15:5219
+--- device ---
+==> Kenos iOS Daily Beta doctor 2026-07-21T17:18:05Z
+device=8097F071-CAB6-5AF0-8258-BCD985E9D79E team=93NJ4CAU8B origin=http://10.20.202.15:5219
+device_line=Ken’s 17 Pro 🤏🏻  🌊 🌲          Kens-17-Pro-.coredevice.local           8097F071-CAB6-5AF0-8258-BCD985E9D79E   connected            iPhone 17 Pro (iPhone18,1)     
+[PASS] device online
+[PASS] LAN origin health http://10.20.202.15:5219
+[PASS] domain :5188
+[PASS] domain :5190
+1.0.0 202607211716 Kenos
+[PASS] app installed space.kenos.app.ios
+[PASS] local .app present
+["93NJ4CAU8B"]space.kenos.app.ios
+202607211716
+http://10.20.202.15:5219
+[PASS] launch
+TEAM=93NJ4CAU8B BUNDLE=space.kenos.app.ios ORIGIN_OK=1 DEVICE_OK=1 INSTALLED=1
+Doctor done 2026-07-21T17:18:06Z
+--- kenos-ctl ---
+=== kenos-doctor ===
+Kenos Personal Daily Beta
+  release: 71ad6d5f3aca 2026-07-21T17:15:56Z
+  aios: UP  http://127.0.0.1:5219
+  planner: UP  http://127.0.0.1:5188
+  fitness: UP  http://127.0.0.1:5190
+  finance: UP  http://127.0.0.1:5180
+  knowledge: UP  http://127.0.0.1:5879
+  music: UP  http://127.0.0.1:5189
+  home: UP  http://127.0.0.1:5196
+  health: UP  http://127.0.0.1:5192
+--- ports ---
+  :5219 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  66918 kenpan    3u  IPv4 0x4ba62da612b4c5cc      0t0  TCP *:5219 (LISTEN)
+  :5188 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  66923 kenpan    3u  IPv4 0x1e4bba02024b43f4      0t0  TCP *:5188 (LISTEN)
+  :5190 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  66928 kenpan    3u  IPv4 0xfbe94aa8e12bfabb      0t0  TCP *:5190 (LISTEN)
+  :5180 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  66943 kenpan    3u  IPv4 0xc4f8bd6353d491b7      0t0  TCP *:5180 (LISTEN)
+  :5879 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  66971 kenpan    3u  IPv4 0x1ce1bf9bb7090c45      0t0  TCP *:5879 (LISTEN)
+  :5189 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  66986 kenpan    3u  IPv4 0x4a1b065cf0519ec9      0t0  TCP *:5189 (LISTEN)
+  :5196 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  66998 kenpan    3u  IPv4 0x53b265c015b2573a      0t0  TCP *:5196 (LISTEN)
+  :5192 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  67010 kenpan    3u  IPv4 0xf829ef57bc366f72      0t0  TCP *:5192 (LISTEN)
+--- release identity ---
+  http://127.0.0.1:5219 → {"app": "aios", "environment": "local-daily-beta", "port": 5219, "root": "/Users/kenpan/.kenos-daily-beta/releases/71ad6d5f3aca/apps/aios/build", "server": "python-static", "sha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10", "shortSha": "71ad6d5f3aca", "builtAt": "2026-07-21T17:15:56Z", "origins": {"aios": "http://127.0.0.1:5219", "planner": "http://127.0.0.1:5188", "fitness": "http://127.0.0.1:5190"}}
+  http://127.0.0.1:5188 → {"app": "planner", "environment": "local-daily-beta", "port": 5188, "root": "/Users/kenpan/.kenos-daily-beta/releases/71ad6d5f3aca/apps/planner/build", "server": "python-static", "sha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10", "shortSha": "71ad6d5f3aca", "builtAt": "2026-07-21T17:15:56Z", "origins": {"aios": "http://127.0.0.1:5219", "planner": "http://127.0.0.1:5188", "fitness": "http://127.0.0.1:5190"}}
+  http://127.0.0.1:5190 → {"app": "fitness", "environment": "local-daily-beta", "port": 5190, "root": "/Users/kenpan/.kenos-daily-beta/releases/71ad6d5f3aca/apps/fitness/build", "server": "python-static", "sha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10", "shortSha": "71ad6d5f3aca", "builtAt": "2026-07-21T17:15:56Z", "origins": {"aios": "http://127.0.0.1:5219", "planner": "http://127.0.0.1:5188", "fitness": "http://127.0.0.1:5190"}}
+--- app identity (HTML data-app) ---
+  aios identity OK
+  planner identity OK
+  fitness identity OK
+--- Continuity companions ---
+  finance OK http://127.0.0.1:5180
+  knowledge OK http://127.0.0.1:5879
+  music OK http://127.0.0.1:5189
+  home OK http://127.0.0.1:5196
+  health OK http://127.0.0.1:5192
+--- auth bootstrap (public supabase reachability) ---
+  supabase reachability WARN (network)
+--- rollback target ---
+  previous release present → /Users/kenpan/.kenos-daily-beta/previous
+--- recent logs ---
+total 3928
+-rw-r--r--  1 kenpan  staff    4620 Jul 21 10:18 health.stderr.log
+-rw-r--r--  1 kenpan  staff   32571 Jul 21 10:18 home.stderr.log
+-rw-r--r--  1 kenpan  staff   58136 Jul 21 10:18 music.stderr.log
+-rw-r--r--  1 kenpan  staff    2794 Jul 21 10:18 knowledge.stderr.log
+-rw-r--r--  1 kenpan  staff  113690 Jul 21 10:18 finance.stderr.log
+DOCTOR: PASS
+--- rollback ---
+[PASS] previous release present
+/Users/kenpan/.kenos-daily-beta/releases/release-20260721T161441Z-f93b2bff5
+--- launchd ---
+		   66971      - 	com.kenpan.kenos-daily-beta.knowledge
+		   66943      - 	com.kenpan.kenos-daily-beta.finance
+		   66998      - 	com.kenpan.kenos-daily-beta.home
+		   66928      - 	com.kenpan.kenos-daily-beta.fitness
+		   66918      - 	com.kenpan.kenos-daily-beta.aios
+		   66923      - 	com.kenpan.kenos-daily-beta.planner
+		   67010      - 	com.kenpan.kenos-daily-beta.health
+		   66986      - 	com.kenpan.kenos-daily-beta.music
+		"com.kenpan.kenos-daily-beta.finance" => enabled
+		"com.kenpan.kenos-daily-beta.fitness" => enabled
+		"com.kenpan.kenos-daily-beta.knowledge" => enabled
+		"com.kenpan.kenos-daily-beta.aios" => enabled
+		"com.kenpan.kenos-daily-beta.music" => enabled
+		"com.kenpan.kenos-daily-beta.home" => enabled
+		"com.kenpan.kenos-daily-beta.health" => enabled
+		"com.kenpan.kenos-daily-beta.planner" => enabled
+Doctor done 2026-07-21T17:18:05Z
+{
+  "verdict": "PASS",
+  "iosBuildNumber": "202607211716",
+  "rollback": true
+}
+<stdin>:4: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+
+==> log-export.mjs
+{
+  "exported": 36
+}
+
+# IOS_STABILITY_ACCEPTANCE
+
+## Verdict
+
+```text
+IOS DAILY BETA STABILIZATION: NOT_PASSED_SMOKE
+HEAD: 71ad6d5f3aca78a1b7985e77061f13fac59afb10
+BUILD: 202607211716 / 71ad6d5f3aca
+REAL DEVICE: iPhone 17 Pro
+OBSERVATION DURATION: 164922 ms (automated window)
+AUTOMATED RUNS: 1 closure (+ loop cases inside)
+OWNER DOGFOOD DAYS: 0
+
+COLD LAUNCH: HOLD
+AUTH PERSISTENCE: PRIOR/OWNER
+PLAN FLOW A: SEE_FLOW_HARNESS
+TRAINING FLOW B: SEE_FLOW_HARNESS
+ALL-DOMAIN SMOKE: HOLD
+CONTINUE: LAUNCH_PASS
+SPACE SHELF: OWNER
+QUICK SWITCH: OWNER
+WKWEBVIEW: LAUNCH_PASS
+ACCOUNT ISOLATION: PRIOR/OWNER
+MAC SLEEP/WAKE: PROXY_PASS / TRUE_SLEEP_OWNER_OPEN
+SERVICE RESTART: PASS
+WIFI RECOVERY: OWNER_OPEN
+DEGRADED MODE: PROXY_PASS
+ROLLBACK: TARGET_PRESENT
+DOCTOR: PASS
+DATA LOSS: 0
+ISOLATION LEAK: 0
+CRASHES: 0
+P0: 0
+P1: 1
+
+IOS PERSONAL DAILY BETA: READY_LAN_DEPENDENT
+PHASE 4: EXIT_OPEN
+LEGACY FALLBACK: RETAINED
+PUSH / DEPLOY / PRODUCTION MIGRATION: NOT PERFORMED
+```
+
+## Open gates
+
+- OWNER_3_DAY_DOGFOOD
+- PHASE_4_EXIT_OPEN
+- TRUE_MAC_SLEEP_WAKE
+- IPHONE_WIFI_TOGGLE
+- APNS_TESTFLIGHT_DISTRIBUTION
+- PAPER_PARTIAL
+
+## Steps
+
+- kenos_ctl_build: exit 0
+- kenos_ctl_restart: exit 0
+- device_build_install: exit 0
+- preflight.mjs: exit 0
+- smoke.mjs: exit 1
+- soak.mjs: exit 0
+- doctor.sh: exit 0
+- log-export.mjs: exit 0
+- flow_ab: exit 0
+

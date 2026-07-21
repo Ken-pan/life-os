@@ -1,0 +1,188 @@
+{"ts":"2026-07-21T17:15:56.426Z","type":"closure_start","head":""}
+{"ts":"2026-07-21T17:16:20.380Z","type":"preflight_check","name":"17_pro_connected","ok":true,"class":"device","reason":"online"}
+{"ts":"2026-07-21T17:16:20.508Z","type":"preflight_check","name":"app_installed","ok":true,"class":"product","reason":"installed"}
+{"ts":"2026-07-21T17:16:20.520Z","type":"preflight_check","name":"lan_origin_reachable","ok":true,"class":"service","reason":"health_200"}
+{"ts":"2026-07-21T17:16:20.534Z","type":"preflight_check","name":"service_aios","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:16:20.547Z","type":"preflight_check","name":"service_planner","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:16:20.558Z","type":"preflight_check","name":"service_fitness","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:16:20.571Z","type":"preflight_check","name":"service_finance","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:16:20.585Z","type":"preflight_check","name":"service_knowledge","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:16:20.598Z","type":"preflight_check","name":"service_music","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:16:20.611Z","type":"preflight_check","name":"service_home","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:16:20.624Z","type":"preflight_check","name":"service_health","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:16:20.624Z","type":"preflight_check","name":"build_sha_recorded","ok":true,"class":"product","reason":"ios=71ad6d5f3 release=71ad6d5f3"}
+{"ts":"2026-07-21T17:16:20.624Z","type":"preflight_check","name":"head_vs_installed_drift","ok":true,"class":"product","reason":"aligned"}
+{"ts":"2026-07-21T17:16:20.907Z","type":"preflight_check","name":"app_launchable","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-21T17:16:20.907Z","type":"preflight_check","name":"wkwebview_payload","ok":true,"class":"product","reason":"payload_launch_accepted"}
+{"ts":"2026-07-21T17:16:20.907Z","type":"preflight_check","name":"auth_bootstrap_surface","ok":true,"class":"product","reason":"deferred_to_smoke_flow_a (no token in preflight)"}
+{"ts":"2026-07-21T17:16:20.907Z","type":"preflight_check","name":"continue_store_readable","ok":true,"class":"product","reason":"native_store_assumed; verified in continuity soak"}
+{"ts":"2026-07-21T17:16:20.907Z","type":"preflight_check","name":"app_log_path","ok":true,"class":"product","reason":"kenos_app_logs schema exists; export in log-export"}
+{"ts":"2026-07-21T17:16:20.907Z","type":"preflight_check","name":"legacy_fallback_available","ok":true,"class":"product","reason":"production_fallback_retained_in_settings"}
+{"ts":"2026-07-21T17:16:20.908Z","type":"preflight_check","name":"rollback_target","ok":true,"class":"service","reason":"previous_release_present"}
+{"ts":"2026-07-21T17:16:20.908Z","type":"preflight_end","verdict":"PASS"}
+{"ts":"2026-07-21T17:16:34.191Z","type":"smoke_case","loop":"A_cold_launch","name":"home_screen_relaunch","ok":true,"reason":"launched","ms":795}
+{"ts":"2026-07-21T17:16:36.487Z","type":"smoke_case","loop":"A_cold_launch","name":"second_cold","ok":true,"reason":"launched","ms":291}
+{"ts":"2026-07-21T17:16:36.487Z","type":"smoke_case","loop":"A_cold_launch","name":"no_external_safari_claim","ok":true,"reason":"launch_stays_in_bundle (Safari escape requires visual Owner confirm)","ms":null}
+{"ts":"2026-07-21T17:16:36.509Z","type":"smoke_case","loop":"B_plan","name":"planner_service","ok":true,"reason":null,"ms":12}
+{"ts":"2026-07-21T17:16:37.024Z","type":"smoke_case","loop":"B_plan","name":"continue_plan_launch","ok":true,"reason":"launched","ms":515}
+{"ts":"2026-07-21T17:16:38.833Z","type":"smoke_case","loop":"B_plan","name":"return_kenos","ok":true,"reason":"launched","ms":303}
+{"ts":"2026-07-21T17:16:38.851Z","type":"smoke_case","loop":"C_training","name":"fitness_service","ok":true,"reason":null,"ms":12}
+{"ts":"2026-07-21T17:16:39.321Z","type":"smoke_case","loop":"C_training","name":"continue_training_launch","ok":true,"reason":"launched","ms":470}
+{"ts":"2026-07-21T17:16:41.123Z","type":"smoke_case","loop":"C_training","name":"return_kenos","ok":true,"reason":"launched","ms":297}
+{"ts":"2026-07-21T17:16:41.633Z","type":"smoke_case","loop":"D_domains","name":"work","ok":true,"reason":"launched","ms":509}
+{"ts":"2026-07-21T17:16:42.645Z","type":"smoke_case","loop":"D_domains","name":"work_return_kenos","ok":true,"reason":"launched","ms":207}
+{"ts":"2026-07-21T17:16:43.486Z","type":"smoke_case","loop":"D_domains","name":"money","ok":true,"reason":"launched","ms":237}
+{"ts":"2026-07-21T17:16:44.586Z","type":"smoke_case","loop":"D_domains","name":"money_return_kenos","ok":true,"reason":"launched","ms":298}
+{"ts":"2026-07-21T17:16:45.426Z","type":"smoke_case","loop":"D_domains","name":"library","ok":true,"reason":"launched","ms":235}
+{"ts":"2026-07-21T17:16:46.524Z","type":"smoke_case","loop":"D_domains","name":"library_return_kenos","ok":true,"reason":"launched","ms":297}
+{"ts":"2026-07-21T17:16:47.353Z","type":"smoke_case","loop":"D_domains","name":"music","ok":true,"reason":"launched","ms":224}
+{"ts":"2026-07-21T17:16:48.392Z","type":"smoke_case","loop":"D_domains","name":"music_return_kenos","ok":true,"reason":"launched","ms":238}
+{"ts":"2026-07-21T17:16:49.223Z","type":"smoke_case","loop":"D_domains","name":"home","ok":true,"reason":"launched","ms":226}
+{"ts":"2026-07-21T17:16:50.290Z","type":"smoke_case","loop":"D_domains","name":"home_return_kenos","ok":true,"reason":"launched","ms":267}
+{"ts":"2026-07-21T17:16:51.104Z","type":"smoke_case","loop":"D_domains","name":"health","ok":true,"reason":"launched","ms":210}
+{"ts":"2026-07-21T17:16:52.127Z","type":"smoke_case","loop":"D_domains","name":"health_return_kenos","ok":true,"reason":"launched","ms":220}
+{"ts":"2026-07-21T17:16:52.981Z","type":"smoke_case","loop":"D_domains","name":"paper","ok":true,"reason":"partial_ok_not_fully_integrated","ms":252}
+{"ts":"2026-07-21T17:16:54.007Z","type":"smoke_case","loop":"D_domains","name":"paper_return_kenos","ok":true,"reason":"launched","ms":224}
+{"ts":"2026-07-21T17:16:54.878Z","type":"smoke_case","loop":"E_assistant_inbox","name":"assistant_in_app","ok":true,"reason":"in_app_webview_payload (Safari chrome = Owner visual)","ms":266}
+{"ts":"2026-07-21T17:16:56.083Z","type":"smoke_case","loop":"E_assistant_inbox","name":"inbox","ok":false,"reason":"device_unreachable","ms":205}
+{"ts":"2026-07-21T17:16:57.061Z","type":"smoke_case","loop":"E_assistant_inbox","name":"spaces","ok":true,"reason":"launched","ms":176}
+{"ts":"2026-07-21T17:17:29.826Z","type":"smoke_case","loop":"B_plan","name":"flow_a_harness","ok":true,"reason":"PASS","ms":null}
+{"ts":"2026-07-21T17:17:29.827Z","type":"smoke_case","loop":"C_training","name":"flow_b_harness","ok":true,"reason":"PASS","ms":null}
+{"ts":"2026-07-21T17:17:29.829Z","type":"smoke_end","verdict":"FAIL","attempts":28,"passed":27,"failed":1,"recovered":0,"latency":{"count":25,"median":238,"p50":238,"p95":515,"min":12,"max":795},"p0":0,"p1":"see_cases"}
+{"ts":"2026-07-21T17:17:36.433Z","type":"soak_case","id":"CASE_1_normal_lan","result":"PASS","dataLoss":0,"authEffect":"none_observed"}
+{"ts":"2026-07-21T17:17:38.415Z","type":"soak_case","id":"CASE_2_mac_sleep_proxy","result":"PASS","dataLoss":0,"authEffect":"must_not_logout (Owner visual)"}
+{"ts":"2026-07-21T17:17:39.584Z","type":"soak_case","id":"CASE_3_mac_wake_proxy","result":"PASS","dataLoss":0,"authEffect":"must_not_require_relogin (Owner visual)"}
+{"ts":"2026-07-21T17:17:52.559Z","type":"soak_case","id":"CASE_4_restart_aios","result":"PASS","dataLoss":0,"authEffect":"none_expected"}
+{"ts":"2026-07-21T17:17:55.213Z","type":"soak_case","id":"CASE_4_restart_planner","result":"PASS","dataLoss":0,"authEffect":"none_expected"}
+{"ts":"2026-07-21T17:17:57.871Z","type":"soak_case","id":"CASE_4_restart_fitness","result":"PASS","dataLoss":0,"authEffect":"none_expected"}
+{"ts":"2026-07-21T17:17:57.957Z","type":"soak_case","id":"CASE_5_wifi_proxy","result":"PASS","dataLoss":0,"authEffect":"must_not_misclassify_as_logout"}
+{"ts":"2026-07-21T17:17:57.957Z","type":"soak_case","id":"CASE_6_lan_identity","result":"PASS","dataLoss":0,"authEffect":"n/a"}
+{"ts":"2026-07-21T17:17:59.999Z","type":"soak_case","id":"CASE_7_mac_reboot_proxy","result":"PASS","dataLoss":0,"authEffect":"none"}
+{"ts":"2026-07-21T17:18:05.739Z","type":"soak_case","id":"CASE_8_partial_fitness_down","result":"PASS","dataLoss":0,"authEffect":"none"}
+{"ts":"2026-07-21T17:18:05.745Z","type":"soak_end","verdict":"PASS","total":10,"pass":10,"fail":0,"dataLossTotal":0,"ownerDogfoodOpen":["true_mac_sleep_wake","iphone_wifi_off_on","true_mac_reboot","visual_no_white_screen","visual_auth_not_cleared","visual_continue_retained"]}
+{"ts":"2026-07-21T17:18:08.059Z","type":"log_export","files":36}
+{"ts":"2026-07-21T17:18:40.768Z","type":"closure_end","verdict":"NOT_PASSED_SMOKE","head":""}
+{"ts":"2026-07-21T17:19:01.570Z","type":"closure_start","head":""}
+{"ts":"2026-07-21T17:19:01.703Z","type":"preflight_check","name":"17_pro_connected","ok":true,"class":"device","reason":"online"}
+{"ts":"2026-07-21T17:19:01.856Z","type":"preflight_check","name":"app_installed","ok":true,"class":"product","reason":"installed"}
+{"ts":"2026-07-21T17:19:01.868Z","type":"preflight_check","name":"lan_origin_reachable","ok":true,"class":"service","reason":"health_200"}
+{"ts":"2026-07-21T17:19:01.880Z","type":"preflight_check","name":"service_aios","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:19:01.893Z","type":"preflight_check","name":"service_planner","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:19:01.906Z","type":"preflight_check","name":"service_fitness","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:19:01.918Z","type":"preflight_check","name":"service_finance","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:19:01.932Z","type":"preflight_check","name":"service_knowledge","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:19:01.944Z","type":"preflight_check","name":"service_music","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:19:01.957Z","type":"preflight_check","name":"service_home","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:19:01.970Z","type":"preflight_check","name":"service_health","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:19:01.970Z","type":"preflight_check","name":"build_sha_recorded","ok":true,"class":"product","reason":"ios=71ad6d5f3 release=71ad6d5f3"}
+{"ts":"2026-07-21T17:19:01.970Z","type":"preflight_check","name":"head_vs_installed_drift","ok":true,"class":"product","reason":"aligned"}
+{"ts":"2026-07-21T17:19:02.230Z","type":"preflight_check","name":"app_launchable","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-21T17:19:02.230Z","type":"preflight_check","name":"wkwebview_payload","ok":true,"class":"product","reason":"payload_launch_accepted"}
+{"ts":"2026-07-21T17:19:02.230Z","type":"preflight_check","name":"auth_bootstrap_surface","ok":true,"class":"product","reason":"deferred_to_smoke_flow_a (no token in preflight)"}
+{"ts":"2026-07-21T17:19:02.230Z","type":"preflight_check","name":"continue_store_readable","ok":true,"class":"product","reason":"native_store_assumed; verified in continuity soak"}
+{"ts":"2026-07-21T17:19:02.230Z","type":"preflight_check","name":"app_log_path","ok":true,"class":"product","reason":"kenos_app_logs schema exists; export in log-export"}
+{"ts":"2026-07-21T17:19:02.230Z","type":"preflight_check","name":"legacy_fallback_available","ok":true,"class":"product","reason":"production_fallback_retained_in_settings"}
+{"ts":"2026-07-21T17:19:02.230Z","type":"preflight_check","name":"rollback_target","ok":true,"class":"service","reason":"previous_release_present"}
+{"ts":"2026-07-21T17:19:02.231Z","type":"preflight_end","verdict":"PASS"}
+{"ts":"2026-07-21T17:19:15.401Z","type":"smoke_case","loop":"A_cold_launch","name":"home_screen_relaunch","ok":true,"reason":"launched","ms":681}
+{"ts":"2026-07-21T17:19:17.678Z","type":"smoke_case","loop":"A_cold_launch","name":"second_cold","ok":true,"reason":"launched","ms":267}
+{"ts":"2026-07-21T17:19:17.678Z","type":"smoke_case","loop":"A_cold_launch","name":"no_external_safari_claim","ok":true,"reason":"launch_stays_in_bundle (Safari escape requires visual Owner confirm)","ms":null}
+{"ts":"2026-07-21T17:19:17.694Z","type":"smoke_case","loop":"B_plan","name":"planner_service","ok":true,"reason":null,"ms":10}
+{"ts":"2026-07-21T17:19:18.187Z","type":"smoke_case","loop":"B_plan","name":"continue_plan_launch","ok":true,"reason":"launched","ms":493}
+{"ts":"2026-07-21T17:19:19.972Z","type":"smoke_case","loop":"B_plan","name":"return_kenos","ok":true,"reason":"launched","ms":279}
+{"ts":"2026-07-21T17:19:19.986Z","type":"smoke_case","loop":"C_training","name":"fitness_service","ok":true,"reason":null,"ms":11}
+{"ts":"2026-07-21T17:19:20.483Z","type":"smoke_case","loop":"C_training","name":"continue_training_launch","ok":true,"reason":"launched","ms":496}
+{"ts":"2026-07-21T17:19:22.264Z","type":"smoke_case","loop":"C_training","name":"return_kenos","ok":true,"reason":"launched","ms":274}
+{"ts":"2026-07-21T17:19:22.799Z","type":"smoke_case","loop":"D_domains","name":"work","ok":true,"reason":"launched","ms":535}
+{"ts":"2026-07-21T17:19:23.844Z","type":"smoke_case","loop":"D_domains","name":"work_return_kenos","ok":true,"reason":"launched","ms":241}
+{"ts":"2026-07-21T17:19:24.665Z","type":"smoke_case","loop":"D_domains","name":"money","ok":true,"reason":"launched","ms":211}
+{"ts":"2026-07-21T17:19:25.696Z","type":"smoke_case","loop":"D_domains","name":"money_return_kenos","ok":true,"reason":"launched","ms":230}
+{"ts":"2026-07-21T17:19:26.549Z","type":"smoke_case","loop":"D_domains","name":"library","ok":true,"reason":"launched","ms":243}
+{"ts":"2026-07-21T17:19:27.570Z","type":"smoke_case","loop":"D_domains","name":"library_return_kenos","ok":true,"reason":"launched","ms":221}
+{"ts":"2026-07-21T17:19:28.432Z","type":"smoke_case","loop":"D_domains","name":"music","ok":true,"reason":"launched","ms":260}
+{"ts":"2026-07-21T17:19:29.472Z","type":"smoke_case","loop":"D_domains","name":"music_return_kenos","ok":true,"reason":"launched","ms":232}
+{"ts":"2026-07-21T17:19:30.304Z","type":"smoke_case","loop":"D_domains","name":"home","ok":true,"reason":"launched","ms":221}
+{"ts":"2026-07-21T17:19:31.299Z","type":"smoke_case","loop":"D_domains","name":"home_return_kenos","ok":true,"reason":"launched","ms":192}
+{"ts":"2026-07-21T17:19:32.142Z","type":"smoke_case","loop":"D_domains","name":"health","ok":true,"reason":"launched","ms":233}
+{"ts":"2026-07-21T17:19:33.155Z","type":"smoke_case","loop":"D_domains","name":"health_return_kenos","ok":true,"reason":"launched","ms":204}
+{"ts":"2026-07-21T17:19:34.005Z","type":"smoke_case","loop":"D_domains","name":"paper","ok":true,"reason":"partial_ok_not_fully_integrated","ms":240}
+{"ts":"2026-07-21T17:19:35.019Z","type":"smoke_case","loop":"D_domains","name":"paper_return_kenos","ok":true,"reason":"launched","ms":207}
+{"ts":"2026-07-21T17:19:37.400Z","type":"smoke_case","loop":"E_assistant_inbox","name":"assistant_in_app","ok":true,"reason":"in_app_webview_payload (Safari chrome = Owner visual)","ms":266}
+{"ts":"2026-07-21T17:19:39.676Z","type":"smoke_case","loop":"E_assistant_inbox","name":"inbox","ok":true,"reason":"launched","ms":270}
+{"ts":"2026-07-21T17:19:41.415Z","type":"smoke_case","loop":"E_assistant_inbox","name":"spaces","ok":true,"reason":"launched","ms":230}
+{"ts":"2026-07-21T17:19:41.416Z","type":"smoke_end","verdict":"PASS","attempts":26,"passed":26,"failed":0,"recovered":0,"latency":{"count":25,"median":240,"p50":240,"p95":535,"min":10,"max":681},"p0":0,"p1":0}
+{"ts":"2026-07-21T17:19:48.078Z","type":"soak_case","id":"CASE_1_normal_lan","result":"PASS","dataLoss":0,"authEffect":"none_observed"}
+{"ts":"2026-07-21T17:19:49.994Z","type":"soak_case","id":"CASE_2_mac_sleep_proxy","result":"PASS","dataLoss":0,"authEffect":"must_not_logout (Owner visual)"}
+{"ts":"2026-07-21T17:19:51.163Z","type":"soak_case","id":"CASE_3_mac_wake_proxy","result":"PASS","dataLoss":0,"authEffect":"must_not_require_relogin (Owner visual)"}
+{"ts":"2026-07-21T17:20:04.193Z","type":"soak_case","id":"CASE_4_restart_aios","result":"PASS","dataLoss":0,"authEffect":"none_expected"}
+{"ts":"2026-07-21T17:20:06.807Z","type":"soak_case","id":"CASE_4_restart_planner","result":"PASS","dataLoss":0,"authEffect":"none_expected"}
+{"ts":"2026-07-21T17:20:09.426Z","type":"soak_case","id":"CASE_4_restart_fitness","result":"PASS","dataLoss":0,"authEffect":"none_expected"}
+{"ts":"2026-07-21T17:20:09.514Z","type":"soak_case","id":"CASE_5_wifi_proxy","result":"PASS","dataLoss":0,"authEffect":"must_not_misclassify_as_logout"}
+{"ts":"2026-07-21T17:20:09.515Z","type":"soak_case","id":"CASE_6_lan_identity","result":"PASS","dataLoss":0,"authEffect":"n/a"}
+{"ts":"2026-07-21T17:20:11.577Z","type":"soak_case","id":"CASE_7_mac_reboot_proxy","result":"PASS","dataLoss":0,"authEffect":"none"}
+{"ts":"2026-07-21T17:20:17.391Z","type":"soak_case","id":"CASE_8_partial_fitness_down","result":"PASS","dataLoss":0,"authEffect":"none"}
+{"ts":"2026-07-21T17:20:17.397Z","type":"soak_end","verdict":"PASS","total":10,"pass":10,"fail":0,"dataLossTotal":0,"ownerDogfoodOpen":["true_mac_sleep_wake","iphone_wifi_off_on","true_mac_reboot","visual_no_white_screen","visual_auth_not_cleared","visual_continue_retained"]}
+{"ts":"2026-07-21T17:20:19.609Z","type":"log_export","files":36}
+{"ts":"2026-07-21T17:20:19.795Z","type":"closure_end","verdict":"AUTOMATED_STABILITY_PASSED","head":""}
+{"ts":"2026-07-21T17:25:21.121Z","type":"closure_start","head":""}
+{"ts":"2026-07-21T17:25:21.256Z","type":"preflight_check","name":"17_pro_connected","ok":true,"class":"device","reason":"online"}
+{"ts":"2026-07-21T17:25:21.411Z","type":"preflight_check","name":"app_installed","ok":true,"class":"product","reason":"installed"}
+{"ts":"2026-07-21T17:25:21.424Z","type":"preflight_check","name":"lan_origin_reachable","ok":true,"class":"service","reason":"health_200"}
+{"ts":"2026-07-21T17:25:21.437Z","type":"preflight_check","name":"service_aios","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:25:21.450Z","type":"preflight_check","name":"service_planner","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:25:21.462Z","type":"preflight_check","name":"service_fitness","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:25:21.475Z","type":"preflight_check","name":"service_finance","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:25:21.489Z","type":"preflight_check","name":"service_knowledge","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:25:21.502Z","type":"preflight_check","name":"service_music","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:25:21.514Z","type":"preflight_check","name":"service_home","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:25:21.527Z","type":"preflight_check","name":"service_health","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:25:21.527Z","type":"preflight_check","name":"build_sha_recorded","ok":true,"class":"product","reason":"ios=71ad6d5f3 release=71ad6d5f3"}
+{"ts":"2026-07-21T17:25:21.527Z","type":"preflight_check","name":"head_vs_installed_drift","ok":true,"class":"product","reason":"aligned"}
+{"ts":"2026-07-21T17:25:21.836Z","type":"preflight_check","name":"app_launchable","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-21T17:25:21.836Z","type":"preflight_check","name":"wkwebview_payload","ok":true,"class":"product","reason":"payload_launch_accepted"}
+{"ts":"2026-07-21T17:25:21.836Z","type":"preflight_check","name":"auth_bootstrap_surface","ok":true,"class":"product","reason":"deferred_to_smoke_flow_a (no token in preflight)"}
+{"ts":"2026-07-21T17:25:21.836Z","type":"preflight_check","name":"continue_store_readable","ok":true,"class":"product","reason":"native_store_assumed; verified in continuity soak"}
+{"ts":"2026-07-21T17:25:21.836Z","type":"preflight_check","name":"app_log_path","ok":true,"class":"product","reason":"kenos_app_logs schema exists; export in log-export"}
+{"ts":"2026-07-21T17:25:21.836Z","type":"preflight_check","name":"legacy_fallback_available","ok":true,"class":"product","reason":"production_fallback_retained_in_settings"}
+{"ts":"2026-07-21T17:25:21.836Z","type":"preflight_check","name":"rollback_target","ok":true,"class":"service","reason":"previous_release_present"}
+{"ts":"2026-07-21T17:25:21.837Z","type":"preflight_end","verdict":"PASS"}
+{"ts":"2026-07-21T17:25:34.960Z","type":"smoke_case","loop":"A_cold_launch","name":"home_screen_relaunch","ok":true,"reason":"launched","ms":676}
+{"ts":"2026-07-21T17:25:37.222Z","type":"smoke_case","loop":"A_cold_launch","name":"second_cold","ok":true,"reason":"launched","ms":261}
+{"ts":"2026-07-21T17:25:37.222Z","type":"smoke_case","loop":"A_cold_launch","name":"no_external_safari_claim","ok":true,"reason":"launch_stays_in_bundle (Safari escape requires visual Owner confirm)","ms":null}
+{"ts":"2026-07-21T17:25:37.239Z","type":"smoke_case","loop":"B_plan","name":"planner_service","ok":true,"reason":null,"ms":11}
+{"ts":"2026-07-21T17:25:37.703Z","type":"smoke_case","loop":"B_plan","name":"continue_plan_launch","ok":true,"reason":"launched","ms":464}
+{"ts":"2026-07-21T17:25:39.493Z","type":"smoke_case","loop":"B_plan","name":"return_kenos","ok":true,"reason":"launched","ms":282}
+{"ts":"2026-07-21T17:25:39.508Z","type":"smoke_case","loop":"C_training","name":"fitness_service","ok":true,"reason":null,"ms":11}
+{"ts":"2026-07-21T17:25:39.975Z","type":"smoke_case","loop":"C_training","name":"continue_training_launch","ok":true,"reason":"launched","ms":466}
+{"ts":"2026-07-21T17:25:41.749Z","type":"smoke_case","loop":"C_training","name":"return_kenos","ok":true,"reason":"launched","ms":266}
+{"ts":"2026-07-21T17:25:42.268Z","type":"smoke_case","loop":"D_domains","name":"work","ok":true,"reason":"launched","ms":517}
+{"ts":"2026-07-21T17:25:43.309Z","type":"smoke_case","loop":"D_domains","name":"work_return_kenos","ok":true,"reason":"launched","ms":231}
+{"ts":"2026-07-21T17:25:44.166Z","type":"smoke_case","loop":"D_domains","name":"money","ok":true,"reason":"launched","ms":254}
+{"ts":"2026-07-21T17:25:45.188Z","type":"smoke_case","loop":"D_domains","name":"money_return_kenos","ok":true,"reason":"launched","ms":212}
+{"ts":"2026-07-21T17:25:46.015Z","type":"smoke_case","loop":"D_domains","name":"library","ok":true,"reason":"launched","ms":216}
+{"ts":"2026-07-21T17:25:47.022Z","type":"smoke_case","loop":"D_domains","name":"library_return_kenos","ok":true,"reason":"launched","ms":204}
+{"ts":"2026-07-21T17:25:47.847Z","type":"smoke_case","loop":"D_domains","name":"music","ok":true,"reason":"launched","ms":214}
+{"ts":"2026-07-21T17:25:48.869Z","type":"smoke_case","loop":"D_domains","name":"music_return_kenos","ok":true,"reason":"launched","ms":220}
+{"ts":"2026-07-21T17:25:49.705Z","type":"smoke_case","loop":"D_domains","name":"home","ok":true,"reason":"launched","ms":226}
+{"ts":"2026-07-21T17:25:50.797Z","type":"smoke_case","loop":"D_domains","name":"home_return_kenos","ok":true,"reason":"launched","ms":289}
+{"ts":"2026-07-21T17:25:51.633Z","type":"smoke_case","loop":"D_domains","name":"health","ok":true,"reason":"launched","ms":232}
+{"ts":"2026-07-21T17:25:52.688Z","type":"smoke_case","loop":"D_domains","name":"health_return_kenos","ok":true,"reason":"launched","ms":245}
+{"ts":"2026-07-21T17:25:53.516Z","type":"smoke_case","loop":"D_domains","name":"paper","ok":true,"reason":"partial_ok_not_fully_integrated","ms":223}
+{"ts":"2026-07-21T17:25:54.580Z","type":"smoke_case","loop":"D_domains","name":"paper_return_kenos","ok":true,"reason":"launched","ms":260}
+{"ts":"2026-07-21T17:25:56.921Z","type":"smoke_case","loop":"E_assistant_inbox","name":"assistant_in_app","ok":true,"reason":"in_app_webview_payload (Safari chrome = Owner visual)","ms":233}
+{"ts":"2026-07-21T17:25:59.211Z","type":"smoke_case","loop":"E_assistant_inbox","name":"inbox","ok":true,"reason":"launched","ms":289}
+{"ts":"2026-07-21T17:26:01.021Z","type":"smoke_case","loop":"E_assistant_inbox","name":"spaces","ok":true,"reason":"launched","ms":308}
+{"ts":"2026-07-21T17:26:01.021Z","type":"smoke_end","verdict":"PASS","attempts":26,"passed":26,"failed":0,"recovered":0,"latency":{"count":25,"median":245,"p50":245,"p95":517,"min":11,"max":676},"p0":0,"p1":0}
+{"ts":"2026-07-21T17:26:07.641Z","type":"soak_case","id":"CASE_1_normal_lan","result":"PASS","dataLoss":0,"authEffect":"none_observed"}
+{"ts":"2026-07-21T17:26:09.570Z","type":"soak_case","id":"CASE_2_mac_sleep_proxy","result":"PASS","dataLoss":0,"authEffect":"must_not_logout (Owner visual)"}
+{"ts":"2026-07-21T17:26:10.812Z","type":"soak_case","id":"CASE_3_mac_wake_proxy","result":"PASS","dataLoss":0,"authEffect":"must_not_require_relogin (Owner visual)"}
+{"ts":"2026-07-21T17:26:24.275Z","type":"soak_case","id":"CASE_4_restart_aios","result":"PASS","dataLoss":0,"authEffect":"none_expected"}
+{"ts":"2026-07-21T17:26:26.859Z","type":"soak_case","id":"CASE_4_restart_planner","result":"PASS","dataLoss":0,"authEffect":"none_expected"}
+{"ts":"2026-07-21T17:26:29.451Z","type":"soak_case","id":"CASE_4_restart_fitness","result":"PASS","dataLoss":0,"authEffect":"none_expected"}
+{"ts":"2026-07-21T17:26:29.534Z","type":"soak_case","id":"CASE_5_wifi_proxy","result":"PASS","dataLoss":0,"authEffect":"must_not_misclassify_as_logout"}
+{"ts":"2026-07-21T17:26:29.534Z","type":"soak_case","id":"CASE_6_lan_identity","result":"PASS","dataLoss":0,"authEffect":"n/a"}
+{"ts":"2026-07-21T17:26:31.601Z","type":"soak_case","id":"CASE_7_mac_reboot_proxy","result":"PASS","dataLoss":0,"authEffect":"none"}
+{"ts":"2026-07-21T17:26:37.349Z","type":"soak_case","id":"CASE_8_partial_fitness_down","result":"PASS","dataLoss":0,"authEffect":"none"}
+{"ts":"2026-07-21T17:26:37.354Z","type":"soak_end","verdict":"PASS","total":10,"pass":10,"fail":0,"dataLossTotal":0,"ownerDogfoodOpen":["true_mac_sleep_wake","iphone_wifi_off_on","true_mac_reboot","visual_no_white_screen","visual_auth_not_cleared","visual_continue_retained"]}
+{"ts":"2026-07-21T17:26:39.620Z","type":"log_export","files":36}
+{"ts":"2026-07-21T17:26:39.801Z","type":"closure_end","verdict":"AUTOMATED_STABILITY_PASSED","head":""}

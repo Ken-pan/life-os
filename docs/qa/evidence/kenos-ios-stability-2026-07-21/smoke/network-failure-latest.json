@@ -1,0 +1,249 @@
+{
+  "kind": "AUTOMATED",
+  "runId": "soak-2026-07-21T17-26-01-078Z",
+  "ts": "2026-07-21T17:26:37.349Z",
+  "head": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+  "build": {
+    "iosBuildSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "iosBuildNumber": "202607211716",
+    "releaseSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "releaseShort": "71ad6d5f3"
+  },
+  "cases": [
+    {
+      "id": "CASE_1_normal_lan",
+      "ts": "2026-07-21T17:26:07.641Z",
+      "start": "2026-07-21T17:26:07.306Z",
+      "failureInjected": "none",
+      "uiReactionMs": 253,
+      "recoveryMs": 0,
+      "dataLoss": 0,
+      "authEffect": "none_observed",
+      "continueEffect": "unchanged_assumed",
+      "result": "PASS",
+      "note": "core paths healthy",
+      "health": {
+        "aios": true,
+        "planner": true,
+        "fitness": true,
+        "finance": true,
+        "knowledge": true,
+        "music": true,
+        "home": true,
+        "health": true
+      },
+      "logs": "see dogfood-events.jsonl"
+    },
+    {
+      "id": "CASE_2_mac_sleep_proxy",
+      "ts": "2026-07-21T17:26:09.570Z",
+      "start": "2026-07-21T17:26:07.642Z",
+      "failureInjected": "kenos_ctl_stop_all (Mac sleep phone-visible proxy)",
+      "uiReactionMs": 1928,
+      "recoveryMs": null,
+      "dataLoss": 0,
+      "authEffect": "must_not_logout (Owner visual)",
+      "continueEffect": "must_retain (Owner visual)",
+      "result": "PASS",
+      "note": "services down; native launch may still open; no white-screen claim without screenshot",
+      "health": {
+        "aios": false,
+        "planner": false,
+        "fitness": false,
+        "finance": false,
+        "knowledge": false,
+        "music": false,
+        "home": false,
+        "health": false
+      },
+      "launchDuring": {
+        "ok": true,
+        "reason": "launched",
+        "class": "product"
+      },
+      "ownerDogfoodRequired": [
+        "true_mac_sleep",
+        "no_white_screen",
+        "no_auth_clear",
+        "no_continue_wipe"
+      ]
+    },
+    {
+      "id": "CASE_3_mac_wake_proxy",
+      "ts": "2026-07-21T17:26:10.812Z",
+      "start": "2026-07-21T17:26:09.570Z",
+      "failureInjected": "none (wake/start)",
+      "uiReactionMs": 232,
+      "recoveryMs": 74,
+      "dataLoss": 0,
+      "authEffect": "must_not_require_relogin (Owner visual)",
+      "continueEffect": "must_restore",
+      "result": "PASS",
+      "note": "services restored after stop",
+      "health": {
+        "aios": true,
+        "planner": true,
+        "fitness": true,
+        "finance": true,
+        "knowledge": true,
+        "music": true,
+        "home": true,
+        "health": true
+      }
+    },
+    {
+      "id": "CASE_4_restart_aios",
+      "ts": "2026-07-21T17:26:24.275Z",
+      "start": "2026-07-21T17:26:10.812Z",
+      "failureInjected": "launchctl kickstart -k com.kenpan.kenos-daily-beta.aios",
+      "uiReactionMs": 1148,
+      "recoveryMs": 79,
+      "dataLoss": 0,
+      "authEffect": "none_expected",
+      "continueEffect": "retain",
+      "result": "PASS",
+      "note": "single-domain restart must not brick shell",
+      "health": {
+        "aios": true,
+        "planner": true,
+        "fitness": true,
+        "finance": true,
+        "knowledge": true,
+        "music": true,
+        "home": true,
+        "health": true
+      }
+    },
+    {
+      "id": "CASE_4_restart_planner",
+      "ts": "2026-07-21T17:26:26.859Z",
+      "start": "2026-07-21T17:26:24.275Z",
+      "failureInjected": "launchctl kickstart -k com.kenpan.kenos-daily-beta.planner",
+      "uiReactionMs": 277,
+      "recoveryMs": 80,
+      "dataLoss": 0,
+      "authEffect": "none_expected",
+      "continueEffect": "retain",
+      "result": "PASS",
+      "note": "single-domain restart must not brick shell",
+      "health": {
+        "aios": true,
+        "planner": true,
+        "fitness": true,
+        "finance": true,
+        "knowledge": true,
+        "music": true,
+        "home": true,
+        "health": true
+      }
+    },
+    {
+      "id": "CASE_4_restart_fitness",
+      "ts": "2026-07-21T17:26:29.451Z",
+      "start": "2026-07-21T17:26:26.859Z",
+      "failureInjected": "launchctl kickstart -k com.kenpan.kenos-daily-beta.fitness",
+      "uiReactionMs": 287,
+      "recoveryMs": 78,
+      "dataLoss": 0,
+      "authEffect": "none_expected",
+      "continueEffect": "retain",
+      "result": "PASS",
+      "note": "single-domain restart must not brick shell",
+      "health": {
+        "aios": true,
+        "planner": true,
+        "fitness": true,
+        "finance": true,
+        "knowledge": true,
+        "music": true,
+        "home": true,
+        "health": true
+      }
+    },
+    {
+      "id": "CASE_5_wifi_proxy",
+      "ts": "2026-07-21T17:26:29.534Z",
+      "start": "2026-07-21T17:26:29.451Z",
+      "failureInjected": "bogus_port_probe (phone Wi-Fi toggle = OWNER_DOGFOOD)",
+      "uiReactionMs": 7,
+      "recoveryMs": 0,
+      "dataLoss": 0,
+      "authEffect": "must_not_misclassify_as_logout",
+      "continueEffect": "retain",
+      "result": "PASS",
+      "note": "classification-only; real Wi-Fi toggle needs Owner",
+      "ownerDogfoodRequired": [
+        "iphone_wifi_off_on"
+      ]
+    },
+    {
+      "id": "CASE_6_lan_identity",
+      "ts": "2026-07-21T17:26:29.534Z",
+      "start": "2026-07-21T17:26:29.534Z",
+      "failureInjected": "none",
+      "uiReactionMs": 0,
+      "recoveryMs": 0,
+      "dataLoss": 0,
+      "authEffect": "n/a",
+      "continueEffect": "n/a",
+      "result": "PASS",
+      "note": "P1 residual: origin uses LAN IP (not stable hostname); DHCP change risk",
+      "p1": "hardcoded_or_dhcp_ip_origin",
+      "originHost": "10.20.202.15:5219"
+    },
+    {
+      "id": "CASE_7_mac_reboot_proxy",
+      "ts": "2026-07-21T17:26:31.601Z",
+      "start": "2026-07-21T17:26:29.534Z",
+      "failureInjected": "stop+start (launchd RunAtLoad rehearsal)",
+      "uiReactionMs": 79,
+      "recoveryMs": 79,
+      "dataLoss": 0,
+      "authEffect": "none",
+      "continueEffect": "n/a",
+      "result": "PASS",
+      "note": "true reboot OWNER_DOGFOOD; agents verify launchd boot path via ctl start",
+      "ownerDogfoodRequired": [
+        "true_mac_reboot"
+      ]
+    },
+    {
+      "id": "CASE_8_partial_fitness_down",
+      "ts": "2026-07-21T17:26:37.349Z",
+      "start": "2026-07-21T17:26:31.602Z",
+      "failureInjected": "bootout fitness LaunchAgent",
+      "uiReactionMs": 274,
+      "recoveryMs": 77,
+      "dataLoss": 0,
+      "authEffect": "none",
+      "continueEffect": "training_may_degrade",
+      "result": "PASS",
+      "note": "other domains must stay up; Training unavailable honest",
+      "healthDuring": {
+        "aios": true,
+        "planner": true,
+        "fitness": false,
+        "finance": true,
+        "knowledge": true,
+        "music": true,
+        "home": true,
+        "health": true
+      }
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "pass": 10,
+    "fail": 0,
+    "dataLossTotal": 0,
+    "ownerDogfoodOpen": [
+      "true_mac_sleep_wake",
+      "iphone_wifi_off_on",
+      "true_mac_reboot",
+      "visual_no_white_screen",
+      "visual_auth_not_cleared",
+      "visual_continue_retained"
+    ]
+  },
+  "verdict": "PASS"
+}

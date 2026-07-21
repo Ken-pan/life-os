@@ -1,0 +1,61 @@
+{
+  "ts": "2026-07-21T17:25:20.892Z",
+  "head": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+  "headShort": "",
+  "formalBaseline": "502d805c28b29d3d50c0efa2699ab717a301ac45",
+  "iosApp": {
+    "bundleId": "space.kenos.app.ios",
+    "version": "1.0.0",
+    "buildNumber": "202607211716",
+    "recordedBuildSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "releaseSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10"
+  },
+  "device": {
+    "model": "iPhone 17 Pro",
+    "productType": "iPhone18,1",
+    "osVersion": "27.0",
+    "udidSuffix": "0AC0401C",
+    "online": true
+  },
+  "signing": {
+    "teamId": "93NJ4CAU8B",
+    "style": "Automatic",
+    "note": "profile details not exported"
+  },
+  "mac": {
+    "model": "Mac17,6",
+    "macos": "27.0",
+    "build": "26A5378j",
+    "arch": "arm64"
+  },
+  "network": {
+    "scope": "LAN-DEPENDENT",
+    "originHost": "10.20.202.15:5219",
+    "lanStrategy": "ipconfig en0/en1 → http://<ip>:5219",
+    "hostnameStable": false,
+    "ports": {
+      "aios": 5219,
+      "planner": 5188,
+      "fitness": 5190,
+      "finance": 5180,
+      "knowledge": 5879,
+      "music": 5189,
+      "home": 5196,
+      "health": 5192
+    }
+  },
+  "domainRegistry": [
+    "work",
+    "money",
+    "library",
+    "music",
+    "home",
+    "health",
+    "paper"
+  ],
+  "continueDescriptorCount": "NOT_MEASURED",
+  "appLogsSchema": "kenos_app_logs / kenos_ingest_app_logs (prod tip ≥ 20260721144405)",
+  "knownIssuesAtStart": "see known-issues.md",
+  "accountUid": "MASKED_IN_FLOW_HARNESS",
+  "rollback": true
+}

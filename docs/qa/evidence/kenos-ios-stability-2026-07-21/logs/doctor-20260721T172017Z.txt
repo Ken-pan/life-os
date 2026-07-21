@@ -1,0 +1,106 @@
+==> kenos-ios-doctor 2026-07-21T17:20:17Z
+HEAD=71ad6d5f3aca78a1b7985e77061f13fac59afb10
+ios_build_sha=71ad6d5f3aca78a1b7985e77061f13fac59afb10
+ios_build_number=202607211716
+origin=http://10.20.202.15:5219
+--- device ---
+==> Kenos iOS Daily Beta doctor 2026-07-21T17:20:17Z
+device=8097F071-CAB6-5AF0-8258-BCD985E9D79E team=93NJ4CAU8B origin=http://10.20.202.15:5219
+device_line=Ken’s 17 Pro 🤏🏻  🌊 🌲          Kens-17-Pro-.coredevice.local           8097F071-CAB6-5AF0-8258-BCD985E9D79E   connected     iPhone 17 Pro (iPhone18,1)     
+[PASS] device online
+[PASS] LAN origin health http://10.20.202.15:5219
+[PASS] domain :5188
+[PASS] domain :5190
+1.0.0 202607211716 Kenos
+[PASS] app installed space.kenos.app.ios
+[PASS] local .app present
+["93NJ4CAU8B"]space.kenos.app.ios
+202607211716
+http://10.20.202.15:5219
+[PASS] launch
+TEAM=93NJ4CAU8B BUNDLE=space.kenos.app.ios ORIGIN_OK=1 DEVICE_OK=1 INSTALLED=1
+Doctor done 2026-07-21T17:20:17Z
+--- kenos-ctl ---
+=== kenos-doctor ===
+Kenos Personal Daily Beta
+  release: 71ad6d5f3aca 2026-07-21T17:15:56Z
+  aios: UP  http://127.0.0.1:5219
+  planner: UP  http://127.0.0.1:5188
+  fitness: UP  http://127.0.0.1:5190
+  finance: UP  http://127.0.0.1:5180
+  knowledge: UP  http://127.0.0.1:5879
+  music: UP  http://127.0.0.1:5189
+  home: UP  http://127.0.0.1:5196
+  health: UP  http://127.0.0.1:5192
+--- ports ---
+  :5219 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  40239 kenpan    3u  IPv4 0x3bdb4c4a4bcc23d2      0t0  TCP *:5219 (LISTEN)
+  :5188 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  40244 kenpan    3u  IPv4 0x4ba62da612b4c5cc      0t0  TCP *:5188 (LISTEN)
+  :5190 LISTEN
+COMMAND   PID   USER   FD   TYPE            DEVICE SIZE/OFF NODE NAME
+Python  40249 kenpan    3u  IPv4 0x7edda60c688d2b3      0t0  TCP *:5190 (LISTEN)
+  :5180 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  40261 kenpan    3u  IPv4 0x53b265c015b2573a      0t0  TCP *:5180 (LISTEN)
+  :5879 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  40277 kenpan    3u  IPv4 0x9f3e1a2b4a3ad909      0t0  TCP *:5879 (LISTEN)
+  :5189 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  40291 kenpan    3u  IPv4 0x1e4bba02024b43f4      0t0  TCP *:5189 (LISTEN)
+  :5196 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  40304 kenpan    3u  IPv4 0xd2c179e79d0b591d      0t0  TCP *:5196 (LISTEN)
+  :5192 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  40317 kenpan    3u  IPv4 0xed9ba1daa97399b3      0t0  TCP *:5192 (LISTEN)
+--- release identity ---
+  http://127.0.0.1:5219 → {"app": "aios", "environment": "local-daily-beta", "port": 5219, "root": "/Users/kenpan/.kenos-daily-beta/releases/71ad6d5f3aca/apps/aios/build", "server": "python-static", "sha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10", "shortSha": "71ad6d5f3aca", "builtAt": "2026-07-21T17:15:56Z", "origins": {"aios": "http://127.0.0.1:5219", "planner": "http://127.0.0.1:5188", "fitness": "http://127.0.0.1:5190"}}
+  http://127.0.0.1:5188 → {"app": "planner", "environment": "local-daily-beta", "port": 5188, "root": "/Users/kenpan/.kenos-daily-beta/releases/71ad6d5f3aca/apps/planner/build", "server": "python-static", "sha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10", "shortSha": "71ad6d5f3aca", "builtAt": "2026-07-21T17:15:56Z", "origins": {"aios": "http://127.0.0.1:5219", "planner": "http://127.0.0.1:5188", "fitness": "http://127.0.0.1:5190"}}
+  http://127.0.0.1:5190 → {"app": "fitness", "environment": "local-daily-beta", "port": 5190, "root": "/Users/kenpan/.kenos-daily-beta/releases/71ad6d5f3aca/apps/fitness/build", "server": "python-static", "sha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10", "shortSha": "71ad6d5f3aca", "builtAt": "2026-07-21T17:15:56Z", "origins": {"aios": "http://127.0.0.1:5219", "planner": "http://127.0.0.1:5188", "fitness": "http://127.0.0.1:5190"}}
+--- app identity (HTML data-app) ---
+  aios identity OK
+  planner identity OK
+  fitness identity OK
+--- Continuity companions ---
+  finance OK http://127.0.0.1:5180
+  knowledge OK http://127.0.0.1:5879
+  music OK http://127.0.0.1:5189
+  home OK http://127.0.0.1:5196
+  health OK http://127.0.0.1:5192
+--- auth bootstrap (public supabase reachability) ---
+  supabase reachability WARN (network)
+--- rollback target ---
+  previous release present → /Users/kenpan/.kenos-daily-beta/previous
+--- recent logs ---
+total 3936
+-rw-r--r--  1 kenpan  staff    5795 Jul 21 10:20 health.stderr.log
+-rw-r--r--  1 kenpan  staff   33746 Jul 21 10:20 home.stderr.log
+-rw-r--r--  1 kenpan  staff   59311 Jul 21 10:20 music.stderr.log
+-rw-r--r--  1 kenpan  staff    3969 Jul 21 10:20 knowledge.stderr.log
+-rw-r--r--  1 kenpan  staff  114865 Jul 21 10:20 finance.stderr.log
+DOCTOR: PASS
+--- rollback ---
+[PASS] previous release present
+/Users/kenpan/.kenos-daily-beta/releases/release-20260721T161441Z-f93b2bff5
+--- launchd ---
+		   40277      - 	com.kenpan.kenos-daily-beta.knowledge
+		   40261      - 	com.kenpan.kenos-daily-beta.finance
+		   40304      - 	com.kenpan.kenos-daily-beta.home
+		   40249      - 	com.kenpan.kenos-daily-beta.fitness
+		   40239      - 	com.kenpan.kenos-daily-beta.aios
+		   40244      - 	com.kenpan.kenos-daily-beta.planner
+		   40317      - 	com.kenpan.kenos-daily-beta.health
+		   40291      - 	com.kenpan.kenos-daily-beta.music
+		"com.kenpan.kenos-daily-beta.finance" => enabled
+		"com.kenpan.kenos-daily-beta.fitness" => enabled
+		"com.kenpan.kenos-daily-beta.knowledge" => enabled
+		"com.kenpan.kenos-daily-beta.aios" => enabled
+		"com.kenpan.kenos-daily-beta.music" => enabled
+		"com.kenpan.kenos-daily-beta.home" => enabled
+		"com.kenpan.kenos-daily-beta.health" => enabled
+		"com.kenpan.kenos-daily-beta.planner" => enabled
+Doctor done 2026-07-21T17:20:17Z

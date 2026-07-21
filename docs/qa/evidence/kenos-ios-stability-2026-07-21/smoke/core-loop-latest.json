@@ -1,0 +1,449 @@
+{
+  "kind": "AUTOMATED",
+  "runId": "smoke-2026-07-21T17-25-21-888Z",
+  "ts": "2026-07-21T17:25:21.889Z",
+  "head": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+  "build": {
+    "iosBuildSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "iosBuildNumber": "202607211716",
+    "releaseSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "releaseShort": "71ad6d5f3"
+  },
+  "originHost": "10.20.202.15:5219",
+  "loops": {
+    "A_cold_launch": {
+      "attempts": 3,
+      "passed": 3,
+      "failed": 0,
+      "recovered": 0,
+      "cases": [
+        {
+          "name": "home_screen_relaunch",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 676,
+          "status": 0,
+          "stdout": "10:25:34  Acquired tunnel connection to device.\n10:25:34  Enabling developer disk image services.\n10:25:34  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:34.960Z"
+        },
+        {
+          "name": "second_cold",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 261,
+          "status": 0,
+          "stdout": "10:25:37  Acquired tunnel connection to device.\n10:25:37  Enabling developer disk image services.\n10:25:37  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:37.222Z"
+        },
+        {
+          "name": "no_external_safari_claim",
+          "ok": true,
+          "reason": "launch_stays_in_bundle (Safari escape requires visual Owner confirm)",
+          "class": "product",
+          "ts": "2026-07-21T17:25:37.222Z"
+        }
+      ],
+      "latency": {
+        "count": 2,
+        "median": 261,
+        "p50": 261,
+        "p95": 676,
+        "min": 261,
+        "max": 676
+      }
+    },
+    "B_plan": {
+      "attempts": 3,
+      "passed": 3,
+      "failed": 0,
+      "recovered": 0,
+      "cases": [
+        {
+          "name": "planner_service",
+          "label": "planner",
+          "host": "10.20.202.15:5188",
+          "ok": true,
+          "expectOk": true,
+          "httpCode": "200",
+          "ms": 11,
+          "class": "backend",
+          "ts": "2026-07-21T17:25:37.239Z"
+        },
+        {
+          "name": "continue_plan_launch",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 464,
+          "status": 0,
+          "stdout": "10:25:37  Acquired tunnel connection to device.\n10:25:37  Enabling developer disk image services.\n10:25:37  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:37.703Z"
+        },
+        {
+          "name": "return_kenos",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 282,
+          "status": 0,
+          "stdout": "10:25:39  Acquired tunnel connection to device.\n10:25:39  Enabling developer disk image services.\n10:25:39  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:39.493Z"
+        }
+      ],
+      "latency": {
+        "count": 3,
+        "median": 282,
+        "p50": 282,
+        "p95": 464,
+        "min": 11,
+        "max": 464
+      }
+    },
+    "C_training": {
+      "attempts": 3,
+      "passed": 3,
+      "failed": 0,
+      "recovered": 0,
+      "cases": [
+        {
+          "name": "fitness_service",
+          "label": "fitness",
+          "host": "10.20.202.15:5190",
+          "ok": true,
+          "expectOk": true,
+          "httpCode": "200",
+          "ms": 11,
+          "class": "backend",
+          "ts": "2026-07-21T17:25:39.508Z"
+        },
+        {
+          "name": "continue_training_launch",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 466,
+          "status": 0,
+          "stdout": "10:25:39  Acquired tunnel connection to device.\n10:25:39  Enabling developer disk image services.\n10:25:39  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:39.974Z"
+        },
+        {
+          "name": "return_kenos",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 266,
+          "status": 0,
+          "stdout": "10:25:41  Acquired tunnel connection to device.\n10:25:41  Enabling developer disk image services.\n10:25:41  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:41.749Z"
+        }
+      ],
+      "latency": {
+        "count": 3,
+        "median": 266,
+        "p50": 266,
+        "p95": 466,
+        "min": 11,
+        "max": 466
+      }
+    },
+    "D_domains": {
+      "attempts": 14,
+      "passed": 14,
+      "failed": 0,
+      "recovered": 0,
+      "cases": [
+        {
+          "name": "work",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 517,
+          "status": 0,
+          "stdout": "10:25:41  Acquired tunnel connection to device.\n10:25:41  Enabling developer disk image services.\n10:25:41  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:42.267Z"
+        },
+        {
+          "name": "work_return_kenos",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 231,
+          "status": 0,
+          "stdout": "10:25:43  Acquired tunnel connection to device.\n10:25:43  Enabling developer disk image services.\n10:25:43  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:43.309Z"
+        },
+        {
+          "name": "money",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 254,
+          "status": 0,
+          "stdout": "10:25:43  Acquired tunnel connection to device.\n10:25:43  Enabling developer disk image services.\n10:25:44  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:44.166Z"
+        },
+        {
+          "name": "money_return_kenos",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 212,
+          "status": 0,
+          "stdout": "10:25:45  Acquired tunnel connection to device.\n10:25:45  Enabling developer disk image services.\n10:25:45  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:45.188Z"
+        },
+        {
+          "name": "library",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 216,
+          "status": 0,
+          "stdout": "10:25:45  Acquired tunnel connection to device.\n10:25:45  Enabling developer disk image services.\n10:25:45  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:46.015Z"
+        },
+        {
+          "name": "library_return_kenos",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 204,
+          "status": 0,
+          "stdout": "10:25:46  Acquired tunnel connection to device.\n10:25:46  Enabling developer disk image services.\n10:25:46  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:47.022Z"
+        },
+        {
+          "name": "music",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 214,
+          "status": 0,
+          "stdout": "10:25:47  Acquired tunnel connection to device.\n10:25:47  Enabling developer disk image services.\n10:25:47  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:47.847Z"
+        },
+        {
+          "name": "music_return_kenos",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 220,
+          "status": 0,
+          "stdout": "10:25:48  Acquired tunnel connection to device.\n10:25:48  Enabling developer disk image services.\n10:25:48  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:48.869Z"
+        },
+        {
+          "name": "home",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 226,
+          "status": 0,
+          "stdout": "10:25:49  Acquired tunnel connection to device.\n10:25:49  Enabling developer disk image services.\n10:25:49  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:49.705Z"
+        },
+        {
+          "name": "home_return_kenos",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 289,
+          "status": 0,
+          "stdout": "10:25:50  Acquired tunnel connection to device.\n10:25:50  Enabling developer disk image services.\n10:25:50  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:50.797Z"
+        },
+        {
+          "name": "health",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 232,
+          "status": 0,
+          "stdout": "10:25:51  Acquired tunnel connection to device.\n10:25:51  Enabling developer disk image services.\n10:25:51  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:51.633Z"
+        },
+        {
+          "name": "health_return_kenos",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 245,
+          "status": 0,
+          "stdout": "10:25:52  Acquired tunnel connection to device.\n10:25:52  Enabling developer disk image services.\n10:25:52  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:52.688Z"
+        },
+        {
+          "name": "paper",
+          "ok": true,
+          "class": "product",
+          "reason": "partial_ok_not_fully_integrated",
+          "ms": 223,
+          "status": 0,
+          "stdout": "10:25:53  Acquired tunnel connection to device.\n10:25:53  Enabling developer disk image services.\n10:25:53  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "partial": true,
+          "ts": "2026-07-21T17:25:53.516Z"
+        },
+        {
+          "name": "paper_return_kenos",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 260,
+          "status": 0,
+          "stdout": "10:25:54  Acquired tunnel connection to device.\n10:25:54  Enabling developer disk image services.\n10:25:54  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:54.579Z"
+        }
+      ],
+      "latency": {
+        "count": 14,
+        "median": 226,
+        "p50": 226,
+        "p95": 517,
+        "min": 204,
+        "max": 517
+      }
+    },
+    "E_assistant_inbox": {
+      "attempts": 3,
+      "passed": 3,
+      "failed": 0,
+      "recovered": 0,
+      "cases": [
+        {
+          "name": "assistant_in_app",
+          "ok": true,
+          "class": "product",
+          "reason": "in_app_webview_payload (Safari chrome = Owner visual)",
+          "ms": 233,
+          "status": 0,
+          "stdout": "10:25:56  Acquired tunnel connection to device.\n10:25:56  Enabling developer disk image services.\n10:25:56  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:56.921Z"
+        },
+        {
+          "name": "inbox",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 289,
+          "status": 0,
+          "stdout": "10:25:59  Acquired tunnel connection to device.\n10:25:59  Enabling developer disk image services.\n10:25:59  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:25:59.211Z"
+        },
+        {
+          "name": "spaces",
+          "ok": true,
+          "class": "product",
+          "reason": "launched",
+          "ms": 308,
+          "status": 0,
+          "stdout": "10:26:00  Acquired tunnel connection to device.\n10:26:00  Enabling developer disk image services.\n10:26:00  Acquired usage assertion.\nLaunched application with space.kenos.app.ios bundle identifier.\n",
+          "stderr": "",
+          "attempts": 1,
+          "ts": "2026-07-21T17:26:01.021Z"
+        }
+      ],
+      "latency": {
+        "count": 3,
+        "median": 289,
+        "p50": 289,
+        "p95": 308,
+        "min": 233,
+        "max": 308
+      }
+    }
+  },
+  "latencies": [
+    676,
+    261,
+    11,
+    464,
+    282,
+    11,
+    466,
+    266,
+    517,
+    231,
+    254,
+    212,
+    216,
+    204,
+    214,
+    220,
+    226,
+    289,
+    232,
+    245,
+    223,
+    260,
+    233,
+    289,
+    308
+  ],
+  "summary": {
+    "attempts": 26,
+    "passed": 26,
+    "failed": 0,
+    "recovered": 0,
+    "latency": {
+      "count": 25,
+      "median": 245,
+      "p50": 245,
+      "p95": 517,
+      "min": 11,
+      "max": 676
+    },
+    "p0": 0,
+    "p1": 0
+  },
+  "flowAb": {
+    "status": "SKIPPED",
+    "reason": "not_requested_in_smoke"
+  },
+  "verdict": "PASS"
+}

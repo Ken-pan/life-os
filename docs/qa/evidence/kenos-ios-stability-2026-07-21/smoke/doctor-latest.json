@@ -1,0 +1,18 @@
+{
+  "ts": "2026-07-21T17:26:39.481076Z",
+  "head": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+  "iosBuildSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+  "iosBuildNumber": "202607211716",
+  "originHost": "10.20.202.15:5219",
+  "services": {
+    "aios": true,
+    "planner": true,
+    "fitness": true,
+    "finance": true,
+    "knowledge": true,
+    "music": true,
+    "home": true,
+    "health": true
+  },
+  "rollback": true
+}

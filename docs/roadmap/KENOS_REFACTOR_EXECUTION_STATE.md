@@ -12,16 +12,24 @@ status: controlled-production-canary-legacy-cutover-open
 
 ## 当前快照（2026-07-21）
 
-- Formal baseline: `502d805c28b29d3d50c0efa2699ab717a301ac45`，审计时与 `origin/master` 同步。
+- Formal baseline: `502d805c28b29d3d50c0efa2699ab717a301ac45`。
+- Working HEAD at stability lane: `71ad6d5f3aca78a1b7985e77061f13fac59afb10` (+ Planner `coerceTimestamp` LWW fix in working tree / Daily Beta release rebuild).
 - Production migration tip: `20260721144405`（`kenos_app_logs`；prior Wave tip `20260720230000`）。
 - Owner cohort: Plan create/title/due/schedule/project/complete/reopen/archive、MCP complete、Capture convert 已走 Kenos command/RPC；非 cohort、未覆盖字段和 sync upsert 仍有 legacy fallback。
 - AIOS / Portal: Approval/Capture canary 与 Portal `/today` owner-limited soft redirect 已有生产证据；Portal 未退役。
 - Apple / Phase 5: 多端代码、构建、device install/open 和本地 contextual behavior 已验证；App Group/APNs/分发、ProductionExecutor 与生产主动能力仍关闭。
-- Personal Daily Beta（2026-07-21）：**Mac Web READY**；**iOS READY (LAN-DEPENDENT)** on Ken’s 17 Pro — Flow A PASS (`ios-fa-mru7x8jx` user JWT) + Flow B PASS (Set1→Set2 no URL pin) + isolation PASS；Assistant=IN-APP WEB；Continuity=in-app WKWebView；Phase 4 仍 `EXIT_OPEN`。证据 `docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`。
-- **iOS Daily Beta Stabilization**（2026-07-21）：状态冻结 READY_LAN_DEPENDENT；dogfood 证据包 `docs/qa/evidence/kenos-ios-dogfood-2026-07/`；低噪 `KenosRuntimeHealth`；**不关 Phase 4**。
-- Phase 4 next slice（2026-07-21 post-READY）：title writer + `KenosAppGroupStore` local foundation；IA lock + web Continue parity + native unlock launch **PASS_LAUNCH_NO_USB_SHOT**；Focus timer Dynamic Type display font；**PHASE 4 仍 EXIT_OPEN**。证据 `PHASE4_NEXT_SLICE.md` / `IA_WEB_PARITY.md`。
-- Program verdict: `CONTROLLED_PRODUCTION_CANARY_WITH_OPEN_EXITS`。不能继续使用早期 `phase-2-partial-read-only-integration-no-production-cutover` 作为当前总状态。
-- Verification debt: Phase 2 正式基线 guard 失败；Phase 3 正式 HEAD 通过但当前本地 WIP 破坏既有合同；Phase 6 输出仍含过期 apply 状态；Phase 0 必须在干净 Git checkout 验证。详见 implementation status 第 6 节。
+- Personal Daily Beta：**Mac Web READY**；**iOS READY_LAN_DEPENDENT** on Ken’s 17 Pro。
+- **iOS Daily Beta Stabilization（2026-07-21 reliability closure）：**
+  - `AUTOMATED STABILITY: PASSED`
+  - `OWNER 3-DAY DOGFOOD: OPEN`
+  - Native build `202607211716` / install SHA aligned to HEAD
+  - Preflight/smoke/soak/doctor PASS；Flow A `PASS_DEVICE_SESSION_MUTATE`；Flow B `PASS_DEVICE_DEEPLINK_SET2`
+  - Product fix: Planner LWW ISO `updatedAt` coerce（防止 Continuity sync 覆盖更新的 REST mutation）
+  - Residual P1: LAN DHCP IP origin；true Mac sleep / phone Wi‑Fi = Owner
+  - Evidence: `docs/qa/evidence/kenos-ios-stability-2026-07-21/`
+  - **不关 Phase 4**；**不宣称** `READY_LAN_DEPENDENT_STABILIZED`
+- Program verdict: `CONTROLLED_PRODUCTION_CANARY_WITH_OPEN_EXITS`。
+- Verification debt: Phase 2 正式基线 guard 失败；Phase 6 输出仍含过期 apply 状态；Phase 0 必须在干净 Git checkout 验证。详见 implementation status 第 6 节。
 
 ## 历史基线：Phase 0 Cloud 初始任务
 

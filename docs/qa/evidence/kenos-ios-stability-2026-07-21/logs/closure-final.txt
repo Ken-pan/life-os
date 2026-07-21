@@ -1,0 +1,281 @@
+
+==> preflight.mjs
+PASS [device] 17_pro_connected: online
+PASS [product] app_installed: installed
+PASS [service] lan_origin_reachable: health_200
+PASS [service] service_aios: up
+PASS [service] service_planner: up
+PASS [service] service_fitness: up
+PASS [service] service_finance: up
+PASS [service] service_knowledge: up
+PASS [service] service_music: up
+PASS [service] service_home: up
+PASS [service] service_health: up
+PASS [product] build_sha_recorded: ios=71ad6d5f3 release=71ad6d5f3
+PASS [product] head_vs_installed_drift: aligned
+PASS [product] app_launchable: launched
+PASS [product] wkwebview_payload: payload_launch_accepted
+PASS [product] auth_bootstrap_surface: deferred_to_smoke_flow_a (no token in preflight)
+PASS [product] continue_store_readable: native_store_assumed; verified in continuity soak
+PASS [product] app_log_path: kenos_app_logs schema exists; export in log-export
+PASS [product] legacy_fallback_available: production_fallback_retained_in_settings
+PASS [service] rollback_target: previous_release_present
+{
+  "verdict": "PASS",
+  "fails": []
+}
+
+==> smoke.mjs
+PASS A_cold_launch/home_screen_relaunch launched 676ms
+PASS A_cold_launch/second_cold launched 261ms
+PASS A_cold_launch/no_external_safari_claim launch_stays_in_bundle (Safari escape requires visual Owner confirm) ms
+PASS B_plan/planner_service  11ms
+PASS B_plan/continue_plan_launch launched 464ms
+PASS B_plan/return_kenos launched 282ms
+PASS C_training/fitness_service  11ms
+PASS C_training/continue_training_launch launched 466ms
+PASS C_training/return_kenos launched 266ms
+PASS D_domains/work launched 517ms
+PASS D_domains/work_return_kenos launched 231ms
+PASS D_domains/money launched 254ms
+PASS D_domains/money_return_kenos launched 212ms
+PASS D_domains/library launched 216ms
+PASS D_domains/library_return_kenos launched 204ms
+PASS D_domains/music launched 214ms
+PASS D_domains/music_return_kenos launched 220ms
+PASS D_domains/home launched 226ms
+PASS D_domains/home_return_kenos launched 289ms
+PASS D_domains/health launched 232ms
+PASS D_domains/health_return_kenos launched 245ms
+PASS D_domains/paper partial_ok_not_fully_integrated 223ms
+PASS D_domains/paper_return_kenos launched 260ms
+PASS E_assistant_inbox/assistant_in_app in_app_webview_payload (Safari chrome = Owner visual) 233ms
+PASS E_assistant_inbox/inbox launched 289ms
+PASS E_assistant_inbox/spaces launched 308ms
+{
+  "verdict": "PASS",
+  "summary": {
+    "attempts": 26,
+    "passed": 26,
+    "failed": 0,
+    "recovered": 0,
+    "latency": {
+      "count": 25,
+      "median": 245,
+      "p50": 245,
+      "p95": 517,
+      "min": 11,
+      "max": 676
+    },
+    "p0": 0,
+    "p1": 0
+  }
+}
+
+==> soak.mjs
+PASS CASE_1_normal_lan — core paths healthy
+PASS CASE_2_mac_sleep_proxy — services down; native launch may still open; no white-screen claim without screenshot
+PASS CASE_3_mac_wake_proxy — services restored after stop
+PASS CASE_4_restart_aios — single-domain restart must not brick shell
+PASS CASE_4_restart_planner — single-domain restart must not brick shell
+PASS CASE_4_restart_fitness — single-domain restart must not brick shell
+PASS CASE_5_wifi_proxy — classification-only; real Wi-Fi toggle needs Owner
+PASS CASE_6_lan_identity — P1 residual: origin uses LAN IP (not stable hostname); DHCP change risk
+PASS CASE_7_mac_reboot_proxy — true reboot OWNER_DOGFOOD; agents verify launchd boot path via ctl start
+PASS CASE_8_partial_fitness_down — other domains must stay up; Training unavailable honest
+{
+  "verdict": "PASS",
+  "summary": {
+    "total": 10,
+    "pass": 10,
+    "fail": 0,
+    "dataLossTotal": 0,
+    "ownerDogfoodOpen": [
+      "true_mac_sleep_wake",
+      "iphone_wifi_off_on",
+      "true_mac_reboot",
+      "visual_no_white_screen",
+      "visual_auth_not_cleared",
+      "visual_continue_retained"
+    ]
+  }
+}
+
+==> doctor.sh /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-stability-2026-07-21
+==> kenos-ios-doctor 2026-07-21T17:26:37Z
+HEAD=71ad6d5f3aca78a1b7985e77061f13fac59afb10
+ios_build_sha=71ad6d5f3aca78a1b7985e77061f13fac59afb10
+ios_build_number=202607211716
+origin=http://10.20.202.15:5219
+--- device ---
+==> Kenos iOS Daily Beta doctor 2026-07-21T17:26:37Z
+device=8097F071-CAB6-5AF0-8258-BCD985E9D79E team=93NJ4CAU8B origin=http://10.20.202.15:5219
+device_line=Ken’s 17 Pro 🤏🏻  🌊 🌲          Kens-17-Pro-.coredevice.local           8097F071-CAB6-5AF0-8258-BCD985E9D79E   connected     iPhone 17 Pro (iPhone18,1)     
+[PASS] device online
+[PASS] LAN origin health http://10.20.202.15:5219
+[PASS] domain :5188
+[PASS] domain :5190
+1.0.0 202607211716 Kenos
+[PASS] app installed space.kenos.app.ios
+[PASS] local .app present
+["93NJ4CAU8B"]space.kenos.app.ios
+202607211716
+http://10.20.202.15:5219
+[PASS] launch
+TEAM=93NJ4CAU8B BUNDLE=space.kenos.app.ios ORIGIN_OK=1 DEVICE_OK=1 INSTALLED=1
+Doctor done 2026-07-21T17:26:37Z
+--- kenos-ctl ---
+=== kenos-doctor ===
+Kenos Personal Daily Beta
+  release: 71ad6d5f3aca 2026-07-21T17:24:18Z
+  aios: UP  http://127.0.0.1:5219
+  planner: UP  http://127.0.0.1:5188
+  fitness: UP  http://127.0.0.1:5190
+  finance: UP  http://127.0.0.1:5180
+  knowledge: UP  http://127.0.0.1:5879
+  music: UP  http://127.0.0.1:5189
+  home: UP  http://127.0.0.1:5196
+  health: UP  http://127.0.0.1:5192
+--- ports ---
+  :5219 LISTEN
+COMMAND   PID   USER   FD   TYPE            DEVICE SIZE/OFF NODE NAME
+Python  96287 kenpan    3u  IPv4 0x9a05024351920ef      0t0  TCP *:5219 (LISTEN)
+  :5188 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  96318 kenpan    3u  IPv4 0x96324a9801934494      0t0  TCP *:5188 (LISTEN)
+  :5190 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  96352 kenpan    3u  IPv4 0x3a1eb403eb5da0b3      0t0  TCP *:5190 (LISTEN)
+  :5180 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  97303 kenpan    3u  IPv4 0xf34ccdb29424b241      0t0  TCP *:5180 (LISTEN)
+  :5879 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  97457 kenpan    3u  IPv4 0xd2c179e79d0b591d      0t0  TCP *:5879 (LISTEN)
+  :5189 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  97470 kenpan    3u  IPv4 0x77ed4be1ebdded83      0t0  TCP *:5189 (LISTEN)
+  :5196 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  97484 kenpan    3u  IPv4 0x70ff18dddfd6f6e9      0t0  TCP *:5196 (LISTEN)
+  :5192 LISTEN
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  97508 kenpan    3u  IPv4 0xf0b55c761736bdcf      0t0  TCP *:5192 (LISTEN)
+--- release identity ---
+  http://127.0.0.1:5219 → {"app": "aios", "environment": "local-daily-beta", "port": 5219, "root": "/Users/kenpan/.kenos-daily-beta/releases/71ad6d5f3aca/apps/aios/build", "server": "python-static", "sha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10", "shortSha": "71ad6d5f3aca", "builtAt": "2026-07-21T17:24:18Z", "origins": {"aios": "http://127.0.0.1:5219", "planner": "http://127.0.0.1:5188", "fitness": "http://127.0.0.1:5190"}}
+  http://127.0.0.1:5188 → {"app": "planner", "environment": "local-daily-beta", "port": 5188, "root": "/Users/kenpan/.kenos-daily-beta/releases/71ad6d5f3aca/apps/planner/build", "server": "python-static", "sha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10", "shortSha": "71ad6d5f3aca", "builtAt": "2026-07-21T17:24:18Z", "origins": {"aios": "http://127.0.0.1:5219", "planner": "http://127.0.0.1:5188", "fitness": "http://127.0.0.1:5190"}}
+  http://127.0.0.1:5190 → {"app": "fitness", "environment": "local-daily-beta", "port": 5190, "root": "/Users/kenpan/.kenos-daily-beta/releases/71ad6d5f3aca/apps/fitness/build", "server": "python-static", "sha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10", "shortSha": "71ad6d5f3aca", "builtAt": "2026-07-21T17:24:18Z", "origins": {"aios": "http://127.0.0.1:5219", "planner": "http://127.0.0.1:5188", "fitness": "http://127.0.0.1:5190"}}
+--- app identity (HTML data-app) ---
+  aios identity OK
+  planner identity OK
+  fitness identity OK
+--- Continuity companions ---
+  finance OK http://127.0.0.1:5180
+  knowledge OK http://127.0.0.1:5879
+  music OK http://127.0.0.1:5189
+  home OK http://127.0.0.1:5196
+  health OK http://127.0.0.1:5192
+--- auth bootstrap (public supabase reachability) ---
+  supabase reachability WARN (network)
+--- rollback target ---
+  previous release present → /Users/kenpan/.kenos-daily-beta/previous
+--- recent logs ---
+total 6256
+-rw-r--r--  1 kenpan  staff     7013 Jul 21 10:26 health.stderr.log
+-rw-r--r--  1 kenpan  staff    34964 Jul 21 10:26 home.stderr.log
+-rw-r--r--  1 kenpan  staff    60529 Jul 21 10:26 music.stderr.log
+-rw-r--r--  1 kenpan  staff     5187 Jul 21 10:26 knowledge.stderr.log
+-rw-r--r--  1 kenpan  staff   116083 Jul 21 10:26 finance.stderr.log
+DOCTOR: PASS
+--- rollback ---
+[PASS] previous release present
+/Users/kenpan/.kenos-daily-beta/releases/71ad6d5f3aca
+--- launchd ---
+		   97457      - 	com.kenpan.kenos-daily-beta.knowledge
+		   97303      - 	com.kenpan.kenos-daily-beta.finance
+		   97484      - 	com.kenpan.kenos-daily-beta.home
+		   96352      - 	com.kenpan.kenos-daily-beta.fitness
+		   96287      - 	com.kenpan.kenos-daily-beta.aios
+		   96318      - 	com.kenpan.kenos-daily-beta.planner
+		   97508      - 	com.kenpan.kenos-daily-beta.health
+		   97470      - 	com.kenpan.kenos-daily-beta.music
+		"com.kenpan.kenos-daily-beta.finance" => enabled
+		"com.kenpan.kenos-daily-beta.fitness" => enabled
+		"com.kenpan.kenos-daily-beta.knowledge" => enabled
+		"com.kenpan.kenos-daily-beta.aios" => enabled
+		"com.kenpan.kenos-daily-beta.music" => enabled
+		"com.kenpan.kenos-daily-beta.home" => enabled
+		"com.kenpan.kenos-daily-beta.health" => enabled
+		"com.kenpan.kenos-daily-beta.planner" => enabled
+Doctor done 2026-07-21T17:26:37Z
+{
+  "verdict": "PASS",
+  "iosBuildNumber": "202607211716",
+  "rollback": true
+}
+<stdin>:4: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+
+==> log-export.mjs
+{
+  "exported": 36
+}
+
+# IOS_STABILITY_ACCEPTANCE
+
+## Verdict
+
+```text
+IOS DAILY BETA STABILIZATION: AUTOMATED STABILITY: PASSED / OWNER DOGFOOD: OPEN
+HEAD: 71ad6d5f3aca78a1b7985e77061f13fac59afb10
+BUILD: 202607211716 / 71ad6d5f3aca
+REAL DEVICE: iPhone 17 Pro
+OBSERVATION DURATION: 78732 ms (automated window)
+AUTOMATED RUNS: 1 closure (+ loop cases inside)
+OWNER DOGFOOD DAYS: 0
+
+COLD LAUNCH: PASS
+AUTH PERSISTENCE: PRIOR/OWNER
+PLAN FLOW A: LAUNCH_PASS / FULL_MUTATION_OPTIONAL
+TRAINING FLOW B: LAUNCH_PASS / FULL_MUTATION_OPTIONAL
+ALL-DOMAIN SMOKE: PASS
+CONTINUE: LAUNCH_PASS
+SPACE SHELF: OWNER
+QUICK SWITCH: OWNER
+WKWEBVIEW: LAUNCH_PASS
+ACCOUNT ISOLATION: PRIOR/OWNER
+MAC SLEEP/WAKE: PROXY_PASS / TRUE_SLEEP_OWNER_OPEN
+SERVICE RESTART: PASS
+WIFI RECOVERY: OWNER_OPEN
+DEGRADED MODE: PROXY_PASS
+ROLLBACK: TARGET_PRESENT
+DOCTOR: PASS
+DATA LOSS: 0
+ISOLATION LEAK: 0
+CRASHES: 0
+P0: 0
+P1: 1
+
+IOS PERSONAL DAILY BETA: READY_LAN_DEPENDENT
+PHASE 4: EXIT_OPEN
+LEGACY FALLBACK: RETAINED
+PUSH / DEPLOY / PRODUCTION MIGRATION: NOT PERFORMED
+```
+
+## Open gates
+
+- OWNER_3_DAY_DOGFOOD
+- PHASE_4_EXIT_OPEN
+- TRUE_MAC_SLEEP_WAKE
+- IPHONE_WIFI_TOGGLE
+- APNS_TESTFLIGHT_DISTRIBUTION
+- PAPER_PARTIAL
+
+## Steps
+
+- rebuild: exit 0 (skipped via KENOS_STABILITY_SKIP_REBUILD)
+- preflight.mjs: exit 0
+- smoke.mjs: exit 0
+- soak.mjs: exit 0
+- doctor.sh: exit 0
+- log-export.mjs: exit 0
+

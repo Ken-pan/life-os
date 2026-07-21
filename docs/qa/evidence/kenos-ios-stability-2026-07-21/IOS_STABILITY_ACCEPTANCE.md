@@ -1,0 +1,60 @@
+# IOS_STABILITY_ACCEPTANCE
+
+## Verdict
+
+```text
+IOS DAILY BETA STABILIZATION: AUTOMATED STABILITY: PASSED / OWNER DOGFOOD: OPEN
+HEAD: 71ad6d5f3aca78a1b7985e77061f13fac59afb10 (+ local Planner LWW fix pending commit)
+BUILD: 202607211716 / 71ad6d5f3aca (native) · Daily Beta release rebuilt with LWW fix
+REAL DEVICE: iPhone 17 Pro
+OBSERVATION DURATION: ~80s automated closure window (+ Flow A/B ~45s)
+AUTOMATED RUNS: 3 closures + Flow A/B harness iterations
+OWNER DOGFOOD DAYS: 0
+
+COLD LAUNCH: PASS
+AUTH PERSISTENCE: PRIOR/OWNER
+PLAN FLOW A: PASS_DEVICE_SESSION_MUTATE
+TRAINING FLOW B: PASS_DEVICE_DEEPLINK_SET2
+ALL-DOMAIN SMOKE: PASS
+CONTINUE: LAUNCH_PASS
+SPACE SHELF: OWNER
+QUICK SWITCH: OWNER
+WKWEBVIEW: LAUNCH_PASS
+ACCOUNT ISOLATION: PRIOR/OWNER
+MAC SLEEP/WAKE: PROXY_PASS / TRUE_SLEEP_OWNER_OPEN
+SERVICE RESTART: PASS
+WIFI RECOVERY: OWNER_OPEN
+DEGRADED MODE: PROXY_PASS
+ROLLBACK: TARGET_PRESENT
+DOCTOR: PASS
+DATA LOSS: 0
+ISOLATION LEAK: 0
+CRASHES: 0
+P0: 0
+P1: 1 (LAN origin uses DHCP IP — not stable hostname)
+
+IOS PERSONAL DAILY BETA: READY_LAN_DEPENDENT
+PHASE 4: EXIT_OPEN
+LEGACY FALLBACK: RETAINED
+PUSH / DEPLOY / PRODUCTION MIGRATION: NOT PERFORMED
+```
+
+## Product fix landed this lane
+
+Planner LWW previously treated ISO-string `data.updatedAt` as non-numeric, so Continuity sync could push stale local titles over fresher phone/REST mutations (`FAIL_PLANNER_SYNC_CLOBBER`). Fixed in `apps/planner/src/lib/persist/migrate.js` (`coerceTimestamp`) + unit test. Flow A re-verified PASS after rebuild.
+
+## Open gates
+
+- OWNER_3_DAY_DOGFOOD
+- PHASE_4_EXIT_OPEN
+- TRUE_MAC_SLEEP_WAKE
+- IPHONE_WIFI_TOGGLE
+- APNS_TESTFLIGHT_DISTRIBUTION
+- PAPER_PARTIAL
+- LAN_IP_ORIGIN_P1 (DHCP)
+
+## Evidence root
+
+`docs/qa/evidence/kenos-ios-stability-2026-07-21/`
+
+Flow A/B: `smoke/flow-ab-latest.json`
