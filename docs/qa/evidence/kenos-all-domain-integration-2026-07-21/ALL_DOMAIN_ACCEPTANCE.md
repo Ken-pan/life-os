@@ -38,8 +38,8 @@ No domain was downgraded from `DAILY_BETA_INTEGRATED` → `PARTIAL`. Paper stays
 
 ## Follow-up commits (local)
 
-- `fix(kenos): embed-shell chrome for domain Continuity`
-- `docs(qa): record all-domain device smoke`
+- `c356d6ae6` `fix(kenos): embed-shell chrome for domain Continuity`
+- `22f0b4a59` `docs(qa): record all-domain device smoke`
 
 ## Residuals
 
