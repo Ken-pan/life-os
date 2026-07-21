@@ -10,12 +10,17 @@
   import { clearAssistantContext } from '$lib/kenos/assistantContext.svelte.js'
   import { SPACE_SWITCHER, launchSpace } from '$lib/kenos/spaceSwitcher.svelte.js'
 
-  let { onCapture = undefined, onSpaceSwitcher = undefined } = $props()
+  /** @type {{ onCapture?: () => void, onSpaceSwitcher?: (e?: Event) => void, onSwitchSpace?: (e?: Event) => void }} */
+  let {
+    onCapture = undefined,
+    onSpaceSwitcher = undefined,
+    onSwitchSpace = undefined,
+  } = $props()
 
   const onChatRoute = $derived(page.url.pathname === '/assistant')
   const primaryItems = $derived(systemNavItems(t))
   const recentSpaces = $derived.by(() => {
-    const fromStore = SPACE_SWITCHER.sections.find((s) => s.id === 'recent')?.items ?? []
+    const fromStore = SPACE_SWITCHER.recentItems
     if (fromStore.length) return fromStore
     return TODAY_SPACE_SHORTCUTS.slice(0, 3).map((space) => ({
       ...space,
@@ -128,7 +133,13 @@
     <div class="recent-spaces" aria-label="Recent spaces">
       <div class="recent-head">
         <p class="recent-label">Recent</p>
-        <button type="button" class="recent-all" onclick={(e) => onSpaceSwitcher?.(e)}>
+        <button
+          type="button"
+          class="recent-all"
+          data-testid="kenos-switch-space-trigger"
+          aria-label="Switch Space"
+          onclick={(e) => (onSwitchSpace ?? onSpaceSwitcher)?.(e)}
+        >
           All
         </button>
       </div>

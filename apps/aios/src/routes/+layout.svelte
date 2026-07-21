@@ -21,7 +21,9 @@
     hydrateSpaceSwitcher,
     noteSpaceVisit,
     syncSpaceSwitcherOwner,
-    openSpaceSwitcherSheet,
+    openContinueSheet,
+    openQuickSwitchSheet,
+    openSwitchSpaceSheet,
   } from '$lib/kenos/spaceSwitcher.svelte.js'
   import { ICONS } from '$lib/iconRegistry.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
@@ -152,14 +154,15 @@
       captureOpen = true
       return
     }
-    // Continue / Space Switcher — Cmd/Ctrl + .
+    // Continue — Cmd/Ctrl + .  ·  Quick Switch — Cmd/Ctrl + Shift + .
     if ((event.metaKey || event.ctrlKey) && event.key === '.') {
       const tag = /** @type {HTMLElement | null} */ (event.target)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || /** @type {HTMLElement} */ (event.target)?.isContentEditable) {
         return
       }
       event.preventDefault()
-      openSpaceSwitcherSheet()
+      if (event.shiftKey) openQuickSwitchSheet()
+      else openContinueSheet()
     }
   }
 
@@ -315,7 +318,8 @@
       {:else if projection === 'desktop'}
         <ChatSidebar
           onCapture={() => (captureOpen = true)}
-          onSpaceSwitcher={openSpaceSwitcherSheet}
+          onSpaceSwitcher={openContinueSheet}
+          onSwitchSpace={openSwitchSpaceSheet}
         />
       {:else}
         <BottomNav />
@@ -326,13 +330,24 @@
       <LifeOsAppBar title={pageTitle} hidden={isAssistant || hasCustomHeader || hideGlobalNav}>
         {#snippet trailing()}
           {#if !hideGlobalNav}
-            <!-- Desktop AppBar only — mobile Continue lives in KenosSystemBar -->
+            <!-- Desktop AppBar — Continue + Quick Switch (Switch Space lives in sidebar All) -->
+            <button
+              type="button"
+              class="space-switcher-trigger desktop-only-continue"
+              data-testid="kenos-quick-switch-trigger"
+              aria-label="Quick Switch"
+              title="Quick Switch (⌘⇧.)"
+              onclick={openQuickSwitchSheet}
+            >
+              Search
+            </button>
             <button
               type="button"
               class="space-switcher-trigger desktop-only-continue"
               data-testid="kenos-space-switcher-trigger"
               aria-label="Continue to a recent Space"
-              onclick={openSpaceSwitcherSheet}
+              title="Continue (⌘.)"
+              onclick={openContinueSheet}
             >
               Continue
             </button>
@@ -396,8 +411,36 @@
       display: none !important;
     }
   }
-  /* iOS KenosIOS WKWebView — native TabView owns bottom IA */
-  :global(html[data-ios-native-shell='true'] .bottom-nav-host) {
+  /* iOS KenosIOS WKWebView — native TabView owns bottom IA (CSS belt + hideGlobalNav) */
+  :global(html[data-ios-native-shell='true'] .bottom-nav-host),
+  :global(html[data-ios-native-shell='true'] nav.bottom-nav),
+  :global(html[data-ios-native-shell='true'] [data-testid='aios-shell-bottom-nav']) {
     display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+  :global(html[data-ios-native-shell='true'] .kenos-system-bar) {
+    display: none !important;
+  }
+  /*
+    Native NavigationStack + TabView already own chrome.
+    Zero web PWA safe-top / tabbar padding or content sits in a middle band
+    with empty top+bottom (classic "letterbox" bug on iPhone Daily Beta).
+  */
+  :global(html[data-ios-native-shell='true']) {
+    --kenos-system-bar-h: 0px;
+    --kenos-mobile-bottom-pad: 12px;
+    --mobile-tabbar-total-h: 0px;
+    --mobile-content-inset: 0px;
+    --mobile-content-inset-tabbar: 0px;
+    --bottom-chrome-h: 0px;
+    --safe-top-effective: 0px;
+    --safe-top: 0px;
+  }
+  :global(html[data-ios-native-shell='true'] body) {
+    /* WebView frame is already below nav / above tab bar */
+    min-height: 100%;
   }
 </style>

@@ -1,8 +1,8 @@
 <script>
   /**
-   * Kenos Space Switcher — Continue sheet (not a 5th tab).
-   * P5 Knife 2: mobile / tablet / desktop anchored.
-   * P5 Knife 3: ≥900 touch-first → tablet-lg form sheet (not forced desktop).
+   * Kenos Space Switcher — mode-gated chrome sheet (not a 5th tab).
+   * Modes: continueRecent | switchSpace | quickSwitch (iOS IA lock).
+   * P5 Knife 2/3: mobile / tablet / desktop anchored layout preserved.
    * Continuity: descriptor schema, owner binding, deep links, E2E testids frozen.
    */
   import { tick } from 'svelte'
@@ -17,7 +17,10 @@
     closeSpaceSwitcherSheet,
     consumeSpaceSwitcherTrigger,
   } from '$lib/kenos/spaceSwitcher.svelte.js'
-  import { SYSTEM_RETURN_LIST_KEY } from '$lib/kenos/spaceSwitcher.core.js'
+  import {
+    SPACE_CHROME_MODES,
+    SYSTEM_RETURN_LIST_KEY,
+  } from '$lib/kenos/spaceSwitcher.core.js'
   import { PRODUCT_COPY } from '$lib/kenos/productStates.core.js'
   import {
     resolveContinueOverlayModeFromWindow,
@@ -32,12 +35,12 @@
   let { onClose = undefined } = $props()
 
   let query = $state('')
-  let allExpanded = $state(false)
   /** @type {import('$lib/kenos/continueOverlayMode.core.js').ContinueOverlayMode} */
   let layoutMode = $state('mobile')
   let sheetStyle = $state('')
 
   const open = $derived(SPACE_SWITCHER.sheetOpen)
+  const chromeMode = $derived(SPACE_SWITCHER.chromeMode)
   const sections = $derived(SPACE_SWITCHER.sections)
   const current = $derived(SPACE_SWITCHER.currentListKey)
   const recentSection = $derived(sections.find((s) => s.id === 'recent'))
@@ -46,20 +49,58 @@
   /** Honest catalog size — not Recent/Pinned remainder. */
   const allCount = $derived(SPACE_SWITCHER.catalog.length)
 
-  const filteredAll = $derived.by(() => {
-    const items = allSection?.items ?? []
+  const isContinue = $derived(chromeMode === SPACE_CHROME_MODES.continueRecent)
+  const isQuick = $derived(chromeMode === SPACE_CHROME_MODES.quickSwitch)
+
+  const sheetTitle = $derived(
+    isContinue ? 'Continue' : isQuick ? 'Quick Switch' : 'Switch Space',
+  )
+  const sheetAria = $derived(
+    isContinue
+      ? 'Continue to a recent Space'
+      : isQuick
+        ? 'Quick Switch across Spaces and resumes'
+        : 'Switch Space',
+  )
+  const sheetTestId = 'kenos-space-switcher'
+  const hint = $derived(
+    isContinue
+      ? '回到刚才做到的地方。浏览全部领域用 Spaces。'
+      : isQuick
+        ? '搜索 Recent、Spaces 与 System。'
+        : 'Pinned · Recent · All Domains。',
+  )
+  const searchPlaceholder = $derived(
+    isContinue
+      ? '筛选 Recent'
+      : isQuick
+        ? '搜索 Spaces 与 resumes'
+        : '搜索 Space',
+  )
+  /** Search is always on for Switch/Quick; Continue stays recent-only (no dump). */
+  const showSearch = $derived(!isContinue)
+
+  /**
+   * @param {import('$lib/kenos/spaceSwitcher.core.js').SpaceEntry[] | undefined} items
+   */
+  function filterItems(items) {
+    const list = items ?? []
     const q = query.trim().toLowerCase()
-    if (!q) return items
-    return items.filter(
+    if (!q) return list
+    return list.filter(
       (s) =>
         s.label.toLowerCase().includes(q) ||
         (s.detail || '').toLowerCase().includes(q),
     )
-  })
+  }
 
-  const showAll = $derived(
-    allExpanded || Boolean(query.trim()) || !(recentSection?.items?.length),
+  const filteredRecent = $derived(filterItems(recentSection?.items))
+  const filteredPinned = $derived(filterItems(pinnedSection?.items))
+  const filteredAll = $derived(filterItems(allSection?.items))
+  const filteredSystem = $derived(
+    filterItems(sections.find((s) => s.id === 'system')?.items),
   )
+
   const showHandle = $derived(layoutMode === 'mobile')
   /** Delayed reveal: skeleton only while open and store not yet hydrated. */
   const showLoading = $derived(open && !SPACE_SWITCHER.hydrated)
@@ -121,7 +162,6 @@
   function close() {
     closeSpaceSwitcherSheet()
     query = ''
-    allExpanded = false
     sheetStyle = ''
     onClose?.()
     const trigger = consumeSpaceSwitcherTrigger()
@@ -130,6 +170,11 @@
         if (trigger.isConnected) trigger.focus({ preventScroll: true })
       })
     }
+  }
+
+  function goSpacesDirectory() {
+    close()
+    void goto('/spaces')
   }
 
   /**
@@ -179,7 +224,7 @@
 <LifeOsSheet
   {open}
   title=""
-  ariaLabel="Continue to a recent Space"
+  ariaLabel={sheetAria}
   sheetClass="space-switcher-sheet"
   bgClass={`space-switcher-sheet-bg layout-${layoutMode}`}
   placement="auto"
@@ -189,12 +234,12 @@
 >
   {#snippet header()}
     <div class="continue-header">
-      <h2 class="sheet-title continue-title">Continue</h2>
+      <h2 class="sheet-title continue-title">{sheetTitle}</h2>
       <button
         type="button"
         class="sheet-close"
         data-testid="kenos-space-switcher-close"
-        aria-label="Close Continue"
+        aria-label={`Close ${sheetTitle}`}
         onclick={close}
       >
         <Icon name="x" size={18} strokeWidth={1.75} />
@@ -202,8 +247,15 @@
     </div>
   {/snippet}
 
-  <div class="switcher" data-testid="kenos-space-switcher">
-    <p class="hint">回到刚才做到的地方。浏览全部领域用 Spaces。</p>
+  <div class="switcher" data-testid={sheetTestId} data-chrome-mode={chromeMode}>
+    <p class="hint">{hint}</p>
+
+    {#if showSearch}
+      <label class="search">
+        <span class="visually-hidden">{searchPlaceholder}</span>
+        <input type="search" placeholder={searchPlaceholder} bind:value={query} />
+      </label>
+    {/if}
 
     {#if showLoading}
       <section class="section loading" aria-busy="true" aria-label="正在加载">
@@ -215,238 +267,127 @@
           {/each}
         </ul>
       </section>
-    {:else if recentSection?.items?.length}
-      <section class="section" aria-labelledby="switcher-recent">
-        <h2 id="switcher-recent" class="section-title">Recent</h2>
-        <ul class="list" role="list">
-          {#each recentSection.items as space (space.listKey)}
-            <li
-              class="item"
-              class:current={current === space.listKey}
-              class:expired={space.expired}
-              style:--space-accent={space.accent || 'var(--border)'}
-            >
-              <a
-                class="row"
-                href={space.href}
-                aria-current={current === space.listKey ? 'true' : undefined}
-                onclick={(e) => onSelect(space, e)}
-              >
-                <span
-                  class="accent"
-                  style:background={space.accent || 'var(--border)'}
-                  aria-hidden="true"
-                ></span>
-                {#if space.icon}
-                  <span
-                    class="row-icon"
-                    style:color={`color-mix(in srgb, ${space.accent || 'var(--t2)'} 78%, var(--t2))`}
-                    aria-hidden="true"
-                  >
-                    <Icon name={space.icon} size={15} strokeWidth={1.75} />
-                  </span>
-                {/if}
-                <span class="row-text">
-                  <span class="label-row">
-                    <strong>{space.label}</strong>
-                    {#if space.expired || space.statusBadge}
-                      <span class="status-badge">
-                        {space.statusBadge || PRODUCT_COPY.continueExpired.badge}
-                      </span>
-                    {/if}
-                  </span>
-                  {#if space.detail || progressText(space) || space.resumeAt}
-                    <span class="meta">
-                      {#if space.detail}
-                        <span class="detail">{space.detail}</span>
-                      {/if}
-                      {#if progressText(space)}
-                        <span class="progress">{progressText(space)}</span>
-                      {/if}
-                      {#if space.resumeAt}
-                        <span class="when">{space.resumeAt}</span>
-                      {/if}
-                    </span>
-                  {/if}
-                </span>
-              </a>
-              {#if space.expired || space.statusBadge}
-                <button
-                  type="button"
-                  class="dismiss"
-                  aria-label={PRODUCT_COPY.continueExpired.actionRemove}
-                  onclick={(e) => onDismissResume(space.listKey, e)}
-                >
-                  {PRODUCT_COPY.continueExpired.actionRemove}
-                </button>
-              {/if}
-              <button
-                type="button"
-                class="pin"
-                class:on={SPACE_SWITCHER.state.pinned.includes(space.listKey)}
-                aria-label={SPACE_SWITCHER.state.pinned.includes(space.listKey)
-                  ? `Unpin ${space.label}`
-                  : `Pin ${space.label}`}
-                onclick={(e) => onPin(space.listKey, e)}
-              >
-                <Icon name="star" size={14} strokeWidth={1.75} />
-              </button>
-            </li>
-          {/each}
-        </ul>
-      </section>
-    {:else}
+    {:else if isContinue && !recentSection?.items?.length}
       <div class="empty-recent" role="status">
         <strong class="empty-title">{PRODUCT_COPY.continueEmptyRecent.title}</strong>
         <p class="empty-body">{PRODUCT_COPY.continueEmptyRecent.body}</p>
-        <button
-          type="button"
-          class="empty-action"
-          onclick={() => (allExpanded = true)}
-        >
+        <button type="button" class="empty-action" onclick={goSpacesDirectory}>
           {PRODUCT_COPY.continueEmptyRecent.action}
         </button>
       </div>
-    {/if}
-
-    {#if pinnedSection?.items?.length}
-      <section class="section" aria-labelledby="switcher-pinned">
-        <h2 id="switcher-pinned" class="section-title">Pinned</h2>
-        <ul class="list" role="list">
-          {#each pinnedSection.items as space (space.listKey)}
-            <li
-              class="item"
-              class:current={current === space.listKey}
-              style:--space-accent={space.accent || 'var(--border)'}
-            >
-              <a class="row" href={space.href} onclick={(e) => onSelect(space, e)}>
-                <span
-                  class="accent"
-                  style:background={space.accent || 'var(--border)'}
-                  aria-hidden="true"
-                ></span>
-                {#if space.icon}
-                  <span
-                    class="row-icon"
-                    style:color={`color-mix(in srgb, ${space.accent || 'var(--t2)'} 78%, var(--t2))`}
-                    aria-hidden="true"
-                  >
-                    <Icon name={space.icon} size={15} strokeWidth={1.75} />
-                  </span>
-                {/if}
-                <span class="row-text">
-                  <strong>{space.label}</strong>
-                  {#if space.detail}<span class="meta"><span class="detail">{space.detail}</span></span>{/if}
-                </span>
-              </a>
-              <button
-                type="button"
-                class="pin on"
-                aria-label={`Unpin ${space.label}`}
-                onclick={(e) => onPin(space.listKey, e)}
-              >
-                <Icon name="star" size={14} strokeWidth={1.75} />
-              </button>
-            </li>
-          {/each}
-        </ul>
-      </section>
-    {/if}
-
-    {#if allSection}
-      <section class="section" aria-labelledby="switcher-all">
-        {#if recentSection?.items?.length && !showAll}
-          <button
-            type="button"
-            id="switcher-all"
-            class="all-toggle"
-            aria-expanded="false"
-            onclick={() => (allExpanded = true)}
-          >
-            <span class="all-toggle-label">All Spaces · {allCount}</span>
-            <Icon name="chevron-down" size={16} strokeWidth={1.75} />
-          </button>
-        {:else}
-          <div class="all-head">
-            <h2 id="switcher-all" class="section-title">All Spaces · {allCount}</h2>
-            {#if recentSection?.items?.length}
-              <button
-                type="button"
-                class="expand"
-                aria-expanded="true"
-                onclick={() => {
-                  allExpanded = false
-                  query = ''
-                }}
-              >
-                收起
-              </button>
-            {/if}
-          </div>
-          <label class="search">
-            <span class="visually-hidden">搜索 Space</span>
-            <input type="search" placeholder="搜索 Space" bind:value={query} />
-          </label>
-          <ul class="list" role="list">
-            {#each filteredAll as space (space.listKey)}
-              <li
-                class="item"
-                class:current={current === space.listKey}
-                style:--space-accent={space.accent || 'var(--border)'}
-              >
-                <a class="row" href={space.href} onclick={(e) => onSelect(space, e)}>
-                  <span
-                    class="accent"
-                    style:background={space.accent || 'var(--border)'}
-                    aria-hidden="true"
-                  ></span>
-                  {#if space.icon}
-                    <span
-                      class="row-icon"
-                      style:color={`color-mix(in srgb, ${space.accent || 'var(--t2)'} 78%, var(--t2))`}
-                      aria-hidden="true"
-                    >
-                      <Icon name={space.icon} size={15} strokeWidth={1.75} />
-                    </span>
-                  {/if}
-                  <span class="row-text">
-                    <strong>{space.label}</strong>
-                    {#if space.detail}<span class="meta"><span class="detail">{space.detail}</span></span>{/if}
-                  </span>
-                  {#if space.external}
-                    <Icon name="external" size={14} strokeWidth={1.75} />
-                  {/if}
-                </a>
-                {#if !space.external}
-                  <button
-                    type="button"
-                    class="pin"
-                    class:on={SPACE_SWITCHER.state.pinned.includes(space.listKey)}
-                    aria-label={SPACE_SWITCHER.state.pinned.includes(space.listKey)
-                      ? `Unpin ${space.label}`
-                      : `Pin ${space.label}`}
-                    onclick={(e) => onPin(space.listKey, e)}
-                  >
-                    <Icon name="star" size={14} strokeWidth={1.75} />
-                  </button>
-                {/if}
-              </li>
-            {:else}
-              <li class="empty-search" role="status">
-                <strong class="empty-title">{PRODUCT_COPY.continueSearchEmpty.title}</strong>
-                <p class="empty-body">{PRODUCT_COPY.continueSearchEmpty.body}</p>
-                <button
-                  type="button"
-                  class="empty-action"
-                  onclick={() => (query = '')}
+    {:else}
+      {#each sections as section (section.id)}
+        {@const items =
+          section.id === 'recent'
+            ? filteredRecent
+            : section.id === 'pinned'
+              ? filteredPinned
+              : section.id === 'all'
+                ? filteredAll
+                : filteredSystem}
+        {#if items.length || section.id === 'all'}
+          <section class="section" aria-labelledby={`switcher-${section.id}`}>
+            <h2 id={`switcher-${section.id}`} class="section-title">
+              {#if section.id === 'all'}
+                {section.title} · {allCount}
+              {:else}
+                {section.title}
+              {/if}
+            </h2>
+            <ul class="list" role="list">
+              {#each items as space (space.listKey)}
+                <li
+                  class="item"
+                  class:current={current === space.listKey}
+                  class:expired={space.expired}
+                  style:--space-accent={space.accent || 'var(--border)'}
                 >
-                  {PRODUCT_COPY.continueSearchEmpty.action}
-                </button>
-              </li>
-            {/each}
-          </ul>
+                  <a
+                    class="row"
+                    href={space.href}
+                    aria-current={current === space.listKey ? 'true' : undefined}
+                    onclick={(e) => onSelect(space, e)}
+                  >
+                    <span
+                      class="accent"
+                      style:background={space.accent || 'var(--border)'}
+                      aria-hidden="true"
+                    ></span>
+                    {#if space.icon}
+                      <span
+                        class="row-icon"
+                        style:color={`color-mix(in srgb, ${space.accent || 'var(--t2)'} 78%, var(--t2))`}
+                        aria-hidden="true"
+                      >
+                        <Icon name={space.icon} size={15} strokeWidth={1.75} />
+                      </span>
+                    {/if}
+                    <span class="row-text">
+                      <span class="label-row">
+                        <strong>{space.label}</strong>
+                        {#if space.expired || space.statusBadge}
+                          <span class="status-badge">
+                            {space.statusBadge || PRODUCT_COPY.continueExpired.badge}
+                          </span>
+                        {/if}
+                      </span>
+                      {#if space.detail || progressText(space) || space.resumeAt}
+                        <span class="meta">
+                          {#if space.detail}
+                            <span class="detail">{space.detail}</span>
+                          {/if}
+                          {#if progressText(space)}
+                            <span class="progress">{progressText(space)}</span>
+                          {/if}
+                          {#if space.resumeAt}
+                            <span class="when">{space.resumeAt}</span>
+                          {/if}
+                        </span>
+                      {/if}
+                    </span>
+                    {#if space.external}
+                      <Icon name="external" size={14} strokeWidth={1.75} />
+                    {/if}
+                  </a>
+                  {#if (space.expired || space.statusBadge) && section.id === 'recent'}
+                    <button
+                      type="button"
+                      class="dismiss"
+                      aria-label={PRODUCT_COPY.continueExpired.actionRemove}
+                      onclick={(e) => onDismissResume(space.listKey, e)}
+                    >
+                      {PRODUCT_COPY.continueExpired.actionRemove}
+                    </button>
+                  {/if}
+                  {#if section.id !== 'system' && !(isContinue && section.id === 'recent') && !space.external}
+                    <button
+                      type="button"
+                      class="pin"
+                      class:on={SPACE_SWITCHER.state.pinned.includes(space.listKey)}
+                      aria-label={SPACE_SWITCHER.state.pinned.includes(space.listKey)
+                        ? `Unpin ${space.label}`
+                        : `Pin ${space.label}`}
+                      onclick={(e) => onPin(space.listKey, e)}
+                    >
+                      <Icon name="star" size={14} strokeWidth={1.75} />
+                    </button>
+                  {/if}
+                </li>
+              {:else}
+                {#if section.id === 'all'}
+                  <li class="empty-search" role="status">
+                    <strong class="empty-title">{PRODUCT_COPY.continueSearchEmpty.title}</strong>
+                    <p class="empty-body">{PRODUCT_COPY.continueSearchEmpty.body}</p>
+                    <button type="button" class="empty-action" onclick={() => (query = '')}>
+                      {PRODUCT_COPY.continueSearchEmpty.action}
+                    </button>
+                  </li>
+                {/if}
+              {/each}
+            </ul>
+          </section>
         {/if}
-      </section>
+      {/each}
     {/if}
   </div>
 </LifeOsSheet>
@@ -709,80 +650,6 @@
     font-weight: 650;
     letter-spacing: var(--kenos-tracking-meta, 0.06em);
     text-transform: uppercase;
-  }
-
-  .all-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 6px;
-  }
-
-  .all-head .section-title {
-    margin-bottom: 0;
-    text-transform: none;
-    letter-spacing: 0.02em;
-    font-size: var(--text-sm);
-    font-weight: 650;
-    color: var(--t2);
-  }
-
-  .all-toggle {
-    appearance: none;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-height: 44px;
-    padding: 8px 4px;
-    border: 0;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    background: transparent;
-    color: var(--t1);
-    font: inherit;
-    cursor: pointer;
-    text-align: left;
-  }
-
-  .all-toggle-label {
-    font-size: var(--text-sm);
-    font-weight: 650;
-    color: var(--t2);
-  }
-
-  .all-toggle:hover {
-    background: color-mix(in srgb, var(--t1) 4%, transparent);
-  }
-
-  .all-toggle:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
-    outline-offset: 2px;
-  }
-
-  .all-toggle:active {
-    background: color-mix(in srgb, var(--t1) 8%, transparent);
-  }
-
-  .expand {
-    appearance: none;
-    border: 0;
-    background: transparent;
-    color: var(--accent, var(--t2));
-    font: inherit;
-    font-size: var(--text-sm);
-    font-weight: 600;
-    min-height: 44px;
-    min-width: 44px;
-    padding: 0 8px;
-    cursor: pointer;
-  }
-
-  .expand:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
-    outline-offset: 2px;
   }
 
   .search {
@@ -1069,7 +936,6 @@
     .pin,
     .dismiss,
     .sheet-close,
-    .all-toggle,
     .empty-action,
     .skeleton-bar {
       transition: none !important;

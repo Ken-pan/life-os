@@ -5,7 +5,7 @@
    */
   import Icon from '@life-os/platform-web/svelte/icon'
   import { page } from '$app/state'
-  import { openSpaceSwitcherSheet } from '$lib/kenos/spaceSwitcher.svelte.js'
+  import { openContinueSheet, openQuickSwitchSheet } from '$lib/kenos/spaceSwitcher.svelte.js'
 
   /** @type {{ onCapture?: () => void, title?: string, compact?: boolean }} */
   let { onCapture = undefined, title = '', compact = false } = $props()
@@ -25,11 +25,21 @@
     {/if}
     <button
       type="button"
+      class="icon-btn"
+      data-testid="kenos-quick-switch-trigger"
+      aria-label="Quick Switch"
+      title="Quick Switch (⌘⇧.)"
+      onclick={openQuickSwitchSheet}
+    >
+      <Icon name="search" size={16} strokeWidth={1.75} />
+    </button>
+    <button
+      type="button"
       class="continue"
       data-testid="kenos-space-switcher-fab"
       aria-label="Continue to a recent Space"
       title="Continue (⌘.)"
-      onclick={openSpaceSwitcherSheet}
+      onclick={openContinueSheet}
     >
       <Icon name="history" size={16} strokeWidth={1.75} />
       <span>Continue</span>
@@ -75,7 +85,8 @@
     flex-shrink: 0;
   }
   .ghost,
-  .continue {
+  .continue,
+  .icon-btn {
     appearance: none;
     display: inline-flex;
     align-items: center;
@@ -88,10 +99,19 @@
     font-weight: 600;
     cursor: pointer;
   }
-  .ghost {
+  .ghost,
+  .icon-btn {
     border: 0;
     background: transparent;
     color: var(--t2);
+  }
+  .icon-btn {
+    width: 34px;
+    padding: 0;
+    justify-content: center;
+  }
+  .icon-btn:hover {
+    color: var(--t1);
   }
   .continue {
     border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);

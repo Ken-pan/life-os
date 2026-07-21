@@ -103,7 +103,8 @@ Do not force Finance wide tables, Home 3D solvers, or Knowledge bulk tools into 
 | Live Accessory | Native bottom inset on TabView (not a second web BottomNav) |
 | Continue Recent-only | Native sheet mode `.continueRecent` |
 | Switch Space | Native sheet mode `.switchSpace` (Pinned + All + System Today) |
-| Quick Switch | Native sheet mode `.quickSwitch` (search + recent + spaces) |
+| Quick Switch | Native sheet mode `.quickSwitch`; AIOS `openQuickSwitchSheet` (⌘⇧. + Search) |
+| Web Continue parity | AIOS `continueRecent` / `switchSpace` / `quickSwitch` — Continue = Recent only |
 | Domain Continuity | In-app WKWebView cover (`continuityURL`) |
 | Immersive Focus | Existing full-screen Focus session |
 

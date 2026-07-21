@@ -44,6 +44,31 @@ import { PRODUCT_COPY, sanitizeContinueDetail } from './productStates.core.js'
 export const SPACE_SWITCHER_STORAGE_KEY = CONTINUE_STORAGE_KEY
 export const SPACE_SWITCHER_MAX_RECENT = CONTINUE_MAX_RECENT
 export const SYSTEM_RETURN_LIST_KEY = 'system:today'
+/**
+ * Web chrome modes — mirror Apple `SpaceChromeMode`.
+ * @typedef {'continueRecent' | 'switchSpace' | 'quickSwitch'} SpaceChromeMode
+ */
+export const SPACE_CHROME_MODES = Object.freeze({
+  continueRecent: 'continueRecent',
+  switchSpace: 'switchSpace',
+  quickSwitch: 'quickSwitch',
+})
+/** @type {readonly SpaceChromeMode[]} */
+export const SPACE_CHROME_MODE_LIST = Object.freeze([
+  SPACE_CHROME_MODES.continueRecent,
+  SPACE_CHROME_MODES.switchSpace,
+  SPACE_CHROME_MODES.quickSwitch,
+])
+/**
+ * @param {string | null | undefined} value
+ * @returns {SpaceChromeMode}
+ */
+export function normalizeSpaceChromeMode(value) {
+  const raw = String(value || '').trim()
+  if (raw === SPACE_CHROME_MODES.switchSpace) return SPACE_CHROME_MODES.switchSpace
+  if (raw === SPACE_CHROME_MODES.quickSwitch) return SPACE_CHROME_MODES.quickSwitch
+  return SPACE_CHROME_MODES.continueRecent
+}
 export { spaceIdFromListKey, listKeyForSpaceId, buildResumeDescriptor, isResumeExpired }
 
 /**
@@ -419,11 +444,32 @@ export function resolveSpaceOpenHref(space, state, { now = Date.now() } = {}) {
 }
 
 /**
- * Build switcher sections for UI.
- * Interaction order: Recent → Pinned → All → System(Today only).
+ * System Today row for Switch Space / Quick Switch (not a domain Space).
+ * @returns {SpaceEntry}
+ */
+export function buildSystemTodayEntry() {
+  return {
+    listKey: SYSTEM_RETURN_LIST_KEY,
+    id: 'today',
+    label: 'Today',
+    detail: '系统 Today',
+    href: '/',
+    external: false,
+    namespace: 'system',
+  }
+}
+
+/**
+ * Build switcher sections for UI — mode-gated to match iOS IA lock.
+ *
+ * - continueRecent: Recent Spaces only (no All Domains / System dump)
+ * - switchSpace: System Today → Pinned → Recent → All Domains
+ * - quickSwitch: Recent → Pinned → All Domains → System Today (searchable)
+ *
  * @param {{
  *   catalog?: SpaceEntry[],
  *   state?: SpaceSwitcherState,
+ *   mode?: SpaceChromeMode | string,
  *   includeSystemReturn?: boolean,
  *   now?: number,
  * }} [options]
@@ -431,9 +477,11 @@ export function resolveSpaceOpenHref(space, state, { now = Date.now() } = {}) {
 export function buildSpaceSwitcherSections({
   catalog = buildSpaceCatalog(),
   state = emptySpaceSwitcherState(),
-  includeSystemReturn = true,
+  mode = SPACE_CHROME_MODES.switchSpace,
+  includeSystemReturn,
   now = Date.now(),
 } = {}) {
+  const chromeMode = normalizeSpaceChromeMode(mode)
   const byKey = new Map(catalog.map((s) => [s.listKey, s]))
   /** @param {string[]} keys */
   const pick = (keys) =>
@@ -444,32 +492,55 @@ export function buildSpaceSwitcherSections({
 
   const recent = pick(state.recent).slice(0, 4)
   const pinned = pick(state.pinned)
-  // All Spaces = full catalog (App Library / Applications honesty).
-  // Recent + Pinned stay shortcut strips; count must not shrink to "remainder".
+  // All Domains = full catalog (App Library honesty). Not a Recent/Pinned remainder.
   const all = catalog.map((space) => annotateSpaceWithResume(space, state, { now }))
+  const showSystem =
+    includeSystemReturn !== undefined
+      ? Boolean(includeSystemReturn)
+      : chromeMode !== SPACE_CHROME_MODES.continueRecent
 
   /** @type {Array<{ id: string, title: string, items: SpaceEntry[] }>} */
   const sections = []
+
+  if (chromeMode === SPACE_CHROME_MODES.continueRecent) {
+    if (recent.length) {
+      sections.push({
+        id: 'recent',
+        title: 'Recent Spaces',
+        items: recent,
+      })
+    }
+    return sections
+  }
+
+  if (chromeMode === SPACE_CHROME_MODES.switchSpace) {
+    if (showSystem) {
+      sections.push({
+        id: 'system',
+        title: 'System',
+        items: [buildSystemTodayEntry()],
+      })
+    }
+    if (pinned.length)
+      sections.push({ id: 'pinned', title: 'Pinned', items: pinned })
+    if (recent.length)
+      sections.push({ id: 'recent', title: 'Recent', items: recent })
+    if (all.length)
+      sections.push({ id: 'all', title: 'All Domains', items: all })
+    return sections
+  }
+
+  // quickSwitch — Recent objects / Spaces / System (Things Quick Find spirit)
   if (recent.length)
     sections.push({ id: 'recent', title: 'Recent', items: recent })
   if (pinned.length)
     sections.push({ id: 'pinned', title: 'Pinned', items: pinned })
-  if (all.length) sections.push({ id: 'all', title: 'All Spaces', items: all })
-  if (includeSystemReturn) {
+  if (all.length) sections.push({ id: 'all', title: 'Spaces', items: all })
+  if (showSystem) {
     sections.push({
       id: 'system',
       title: 'System',
-      items: [
-        {
-          listKey: SYSTEM_RETURN_LIST_KEY,
-          id: 'today',
-          label: 'Today',
-          detail: '系统 Today',
-          href: '/',
-          external: false,
-          namespace: 'system',
-        },
-      ],
+      items: [buildSystemTodayEntry()],
     })
   }
   return sections

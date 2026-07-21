@@ -1,8 +1,10 @@
 /**
  * Reactive Space Switcher store — wraps spaceSwitcher.core for AIOS shell.
+ * Chrome modes mirror Apple SpaceChromeMode (Continue / Switch Space / Quick Switch).
  */
 import { CLOUD } from '$lib/cloud.svelte.js'
 import {
+  SPACE_CHROME_MODES,
   applySpaceVisit,
   bindSpaceSwitcherOwner,
   buildSpaceCatalog,
@@ -11,6 +13,7 @@ import {
   emptySpaceSwitcherState,
   forgetSpaceResume,
   loadSpaceSwitcherState,
+  normalizeSpaceChromeMode,
   rememberSpaceRoute,
   resolveSpaceOpenHref,
   saveSpaceSwitcherState,
@@ -30,6 +33,8 @@ import {
 let state = $state(emptySpaceSwitcherState())
 let hydrated = $state(false)
 let sheetOpen = $state(false)
+/** @type {import('./spaceSwitcher.core.js').SpaceChromeMode} */
+let chromeMode = $state(SPACE_CHROME_MODES.continueRecent)
 /** Last Continue control — preferred focus restore when Escape/scrim closes after Cmd+. */
 /** @type {HTMLElement | null} */
 let lastTriggerEl = null
@@ -44,12 +49,25 @@ export const SPACE_SWITCHER = {
   get catalog() {
     return buildSpaceCatalog({ warn() {} })
   },
+  get chromeMode() {
+    return chromeMode
+  },
   get sections() {
     return buildSpaceSwitcherSections({
       catalog: buildSpaceCatalog({ warn() {} }),
       state,
-      includeSystemReturn: true,
+      mode: chromeMode,
     })
+  },
+  /** Always Recent strip for chrome (sidebar / Today) — independent of open sheet mode. */
+  get recentItems() {
+    return (
+      buildSpaceSwitcherSections({
+        catalog: buildSpaceCatalog({ warn() {} }),
+        state,
+        mode: SPACE_CHROME_MODES.continueRecent,
+      }).find((s) => s.id === 'recent')?.items ?? []
+    )
   },
   get currentListKey() {
     return state.currentListKey
@@ -69,28 +87,79 @@ export const SPACE_SWITCHER = {
 }
 
 /**
- * @param {{ trigger?: EventTarget | null } | Event} [opts]
+ * Capture last trigger for focus restore after sheet close.
+ * @param {{ trigger?: EventTarget | null } | Event | undefined} opts
  */
-export function openSpaceSwitcherSheet(opts = {}) {
+function captureTrigger(opts) {
   if (opts instanceof Event) {
     const t = opts.currentTarget
     if (t instanceof HTMLElement) lastTriggerEl = t
-  } else {
-    const trigger = opts?.trigger
-    if (trigger instanceof HTMLElement) {
-      lastTriggerEl = trigger
-    } else if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
-      const active = document.activeElement
-      if (
-        active.matches(
-          '[data-testid="kenos-space-switcher-fab"], [data-testid="kenos-space-switcher-trigger"], [data-testid="kenos-space-switcher-sidebar"], .space-switcher-trigger',
-        )
-      ) {
-        lastTriggerEl = active
-      }
+    return
+  }
+  const trigger = opts?.trigger
+  if (trigger instanceof HTMLElement) {
+    lastTriggerEl = trigger
+    return
+  }
+  if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+    const active = document.activeElement
+    if (
+      active.matches(
+        '[data-testid="kenos-space-switcher-fab"], [data-testid="kenos-space-switcher-trigger"], [data-testid="kenos-space-switcher-sidebar"], [data-testid="kenos-switch-space-trigger"], [data-testid="kenos-quick-switch-trigger"], .space-switcher-trigger',
+      )
+    ) {
+      lastTriggerEl = active
     }
   }
+}
+
+/**
+ * Open chrome sheet in a specific mode (default Continue = recent-only).
+ * @param {{
+ *   mode?: import('./spaceSwitcher.core.js').SpaceChromeMode | string,
+ *   trigger?: EventTarget | null,
+ * } | Event} [opts]
+ */
+export function openSpaceSwitcherSheet(opts = {}) {
+  if (opts instanceof Event) {
+    captureTrigger(opts)
+    chromeMode = SPACE_CHROME_MODES.continueRecent
+  } else {
+    captureTrigger(opts)
+    chromeMode = normalizeSpaceChromeMode(opts?.mode)
+  }
   sheetOpen = true
+}
+
+/** Continue = Recent resumes / Recent Spaces only. */
+export function openContinueSheet(opts = {}) {
+  if (opts instanceof Event) {
+    openSpaceSwitcherSheet(opts)
+    return
+  }
+  openSpaceSwitcherSheet({ ...opts, mode: SPACE_CHROME_MODES.continueRecent })
+}
+
+/** Switch Space = Pinned + Recent + All Domains (+ System Today). */
+export function openSwitchSpaceSheet(opts = {}) {
+  if (opts instanceof Event) {
+    captureTrigger(opts)
+    chromeMode = SPACE_CHROME_MODES.switchSpace
+    sheetOpen = true
+    return
+  }
+  openSpaceSwitcherSheet({ ...opts, mode: SPACE_CHROME_MODES.switchSpace })
+}
+
+/** Quick Switch = searchable resumes + spaces + system. */
+export function openQuickSwitchSheet(opts = {}) {
+  if (opts instanceof Event) {
+    captureTrigger(opts)
+    chromeMode = SPACE_CHROME_MODES.quickSwitch
+    sheetOpen = true
+    return
+  }
+  openSpaceSwitcherSheet({ ...opts, mode: SPACE_CHROME_MODES.quickSwitch })
 }
 
 export function closeSpaceSwitcherSheet() {
@@ -197,7 +266,10 @@ export function ingestResumeHandoff(encoded, { openSheet = false } = {}) {
     userId: CLOUD.user?.id || descriptor.userId,
   })
   persist()
-  if (openSheet) sheetOpen = true
+  if (openSheet) {
+    chromeMode = SPACE_CHROME_MODES.continueRecent
+    sheetOpen = true
+  }
   return true
 }
 
@@ -212,7 +284,10 @@ export function consumeContinueHandoffFromUrl() {
     const open = url.searchParams.get('openContinue') === '1'
     if (!encoded && !open) return
     if (encoded) ingestResumeHandoff(encoded, { openSheet: open })
-    else if (open) sheetOpen = true
+    else if (open) {
+      chromeMode = SPACE_CHROME_MODES.continueRecent
+      sheetOpen = true
+    }
     url.searchParams.delete('kenosResume')
     url.searchParams.delete('openContinue')
     const next = `${url.pathname}${url.search}${url.hash}`

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
+  SPACE_CHROME_MODES,
   SPACE_SWITCHER_STORAGE_KEY,
   SYSTEM_RETURN_LIST_KEY,
   annotateSpaceWithResume,
@@ -14,6 +15,7 @@ import {
   formatResumeRelativeTime,
   inferSpaceListKeyFromPath,
   loadSpaceSwitcherState,
+  normalizeSpaceChromeMode,
   normalizeSpaceSwitcherState,
   rememberSpaceRoute,
   resolveSpaceOpenHref,
@@ -220,7 +222,7 @@ describe('spaceSwitcher.core', () => {
     assert.equal(href, 'https://fitness.kenos.space/')
   })
 
-  it('pins and sections lead with recent, slim system at end', () => {
+  it('switchSpace leads with System Today, then Pinned / Recent / All Domains', () => {
     let state = emptySpaceSwitcherState()
     state = touchRecentSpace(state, 'hosted:plan')
     state = setPinnedSpace(state, 'hosted:music', true)
@@ -228,20 +230,56 @@ describe('spaceSwitcher.core', () => {
     const sections = buildSpaceSwitcherSections({
       catalog,
       state,
-      includeSystemReturn: true,
+      mode: SPACE_CHROME_MODES.switchSpace,
     })
-    assert.equal(sections[0].id, 'recent')
+    assert.equal(sections[0].id, 'system')
+    assert.equal(sections[0].items[0].listKey, SYSTEM_RETURN_LIST_KEY)
     assert.ok(sections.some((s) => s.id === 'pinned'))
+    assert.ok(sections.some((s) => s.id === 'recent'))
     const all = sections.find((s) => s.id === 'all')
     assert.ok(all)
+    assert.equal(all.title, 'All Domains')
+    assert.equal(all.items.length, catalog.length)
+  })
+
+  it('continueRecent is Recent Spaces only — no All Domains dump', () => {
+    let state = emptySpaceSwitcherState()
+    state = touchRecentSpace(state, 'hosted:plan')
+    state = setPinnedSpace(state, 'hosted:music', true)
+    const catalog = buildSpaceCatalog({ warn() {} })
+    const sections = buildSpaceSwitcherSections({
+      catalog,
+      state,
+      mode: SPACE_CHROME_MODES.continueRecent,
+    })
+    assert.equal(sections.length, 1)
+    assert.equal(sections[0].id, 'recent')
+    assert.equal(sections[0].title, 'Recent Spaces')
+    assert.equal(sections.some((s) => s.id === 'all'), false)
+    assert.equal(sections.some((s) => s.id === 'system'), false)
+    assert.equal(sections.some((s) => s.id === 'pinned'), false)
+  })
+
+  it('quickSwitch keeps searchable Spaces + System Today', () => {
+    let state = emptySpaceSwitcherState()
+    state = touchRecentSpace(state, 'hosted:plan')
+    const catalog = buildSpaceCatalog({ warn() {} })
+    const sections = buildSpaceSwitcherSections({
+      catalog,
+      state,
+      mode: SPACE_CHROME_MODES.quickSwitch,
+    })
+    assert.equal(sections[0].id, 'recent')
+    const all = sections.find((s) => s.id === 'all')
+    assert.ok(all)
+    assert.equal(all.title, 'Spaces')
     assert.equal(all.items.length, catalog.length)
     const system = sections.find((s) => s.id === 'system')
     assert.ok(system)
-    assert.equal(system.items.length, 1)
-    assert.equal(system.items[0].listKey, SYSTEM_RETURN_LIST_KEY)
+    assert.equal(normalizeSpaceChromeMode('nope'), SPACE_CHROME_MODES.continueRecent)
   })
 
-  it('keeps All Spaces catalog-complete after demo-like recent seeding', () => {
+  it('keeps All Domains catalog-complete after demo-like recent seeding', () => {
     let state = emptySpaceSwitcherState()
     const catalog = buildSpaceCatalog({ warn() {} })
     for (const space of catalog) {
@@ -250,6 +288,7 @@ describe('spaceSwitcher.core', () => {
     const sections = buildSpaceSwitcherSections({
       catalog,
       state,
+      mode: SPACE_CHROME_MODES.switchSpace,
       includeSystemReturn: false,
     })
     const all = sections.find((s) => s.id === 'all')
