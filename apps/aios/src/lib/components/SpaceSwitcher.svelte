@@ -13,10 +13,12 @@
     SPACE_SWITCHER,
     launchSpace,
     togglePinnedSpace,
+    dismissSpaceResume,
     closeSpaceSwitcherSheet,
     consumeSpaceSwitcherTrigger,
   } from '$lib/kenos/spaceSwitcher.svelte.js'
   import { SYSTEM_RETURN_LIST_KEY } from '$lib/kenos/spaceSwitcher.core.js'
+  import { PRODUCT_COPY } from '$lib/kenos/productStates.core.js'
   import {
     resolveContinueOverlayModeFromWindow,
   } from '$lib/kenos/continueOverlayMode.core.js'
@@ -59,6 +61,8 @@
     allExpanded || Boolean(query.trim()) || !(recentSection?.items?.length),
   )
   const showHandle = $derived(layoutMode === 'mobile')
+  /** Delayed reveal: skeleton only while open and store not yet hydrated. */
+  const showLoading = $derived(open && !SPACE_SWITCHER.hydrated)
 
   /** Desktop Direction A — flip/shift + sidebar chrome clearance. */
   function updateDesktopAnchor() {
@@ -150,6 +154,16 @@
   }
 
   /**
+   * @param {string} listKey
+   * @param {MouseEvent} event
+   */
+  function onDismissResume(listKey, event) {
+    event.preventDefault()
+    event.stopPropagation()
+    dismissSpaceResume(listKey)
+  }
+
+  /**
    * Avoid duplicate progress when detail already carries the same text.
    * @param {import('$lib/kenos/spaceSwitcher.core.js').SpaceEntry} space
    */
@@ -191,7 +205,17 @@
   <div class="switcher" data-testid="kenos-space-switcher">
     <p class="hint">回到刚才做到的地方。浏览全部领域用 Spaces。</p>
 
-    {#if recentSection?.items?.length}
+    {#if showLoading}
+      <section class="section loading" aria-busy="true" aria-label="正在加载">
+        <ul class="list skeleton-list" role="presentation">
+          {#each [1, 2, 3] as n (n)}
+            <li class="item skeleton-row" aria-hidden="true">
+              <span class="skeleton skeleton--text skeleton-bar"></span>
+            </li>
+          {/each}
+        </ul>
+      </section>
+    {:else if recentSection?.items?.length}
       <section class="section" aria-labelledby="switcher-recent">
         <h2 id="switcher-recent" class="section-title">Recent</h2>
         <ul class="list" role="list">
@@ -223,7 +247,14 @@
                   </span>
                 {/if}
                 <span class="row-text">
-                  <strong>{space.label}</strong>
+                  <span class="label-row">
+                    <strong>{space.label}</strong>
+                    {#if space.expired || space.statusBadge}
+                      <span class="status-badge">
+                        {space.statusBadge || PRODUCT_COPY.continueExpired.badge}
+                      </span>
+                    {/if}
+                  </span>
                   {#if space.detail || progressText(space) || space.resumeAt}
                     <span class="meta">
                       {#if space.detail}
@@ -239,6 +270,16 @@
                   {/if}
                 </span>
               </a>
+              {#if space.expired || space.statusBadge}
+                <button
+                  type="button"
+                  class="dismiss"
+                  aria-label={PRODUCT_COPY.continueExpired.actionRemove}
+                  onclick={(e) => onDismissResume(space.listKey, e)}
+                >
+                  {PRODUCT_COPY.continueExpired.actionRemove}
+                </button>
+              {/if}
               <button
                 type="button"
                 class="pin"
@@ -255,7 +296,17 @@
         </ul>
       </section>
     {:else}
-      <p class="empty-recent" role="status">还没有最近 Space。从 Spaces 进入一次后会出现在这里。</p>
+      <div class="empty-recent" role="status">
+        <strong class="empty-title">{PRODUCT_COPY.continueEmptyRecent.title}</strong>
+        <p class="empty-body">{PRODUCT_COPY.continueEmptyRecent.body}</p>
+        <button
+          type="button"
+          class="empty-action"
+          onclick={() => (allExpanded = true)}
+        >
+          {PRODUCT_COPY.continueEmptyRecent.action}
+        </button>
+      </div>
     {/if}
 
     {#if pinnedSection?.items?.length}
@@ -381,7 +432,17 @@
                 {/if}
               </li>
             {:else}
-              <li class="empty-search">没有匹配的 Space</li>
+              <li class="empty-search" role="status">
+                <strong class="empty-title">{PRODUCT_COPY.continueSearchEmpty.title}</strong>
+                <p class="empty-body">{PRODUCT_COPY.continueSearchEmpty.body}</p>
+                <button
+                  type="button"
+                  class="empty-action"
+                  onclick={() => (query = '')}
+                >
+                  {PRODUCT_COPY.continueSearchEmpty.action}
+                </button>
+              </li>
             {/each}
           </ul>
         {/if}
@@ -577,9 +638,68 @@
   .empty-recent {
     margin: 0;
     padding: 12px 0;
+    display: grid;
+    gap: 6px;
     color: var(--t3);
     font-size: var(--kenos-type-secondary, var(--text-sm));
     border-top: 1px solid var(--border);
+  }
+
+  .empty-title {
+    display: block;
+    color: var(--t2);
+    font-size: var(--text-sm);
+    font-weight: 650;
+  }
+
+  .empty-body {
+    margin: 0;
+    color: var(--t3);
+    font-size: var(--kenos-type-secondary, var(--text-sm));
+    line-height: 1.45;
+  }
+
+  .empty-action {
+    appearance: none;
+    justify-self: start;
+    margin-top: 4px;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 4px;
+    border: 0;
+    background: transparent;
+    color: var(--accent, var(--t2));
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .empty-action:hover {
+    text-decoration: underline;
+  }
+
+  .empty-action:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
+    outline-offset: 2px;
+  }
+
+  .skeleton-list {
+    gap: 0;
+  }
+
+  .skeleton-row {
+    min-height: 48px;
+    align-items: center;
+    padding: 10px 8px;
+  }
+
+  .skeleton-bar {
+    display: block;
+    width: 72%;
+    max-width: 18rem;
+    height: 12px;
   }
 
   .section-title {
@@ -760,9 +880,36 @@
     gap: 2px;
   }
 
+  .label-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
   .row-text strong {
     font-size: var(--kenos-type-list, 15px);
     font-weight: var(--kenos-weight-list, 600);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .status-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    min-height: 18px;
+    padding: 0 6px;
+    border-radius: 4px;
+    border: 1px solid color-mix(in srgb, var(--t3) 45%, transparent);
+    background: color-mix(in srgb, var(--t3) 12%, transparent);
+    color: var(--t2);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
   }
 
   .meta {
@@ -803,6 +950,44 @@
     display: inline-flex;
     flex-shrink: 0;
     opacity: 0.92;
+  }
+
+  .dismiss {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--t3);
+    min-width: 44px;
+    min-height: 44px;
+    height: 44px;
+    padding: 0 8px;
+    margin: 2px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .dismiss:hover {
+    color: var(--t2);
+    background: color-mix(in srgb, var(--t1) 5%, transparent);
+  }
+
+  .dismiss:active {
+    background: color-mix(in srgb, var(--t1) 10%, transparent);
+  }
+
+  .dismiss:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
+    outline-offset: 2px;
+    color: var(--t1);
   }
 
   .pin {
@@ -852,6 +1037,8 @@
 
   .empty-search {
     padding: 14px 8px;
+    display: grid;
+    gap: 6px;
     color: var(--t3);
     font-size: var(--text-sm);
     border-bottom: 1px solid var(--border);
@@ -872,5 +1059,22 @@
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.sheet-bg.space-switcher-sheet-bg),
+    :global(.sheet.space-switcher-sheet),
+    :global(.sheet-bg.space-switcher-sheet-bg .space-switcher-sheet),
+    .row,
+    .pin,
+    .dismiss,
+    .sheet-close,
+    .all-toggle,
+    .empty-action,
+    .skeleton-bar {
+      transition: none !important;
+      transform: none !important;
+      animation: none !important;
+    }
   }
 </style>

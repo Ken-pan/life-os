@@ -9,6 +9,7 @@ import {
   buildSpaceSwitcherSections,
   clearSpaceSwitcherState,
   emptySpaceSwitcherState,
+  forgetSpaceResume,
   loadSpaceSwitcherState,
   rememberSpaceRoute,
   resolveSpaceOpenHref,
@@ -267,22 +268,51 @@ export function openSpaceFromSwitcher(space) {
 
 /**
  * Navigate or window.open using the same resume rules as Continue.
+ * Guards against duplicate rapid clicks (single navigation).
  * @param {import('./spaceSwitcher.core.js').SpaceEntry} space
  * @param {{ goto?: (href: string) => unknown }} [nav]
  * @returns {string} resolved href
  */
+let launchInFlight = false
+let launchInFlightUntil = 0
+
 export function launchSpace(space, nav = {}) {
-  const href = openSpaceFromSwitcher(space)
-  if (space.external || /^https?:\/\//i.test(href)) {
-    if (typeof window !== 'undefined') {
-      window.location.assign(href)
+  const now = Date.now()
+  if (launchInFlight && now < launchInFlightUntil) {
+    return resolveSpaceOpenHref(space, state)
+  }
+  launchInFlight = true
+  launchInFlightUntil = now + 700
+  try {
+    const href = openSpaceFromSwitcher(space)
+    if (space.external || /^https?:\/\//i.test(href)) {
+      if (typeof window !== 'undefined') {
+        window.location.assign(href)
+      }
+      return href
+    }
+    if (typeof nav.goto === 'function') {
+      void nav.goto(href)
     }
     return href
+  } finally {
+    if (typeof window !== 'undefined') {
+      window.setTimeout(() => {
+        launchInFlight = false
+      }, 700)
+    } else {
+      launchInFlight = false
+    }
   }
-  if (typeof nav.goto === 'function') {
-    void nav.goto(href)
-  }
-  return href
+}
+
+/**
+ * Remove expired / unwanted Continue resume from store.
+ * @param {string} listKey
+ */
+export function dismissSpaceResume(listKey) {
+  state = forgetSpaceResume(state, listKey)
+  persist()
 }
 
 /**

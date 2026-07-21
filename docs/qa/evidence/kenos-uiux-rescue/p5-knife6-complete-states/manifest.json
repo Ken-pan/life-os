@@ -1,0 +1,39 @@
+{
+  "capturedAt": "2026-07-21T00:41:28.549Z",
+  "knife": "6-complete-states",
+  "base": "http://127.0.0.1:5197",
+  "shots": [
+    {
+      "id": "matrix-light-dark",
+      "ok": true
+    },
+    {
+      "vp": "390x844",
+      "offlineVisible": true,
+      "sheetGone": true
+    },
+    {
+      "vp": "768x1024",
+      "offlineVisible": true,
+      "sheetGone": true
+    },
+    {
+      "vp": "1440x900",
+      "offlineVisible": true,
+      "sheetGone": true
+    },
+    {
+      "id": "1024-touch",
+      "mode": "layout-tablet-lg"
+    }
+  ],
+  "failures": [],
+  "pass": true,
+  "notes": [
+    "Matrix fixtures: /uiux-states light+dark",
+    "Offline banner via window offline event",
+    "Continue Escape close + reducedMotion context",
+    "200% zoom CSS probe",
+    "Does not mutate Continuity contracts"
+  ]
+}

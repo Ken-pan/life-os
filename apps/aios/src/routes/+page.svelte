@@ -20,6 +20,7 @@
   import { WORK, refreshWorkSurface } from '$lib/kenos/workStore.svelte.js'
   import { capabilityEmptyCopy } from '$lib/kenos/capabilityRegistry.core.js'
   import { isProdTodayKenosOverlayEnabled, isProdWorkReadEnabled } from '$lib/kenos/prodReadFlags.core.js'
+  import { PRODUCT_COPY } from '$lib/kenos/productStates.core.js'
 
   const today = $derived(buildTodayReadModel(CONTROL.summary))
   const queue = $derived(summarizeControlQueue(CONTROL))
@@ -141,7 +142,13 @@
           </div>
         </div>
 
-        {#if today.priorities.length}
+        {#if CONTROL.loading && !today.priorities.length && !CONTROL.summary}
+          <div class="priority-skeleton" aria-busy="true" aria-label={PRODUCT_COPY.todayLoading.label}>
+            <div class="skeleton skeleton--title"></div>
+            <div class="skeleton skeleton--text"></div>
+            <div class="skeleton skeleton--text"></div>
+          </div>
+        {:else if today.priorities.length}
           <div class="priority-list">
             {#each today.priorities as item, index (item.id)}
               <a
@@ -174,8 +181,11 @@
             {/each}
           </div>
         {:else}
-          <div class="empty-block">
-            <p>{today.emptyReason}</p>
+          <div class="empty-block" role="status">
+            <p class="empty-block-title">
+              {today.emptyReason || PRODUCT_COPY.todayEmptyUrgent.title}
+            </p>
+            <p class="empty-block-body">{PRODUCT_COPY.todayEmptyUrgent.body}</p>
             <div class="empty-block-actions">
               <button
                 type="button"
@@ -183,10 +193,10 @@
                 aria-label="Continue to a recent Space"
                 onclick={openSpaceSwitcherSheet}
               >
-                继续刚才的事
+                {PRODUCT_COPY.todayEmptyUrgent.actionContinue}
                 <Icon name="history" size={15} strokeWidth={1.75} />
               </button>
-              <a href="/assistant">从 Assistant 开始</a>
+              <a href="/assistant">{PRODUCT_COPY.todayEmptyUrgent.actionAssistant}</a>
             </div>
           </div>
         {/if}
@@ -842,8 +852,33 @@
     padding: 24px 0;
     border-block: 1px solid var(--border);
   }
+  .empty-block-title {
+    margin: 0 0 6px;
+    color: var(--t1);
+    font-size: var(--kenos-type-section, 17px);
+    font-weight: 600;
+  }
+  .empty-block-body {
+    margin: 0 0 14px;
+    color: var(--t3);
+    font-size: var(--text-md);
+    max-width: 36rem;
+  }
   .empty-block p {
     margin: 0 0 12px;
+  }
+  .priority-skeleton {
+    display: grid;
+    gap: 12px;
+    padding: 16px 0;
+  }
+  .priority-skeleton .skeleton {
+    min-height: 14px;
+    border-radius: 6px;
+  }
+  .priority-skeleton .skeleton--title {
+    min-height: 22px;
+    width: 55%;
   }
   .empty-block-actions {
     display: flex;

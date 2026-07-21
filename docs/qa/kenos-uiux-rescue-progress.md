@@ -6,7 +6,7 @@
 | Space Continuity (function) | **PASSED** · Planner / Fitness / Isolation **VALIDATED** |
 | Annotation / evidence binding | Closed in `…T20-12-22-998Z` |
 | Continuity Verification Sheet | Rebuilt from canonical run (not Owner Review) |
-| **P5 Visual Quality** | **IN_PROGRESS** — knives 1–5 DONE · Knife 6 polish open |
+| **P5 Visual Quality** | **IN_PROGRESS** — knives 1–6 DONE · Final Visual Audit next |
 | Owner Review | **NOT OPEN** |
 
 ```text
@@ -71,6 +71,18 @@ OWNER REVIEW — NOT OPEN
 - Capture: `node scripts/qa/kenos-knife5-today-rhythm-capture.mjs --port 5197`
 - Continuity: descriptor / deep links / existing testids **unchanged**
 
+## P5 knife 6 — complete product states
+
+- Status: **PASS** (Owner Review still **NOT OPEN**; Visual still **IN_PROGRESS** — needs Final Audit)
+- Loading skeletons · empty copy · offline low-noise banner · expired Continue + dismiss · launch debounce
+- Copy sanitization (no demo/entity/route leaks in Continue detail)
+- prefers-reduced-motion · Escape close · 200% zoom probe · light/dark matrix fixtures
+- Evidence: `docs/qa/evidence/kenos-uiux-rescue/p5-knife6-complete-states/` (`manifest.json` PASS)
+- Capture: `node scripts/qa/kenos-knife6-complete-states-capture.mjs --port 5197`
+- Continuity contracts/testids **unchanged**; functional canonical remains `…T20-12-22-998Z`
+- Residual: full Continuity E2E against local preview can PARTIAL (domain sync); not a Knife 6 UI fail
+
 ## Still open (later)
 
-- Knife 6: full state polish (loading / empty / error / offline / a11y / dark-light) — **before** Owner Review
+- **P5 Final Visual Audit** (audit-only) → then possibly `READY_FOR_OWNER_REVIEW`
+- Do **not** open Owner Review from Knife 6 alone

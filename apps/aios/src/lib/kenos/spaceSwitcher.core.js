@@ -8,7 +8,9 @@
  * Today · Assistant · Spaces · Inbox
  */
 
-import { knownDomainOrigins } from './domainResume.core.js'
+import {
+  knownDomainOrigins,
+} from './domainResume.core.js'
 import { buildSpacesList, spaceListKey } from './spacesList.core.js'
 import {
   CONTINUE_MAX_RECENT,
@@ -25,6 +27,7 @@ import {
   titleForSpaceId,
   toIso,
 } from '@life-os/platform-web/kenos-space-continuity'
+import { PRODUCT_COPY, sanitizeContinueDetail } from './productStates.core.js'
 
 /** @typedef {{ listKey: string, id: string, label: string, detail?: string, href: string, external?: boolean, namespace?: string, accent?: string, icon?: string }} SpaceEntry */
 /**
@@ -165,6 +168,25 @@ export function touchRecentSpace(state, listKey, { now = Date.now() } = {}) {
     recent,
     currentListKey: key,
     resume: nextResume,
+  }
+}
+
+/**
+ * Drop a Recent/resume entry (expired, deleted target, or user dismiss).
+ * Does not change Continuity schema — presentation/store hygiene only.
+ * @param {SpaceSwitcherState} state
+ * @param {string} listKey
+ */
+export function forgetSpaceResume(state, listKey) {
+  const key = String(listKey || '').trim()
+  if (!key) return state
+  const { [key]: _dropped, ...restResume } = state.resume
+  return {
+    ...state,
+    recent: state.recent.filter((k) => k !== key),
+    pinned: state.pinned.filter((k) => k !== key),
+    resume: restResume,
+    currentListKey: state.currentListKey === key ? null : state.currentListKey,
   }
 }
 
@@ -483,20 +505,23 @@ export function annotateSpaceWithResume(space, state, { now = Date.now() } = {})
   if (!resume) return space
   const expired = isResumeExpired(resume, now)
   const resumeAt = formatResumeRelativeTime(resume.updatedAt, now)
-  /** @type {SpaceEntry & { resumeAt?: string, expired?: boolean, progress?: string }} */
+  /** @type {SpaceEntry & { resumeAt?: string, expired?: boolean, progress?: string, statusBadge?: string }} */
   let next = {
     ...space,
     resumeAt: resumeAt || undefined,
     expired: expired || undefined,
+    statusBadge: expired ? PRODUCT_COPY.continueExpired.badge : undefined,
   }
 
-  const subtitle = resume.displaySubtitle
+  const subtitle = sanitizeContinueDetail(resume.displaySubtitle)
   if (subtitle) {
     next = {
       ...next,
-      detail: expired ? `${subtitle} · 将回到入口` : subtitle,
+      detail: expired
+        ? PRODUCT_COPY.continueExpired.detail
+        : subtitle,
       progress: resume.substate?.progress
-        ? String(resume.substate.progress)
+        ? sanitizeContinueDetail(String(resume.substate.progress)) || undefined
         : undefined,
     }
     return next
@@ -504,19 +529,24 @@ export function annotateSpaceWithResume(space, state, { now = Date.now() } = {})
 
   const route = resume.route
   if (route && route !== space.href) {
-    try {
-      const url = new URL(route)
-      const path = url.pathname === '/' ? url.hostname : url.pathname
-      return { ...next, detail: path }
-    } catch {
-      return {
-        ...next,
-        detail: route.startsWith('/') ? route : '继续上次位置',
-      }
+    if (expired) {
+      return { ...next, detail: PRODUCT_COPY.continueExpired.detail }
+    }
+    return {
+      ...next,
+      detail: sanitizeContinueDetail('继续上次位置') || '继续上次位置',
     }
   }
   if (resume.entityId) {
-    return { ...next, detail: `已选 · ${resume.entityId}` }
+    return {
+      ...next,
+      detail: expired
+        ? PRODUCT_COPY.continueExpired.detail
+        : sanitizeContinueDetail(`已选 · ${resume.entityId}`) || undefined,
+    }
+  }
+  if (expired) {
+    return { ...next, detail: PRODUCT_COPY.continueExpired.detail }
   }
   return next
 }

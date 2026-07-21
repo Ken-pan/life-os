@@ -169,7 +169,9 @@ export function buildTodayReadModel(summary, { now = Date.now() } = {}) {
     asOf: typeof summary.asOf === 'string' ? summary.asOf : null,
     priorities,
     signals,
-    emptyReason: null,
+    emptyReason: priorities.length
+      ? null
+      : '今天没有需要立即处理的事',
     source: 'public.portal_today_summary',
     status: freshness.stale ? 'stale' : 'ready',
   }

@@ -267,9 +267,9 @@ export function buildCapabilityRegistry(options = {}) {
         operation: 'read',
         surface: workFoundation ? 'legacy-backed' : 'unavailable',
         sourceOfTruth: workFoundation ? 'kenos_work_local_projection' : 'unset',
-        userSafeLabel: workFoundation ? '本地 Work 演练' : 'Work 读取未开启',
+        userSafeLabel: workFoundation ? '本地 Work 草稿' : 'Work 读取未开启',
         userSafeDetail: workFoundation
-          ? '本地/演示投影，不是生产 Kenos Work 读模型。'
+          ? '仅本机草稿，尚未接入生产 Work 读模型。'
           : '不会显示为零条 Work。',
         productionReady: false,
       })
@@ -368,8 +368,8 @@ export function buildCapabilityRegistry(options = {}) {
         operation: 'read',
         surface: 'shadow-only',
         sourceOfTruth: 'independent-legacy-vs-kenos',
-        userSafeLabel: '影子比对（诊断）',
-        userSafeDetail: '仅红acted 指标；不作为用户主界面来源。',
+        userSafeLabel: '内部比对（非主界面）',
+        userSafeDetail: '仅供诊断；不作为日常内容来源。',
       }),
     )
   }

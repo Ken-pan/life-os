@@ -10,7 +10,7 @@
     { id: 'empty', state: { status: 'empty', message: '没有可显示的条目', retryable: false } },
     { id: 'unavailable', state: { status: 'unavailable', message: '当前能力尚未开启', retryable: false } },
     { id: 'offline', state: { status: 'offline', message: '当前离线', retryable: true } },
-    { id: 'error', state: { status: 'error', message: '读取失败（演示）', retryable: true } },
+    { id: 'error', state: { status: 'error', message: '读取失败，请重试', retryable: true } },
     { id: 'permission_denied', state: { status: 'permission_denied', message: '需要登录后读取', retryable: false } },
     { id: 'unsupported', state: { status: 'unsupported', message: '此环境不支持该读取', retryable: false } },
     { id: 'partial', state: { status: 'partial', message: '部分来源可用', retryable: true } },
@@ -26,7 +26,7 @@
     <div>
       <p class="kicker">UIUX · States</p>
       <h1 class="kenos-page-title">State matrix</h1>
-      <p class="lede">Round 5 本地状态样板。不写生产、不改 flag。Continue 在系统栏。</p>
+      <p class="lede">Knife 6 本地状态样板。不写生产、不改 Continuity 契约。Continue 在系统栏。</p>
     </div>
   </header>
 
@@ -41,13 +41,35 @@
   </section>
 
   <section class="block">
+    <h2>Continue / Today copy samples</h2>
+    <div class="fixture" data-state="continue-empty">
+      <p class="label">continue empty recent</p>
+      <p><strong>还没有可以继续的内容</strong></p>
+      <p class="meta">这是正常的。进入任一 Space 后，会在这里出现。</p>
+    </div>
+    <div class="fixture" data-state="continue-expired">
+      <p class="label">continue expired</p>
+      <p><strong>Training</strong> <span class="badge">已过期</span></p>
+      <p class="meta">位置已过期 · 将打开 Space 入口</p>
+    </div>
+    <div class="fixture" data-state="today-empty">
+      <p class="label">today no urgent</p>
+      <p><strong>今天没有需要立即处理的事</strong></p>
+      <p class="meta">这是正常状态。可以从 Inbox 整理，或继续刚才的工作。</p>
+    </div>
+  </section>
+
+  <section class="block">
     <h2>Shell banners</h2>
     <label class="toggle">
       <input type="checkbox" bind:checked={offlineSim} />
       模拟 offline banner
     </label>
     {#if offlineSim}
-      <div class="offline-banner" role="status">当前离线 · 显示已缓存内容；恢复网络后将自动重试</div>
+      <div class="offline-banner" role="status">
+        <strong>当前离线</strong>
+        <span> · 显示已缓存内容；恢复网络后将自动重试</span>
+      </div>
     {/if}
   </section>
 

@@ -10,6 +10,7 @@ import {
   buildSpaceSwitcherSections,
   clearSpaceSwitcherState,
   emptySpaceSwitcherState,
+  forgetSpaceResume,
   formatResumeRelativeTime,
   inferSpaceListKeyFromPath,
   loadSpaceSwitcherState,
@@ -255,6 +256,31 @@ describe('spaceSwitcher.core', () => {
     assert.ok(all)
     assert.equal(all.items.length, catalog.length)
     assert.ok(catalog.length >= 6)
+  })
+
+  it('forgets resume entries and sanitizes expired Continue detail', () => {
+    let state = emptySpaceSwitcherState()
+    state = touchRecentSpace(state, 'hosted:training')
+    state = rememberSpaceRoute(state, 'hosted:training', {
+      lastRoute: 'https://fitness.kenos.space/day/x',
+      displaySubtitle: 'Cable fly',
+      entityId: 'demo-overdue-task',
+      now: Date.now() - 1000,
+      expiresAt: Date.now() - 500,
+    })
+    const sections = buildSpaceSwitcherSections({
+      state,
+      includeSystemReturn: false,
+      now: Date.now(),
+    })
+    const recent = sections.find((s) => s.id === 'recent')
+    assert.ok(recent?.items[0]?.expired)
+    assert.match(String(recent.items[0].detail), /过期/)
+    assert.doesNotMatch(String(recent.items[0].detail), /demo-overdue/)
+
+    state = forgetSpaceResume(state, 'hosted:training')
+    assert.equal(state.recent.includes('hosted:training'), false)
+    assert.equal(state.resume['hosted:training'], undefined)
   })
 
   it('annotates recent rows with resume filter for Continue copy', () => {

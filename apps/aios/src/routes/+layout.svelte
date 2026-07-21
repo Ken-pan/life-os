@@ -281,7 +281,8 @@
 {:else}
   {#if !online}
     <div class="offline-banner" data-testid="aios-offline-banner" role="status">
-      当前离线 · 显示已缓存内容；恢复网络后将自动重试
+      <strong>当前离线</strong>
+      <span> · 显示已缓存内容；恢复网络后将自动重试</span>
     </div>
   {/if}
   <CaptureQuick bind:open={captureOpen} />
@@ -352,9 +353,19 @@
     padding: 8px 16px;
     text-align: center;
     font-size: var(--text-sm, 13px);
-    color: var(--warning);
-    background: color-mix(in srgb, var(--warning-subtle, var(--warning)) 55%, var(--bg));
-    border-bottom: 1px solid color-mix(in srgb, var(--warning) 35%, var(--border));
+    font-weight: 450;
+    color: var(--t2);
+    background: color-mix(in srgb, var(--t1) 4%, var(--bg));
+    border-bottom: 1px solid var(--border);
+  }
+  .offline-banner strong {
+    font-weight: 650;
+    color: var(--t1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.space-switcher-trigger) {
+      transition: none;
+    }
   }
   :global(.space-switcher-trigger) {
     appearance: none;
