@@ -1,0 +1,18 @@
+{
+  "date": "2026-07-21",
+  "verdict": "ALL_DOMAIN_DAILY_BETA_PARTIAL_PAPER",
+  "domains": {
+    "work": "DAILY_BETA_INTEGRATED",
+    "money": "DAILY_BETA_INTEGRATED",
+    "library": "DAILY_BETA_INTEGRATED",
+    "music": "DAILY_BETA_INTEGRATED",
+    "home": "DAILY_BETA_INTEGRATED",
+    "health": "DAILY_BETA_INTEGRATED",
+    "paper": "PARTIAL"
+  },
+  "phase4": "EXIT_OPEN",
+  "legacyFallback": "RETAINED",
+  "pushDeployProdMigration": "NOT_PERFORMED",
+  "ssot": "apps/aios/src/lib/kenos/domainIntegration.core.js",
+  "swiftMirror": "clients/apple/Apps/Shared/KenosDomainRegistry.swift"
+}

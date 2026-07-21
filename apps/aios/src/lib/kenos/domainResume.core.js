@@ -7,7 +7,7 @@
  */
 import { LIFE_OS_APP_ORIGINS } from '@life-os/theme'
 
-/** @typedef {'plan' | 'money' | 'training' | 'music' | 'home' | 'knowledge'} DomainId */
+/** @typedef {'plan' | 'money' | 'training' | 'music' | 'home' | 'knowledge' | 'health'} DomainId */
 
 /** @type {Record<DomainId, keyof typeof LIFE_OS_APP_ORIGINS>} */
 export const DOMAIN_APP_IDS = Object.freeze({
@@ -17,6 +17,7 @@ export const DOMAIN_APP_IDS = Object.freeze({
   music: 'music',
   home: 'home',
   knowledge: 'knowledge',
+  health: 'health',
 })
 
 /**
@@ -30,6 +31,7 @@ export const DOMAIN_ORIGINS = Object.freeze({
   music: LIFE_OS_APP_ORIGINS.music.production,
   home: LIFE_OS_APP_ORIGINS.home.production,
   knowledge: LIFE_OS_APP_ORIGINS.knowledge.production,
+  health: LIFE_OS_APP_ORIGINS.health.production,
 })
 
 /** Stable local Personal Daily Beta AIOS port (see scripts/kenos-daily-beta). */

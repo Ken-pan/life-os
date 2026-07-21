@@ -76,6 +76,8 @@
     '/spaces/music',
     '/spaces/home',
     '/spaces/knowledge',
+    '/spaces/paper',
+    '/spaces/health',
     '/focus',
     '/inbox',
     '/approvals',
@@ -299,9 +301,6 @@
   {#if showReturnBanner && page.url.pathname !== '/focus'}
     <FocusSessionShell />
   {/if}
-  {#if !hideGlobalNav && !isAssistant}
-    <KenosSystemBar title={pageTitle} onCapture={() => (captureOpen = true)} />
-  {/if}
   <LifeOsAppShell
     navigationKey={page.url.pathname}
     focusOnNavigate="main"
@@ -357,6 +356,10 @@
     {/snippet}
 
     {#snippet main()}
+      {#if page.url.pathname !== '/focus'}
+        <!-- Music-style: title + action bubble scroll with content (not fixed overlay). -->
+        <KenosSystemBar title={pageTitle} onCapture={() => (captureOpen = true)} />
+      {/if}
       {@render children()}
     {/snippet}
 
@@ -421,17 +424,15 @@
     height: 0 !important;
     overflow: hidden !important;
   }
-  :global(html[data-ios-native-shell='true'] .kenos-system-bar) {
-    display: none !important;
-  }
   /*
-    Native NavigationStack + TabView already own chrome.
-    Zero web PWA safe-top / tabbar padding or content sits in a middle band
-    with empty top+bottom (classic "letterbox" bug on iPhone Daily Beta).
+    Native TabView owns bottom IA. Top tools are no longer a fixed overlay —
+    Music-style large title + bubble live in the scroll surface and scroll away.
   */
   :global(html[data-ios-native-shell='true']) {
     --kenos-system-bar-h: 0px;
-    --kenos-mobile-bottom-pad: 12px;
+    --kenos-mobile-bottom-pad: 0px;
+    --kenos-space-inline: 16px;
+    --kenos-space-page-top: 0px;
     --mobile-tabbar-total-h: 0px;
     --mobile-content-inset: 0px;
     --mobile-content-inset-tabbar: 0px;
@@ -440,7 +441,68 @@
     --safe-top: 0px;
   }
   :global(html[data-ios-native-shell='true'] body) {
-    /* WebView frame is already below nav / above tab bar */
-    min-height: 100%;
+    min-height: 100dvh;
+    background: var(--bg, #08090a);
+  }
+  /* Status-bar clearance only (was 72px for fixed floating tools). */
+  :global(html[data-ios-native-shell='true'] .life-os-app-shell__main),
+  :global(html[data-ios-native-shell='true'] #main-content) {
+    padding-top: 54px !important;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
+  }
+  :global(html[data-ios-native-shell='true'] .today-page) {
+    padding-top: 0 !important;
+    padding-bottom: 12px !important;
+  }
+  :global(html[data-ios-native-shell='true'] .space-page) {
+    padding-top: 0 !important;
+  }
+  /* SystemBar owns the page title on native — avoid double headings / kickers. */
+  :global(html[data-ios-native-shell='true'] .today-header .kenos-page-title),
+  :global(html[data-ios-native-shell='true'] .spaces-header .kenos-page-title),
+  :global(html[data-ios-native-shell='true'] .control-page-header h1),
+  :global(html[data-ios-native-shell='true'] .control-page-kicker),
+  :global(html[data-ios-native-shell='true'] .spaces-header .kenos-page-title) {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+  :global(html[data-ios-native-shell='true'] .today-intro),
+  :global(html[data-ios-native-shell='true'] .control-page-intro),
+  :global(html[data-ios-native-shell='true'] .spaces-header .intro) {
+    /* Keep one short line of context; tighten under Music title */
+    margin-top: 0 !important;
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+    max-width: 34rem;
+  }
+  :global(html[data-ios-native-shell='true'] .today-header),
+  :global(html[data-ios-native-shell='true'] .control-page-header),
+  :global(html[data-ios-native-shell='true'] .spaces-header) {
+    padding-top: 0 !important;
+    padding-bottom: 12px !important;
+    border-bottom: 0 !important;
+  }
+  :global(html[data-ios-native-shell='true'] .today-actions) {
+    /* Refresh lives as content affordance — demote vs Music bubble */
+    opacity: 0.72;
+  }
+  :global(html[data-ios-native-shell='true'] .kenos-page-title) {
+    margin-top: 0;
+    line-height: 1.15;
+  }
+  /* Assistant: Music title owns chrome; keep Scope/model, drop competing top density */
+  :global(html[data-ios-native-shell='true'] .chat-top) {
+    padding-top: 0 !important;
+    padding-bottom: 8px !important;
+    min-height: 0 !important;
+    border-bottom: 0 !important;
+    background: transparent !important;
   }
 </style>
