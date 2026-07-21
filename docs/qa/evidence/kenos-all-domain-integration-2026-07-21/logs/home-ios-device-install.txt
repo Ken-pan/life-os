@@ -1,0 +1,10 @@
+07:54:22  Acquired tunnel connection to device.
+07:54:22  Enabling developer disk image services.
+07:54:22  Acquired usage assertion.
+App installed:
+• bundleID: space.kenos.app.ios
+• installationURL: file:///private/var/containers/Bundle/Application/B1AAFAC8-0B60-48E5-8407-2FA24DCD28FD/KenosIOS.app/
+• launchServicesIdentifier: unknown
+• databaseUUID: 6A2B1109-D682-4C35-A1A8-E9B4FFD80DA7
+• databaseSequenceNumber: 4780
+• options: 

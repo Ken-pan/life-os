@@ -1,15 +1,17 @@
 # Navigation Manifest Matrix
 
-| Domain | Slot1 (native Kenos chip) | Capsule slots (≤4) | More |
-| ------ | ------------------------- | ------------------- | ---- |
-| plan | Kenos return | Tasks, Calendar, Projects, More | Search… |
-| training | Kenos return | Today, Workout, Library, More | History… |
-| work | Kenos return | Today, Projects, Focus, More | Assistant… |
-| money | Kenos return | Today, Transactions, Plan, More | Accounts… |
-| library | Kenos return | Notes, Library, Capture, Search | Projects… |
-| music | Kenos return | Now Playing, Library, Discover, Search | — |
-| home | Kenos return | Home, Rooms, Items, Organize | — |
-| health | Kenos return | Status, Focus, Trends, More | Settings |
-| paper | Kenos return | Recent, Notebooks, Capture, Search | — (fallback) |
+> Updated 2026-07-21 — cross-app tab rethink (usage + HIG). Leading chip is **Spaces** (Shelf), not a return-only Kenos glyph.
 
-Frozen: one dock; Focus Mode hides dock; no bridge pages; no Safari for internal features.
+| Domain   | Spaces chip | Capsule slots (≤4)                 | More                                                |
+| -------- | ----------- | ---------------------------------- | --------------------------------------------------- |
+| plan     | Spaces      | Tasks, Calendar, Inbox, More       | Search · Upcoming · Projects · Completed · Insights |
+| training | Spaces      | Today, Workout, History, More      | Program · Library · Discover · Stats · Tools        |
+| work     | Spaces      | Today, Focus, Inbox, More          | Assistant · Spaces · Settings                       |
+| money    | Spaces      | Today, History, Accounts, More     | Forecast · Stocks · Decision · Review · Settings    |
+| library  | Spaces      | Inbox, Library, Recall, More       | Projects · Timeline · Overview · Settings           |
+| music    | Spaces      | Home, Search, Library, More        | Playlists · Liked · Browse · Import · Settings      |
+| home     | Spaces      | Rooms, Items, Organize, More       | Scan · Find · Cabinet · Cloud scans · Settings      |
+| health   | Spaces      | Status, Focus, Trends, More        | Settings                                            |
+| paper    | Spaces      | Recent, Notebooks, Capture, Search | — (fallback)                                        |
+
+Frozen: one dock; Focus Mode hides dock; no bridge pages; no Safari for internal features. Paths must exist on the domain app.
