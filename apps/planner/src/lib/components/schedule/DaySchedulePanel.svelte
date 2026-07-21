@@ -11,8 +11,13 @@
   import { t, localeTag } from '$lib/i18n/index.js';
   import { todayKey, dateKeyOf } from '$lib/state.svelte.js';
 
-  /** @type {{ dateKey?: string, showToolbar?: boolean, onDateChange?: (dateKey: string) => void }} */
-  let { dateKey = todayKey(), showToolbar = true, onDateChange } = $props();
+  /** @type {{ dateKey?: string, showToolbar?: boolean, showUnscheduled?: boolean, onDateChange?: (dateKey: string) => void }} */
+  let {
+    dateKey = todayKey(),
+    showToolbar = true,
+    showUnscheduled = true,
+    onDateChange,
+  } = $props();
 
   let selected = $state(todayKey());
 
@@ -68,8 +73,10 @@
 
   <p class="schedule-desktop-hint">{t('schedule.desktopHint')}</p>
 
-  <div class="schedule-layout">
-    <UnscheduledPanel dateKey={selected} tasks={unscheduled} />
+  <div class="schedule-layout" class:schedule-layout--timeline-only={!showUnscheduled}>
+    {#if showUnscheduled}
+      <UnscheduledPanel dateKey={selected} tasks={unscheduled} />
+    {/if}
     <DayTimeline dateKey={selected} tasks={scheduled} />
   </div>
 </section>

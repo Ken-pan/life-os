@@ -23,7 +23,11 @@
     <h2 class="today-recap-title">{t('home.recapTitle')}</h2>
     <p class="today-recap-sub">
       {#if progress.total > 0}
-        {t('home.progressCount', { done: progress.done, total: progress.total })}
+        {t('home.progressCount', {
+          count: progress.remaining,
+          done: progress.done,
+          total: progress.total,
+        })}
       {:else}
         {t('home.progressDoneOnly', { count: doneToday.length })}
       {/if}

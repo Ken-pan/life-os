@@ -7,6 +7,7 @@
   import { onDestroy } from 'svelte'
   import {
     isOverdue,
+    taskUrgencyTier,
     updateTask,
     updateTaskDueDateAsync,
     deleteTaskAsync,
@@ -24,6 +25,7 @@
   import { paperLinksForTask } from '$lib/paperLinks.js'
   import Icon from '@life-os/platform-web/svelte/icon'
   import { sensory } from '@life-os/platform-web/kenos-sensory'
+  import { isIosNativeShell } from '@life-os/platform-web/ios-native-shell'
 
   /** @type {{ task: import('$lib/types.js').Task, compact?: boolean, metaMinimal?: boolean, ritualComplete?: boolean, showScheduleAction?: boolean, scheduleDate?: string, contextDate?: string, onToggle?: (id: string) => void, onEdit?: (task: import('$lib/types.js').Task) => void }} */
   let {
@@ -38,6 +40,9 @@
     onToggle,
     onEdit,
   } = $props()
+
+  /** Kenos iOS Domain Mode — title + due/project + one status; chips/actions in detail. */
+  const nativeShell = $derived(isIosNativeShell())
 
   const COMPLETE_RITUAL_MS = 300
   const reduceMotion =
@@ -56,6 +61,8 @@
   const showAsCompleted = $derived(task.completed || completing)
 
   const overdue = $derived(isOverdue(task))
+  /** One warning tier per row — missed time (red gutter) vs muted overdue vs neutral. */
+  const urgencyTier = $derived(taskUrgencyTier(task))
   const kind = $derived(getTaskKind(task))
   const list = $derived(getListById(task.listId))
   const project = $derived(getProjectById(task.projectId))
@@ -63,9 +70,28 @@
     task.recurrence?.rule && task.recurrence.rule !== 'none',
   )
   const hasScheduledBlock = $derived(Boolean(task.scheduledStart))
-  const metaLine = $derived(
-    buildTaskMetaLine(task, t, { contextDate, minimal: metaMinimal, overdue }),
-  )
+  /** Compact lists: leading time column when a clock time exists. */
+  const timeGutter = $derived.by(() => {
+    if (!compact || showAsCompleted) return ''
+    if (task.scheduledStart) return task.scheduledStart
+    if (task.dueTime) return task.dueTime
+    return ''
+  })
+  const metaLine = $derived.by(() => {
+    const line = buildTaskMetaLine(task, t, {
+      contextDate,
+      minimal: metaMinimal,
+      overdue,
+      urgencyTier,
+      omitScheduleTime: Boolean(timeGutter),
+    })
+    if (!nativeShell) return line
+    // Native: fold project into the single meta line (no chip row).
+    const projectTitle = project?.title?.trim()
+    if (!projectTitle) return line
+    if (line && line.includes(projectTitle)) return line
+    return line ? `${line} · ${projectTitle}` : projectTitle
+  })
   const lifeEventSource = $derived(getLifeEventSource(task, t))
   const paperLinks = $derived(paperLinksForTask(task))
   /* compact（Today/Calendar 列表）仍保留关键 chip：来源 · 项目 · 循环 */
@@ -74,12 +100,19 @@
       lifeEventSource || task.projectId || hasRecurrence || paperLinks.length,
     ),
   )
-  const showSecondaryMeta = $derived(!metaMinimal && (!compact || hasKeyChips))
+  /** Native shell: no chip row — detail sheet owns tags / source / sync. */
+  const showSecondaryMeta = $derived(
+    !nativeShell && !metaMinimal && (!compact || hasKeyChips),
+  )
   const showScheduleBtn = $derived(
-    showScheduleAction &&
+    !nativeShell &&
+      showScheduleAction &&
       !task.completed &&
       !completing &&
       Boolean(scheduleDate),
+  )
+  const showOverdueActions = $derived(
+    overdue && !showAsCompleted && !hideQuickActions && !nativeShell,
   )
 
   function fmtDate(dateKey) {
@@ -175,8 +208,23 @@
     requestComplete()
   }
 
+  /** Mirror `--kenos-gesture-edge-strip` (KenosShelfGesture.edgeStripWidth). */
+  function edgeStripPx() {
+    if (typeof getComputedStyle === 'undefined' || typeof document === 'undefined') {
+      return 28
+    }
+    const n = parseFloat(
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--kenos-gesture-edge-strip')
+        .trim(),
+    )
+    return Number.isFinite(n) ? n : 28
+  }
+
   function onPointerDown(e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return
+    // Kenos iOS: leading edge strip belongs to Space Shelf / WK Back — never steal.
+    if (nativeShell && e.clientX <= edgeStripPx()) return
     // 动画进行中再次拖拽：以当前视觉位置为起点，避免跳变
     if (settling) {
       settling = false
@@ -429,7 +477,7 @@
       class="task-row"
       class:done={showAsCompleted}
       class:completing
-      class:overdue
+      class:overdue={urgencyTier === 'overdue'}
       class:task-row--compact={compact}
       class:task-row--focus={kind === 'focus'}
       class:task-row--micro={kind === 'micro'}
@@ -468,6 +516,13 @@
         }}
       >
         <div class="task-title-row">
+          {#if timeGutter}
+            <span
+              class="task-time-gutter"
+              class:missed={urgencyTier === 'missed'}
+              >{timeGutter}</span
+            >
+          {/if}
           {#if kind === 'micro'}
             <span class="task-kind-dot" aria-hidden="true"></span>
           {/if}
@@ -479,7 +534,7 @@
           <p
             class="task-meta-line"
             class:task-meta-line--done={showAsCompleted}
-            class:overdue
+            class:overdue={urgencyTier === 'overdue'}
           >
             {metaLine}
           </p>
@@ -536,7 +591,7 @@
             {/if}
           </div>
         {/if}
-        {#if overdue && !showAsCompleted && !hideQuickActions}
+        {#if showOverdueActions}
           <div
             class="task-overdue-actions"
             role="presentation"

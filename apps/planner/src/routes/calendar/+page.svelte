@@ -6,7 +6,10 @@
   import CalendarContextPanel from '$lib/components/CalendarContextPanel.svelte'
   import DaySchedulePanel from '$lib/components/schedule/DaySchedulePanel.svelte'
   import { taskIndex } from '$lib/taskIndex.svelte.js'
-  import { selectByDate } from '$lib/domain/selectors.js'
+  import {
+    selectScheduledForDate,
+    selectUnscheduledForDate,
+  } from '$lib/domain/selectors.js'
   import { startOfWeek, weekDates } from '$lib/domain/views.js'
   import { completeTask, editTask } from '$lib/taskUi.js'
   import { t, localeTag } from '$lib/i18n/index.js'
@@ -44,7 +47,19 @@
   })
 
   const days = $derived(weekDates(weekStart))
-  const tasks = $derived(selectByDate(taskIndex(), selected))
+  const index = $derived(taskIndex())
+  const timedTasks = $derived(selectScheduledForDate(index, selected))
+  const unscheduledPool = $derived(selectUnscheduledForDate(index, selected))
+  /** Due on the selected day, no clock — belongs to the day, not the backlog. */
+  const allDayTasks = $derived(
+    unscheduledPool.filter((task) => task.dueDate === selected && !task.scheduledStart),
+  )
+  /** True backlog — must not read as “on the selected day”. */
+  const backlogTasks = $derived(
+    unscheduledPool.filter(
+      (task) => !(task.dueDate === selected && !task.scheduledStart),
+    ),
+  )
 
   // Apple 日历式周条：星期表头（周一起始）+ 日期行，今天高亮圈。
   const WEEKDAY_LABELS = ['一', '二', '三', '四', '五', '六', '日']
@@ -88,7 +103,7 @@
       const weekday = new Intl.DateTimeFormat(localeTag(), {
         weekday: 'short',
       }).format(new Date(y, m - 1, d))
-      return `${d}日${weekday}`
+      return `${m} 月 ${d} 日 · ${weekday}`
     }
     return chipLabel(day)
   }
@@ -172,13 +187,25 @@
           </div>
         </div>
 
-        <!-- 空日子不渲染这块：下面 DaySchedulePanel（时间轴）已给足结构，再叠一个大太阳
-             空态纯属冗余占屏。（参考 Apple 日历：日期条下直接是时间轴。） -->
-        {#if tasks.length}
+        <h2 class="cal-day-heading">{sectionTitle(selected)}</h2>
+
+        {#if timedTasks.length}
+          <p class="cal-section-label">{t('schedule.timedSection')}</p>
+        {/if}
+
+        <DaySchedulePanel
+          dateKey={selected}
+          showToolbar={false}
+          showUnscheduled={false}
+          onDateChange={setSelected}
+        />
+
+        {#if allDayTasks.length}
           <TaskGroup
-            title={t('schedule.unscheduled')}
-            {tasks}
+            title={t('schedule.allDaySection')}
+            tasks={allDayTasks}
             compactRows
+            hideCount
             showScheduleAction
             hideQuickActions
             scheduleDate={selected}
@@ -188,11 +215,20 @@
           />
         {/if}
 
-        <DaySchedulePanel
-          dateKey={selected}
-          showToolbar={false}
-          onDateChange={setSelected}
-        />
+        {#if backlogTasks.length}
+          <TaskGroup
+            title={t('schedule.unscheduledTasks', { count: backlogTasks.length })}
+            tasks={backlogTasks}
+            compactRows
+            hideCount
+            showScheduleAction
+            hideQuickActions
+            scheduleDate={selected}
+            contextDate={selected}
+            onToggle={completeTask}
+            onEdit={editTask}
+          />
+        {/if}
       </div>
   {/snippet}
   {#snippet aside()}

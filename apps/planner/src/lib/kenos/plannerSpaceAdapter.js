@@ -31,8 +31,10 @@ import { resolvePrimaryNavTab, isMoreNavActive } from '$lib/nav.js'
 import { goto } from '$app/navigation'
 
 export const PLANNER_SPACE_ID = 'plan'
-/** Match KenosDomainRegistry Plan gold (0xC9A227). */
-export const PLANNER_ACCENT = '#C9A227'
+/** Match KenosDomainAccent.plan dark brand (light uses #C47A08 / on-glass #87580E). */
+export const PLANNER_ACCENT = '#D4AE2E'
+export const PLANNER_ACCENT_LIGHT = '#C47A08'
+export const PLANNER_ACCENT_ON_GLASS_LIGHT = '#87580E'
 export const PLANNER_ICON = 'calendar'
 
 function openComposeWithRouteDefaults() {

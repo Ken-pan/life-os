@@ -10,6 +10,8 @@ const t = (key, params = {}) => {
     'task.unscheduledLine': '今天 · 未排程',
     'task.unscheduledOnly': '未排程',
     'task.overdueDue': '已逾期 · 截止 {date}',
+    'task.overdueShort': '逾期 · {date}',
+    'task.actionToday': '今天',
     'task.kindFocus': '关键',
     'task.priority_P0': '高',
     'task.p1': '高',
@@ -42,7 +44,7 @@ describe('buildTaskMetaLine', () => {
       t,
       { contextDate: '2026-07-06' },
     )
-    expect(line).toBe('已安排 09:00–10:30 · 预计 1h30m')
+    expect(line).toBe('09:00–10:30')
   })
 
   it('formats unscheduled task on today', () => {
@@ -61,7 +63,7 @@ describe('buildTaskMetaLine', () => {
     expect(line).toBe('截止 20:00 · 今天 · 未排程 · 预计 30m')
   })
 
-  it('shows overdue original due date plus schedule range only', () => {
+  it('shows muted overdue date only — no stacked schedule range', () => {
     const line = buildTaskMetaLine(
       {
         dueDate: '2026-07-03',
@@ -70,9 +72,39 @@ describe('buildTaskMetaLine', () => {
         priority: 'P0',
       },
       t,
-      { contextDate: '2026-07-06', overdue: true },
+      { contextDate: '2026-07-06', overdue: true, urgencyTier: 'overdue' },
     )
-    expect(line).toBe('已逾期 · 截止 7月3日 · 已安排 09:00–09:30')
+    expect(line).toBe('逾期 · 7月3日')
+  })
+
+  it('missed-today keeps neutral context (gutter owns the red time)', () => {
+    const line = buildTaskMetaLine(
+      {
+        dueDate: '2026-07-06',
+        scheduledStart: '09:00',
+        durationMinutes: 30,
+      },
+      t,
+      {
+        contextDate: '2026-07-06',
+        urgencyTier: 'missed',
+        omitScheduleTime: true,
+      },
+    )
+    expect(line).toBe('今天')
+  })
+
+  it('omits schedule range when time gutter is present', () => {
+    const line = buildTaskMetaLine(
+      {
+        dueDate: '2026-07-06',
+        scheduledStart: '11:00',
+        durationMinutes: 60,
+      },
+      t,
+      { contextDate: '2026-07-06', omitScheduleTime: true },
+    )
+    expect(line).toBe('今天')
   })
 
   it('hides recurrence text on context-day views but keeps it in date-less lists', () => {
@@ -100,6 +132,6 @@ describe('buildTaskMetaLine', () => {
       t,
       { contextDate: '2026-07-06' },
     )
-    expect(line).toBe('已安排 09:00–09:30 · 预计 30m · 1/2')
+    expect(line).toBe('09:00–09:30 · 1/2')
   })
 })

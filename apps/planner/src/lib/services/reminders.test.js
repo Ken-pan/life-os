@@ -1,5 +1,11 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { reminderFireAt } from './reminders.js';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import {
+  reminderFireAt,
+  syncRemindersToNative,
+  __resetNativeLocalCacheForTests,
+} from './reminders.js';
+import * as nativeBridge from '@life-os/platform-web/kenos-native-bridge';
+import { S } from '../state.svelte.js';
 
 const baseTask = {
   id: '1',
@@ -44,5 +50,53 @@ describe('reminderFireAt', () => {
     vi.setSystemTime(new Date(2026, 6, 5, 8, 0, 0));
     const fireAt = reminderFireAt({ ...baseTask, dueTime: null, reminderMinutes: 0 });
     expect(fireAt).toBe(new Date(2026, 6, 5, 9, 0, 0).getTime());
+  });
+});
+
+describe('syncRemindersToNative', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    __resetNativeLocalCacheForTests();
+  });
+
+  it('skips when native bridge unavailable', async () => {
+    vi.spyOn(nativeBridge, 'isNativeBridgeAvailable').mockReturnValue(false);
+    const result = await syncRemindersToNative([{ id: 'a', title: 'A', fireAt: Date.now() + 60_000 }]);
+    expect(result.skipped).toBe(true);
+  });
+
+  it('syncs jobs when localNotifications capability is present', async () => {
+    vi.spyOn(nativeBridge, 'isNativeBridgeAvailable').mockReturnValue(true);
+    vi.spyOn(nativeBridge, 'getNativeCapabilities').mockResolvedValue({
+      ok: true,
+      capabilities: { localNotifications: true, push: false },
+    });
+    const sync = vi
+      .spyOn(nativeBridge, 'nativeNotificationsSyncReminders')
+      .mockResolvedValue({ ok: true, scheduled: 1 });
+    const prev = S.settings.notificationsEnabled;
+    S.settings.notificationsEnabled = true;
+    const jobs = [{ id: 'task-1', title: 'Ship', fireAt: Date.now() + 120_000 }];
+    const result = await syncRemindersToNative(jobs);
+    S.settings.notificationsEnabled = prev;
+    expect(result.ok).toBe(true);
+    expect(sync).toHaveBeenCalledWith({ jobs });
+  });
+
+  it('clears plan reminders when notifications disabled', async () => {
+    vi.spyOn(nativeBridge, 'isNativeBridgeAvailable').mockReturnValue(true);
+    vi.spyOn(nativeBridge, 'getNativeCapabilities').mockResolvedValue({
+      ok: true,
+      capabilities: { localNotifications: true },
+    });
+    const cancel = vi
+      .spyOn(nativeBridge, 'nativeNotificationsCancel')
+      .mockResolvedValue({ ok: true });
+    const prev = S.settings.notificationsEnabled;
+    S.settings.notificationsEnabled = false;
+    const result = await syncRemindersToNative([{ id: 'a', title: 'A', fireAt: Date.now() + 60_000 }]);
+    S.settings.notificationsEnabled = prev;
+    expect(result.cleared).toBe(true);
+    expect(cancel).toHaveBeenCalledWith({ type: 'plan_reminder' });
   });
 });

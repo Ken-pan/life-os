@@ -365,4 +365,34 @@ export function isDueToday(task) {
   return task.dueDate === todayKey();
 }
 
+/**
+ * Today + a concrete clock time that has already passed.
+ * Stronger than date-overdue: drives the single red time signal.
+ * @param {import('../types.js').Task} task
+ * @param {Date} [now]
+ */
+export function isMissedTodayTime(task, now = new Date()) {
+  if (!task?.dueDate || task.completed || task.deletedAt) return false
+  if (task.dueDate !== todayKey()) return false
+  const clock = task.scheduledStart || task.dueTime
+  if (!clock || typeof clock !== 'string') return false
+  const parts = clock.split(':').map(Number)
+  if (!Number.isFinite(parts[0])) return false
+  const startMinutes = parts[0] * 60 + (parts[1] || 0)
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+  return startMinutes < nowMinutes
+}
+
+/**
+ * One urgency tier per row — max one primary warning signal in the UI.
+ * @param {import('../types.js').Task} task
+ * @param {Date} [now]
+ * @returns {'missed' | 'overdue' | 'neutral'}
+ */
+export function taskUrgencyTier(task, now = new Date()) {
+  if (isMissedTodayTime(task, now)) return 'missed'
+  if (isOverdue(task)) return 'overdue'
+  return 'neutral'
+}
+
 export { recurrenceLabel } from './recurrence.js';

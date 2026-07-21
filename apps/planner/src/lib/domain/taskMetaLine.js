@@ -13,18 +13,27 @@ import { recurrenceLabel } from './recurrence.js'
  * - kind / priority 不再进小字（改由 checkbox accent 与 focus 色条表达）
  * - contextDate（Today / Calendar 选中日）下不重复 recurrence 长文案
  * - 子任务进度以 `n/m` 结尾，列表可扫
+ * - 一行最多一个警示：missed 时间在 gutter；普通逾期用低饱和短状态；未来中性
  * @param {import('../types.js').Task} task
  * @param {(key: string, params?: Record<string, unknown>) => string} t
  * @param {{
  *   contextDate?: string,
  *   minimal?: boolean,
  *   overdue?: boolean,
+ *   urgencyTier?: 'missed' | 'overdue' | 'neutral',
+ *   omitScheduleTime?: boolean,
  * }} [opts]
  */
 export function buildTaskMetaLine(task, t, opts = {}) {
-  const { contextDate, minimal = false, overdue = false } = opts
+  const {
+    contextDate,
+    minimal = false,
+    overdue = false,
+    urgencyTier = overdue ? 'overdue' : 'neutral',
+    omitScheduleTime = false,
+  } = opts
   const onContextDay = Boolean(
-    contextDate && task.dueDate === contextDate && !overdue,
+    contextDate && task.dueDate === contextDate && urgencyTier === 'neutral',
   )
 
   if (minimal) {
@@ -38,36 +47,38 @@ export function buildTaskMetaLine(task, t, opts = {}) {
   /** @type {string[]} */
   const parts = []
 
-  if (overdue && task.dueDate) {
-    // 逾期显式说出来，别只靠粉红色让用户猜（审查 P0-4）。
-    parts.push(t('task.overdueDue', { date: formatDateShort(task.dueDate) }))
-    if (task.scheduledStart) {
-      const startMinutes = parseTimeToMinutes(task.scheduledStart)
-      parts.push(
-        t('schedule.scheduledRange', {
-          start: task.scheduledStart,
-          end: formatMinutesAsTime(startMinutes + taskDurationMinutes(task)),
-        }),
-      )
+  // Date-overdue: one muted status only — clock lives in the time gutter when present.
+  if (urgencyTier === 'overdue' && task.dueDate) {
+    parts.push(t('task.overdueShort', { date: formatDateShort(task.dueDate) }))
+    appendSubtaskProgress(task, parts)
+    return parts.join(' · ')
+  }
+
+  // Missed-today time: gutter owns the red signal; meta stays contextual/neutral.
+  if (urgencyTier === 'missed') {
+    if (contextDate && task.dueDate === contextDate) {
+      parts.push(t('task.actionToday'))
+    } else if (task.dueDate) {
+      parts.push(formatDateShort(task.dueDate))
     }
     appendSubtaskProgress(task, parts)
     return parts.join(' · ')
   }
 
-  if (task.scheduledStart) {
+  if (task.scheduledStart && !omitScheduleTime) {
     const startMinutes = parseTimeToMinutes(task.scheduledStart)
     const duration = taskDurationMinutes(task)
+    // Time range is enough; skip redundant “已安排 / 预计” labels on the row.
     parts.push(
-      t('schedule.scheduledRange', {
-        start: task.scheduledStart,
-        end: formatMinutesAsTime(startMinutes + duration),
-      }),
+      `${task.scheduledStart}–${formatMinutesAsTime(startMinutes + duration)}`,
     )
-    parts.push(
-      t('schedule.estimatedDuration', {
-        duration: formatDurationCompact(duration, t),
-      }),
-    )
+  } else if (omitScheduleTime) {
+    // Clock lives in the leading gutter — meta answers context only.
+    if (onContextDay || (contextDate && task.dueDate === contextDate)) {
+      parts.push(t('task.actionToday'))
+    } else if (task.dueDate && !contextDate) {
+      parts.push(formatDateShort(task.dueDate))
+    }
   } else {
     if (task.dueTime) parts.push(t('schedule.dueAt', { time: task.dueTime }))
     if (onContextDay || (!task.dueDate && contextDate)) {

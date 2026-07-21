@@ -129,6 +129,12 @@ body {
   transition: transform var(--kenos-motion-press) var(--kenos-ease-press, var(--ease, ease));
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .swipe-content.settling {
+    transition: none;
+  }
+}
+
 .swipe-content.dragging .task-row:hover {
   border-color: transparent;
   box-shadow: none;
@@ -223,6 +229,11 @@ body {
 
 .task-row.overdue {
   border-color: color-mix(in srgb, var(--deadline) 35%, var(--border));
+}
+
+/* Native: one overdue signal in meta — no red rail competing with Plan amber. */
+:global(html[data-ios-native-shell='true']) .task-row.overdue {
+  border-color: var(--border);
 }
 
 .task-check {
@@ -362,7 +373,7 @@ body {
   margin-bottom: var(--stack-section);
   padding: var(--space-2-5) var(--space-3);
   min-height: 48px;
-  border-radius: var(--radius-control);
+  border-radius: var(--card-radius, var(--radius-lg, 16px));
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid var(--border);
 }
@@ -603,11 +614,29 @@ body {
   user-select: none;
 }
 
+.cal-day-heading {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--t1);
+  line-height: 1.25;
+}
+
+.cal-section-label {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+
 .cal-weekstrip-head {
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
 .cal-strip-month {
@@ -652,7 +681,7 @@ body {
 }
 
 .cal-dow-row {
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-2);
 }
 
 .cal-dow-row span {
@@ -669,18 +698,19 @@ body {
   position: relative;
   display: grid;
   place-items: center;
-  gap: 3px;
-  padding: 4px 0 6px;
+  gap: 4px;
+  padding: 8px 0 10px;
   border: none;
   background: transparent;
   cursor: pointer;
+  min-height: 52px;
 }
 
 .cal-date-num {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   font-size: var(--text-md);
   font-weight: 600;
@@ -702,16 +732,16 @@ body {
   font-weight: 700;
 }
 
-/* 事件圆点：独立标识「这天有任务」，与选中/今天无关。 */
+/* 事件圆点：仅表示「有日程」；选中用实心数字圆，不再叠第三种橙色语义。 */
 .cal-date-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--accent);
+  background: color-mix(in srgb, var(--t2) 72%, transparent);
 }
 
 .cal-date--sel .cal-date-dot {
-  background: var(--on-accent, #14310a);
+  background: color-mix(in srgb, var(--on-accent, #14310a) 85%, transparent);
 }
 
 .desktop-split-main {
@@ -940,6 +970,23 @@ body {
   min-width: 0;
 }
 
+.task-time-gutter {
+  flex-shrink: 0;
+  min-width: 2.75rem;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--t2);
+  line-height: 1.35;
+}
+
+/* Only missed-today clock times use critical red — date-overdue stays muted in meta. */
+.task-time-gutter.missed {
+  color: color-mix(in srgb, var(--deadline) 78%, var(--t2));
+}
+
 .task-kind-dot {
   width: 6px;
   height: 6px;
@@ -1111,7 +1158,8 @@ body {
 }
 
 .task-meta-line.overdue {
-  color: var(--deadline);
+  /* Muted date-overdue — not the same weight as missed-today time. */
+  color: color-mix(in srgb, var(--deadline) 38%, var(--t2));
 }
 
 .task-meta-line--done {
@@ -1264,6 +1312,11 @@ body {
 
 .insight-banner--overdue {
   border-left: 3px solid var(--deadline);
+  background: color-mix(in srgb, var(--deadline) 6%, var(--card));
+}
+
+.insight-banner--overdue .insight-banner-title {
+  color: var(--deadline);
 }
 
 .insight-banner--schedule,
@@ -3156,11 +3209,17 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     display: none;
   }
 
-  /* Kenos native: scroll-root already pads status (54) + dock (80+safe).
-     Avoid stacking timeline safe-area on top of .main-col bottom pad. */
+  /* Kenos native: timeline is its own scroll surface — must clear Domain Dock
+     at scroll-end (main-col pad does not help nested overflow). */
   :global(html[data-ios-native-shell='true']) .calendar-page .day-timeline-scroll {
     max-height: calc(var(--app-vh, 100dvh) - 14rem);
-    padding-bottom: var(--space-6);
+    padding-bottom: calc(
+      var(--space-6) + var(--kenos-dock-scroll-end-pad, 78px) +
+        env(safe-area-inset-bottom, 0px)
+    );
+    scroll-padding-bottom: calc(
+      var(--kenos-dock-scroll-end-pad, 78px) + env(safe-area-inset-bottom, 0px)
+    );
   }
 
   /* 时间轴成开放画布后，底部「回到当前时间」也去掉卡片外框保持一致。 */
@@ -3224,7 +3283,7 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     background: var(--overlay-backdrop);
     -webkit-backdrop-filter: blur(1px);
     backdrop-filter: blur(1px);
-    animation: life-os-fade-in var(--dur-fast) var(--ease-standard);
+    /* Enter motion from .kenos-drawer-backdrop (kenos-motion.css). */
   }
 
   .task-drawer-panel {
@@ -3242,25 +3301,13 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     box-shadow: var(--shadow-elevated, 0 12px 40px rgba(31, 28, 24, 0.12));
     padding-top: max(var(--space-3), env(safe-area-inset-top));
     padding-bottom: max(var(--space-3), var(--safe-bottom-effective));
-    animation: planner-task-drawer-in var(--dur-base) var(--ease-standard);
+    /* Enter motion from .kenos-drawer-panel (kenos-motion.css). */
   }
 
-  /* Kenos Continuity: match status pad (54) even if env(safe-area) is muted. */
+  /* Kenos Continuity: match status pad even if env(safe-area) is muted. */
   :global(html[data-ios-native-shell='true']) .task-drawer-panel {
-    padding-top: 54px;
+    padding-top: var(--kenos-chrome-top-inset, 54px);
     padding-bottom: max(var(--space-3), env(safe-area-inset-bottom, 0px));
-  }
-
-  @keyframes planner-task-drawer-in {
-    from {
-      transform: translateX(-100%);
-      opacity: 0.7;
-    }
-
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
   }
 
   .task-drawer-header {

@@ -57,13 +57,13 @@
 {#if open}
   <button
     type="button"
-    class="task-drawer-backdrop"
+    class="task-drawer-backdrop kenos-drawer-backdrop"
     aria-label={t('common.close')}
     onclick={closeTaskDrawer}
   ></button>
   <div
     bind:this={panelEl}
-    class="task-drawer-panel"
+    class="task-drawer-panel kenos-drawer-panel kenos-drawer-panel--leading"
     role="dialog"
     aria-modal="true"
     aria-labelledby="task-drawer-title"
