@@ -1,0 +1,179 @@
+LAUNCH spaces kenos://shell?path=/spaces
+07:43:29  Acquired tunnel connection to device.
+07:43:29  Enabling developer disk image services.
+07:43:29  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK spaces
+LAUNCH work-home http://10.20.202.15:5219/work?iosNativeShell=1
+07:43:32  Acquired tunnel connection to device.
+07:43:32  Enabling developer disk image services.
+07:43:32  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK work-home
+LAUNCH work-return kenos://return
+07:43:35  Acquired tunnel connection to device.
+07:43:35  Enabling developer disk image services.
+07:43:35  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK work-return
+LAUNCH money-home http://10.20.202.15:5180/home/today?iosNativeShell=1
+07:43:37  Acquired tunnel connection to device.
+07:43:37  Enabling developer disk image services.
+07:43:37  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK money-home
+LAUNCH money-return kenos://return
+07:43:40  Acquired tunnel connection to device.
+07:43:40  Enabling developer disk image services.
+07:43:40  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK money-return
+LAUNCH library-home http://10.20.202.15:5879/?iosNativeShell=1
+07:43:41  Acquired tunnel connection to device.
+07:43:42  Enabling developer disk image services.
+07:43:42  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK library-home
+LAUNCH library-return kenos://return
+07:43:45  Acquired tunnel connection to device.
+07:43:45  Enabling developer disk image services.
+07:43:45  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK library-return
+LAUNCH music-home http://10.20.202.15:5189/?iosNativeShell=1
+07:43:46  Acquired tunnel connection to device.
+07:43:46  Enabling developer disk image services.
+07:43:46  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK music-home
+LAUNCH music-return kenos://return
+07:43:49  Acquired tunnel connection to device.
+07:43:49  Enabling developer disk image services.
+07:43:49  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK music-return
+LAUNCH home-home http://10.20.202.15:5196/storage?iosNativeShell=1
+07:43:51  Acquired tunnel connection to device.
+07:43:51  Enabling developer disk image services.
+07:43:51  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK home-home
+LAUNCH home-return kenos://return
+07:43:54  Acquired tunnel connection to device.
+07:43:54  Enabling developer disk image services.
+07:43:54  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK home-return
+LAUNCH health-home http://10.20.202.15:5192/?iosNativeShell=1
+07:43:56  Acquired tunnel connection to device.
+07:43:56  Enabling developer disk image services.
+07:43:56  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK health-home
+LAUNCH health-return kenos://return
+07:43:59  Acquired tunnel connection to device.
+07:43:59  Enabling developer disk image services.
+07:43:59  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK health-return
+LAUNCH plan-home http://10.20.202.15:5188/?iosNativeShell=1
+07:44:01  Acquired tunnel connection to device.
+07:44:01  Enabling developer disk image services.
+07:44:01  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK plan-home
+LAUNCH plan-return kenos://return
+07:44:04  Acquired tunnel connection to device.
+07:44:04  Enabling developer disk image services.
+07:44:04  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK plan-return
+LAUNCH training-home http://10.20.202.15:5190/?iosNativeShell=1
+07:44:06  Acquired tunnel connection to device.
+07:44:06  Enabling developer disk image services.
+07:44:06  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK training-home
+LAUNCH training-return kenos://return
+07:44:09  Acquired tunnel connection to device.
+07:44:09  Enabling developer disk image services.
+07:44:09  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK training-return
+LAUNCH paper-home http://10.20.202.15:5219/spaces/paper?iosNativeShell=1
+07:44:11  Acquired tunnel connection to device.
+07:44:11  Enabling developer disk image services.
+07:44:11  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK paper-home
+LAUNCH paper-return kenos://return
+07:44:14  Acquired tunnel connection to device.
+07:44:14  Enabling developer disk image services.
+07:44:14  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK paper-return
+LAUNCH spaces-final kenos://shell?path=/spaces
+07:44:16  Acquired tunnel connection to device.
+07:44:16  Enabling developer disk image services.
+07:44:16  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+LAUNCH_OK spaces-final
+=== ACCESS DELTA (new log bytes after launches) ===
+10.20.202.6 - "GET /__health HTTP/1.1" 200 -
+10.20.202.6 - "GET /spaces?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /spaces?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+aios delta_bytes=747191
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /brand-circle-light-96.png HTTP/1.1" 200 -
+10.20.202.6 - "GET /brand-circle-light-96.png HTTP/1.1" 200 -
+10.20.202.6 - "GET /brand-circle-dark-96.png HTTP/1.1" 200 -
+10.20.202.6 - "GET /brand-circle-dark-96.png HTTP/1.1" 200 -
+planner delta_bytes=223765
+10.20.202.6 - "GET /?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /brand-circle-light-96.png HTTP/1.1" 200 -
+10.20.202.6 - "GET /brand-circle-dark-96.png HTTP/1.1" 200 -
+10.20.202.6 - "GET /assets/images/exercises/b_pull.jpg HTTP/1.1" 200 -
+fitness delta_bytes=158578
+10.20.202.6 - "GET /assets/brand/brand-circle-light-96.png HTTP/1.1" 200 -
+10.20.202.6 - "GET /assets/brand/brand-circle-dark-96.png HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /assets/brand/brand-circle-light-96.png HTTP/1.1" 200 -
+10.20.202.6 - "GET /assets/brand/brand-circle-dark-96.png HTTP/1.1" 200 -
+finance delta_bytes=2047
+10.20.202.15 - "GET /settings?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+knowledge delta_bytes=413
+10.20.202.6 - "GET /?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /_app/immutable/nodes/0.D2HbDiRi.js HTTP/1.1" 200 -
+10.20.202.6 - "GET /_app/immutable/nodes/0.D2HbDiRi.js HTTP/1.1" 200 -
+music delta_bytes=612
+10.20.202.6 - "GET /storage?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /_app/immutable/nodes/0.J1K8kptL.js HTTP/1.1" 200 -
+10.20.202.6 - "GET /_app/immutable/nodes/0.J1K8kptL.js HTTP/1.1" 200 -
+home delta_bytes=389
+10.20.202.6 - "GET /?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /?iosNativeShell=1 HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+10.20.202.6 - "GET /manifest.webmanifest HTTP/1.1" 200 -
+health delta_bytes=222
+SCREENSHOTS: unavailable (pymobiledevice3/DDI screenshotr). Prior PASS_LAN screenshots retained under screenshots/.
+Kenos Personal Daily Beta
+  release: 4aa3a639e5cf 2026-07-21T14:09:33Z
+  aios: UP  http://127.0.0.1:5219
+  planner: UP  http://127.0.0.1:5188
+  fitness: UP  http://127.0.0.1:5190
+  finance: UP  http://127.0.0.1:5180
+  knowledge: UP  http://127.0.0.1:5879
+  music: UP  http://127.0.0.1:5189
+  home: UP  http://127.0.0.1:5196
+  health: UP  http://127.0.0.1:5192

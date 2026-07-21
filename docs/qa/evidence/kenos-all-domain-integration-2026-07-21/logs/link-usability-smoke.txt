@@ -1,0 +1,164 @@
+pymobiledevice3=
+LAUNCH kenos://shell?path=/spaces
+07:41:03  Acquired tunnel connection to device.
+07:41:03  Enabling developer disk image services.
+07:41:03  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/10-spaces.png
+LAUNCH http://10.20.202.15:5219/work?iosNativeShell=1
+07:41:05  Acquired tunnel connection to device.
+07:41:05  Enabling developer disk image services.
+07:41:05  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/20-work-home.png
+LAUNCH kenos://return
+07:41:09  Acquired tunnel connection to device.
+07:41:09  Enabling developer disk image services.
+07:41:09  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/21-work-return.png
+LAUNCH http://10.20.202.15:5180/home/today?iosNativeShell=1
+07:41:11  Acquired tunnel connection to device.
+07:41:11  Enabling developer disk image services.
+07:41:11  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/30-money-home.png
+LAUNCH kenos://return
+07:41:15  Acquired tunnel connection to device.
+07:41:15  Enabling developer disk image services.
+07:41:15  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/31-money-return.png
+LAUNCH http://10.20.202.15:5879/?iosNativeShell=1
+07:41:18  Acquired tunnel connection to device.
+07:41:18  Enabling developer disk image services.
+07:41:18  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/40-library-home.png
+LAUNCH kenos://return
+07:41:21  Acquired tunnel connection to device.
+07:41:21  Enabling developer disk image services.
+07:41:21  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/41-library-return.png
+LAUNCH http://10.20.202.15:5189/?iosNativeShell=1
+07:41:24  Acquired tunnel connection to device.
+07:41:24  Enabling developer disk image services.
+07:41:24  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/50-music-home.png
+LAUNCH kenos://return
+07:41:27  Acquired tunnel connection to device.
+07:41:27  Enabling developer disk image services.
+07:41:28  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/51-music-return.png
+LAUNCH http://10.20.202.15:5196/storage?iosNativeShell=1
+07:41:30  Acquired tunnel connection to device.
+07:41:30  Enabling developer disk image services.
+07:41:31  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/60-home-home.png
+LAUNCH kenos://return
+07:41:34  Acquired tunnel connection to device.
+07:41:34  Enabling developer disk image services.
+07:41:34  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/61-home-return.png
+LAUNCH http://10.20.202.15:5192/?iosNativeShell=1
+07:41:37  Acquired tunnel connection to device.
+07:41:37  Enabling developer disk image services.
+07:41:37  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/70-health-home.png
+LAUNCH kenos://return
+07:41:40  Acquired tunnel connection to device.
+07:41:40  Enabling developer disk image services.
+07:41:40  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/71-health-return.png
+LAUNCH http://10.20.202.15:5188/?iosNativeShell=1
+07:41:43  Acquired tunnel connection to device.
+07:41:43  Enabling developer disk image services.
+07:41:43  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/80-plan-home.png
+LAUNCH kenos://return
+07:41:46  Acquired tunnel connection to device.
+07:41:46  Enabling developer disk image services.
+07:41:46  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/81-plan-return.png
+LAUNCH http://10.20.202.15:5190/?iosNativeShell=1
+07:41:49  Acquired tunnel connection to device.
+07:41:49  Enabling developer disk image services.
+07:41:49  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/90-training-home.png
+LAUNCH kenos://return
+07:41:52  Acquired tunnel connection to device.
+07:41:52  Enabling developer disk image services.
+07:41:52  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/91-training-return.png
+LAUNCH http://10.20.202.15:5219/spaces/paper?iosNativeShell=1
+07:41:55  Acquired tunnel connection to device.
+07:41:55  Enabling developer disk image services.
+07:41:55  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/95-paper-placeholder.png
+LAUNCH kenos://return
+07:41:58  Acquired tunnel connection to device.
+07:41:58  Enabling developer disk image services.
+07:41:58  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/96-paper-return.png
+LAUNCH kenos://shell?path=/spaces
+07:42:01  Acquired tunnel connection to device.
+07:42:01  Enabling developer disk image services.
+07:42:01  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+SHOT_FAIL /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-all-domain-integration-2026-07-21/screenshots/link-check-2026-07-21/99-spaces-final.png
+total 0
+drwxr-xr-x   2 kenpan  staff   64 Jul 21 07:41 .
+drwxr-xr-x  23 kenpan  staff  736 Jul 21 07:41 ..
