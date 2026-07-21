@@ -1,7 +1,7 @@
 {
-  "startedAt": "2026-07-21T01:58:10.362Z",
-  "finishedAt": "2026-07-21T01:58:46.516Z",
-  "sha": "aff9303903c10752c0ea6ca657a1da36442d6d12",
+  "startedAt": "2026-07-21T04:17:29.392Z",
+  "finishedAt": "2026-07-21T04:18:06.473Z",
+  "sha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
   "origins": {
     "AIOS": "http://127.0.0.1:5219",
     "PLANNER": "http://127.0.0.1:5188",
@@ -19,10 +19,11 @@
           "app": "aios",
           "environment": "local-daily-beta",
           "port": 5219,
-          "root": "/Users/kenpan/.kenos-daily-beta/current/apps/aios/build",
-          "sha": "aff9303903c10752c0ea6ca657a1da36442d6d12",
-          "shortSha": "aff9303903c1",
-          "builtAt": "2026-07-21T01:55:26Z",
+          "root": "/Users/kenpan/.kenos-daily-beta/releases/3e49cf6c7da7/apps/aios/build",
+          "server": "python-static",
+          "sha": "3e49cf6c7da7fb4dd089adf88cfb34baddf7cb4c",
+          "shortSha": "3e49cf6c7da7",
+          "builtAt": "2026-07-21T04:16:57Z",
           "origins": {
             "aios": "http://127.0.0.1:5219",
             "planner": "http://127.0.0.1:5188",

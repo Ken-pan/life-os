@@ -13,7 +13,7 @@ status: controlled-production-canary-legacy-cutover-open
 ## 当前快照（2026-07-21）
 
 - Formal baseline: `502d805c28b29d3d50c0efa2699ab717a301ac45`，审计时与 `origin/master` 同步。
-- Production migration tip: `20260720230000`。
+- Production migration tip: `20260721144405`（`kenos_app_logs`；prior Wave tip `20260720230000`）。
 - Owner cohort: Plan create/title/due/schedule/project/complete/reopen/archive、MCP complete、Capture convert 已走 Kenos command/RPC；非 cohort、未覆盖字段和 sync upsert 仍有 legacy fallback。
 - AIOS / Portal: Approval/Capture canary 与 Portal `/today` owner-limited soft redirect 已有生产证据；Portal 未退役。
 - Apple / Phase 5: 多端代码、构建、device install/open 和本地 contextual behavior 已验证；App Group/APNs/分发、ProductionExecutor 与生产主动能力仍关闭。

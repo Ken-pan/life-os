@@ -5,9 +5,9 @@ Chinese / Japanese / Korean (CJK) input uses an **Input Method Editor (IME)**. D
 **Shared utility:** `@life-os/theme` → `createImeGuard()`
 
 ```js
-import { createImeGuard } from '@life-os/theme';
+import { createImeGuard } from '@life-os/theme'
 
-const ime = createImeGuard();
+const ime = createImeGuard()
 ```
 
 ---
@@ -16,11 +16,11 @@ const ime = createImeGuard();
 
 Any input where **Enter submits**, **debounced search/API** runs on `input`, or **URL / route** updates from typing:
 
-| Pattern | Risk without guard |
-|---------|-------------------|
-| Search / typeahead | Partial pinyin triggers API or `/search?q=zhoujie` |
+| Pattern              | Risk without guard                                  |
+| -------------------- | --------------------------------------------------- |
+| Search / typeahead   | Partial pinyin triggers API or `/search?q=zhoujie`  |
 | Chat / comment Enter | Enter confirms IME candidate but also sends message |
-| Form Enter-to-save | Enter selects kanji/hanzi and saves draft |
+| Form Enter-to-save   | Enter selects kanji/hanzi and saves draft           |
 
 Apply to `<input>`, `<textarea>`, and contenteditable surfaces that accept CJK text.
 
@@ -45,7 +45,9 @@ compositionend → keydown (isComposing === false)
 **Do not** clear the guard synchronously in `compositionend`. Always defer:
 
 ```js
-clearTimer = setTimeout(() => { composing = false; }, 0);
+clearTimer = setTimeout(() => {
+  composing = false
+}, 0)
 ```
 
 You may call `onCommit(value)` in `compositionend` **before** that timer; only the **flag clear** must be deferred.
@@ -96,33 +98,37 @@ Use controlled `value` + explicit handlers (avoid `bind:value` driving side effe
 
 ### Rules
 
-| Event | Do | Don't |
-|-------|-----|--------|
-| `input` | Update visible draft; skip API / URL / submit while composing | Call `goto()`, close overlays, or overwrite `value` mid-composition |
-| `compositionend` | Commit once via `onCommit`; defer clearing guard | Set `composing = false` synchronously before the next `keydown` |
-| `Enter` | Return early when `ime.isComposing(e)` | Rely on `!e.isComposing` alone |
-| `blur` | Skip dismiss if `ime.isComposing()` (no event) | Close dropdown/modal during active composition |
+| Event            | Do                                                            | Don't                                                               |
+| ---------------- | ------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `input`          | Update visible draft; skip API / URL / submit while composing | Call `goto()`, close overlays, or overwrite `value` mid-composition |
+| `compositionend` | Commit once via `onCommit`; defer clearing guard              | Set `composing = false` synchronously before the next `keydown`     |
+| `Enter`          | Return early when `ime.isComposing(e)`                        | Rely on `!e.isComposing` alone                                      |
+| `blur`           | Skip dismiss if `ime.isComposing()` (no event)                | Close dropdown/modal during active composition                      |
 
 ---
 
 ## Music OS reference implementations
 
-| Surface | File | Side effect deferred |
-|---------|------|----------------------|
-| App bar typeahead | `apps/music/src/lib/components/GlobalSearch.svelte` | `fetchSuggestions`, Enter → full search |
-| Search page (mobile toolbar) | `apps/music/src/routes/search/+page.svelte` | `setSearchQuery` → URL + `runFullSearch` |
+| Surface                      | File                                                | Side effect deferred                     |
+| ---------------------------- | --------------------------------------------------- | ---------------------------------------- |
+| App bar typeahead            | `apps/music/src/lib/components/GlobalSearch.svelte` | `fetchSuggestions`, Enter → full search  |
+| Search page (mobile toolbar) | `apps/music/src/routes/search/+page.svelte`         | `setSearchQuery` → URL + `runFullSearch` |
 
 Planner task title: `apps/planner/src/lib/components/TaskEditorSheet.svelte` (Enter-to-save).
+
+AIOS chat: `Composer.svelte` · `Message.svelte` (edit) · `AgentThread.svelte` — `createImeGuard` + `enterkeyhint`.
+
+Knowledge library: `NoteEditor.svelte` (title + contenteditable Enter).
 
 ### Planner Capture（`PLNR.CAPTURE.0`）
 
 规范：[`planner-task-capture-spec.md`](./planner-task-capture-spec.md)
 
-| 表面 | 文件 | IME guard | Enter / 副作用 | 状态 |
-| ---- | ---- | --------- | -------------- | ---- |
-| TaskEditorSheet 标题 | `TaskEditorSheet.svelte` | ✅ | Enter → 保存 | 已覆盖 |
-| QuickAddBar 输入 | `QuickAddBar.svelte` | ✅ | Enter → 创建 | composition 期间 submit fail-closed |
-| `@项目` 补全 | `taskCapture.js` · `ProjectPicker.svelte` | ✅ | Enter 先选项目；无菜单才创建 | mobile + desktop E2E |
+| 表面                 | 文件                                      | IME guard | Enter / 副作用               | 状态                                |
+| -------------------- | ----------------------------------------- | --------- | ---------------------------- | ----------------------------------- |
+| TaskEditorSheet 标题 | `TaskEditorSheet.svelte`                  | ✅        | Enter → 保存                 | 已覆盖                              |
+| QuickAddBar 输入     | `QuickAddBar.svelte`                      | ✅        | Enter → 创建                 | composition 期间 submit fail-closed |
+| `@项目` 补全         | `taskCapture.js` · `ProjectPicker.svelte` | ✅        | Enter 先选项目；无菜单才创建 | mobile + desktop E2E                |
 
 `@` 触发与 `atQuery` 推导在 composition 期间返回 `null`；QuickAdd 的 `submit()` 也再次检查 guard，避免 Safari 选词 Enter 落入表单提交。
 

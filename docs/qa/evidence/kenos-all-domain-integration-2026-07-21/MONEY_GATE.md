@@ -8,14 +8,14 @@
 
 ## Wired
 
-| Surface | Implementation |
-| ------- | -------------- |
-| Registry | money `integrationStatus: integrated`, alias finance→money |
-| Nav | Kenos · Today · Transactions · Plan · More |
-| Continuity | `KenosDomainRegistry.homeURL("money")` → `/home/today` (LAN :5180) |
-| Adapter | `financeSpaceAdapter.js` — sanitize amounts from resume subtitles |
-| Chrome | hide web tabbar/aside; DomainMusicHeader when iosNativeShell |
-| Leave-guard | installed; compose → transactions |
+| Surface     | Implementation                                                     |
+| ----------- | ------------------------------------------------------------------ |
+| Registry    | money `integrationStatus: integrated`, alias finance→money         |
+| Nav         | Spaces · Today · History · Accounts · More                         |
+| Continuity  | `KenosDomainRegistry.homeURL("money")` → `/home/today` (LAN :5180) |
+| Adapter     | `financeSpaceAdapter.js` — sanitize amounts from resume subtitles  |
+| Chrome      | hide web tabbar/aside; DomainMusicHeader when iosNativeShell       |
+| Leave-guard | installed; compose → transactions                                  |
 
 ## Privacy
 

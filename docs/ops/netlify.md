@@ -8,16 +8,16 @@
 
 **六个 canonical web surface**（四生产 + Portal 启动器 + Home 实验）均指向同一 monorepo；另有 KnowledgeOS 实验 site 与 AIOS 只读 viewer。下表记录代码侧已知接线；DNS / 实际 deploy 状态若未在本次远程复核，不从 manifest 推断。
 
-| Site          | Package directory | Build                         | Publish              | Production URL              | 备注     |
-| ------------- | ----------------- | ----------------------------- | -------------------- | --------------------------- | -------- |
-| planneros-ken | `apps/planner`    | `npm run build -w planner-os` | `apps/planner/build` | https://planner.kenos.space | 生产     |
-| fitnessos-ken | `apps/fitness`    | `npm run build -w fitness-os` | `apps/fitness/build` | https://fitness.kenos.space | 生产     |
-| financeos-ken | `apps/finance`    | `npm run build -w finance-os` | `apps/finance/build` | https://finance.kenos.space | 生产     |
-| musicos-ken   | `apps/music`      | `npm run build -w music-os`   | `apps/music/build`   | https://music.kenos.space   | 生产     |
-| portal-ken    | `apps/portal`     | `npm run build -w portal`     | `apps/portal/build`  | https://portal.kenos.space  | 启动器   |
-| homeos-ken    | `apps/home`       | `npm run build -w home-os`    | `apps/home/build`    | https://home.kenos.space    | **实验** |
-| knowledgeos-ken | `apps/knowledge` | `npm run build -w knowledge-os` | `apps/knowledge/build` | https://knowledge.kenos.space（DNS 待加） | **实验** |
-| kenos-uiux-review | `apps/uiux-review-gallery` | `npm run build -w @life-os/uiux-review-gallery`（no-op） | `apps/uiux-review-gallery/public` | https://kenos-uiux-review.netlify.app | UI/UX 审核画廊（静态，site id `cadccd64-e40a-439d-865d-5be5b3741ff3`；图片提交在 public/shots，`npm run qa:uiux-gallery` 生成） |
+| Site              | Package directory          | Build                                                    | Publish                           | Production URL                            | 备注                                                                                                                            |
+| ----------------- | -------------------------- | -------------------------------------------------------- | --------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| planneros-ken     | `apps/planner`             | `npm run build -w planner-os`                            | `apps/planner/build`              | https://planner.kenos.space               | 生产                                                                                                                            |
+| fitnessos-ken     | `apps/fitness`             | `npm run build -w fitness-os`                            | `apps/fitness/build`              | https://fitness.kenos.space               | 生产                                                                                                                            |
+| financeos-ken     | `apps/finance`             | `npm run build -w finance-os`                            | `apps/finance/build`              | https://finance.kenos.space               | 生产                                                                                                                            |
+| musicos-ken       | `apps/music`               | `npm run build -w music-os`                              | `apps/music/build`                | https://music.kenos.space                 | 生产                                                                                                                            |
+| portal-ken        | `apps/portal`              | `npm run build -w portal`                                | `apps/portal/build`               | https://portal.kenos.space                | 启动器                                                                                                                          |
+| homeos-ken        | `apps/home`                | `npm run build -w home-os`                               | `apps/home/build`                 | https://home.kenos.space                  | **实验**                                                                                                                        |
+| knowledgeos-ken   | `apps/knowledge`           | `npm run build -w knowledge-os`                          | `apps/knowledge/build`            | https://knowledge.kenos.space（DNS 待加） | **实验**                                                                                                                        |
+| kenos-uiux-review | `apps/uiux-review-gallery` | `npm run build -w @life-os/uiux-review-gallery`（no-op） | `apps/uiux-review-gallery/public` | https://kenos-uiux-review.netlify.app     | UI/UX 审核画廊（静态，site id `cadccd64-e40a-439d-865d-5be5b3741ff3`；图片提交在 public/shots，`npm run qa:uiux-gallery` 生成） |
 
 > **AIOS 云端只读版（命名不同，但接线方式与上表一致）：** `aios-kenos.netlify.app`（site id `5bfa64b2-7108-479d-b9e2-45f9c4d9f791`），package directory `apps/aios`，`npm run build -w aios-os`（`VITE_AIOS_CLOUD=1` 由 `apps/aios/netlify.toml` 注入）。AIOS 是本地优先原生 Mac app，云端仅登录后查看已同步对话/记忆/图片的**只读查看器**，无自定义 `kenos.space` 子域（代码里 `aios.kenos.space` 的 production URL 目前无 DNS，不解析）。详见 [`../roadmap/apps/aios.md`](../roadmap/apps/aios.md)。
 
@@ -33,6 +33,7 @@ Push 到 `life-os` 的 `master` 分支 → Netlify 自动构建对应 Site。
 > **接线要点：** 用 API 改接线时，`updateSite` 的 **`build_settings` key 会被静默忽略**（返回 200 但不生效），必须写在 **`repo`** key 里；且必须设 `package_path: apps/<app>`（`base` 留空），否则 `apps/<app>/netlify.toml` 根本不会被读到。
 >
 > **体检（新站上线后务必做一次）：**
+>
 > ```bash
 > npx netlify api getSite --data '{"site_id":"<id>"}' | grep -o '"repo_url":"[^"]*"'
 > # 为 null = 没接 Git = push 不会上线
@@ -50,12 +51,12 @@ cd life-os && npm install && npm run build
 
 ## GitHub Actions
 
-| Workflow                                         | 作用                                                                                               |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `.github/workflows/ci.yml` → `build`             | PR / push：`validate:tokens` + Turbo `npm run build`                                               |
+| Workflow                                         | 作用                                                                                                         |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `.github/workflows/ci.yml` → `build`             | PR / push：`validate:tokens` + Turbo `npm run build`                                                         |
 | `.github/workflows/ci.yml` → `design-catalog`    | 当前代码收集 smoke **922** + a11y **147** + snapshots **524**（`--list`，2026-07-17）；实际通过状态看当次 CI |
-| `.github/workflows/ci.yml` → `integration-smoke` | `check:lifeos-boundaries` + outbox 结构；有 `SUPABASE_ACCESS_TOKEN` 时跑远程 identity/outbox smoke |
-| `.github/workflows/deploy-netlify.yml`           | **手动** CLI 上传兜底（需 `NETLIFY_AUTH_TOKEN` secret）                                            |
+| `.github/workflows/ci.yml` → `integration-smoke` | `check:lifeos-boundaries` + outbox 结构；有 `SUPABASE_ACCESS_TOKEN` 时跑远程 identity/outbox smoke           |
+| `.github/workflows/deploy-netlify.yml`           | **手动** CLI 上传兜底（需 `NETLIFY_AUTH_TOKEN` secret）                                                      |
 
 主路径是 Netlify Git 构建；GHA 部署仅在需要时使用。
 
@@ -72,12 +73,13 @@ cd life-os && npm install && npm run build
 
 代码通过 `@life-os/sync` 的 `resolveSupabaseEnv()` 同时读取 `PUBLIC_*` 与 `VITE_*`（见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) INTG.IDENTITY.0）。
 
-**本地 `.env.example` 前缀：**
+**本地 `.env.example` 前缀（均指向 `iueozzuctstwvzbcxcyh` publishable key）：**
 
-| App                       | 示例前缀            |
-| ------------------------- | ------------------- |
-| Planner                   | `PUBLIC_SUPABASE_*` |
-| Fitness / Finance / Music | `VITE_SUPABASE_*`   |
+| App                              | 示例前缀                       |
+| -------------------------------- | ------------------------------ |
+| Planner                          | `PUBLIC_SUPABASE_*`            |
+| Fitness / Finance / Music        | `VITE_SUPABASE_*`              |
+| Portal / Home / AIOS / Knowledge | `PUBLIC_SUPABASE_*` + `VITE_*` |
 
 修改 `packages/sync` 或 `packages/theme` 会触发四站 rebuild（各 app `netlify.toml` 的 ignore 规则包含 `packages/*`）。
 
@@ -102,12 +104,12 @@ CI=1 npx netlify deploy --prod --no-build --filter portal --dir=apps/portal/buil
 
 ## Home（HOME.EXPER.0，🟡 实验 · 生产已部署）
 
-| 项           | 状态                                                                                     |
-| ------------ | ---------------------------------------------------------------------------------------- |
-| 代码         | `apps/home`（SvelteKit + adapter-static）                                                |
-| Netlify site | `homeos-ken`（`69d4c072-d153-499c-90a8-57909df461a4`）                                   |
-| 生产 URL     | https://home.kenos.space                                                                 |
-| Portal       | ✅ Launcher 实验区（HOME.PORTAL.1 · 2026-07-09）                                                  |
+| 项           | 状态                                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------------------- |
+| 代码         | `apps/home`（SvelteKit + adapter-static）                                                            |
+| Netlify site | `homeos-ken`（`69d4c072-d153-499c-90a8-57909df461a4`）                                               |
+| 生产 URL     | https://home.kenos.space                                                                             |
+| Portal       | ✅ Launcher 实验区（HOME.PORTAL.1 · 2026-07-09）                                                     |
 | Integration  | ✅ SSO + redirect；云端已有 `home.scans` / 私有照片桶 / `home.events`；可编辑 spatial 项目仍本地真源 |
 
 ```bash
@@ -120,6 +122,7 @@ CI=1 npx netlify deploy --prod --no-build --filter home-os --dir=apps/home/build
 其他：
 
 - Planner / Finance AI：`KIMI_API_KEY`（Netlify Functions）
+- AIOS 云端 Kimi 回退：`aios-kenos` 站点同样需要 `KIMI_API_KEY`（`/api/ai/chat`；本机网关不可达时启用）
 
 ---
 

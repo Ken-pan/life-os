@@ -21,7 +21,8 @@ import { createHash } from 'node:crypto'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '../..')
-const DEVICE = process.env.KENOS_IOS_DEVICE || '8097F071-CAB6-5AF0-8258-BCD985E9D79E'
+const DEVICE =
+  process.env.KENOS_IOS_DEVICE || '8097F071-CAB6-5AF0-8258-BCD985E9D79E'
 const BUNDLE = 'space.kenos.app.ios'
 const REF = 'iueozzuctstwvzbcxcyh'
 const OWNER = {
@@ -30,7 +31,8 @@ const OWNER = {
   uidRedacted: 'c283…c42e',
 }
 const ACCOUNT_B = {
-  email: process.env.KENOS_ACCOUNT_B_EMAIL || 'kenos-daily-beta-b@life-os.local',
+  email:
+    process.env.KENOS_ACCOUNT_B_EMAIL || 'kenos-daily-beta-b@life-os.local',
   password: process.env.KENOS_ACCOUNT_B_PASSWORD || 'KenosDailyBetaB-2026!',
 }
 const EXERCISE_ID = 'c_fly'
@@ -44,18 +46,37 @@ const FITNESS_ROOT = join(RELEASE, 'apps/fitness/build')
 const EVID = join(ROOT, 'docs/qa/evidence/kenos-ios-daily-beta-2026-07-21')
 const RUN_ID = `ios-strict-${new Date().toISOString().replace(/[:.]/g, '-')}`
 const LOG_DIR = join(EVID, 'logs', RUN_ID)
-const AIOS_LOG = join(process.env.HOME, 'Library/Logs/KenosDailyBeta/aios.stderr.log')
-const PLANNER_LOG = join(process.env.HOME, 'Library/Logs/KenosDailyBeta/planner.stderr.log')
-const FITNESS_LOG = join(process.env.HOME, 'Library/Logs/KenosDailyBeta/fitness.stderr.log')
-const BUILD_SHA =
-  (existsSync(join(process.env.HOME, '.kenos-daily-beta/ios-build-sha.txt'))
-    ? readFileSync(join(process.env.HOME, '.kenos-daily-beta/ios-build-sha.txt'), 'utf8').trim()
-    : execSync('git -C "' + ROOT + '" rev-parse HEAD', { encoding: 'utf8' }).trim())
+const AIOS_LOG = join(
+  process.env.HOME,
+  'Library/Logs/KenosDailyBeta/aios.stderr.log',
+)
+const PLANNER_LOG = join(
+  process.env.HOME,
+  'Library/Logs/KenosDailyBeta/planner.stderr.log',
+)
+const FITNESS_LOG = join(
+  process.env.HOME,
+  'Library/Logs/KenosDailyBeta/fitness.stderr.log',
+)
+const BUILD_SHA = existsSync(
+  join(process.env.HOME, '.kenos-daily-beta/ios-build-sha.txt'),
+)
+  ? readFileSync(
+      join(process.env.HOME, '.kenos-daily-beta/ios-build-sha.txt'),
+      'utf8',
+    ).trim()
+  : execSync('git -C "' + ROOT + '" rev-parse HEAD', {
+      encoding: 'utf8',
+    }).trim()
 const APP_VERSION = '1.0.0'
-const APP_BUILD =
-  existsSync(join(process.env.HOME, '.kenos-daily-beta/ios-build-number.txt'))
-    ? readFileSync(join(process.env.HOME, '.kenos-daily-beta/ios-build-number.txt'), 'utf8').trim()
-    : 'unknown'
+const APP_BUILD = existsSync(
+  join(process.env.HOME, '.kenos-daily-beta/ios-build-number.txt'),
+)
+  ? readFileSync(
+      join(process.env.HOME, '.kenos-daily-beta/ios-build-number.txt'),
+      'utf8',
+    ).trim()
+  : 'unknown'
 
 mkdirSync(LOG_DIR, { recursive: true })
 mkdirSync(join(EVID, 'screenshots', 'strict-acceptance'), { recursive: true })
@@ -87,7 +108,9 @@ function scrub(...paths) {
 function tailPhoneBeacons(logPath, needle, phoneIp, max = 40) {
   if (!existsSync(logPath)) return []
   const lines = readFileSync(logPath, 'utf8').split('\n')
-  return lines.filter((l) => l.includes(needle) && (!phoneIp || l.includes(phoneIp))).slice(-max)
+  return lines
+    .filter((l) => l.includes(needle) && (!phoneIp || l.includes(phoneIp)))
+    .slice(-max)
 }
 function launchOnce(url) {
   const r = spawnSync(
@@ -108,7 +131,10 @@ function launchOnce(url) {
   )
   const out = (r.stdout || '') + (r.stderr || '')
   writeFileSync(
-    join(LOG_DIR, `launch-${createHash('sha1').update(url).digest('hex').slice(0, 8)}.txt`),
+    join(
+      LOG_DIR,
+      `launch-${createHash('sha1').update(url).digest('hex').slice(0, 8)}.txt`,
+    ),
     out,
   )
   return { ...r, out }
@@ -123,7 +149,10 @@ function launch(url, { retries = 24, delayMs = 4000 } = {}) {
       sleep(delayMs)
       continue
     }
-    if (/Launched application|launched process/i.test(r.out) || (r.status === 0 && !/ERROR/i.test(r.out))) {
+    if (
+      /Launched application|launched process/i.test(r.out) ||
+      (r.status === 0 && !/ERROR/i.test(r.out))
+    ) {
       log('device.launch.ok', { i, url: url.slice(0, 120) })
       return r
     }
@@ -139,9 +168,12 @@ function localDateISO(d = new Date()) {
   return `${y}-${m}-${day}`
 }
 function getKeys() {
-  const raw = execSync(`supabase projects api-keys --project-ref ${REF} -o json`, {
-    encoding: 'utf8',
-  })
+  const raw = execSync(
+    `supabase projects api-keys --project-ref ${REF} -o json`,
+    {
+      encoding: 'utf8',
+    },
+  )
   const d = JSON.parse(raw)
   return {
     service_role: d.find((x) => x.name === 'service_role')?.api_key,
@@ -149,7 +181,10 @@ function getKeys() {
   }
 }
 async function sessionFor(admin, anon, email) {
-  const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email })
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: 'magiclink',
+    email,
+  })
   if (error) throw error
   const { data: v, error: ve } = await anon.auth.verifyOtp({
     token_hash: data.properties.hashed_token,
@@ -167,14 +202,25 @@ function encodeResume(descriptor) {
 }
 function injectAuthBootstrap(roots, sessionPayload, keys) {
   for (const root of roots) {
-    writeFileSync(join(root, '__ios_auth_once.json'), JSON.stringify(sessionPayload))
+    writeFileSync(
+      join(root, '__ios_auth_once.json'),
+      JSON.stringify(sessionPayload),
+    )
   }
   const html = `<!doctype html><html><body><script>
 (async function(){
-  const key='sb-${REF}-auth-token';
+  const key='life_os_auth';
   const res=await fetch('/__ios_auth_once.json',{cache:'no-store'});
   const session=await res.json();
   localStorage.setItem(key, JSON.stringify(session));
+  // Host-only SSO cookie — shared across LAN ports on the same host (packages/sync sso.js).
+  if (session.access_token && session.refresh_token) {
+    const tokens=encodeURIComponent(JSON.stringify({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    }));
+    document.cookie='lifeos_shared_session='+tokens+'; path=/; max-age=31536000; SameSite=Lax';
+  }
   await fetch('/__health?kenos_auth_inject='+encodeURIComponent((session.user&&session.user.email)||'none'),{cache:'no-store'}).catch(()=>{});
   location.replace('/'+(location.port==='5219'?'?iosNativeShell=1':''));
 })();
@@ -194,7 +240,11 @@ async function main() {
     generatedAt: new Date().toISOString(),
     host: HOST,
     phoneIp,
-    device: { coredeviceId: DEVICE, udidRedacted: '00008150-…401C', model: 'iPhone 17 Pro' },
+    device: {
+      coredeviceId: DEVICE,
+      udidRedacted: '00008150-…401C',
+      model: 'iPhone 17 Pro',
+    },
     buildSha: BUILD_SHA,
     appVersion: APP_VERSION,
     appBuild: APP_BUILD,
@@ -236,7 +286,9 @@ async function main() {
   let accountBId = null
   {
     const listed = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })
-    const existing = listed.data?.users?.find((u) => u.email === ACCOUNT_B.email)
+    const existing = listed.data?.users?.find(
+      (u) => u.email === ACCOUNT_B.email,
+    )
     if (existing) accountBId = existing.id
     else {
       const { data: created, error } = await admin.auth.admin.createUser({
@@ -247,12 +299,20 @@ async function main() {
       if (error && !/already/i.test(error.message)) throw error
       accountBId = created?.user?.id || existing?.id
       if (!accountBId) {
-        const again = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })
-        accountBId = again.data?.users?.find((u) => u.email === ACCOUNT_B.email)?.id
+        const again = await admin.auth.admin.listUsers({
+          page: 1,
+          perPage: 200,
+        })
+        accountBId = again.data?.users?.find(
+          (u) => u.email === ACCOUNT_B.email,
+        )?.id
       }
     }
   }
-  log('auth.accountB', { email: ACCOUNT_B.email, id: accountBId ? String(accountBId).slice(0, 8) + '…' : null })
+  log('auth.accountB', {
+    email: ACCOUNT_B.email,
+    id: accountBId ? String(accountBId).slice(0, 8) + '…' : null,
+  })
 
   const sessionPayload = {
     access_token: sessionA.access_token,
@@ -262,7 +322,11 @@ async function main() {
     refresh_token: sessionA.refresh_token,
     user: sessionA.user,
   }
-  injectAuthBootstrap([AIOS_ROOT, PLANNER_ROOT, FITNESS_ROOT], sessionPayload, keys)
+  injectAuthBootstrap(
+    [AIOS_ROOT, PLANNER_ROOT, FITNESS_ROOT],
+    sessionPayload,
+    keys,
+  )
   for (const origin of [AIOS, PLANNER, FITNESS]) {
     launch(`${origin}/__ios_auth_bootstrap.html`)
     sleep(3200)
@@ -274,7 +338,9 @@ async function main() {
     ]),
   )
   report.matrix.AUTH = 'PASS'
-  report.notes.push('Auth injected via user session bootstrap; secrets scrubbed')
+  report.notes.push(
+    'Auth injected via user session bootstrap; secrets scrubbed',
+  )
 
   // ========== FLOW A — Planner UI title save ==========
   const TASK_ID = `ios-strict-a-${Date.now().toString(36)}`
@@ -337,7 +403,7 @@ async function main() {
         save.click();
         await new Promise(r=>setTimeout(r,2500));
         // Verify via user JWT (not service role)
-        const sess=JSON.parse(localStorage.getItem('sb-'+REF+'-auth-token')||'{}');
+        const sess=JSON.parse(localStorage.getItem('life_os_auth')||'{}');
         const jwt=sess.access_token;
         const r=await fetch('https://'+REF+'.supabase.co/rest/v1/planner_tasks?id=eq.'+encodeURIComponent(TASK_ID)+'&select=id,data',{
           headers:{apikey:ANON, Authorization:'Bearer '+jwt, Accept:'application/json'}
@@ -385,9 +451,11 @@ async function main() {
   // First open harness which redirects into entity; re-launch harness URL after SPA may need second hit
   launch(`${PLANNER}/__ios_flow_a_ui.html`)
   sleep(2000)
-  launch(`${PLANNER}/upcoming?kenosTask=${encodeURIComponent(TASK_ID)}&kenosDetail=1&kenosHarness=1`)
+  launch(
+    `${PLANNER}/upcoming?kenosTask=${encodeURIComponent(TASK_ID)}&kenosDetail=1&kenosHarness=1`,
+  )
   sleep(1500)
-  // Re-inject harness runner as overlay by navigating to harness again which detects kenosTask in URL... 
+  // Re-inject harness runner as overlay by navigating to harness again which detects kenosTask in URL...
   // Better: write harness into a sticky script on upcoming via temporary index inject
   // Instead launch harness page that immediately replaceStates to detail then polls — already does.
   // Force one more launch of harness with query so it stays on same document after redirect:
@@ -403,11 +471,15 @@ async function main() {
   sleep(8000)
   // Also open the detail page and inject via second probe that only runs on detail
   const flowAOnDetail = flowAUi // same
-  writeProbe(PLANNER_ROOT, '__ios_flow_a_ui2.html', `<!doctype html><html><body><script>
+  writeProbe(
+    PLANNER_ROOT,
+    '__ios_flow_a_ui2.html',
+    `<!doctype html><html><body><script>
 location.replace('/upcoming?kenosTask='+encodeURIComponent(${JSON.stringify(TASK_ID)})+'&kenosDetail=1');
 setTimeout(async function(){
   ${flowAUi.split('<script>')[1].replace('(async function(){', 'void (async function(){').replace('if (!location.search.includes', 'if (false && !location.search.includes')}
-</script></body></html>`)
+</script></body></html>`,
+  )
   // Simpler reliable path: detail page + bookmarklet-style probe loaded as sibling iframe? Use eval via temporary script tag in index.html
   const idxPath = join(PLANNER_ROOT, 'index.html')
   const idxBackup = join(LOG_DIR, 'planner-index.backup.html')
@@ -437,7 +509,7 @@ async function run(){
       if(save.disabled){await new Promise(r=>setTimeout(r,500));}
       save.click();
       await new Promise(r=>setTimeout(r,2800));
-      const sess=JSON.parse(localStorage.getItem('sb-'+REF+'-auth-token')||'{}');
+      const sess=JSON.parse(localStorage.getItem('life_os_auth')||'{}');
       const r=await fetch('https://'+REF+'.supabase.co/rest/v1/planner_tasks?id=eq.'+encodeURIComponent(TASK_ID)+'&select=id,data',{headers:{apikey:ANON,Authorization:'Bearer '+sess.access_token,Accept:'application/json'}});
       const rows=await r.json();
       const title=(rows[0]&&rows[0].data&&rows[0].data.title)||null;
@@ -457,28 +529,50 @@ else setTimeout(run,800);
 document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,600));
 })();`,
   )
-  launch(`${PLANNER}/upcoming?kenosTask=${encodeURIComponent(TASK_ID)}&kenosDetail=1`)
+  launch(
+    `${PLANNER}/upcoming?kenosTask=${encodeURIComponent(TASK_ID)}&kenosDetail=1`,
+  )
   sleep(10000)
-  const flowABeacons = tailPhoneBeacons(PLANNER_LOG, 'kenos_flow_a_ui=', phoneIp)
+  const flowABeacons = tailPhoneBeacons(
+    PLANNER_LOG,
+    'kenos_flow_a_ui=',
+    phoneIp,
+  )
   writeFileSync(join(LOG_DIR, 'flow-a-ui-beacons.txt'), flowABeacons.join('\n'))
-  log('flowA.ui.beacons', { n: flowABeacons.length, last: flowABeacons.at(-1)?.slice(0, 240) })
+  log('flowA.ui.beacons', {
+    n: flowABeacons.length,
+    last: flowABeacons.at(-1)?.slice(0, 240),
+  })
 
   // Restore planner index
   copyFileSync(idxBackup, idxPath)
-  scrub(join(PLANNER_ROOT, '__ios_flow_a_harness.js'), join(PLANNER_ROOT, '__ios_flow_a_ui.html'), join(PLANNER_ROOT, '__ios_flow_a_ui2.html'))
+  scrub(
+    join(PLANNER_ROOT, '__ios_flow_a_harness.js'),
+    join(PLANNER_ROOT, '__ios_flow_a_ui.html'),
+    join(PLANNER_ROOT, '__ios_flow_a_ui2.html'),
+  )
 
   const clientA = createClient(url, keys.anon, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { headers: { Authorization: `Bearer ${sessionA.access_token}` } },
   })
-  const { data: afterA } = await clientA.from('planner_tasks').select('id,data').eq('id', TASK_ID)
+  const { data: afterA } = await clientA
+    .from('planner_tasks')
+    .select('id,data')
+    .eq('id', TASK_ID)
   const dbTitle = afterA?.[0]?.data?.title || null
-  const uiOk = flowABeacons.some((l) => decodeURIComponent(l).includes('"status":"ok"') || l.includes('%22status%22%3A%22ok%22'))
+  const uiOk = flowABeacons.some(
+    (l) =>
+      decodeURIComponent(l).includes('"status":"ok"') ||
+      l.includes('%22status%22%3A%22ok%22'),
+  )
 
   // BG / FG + force quit verify
   launch(`${AIOS}/?iosNativeShell=1&openContinue=1`)
   sleep(2500)
-  launch(`${PLANNER}/upcoming?kenosTask=${encodeURIComponent(TASK_ID)}&kenosDetail=1`)
+  launch(
+    `${PLANNER}/upcoming?kenosTask=${encodeURIComponent(TASK_ID)}&kenosDetail=1`,
+  )
   sleep(3000)
   // force quit via terminate-existing
   launch(`${AIOS}/?iosNativeShell=1`)
@@ -486,7 +580,7 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,600));
   const verifyA = `<!doctype html><html><body><script>
 (async function(){
   const REF=${JSON.stringify(REF)}; const TASK_ID=${JSON.stringify(TASK_ID)}; const MUT=${JSON.stringify(TASK_TITLE_MUT)}; const ANON=${JSON.stringify(keys.anon)};
-  const sess=JSON.parse(localStorage.getItem('sb-'+REF+'-auth-token')||'{}');
+  const sess=JSON.parse(localStorage.getItem('life_os_auth')||'{}');
   const r=await fetch('https://'+REF+'.supabase.co/rest/v1/planner_tasks?id=eq.'+encodeURIComponent(TASK_ID)+'&select=id,data',{headers:{apikey:ANON,Authorization:'Bearer '+sess.access_token,Accept:'application/json'}});
   const rows=await r.json(); const title=(rows[0]&&rows[0].data&&rows[0].data.title)||null;
   await fetch('/__health?kenos_flow_a_verify='+encodeURIComponent(JSON.stringify({status:title===MUT?'ok':'mismatch',title,taskId:TASK_ID})),{cache:'no-store'});
@@ -496,22 +590,41 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,600));
   writeProbe(AIOS_ROOT, '__ios_flow_a_verify.html', verifyA)
   launch(`${AIOS}/__ios_flow_a_verify.html`)
   sleep(4500)
-  const verifyBeacons = tailPhoneBeacons(AIOS_LOG, 'kenos_flow_a_verify=', phoneIp)
-  writeFileSync(join(LOG_DIR, 'flow-a-verify-beacons.txt'), verifyBeacons.join('\n'))
+  const verifyBeacons = tailPhoneBeacons(
+    AIOS_LOG,
+    'kenos_flow_a_verify=',
+    phoneIp,
+  )
+  writeFileSync(
+    join(LOG_DIR, 'flow-a-verify-beacons.txt'),
+    verifyBeacons.join('\n'),
+  )
   scrub(join(AIOS_ROOT, '__ios_flow_a_verify.html'))
-  const verifyOk = verifyBeacons.some((l) => decodeURIComponent(l).includes('"status":"ok"') || l.includes('%22status%22%3A%22ok%22'))
+  const verifyOk = verifyBeacons.some(
+    (l) =>
+      decodeURIComponent(l).includes('"status":"ok"') ||
+      l.includes('%22status%22%3A%22ok%22'),
+  )
 
   report.flowA = {
-    status: dbTitle === TASK_TITLE_MUT && (uiOk || verifyOk) ? 'PASS' : dbTitle === TASK_TITLE_MUT ? 'PARTIAL_DB' : 'FAIL',
+    status:
+      dbTitle === TASK_TITLE_MUT && (uiOk || verifyOk)
+        ? 'PASS'
+        : dbTitle === TASK_TITLE_MUT
+          ? 'PARTIAL_DB'
+          : 'FAIL',
     taskId: TASK_ID,
     uidRedacted: OWNER.uidRedacted,
     buildSha: BUILD_SHA,
     expectedTitle: TASK_TITLE_MUT,
     actualDbTitle: dbTitle,
-    uiSaveEvidence: uiOk ? 'kenos_flow_a_ui beacon ok' : 'beacon missing — DB assert used',
+    uiSaveEvidence: uiOk
+      ? 'kenos_flow_a_ui beacon ok'
+      : 'beacon missing — DB assert used',
     apiDbPersistence: dbTitle === TASK_TITLE_MUT,
     forceQuitReopen: verifyOk,
-    method: 'Planner SPA #task-title input + .btn-primary click (user JWT); no service-role mutate',
+    method:
+      'Planner SPA #task-title input + .btn-primary click (user JWT); no service-role mutate',
   }
   log('flowA.done', report.flowA)
   report.matrix.PLANNER_FLOW_A = report.flowA.status
@@ -538,13 +651,22 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,600));
       .eq('day_id', DAY_ID)
     const ids = (sessions || []).map((s) => s.id)
     if (ids.length) {
-      await fitnessAdmin.from('fitness_exercise_logs').delete().in('session_id', ids).eq('exercise_id', EXERCISE_ID)
+      await fitnessAdmin
+        .from('fitness_exercise_logs')
+        .delete()
+        .in('session_id', ids)
+        .eq('exercise_id', EXERCISE_ID)
     }
     let sessionId = ids[0]
     if (!sessionId) {
       const { data: created, error } = await fitnessAdmin
         .from('fitness_workout_sessions')
-        .insert({ user_id: OWNER.id, session_date: TODAY, day_id: DAY_ID, status: 'active' })
+        .insert({
+          user_id: OWNER.id,
+          session_date: TODAY,
+          day_id: DAY_ID,
+          status: 'active',
+        })
         .select('id')
         .single()
       if (error) throw error
@@ -571,7 +693,10 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,600));
   copyFileSync(fitIdx, fitBackup)
   let fitHtml = readFileSync(fitIdx, 'utf8')
   if (!fitHtml.includes('__ios_flow_b_harness.js')) {
-    fitHtml = fitHtml.replace('</body>', `<script src="/__ios_flow_b_harness.js"></script></body>`)
+    fitHtml = fitHtml.replace(
+      '</body>',
+      `<script src="/__ios_flow_b_harness.js"></script></body>`,
+    )
     writeFileSync(fitIdx, fitHtml)
   }
   writeFileSync(
@@ -619,9 +744,16 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
   // Open focus WITHOUT kenosSet — only day/exercise navigation
   launch(`${FITNESS}/day/${DAY_ID}/focus?kenosEx=${EXERCISE_ID}`)
   sleep(12000)
-  const flowBBeacons = tailPhoneBeacons(FITNESS_LOG, 'kenos_flow_b_ui=', phoneIp)
+  const flowBBeacons = tailPhoneBeacons(
+    FITNESS_LOG,
+    'kenos_flow_b_ui=',
+    phoneIp,
+  )
   writeFileSync(join(LOG_DIR, 'flow-b-ui-beacons.txt'), flowBBeacons.join('\n'))
-  log('flowB.ui.beacons', { n: flowBBeacons.length, last: flowBBeacons.at(-1)?.slice(0, 240) })
+  log('flowB.ui.beacons', {
+    n: flowBBeacons.length,
+    last: flowBBeacons.at(-1)?.slice(0, 240),
+  })
 
   copyFileSync(fitBackup, fitIdx)
   scrub(join(FITNESS_ROOT, '__ios_flow_b_harness.js'))
@@ -636,9 +768,16 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
     displayTitle: 'Cable Fly',
     displaySubtitle: 'Set 2',
     updatedAt: new Date().toISOString(),
-    substate: { set: 2, exerciseId: EXERCISE_ID, dayId: DAY_ID, completedSets: 1 },
+    substate: {
+      set: 2,
+      exerciseId: EXERCISE_ID,
+      dayId: DAY_ID,
+      completedSets: 1,
+    },
   }
-  launch(`${AIOS}/?iosNativeShell=1&openContinue=1&kenosResume=${encodeResume(resumeB)}`)
+  launch(
+    `${AIOS}/?iosNativeShell=1&openContinue=1&kenosResume=${encodeResume(resumeB)}`,
+  )
   sleep(3000)
   // Open via Continuity (may include kenosSet from descriptor — product behavior)
   launch(`${FITNESS}/day/${DAY_ID}/focus?kenosEx=${EXERCISE_ID}&kenosSet=2`)
@@ -647,14 +786,21 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
   // Force quit + reopen Continue
   launch(`${AIOS}/?iosNativeShell=1`)
   sleep(1500)
-  launch(`${AIOS}/?iosNativeShell=1&openContinue=1&kenosResume=${encodeResume(resumeB)}`)
+  launch(
+    `${AIOS}/?iosNativeShell=1&openContinue=1&kenosResume=${encodeResume(resumeB)}`,
+  )
   sleep(3000)
   launch(`${FITNESS}/day/${DAY_ID}/focus?kenosEx=${EXERCISE_ID}&kenosSet=2`)
   sleep(3500)
   const set2Hits2 = tailPhoneBeacons(FITNESS_LOG, 'kenosSet=2', phoneIp)
 
   // Check local progress via data-next-set beacon
-  const flowBUiOk = flowBBeacons.some((l) => decodeURIComponent(l).includes('"status":"ok"') || l.includes('%22status%22%3A%22ok%22') || decodeURIComponent(l).includes('"status":"partial"'))
+  const flowBUiOk = flowBBeacons.some(
+    (l) =>
+      decodeURIComponent(l).includes('"status":"ok"') ||
+      l.includes('%22status%22%3A%22ok%22') ||
+      decodeURIComponent(l).includes('"status":"partial"'),
+  )
   report.flowB = {
     status:
       flowBUiOk && set2Hits.length + set2Hits2.length > 0
@@ -669,7 +815,8 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
     continueDescriptor: resumeB.displaySubtitle,
     coldReopen: set2Hits2.length > 0,
     fitnessDeepLinkHits: set2Hits.length + set2Hits2.length,
-    method: 'UI click Complete Set 1 (no forced kenosSet at start); Continuity handoff descriptor set=2; reopen via Continue',
+    method:
+      'UI click Complete Set 1 (no forced kenosSet at start); Continuity handoff descriptor set=2; reopen via Continue',
     uiBeacon: flowBBeacons.at(-1)?.slice(0, 200) || null,
   }
   log('flowB.done', report.flowB)
@@ -679,12 +826,14 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
   report.surfaces = {
     Today: {
       class: 'in-app WKWebView',
-      evidence: 'KenosRootView DailyBeta → KenosDailyBetaSurface; bundle space.kenos.app.ios',
+      evidence:
+        'KenosRootView DailyBeta → KenosDailyBetaSurface; bundle space.kenos.app.ios',
       pass: true,
     },
     Assistant: {
       class: 'in-app WKWebView',
-      evidence: 'Daily Beta enabled: KenosDailyBetaSurface(/assistant) inside TabView — NOT external Safari',
+      evidence:
+        'Daily Beta enabled: KenosDailyBetaSurface(/assistant) inside TabView — NOT external Safari',
       pass: true,
       note: 'Prior 10-panel Safari chrome shot is NOT acceptance evidence',
     },
@@ -722,7 +871,10 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
     path: p,
     hits: tailPhoneBeacons(AIOS_LOG, p, phoneIp, 5).length,
   }))
-  writeFileSync(join(LOG_DIR, 'shell-routes.json'), JSON.stringify(shellHits, null, 2))
+  writeFileSync(
+    join(LOG_DIR, 'shell-routes.json'),
+    JSON.stringify(shellHits, null, 2),
+  )
 
   // Origin must be LAN IP not 127.0.0.1 for phone
   report.matrix.LAN_ORIGIN_NOT_LOOPBACK = HOST !== '127.0.0.1' ? 'PASS' : 'FAIL'
@@ -752,7 +904,7 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
   // Real cleanup — not only localStorage wipe of one key
   try { localStorage.clear(); sessionStorage.clear(); } catch(e){}
   const session=${JSON.stringify(payloadB)};
-  localStorage.setItem('sb-'+REF+'-auth-token', JSON.stringify(session));
+  localStorage.setItem('life_os_auth', JSON.stringify(session));
   const store=localStorage.getItem('kenos.spaceSwitcher.v1');
   await fetch('/__health?kenos_isolation='+encodeURIComponent(JSON.stringify({
     email: session.user.email,
@@ -772,17 +924,25 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
       auth: { persistSession: false, autoRefreshToken: false },
       global: { headers: { Authorization: `Bearer ${sessionB.access_token}` } },
     })
-    const { data: leak } = await clientB.from('planner_tasks').select('id').eq('id', TASK_ID)
+    const { data: leak } = await clientB
+      .from('planner_tasks')
+      .select('id')
+      .eq('id', TASK_ID)
     const noLeak = !leak || leak.length === 0
     isolation = noLeak ? 'PASS' : 'FAIL'
     report.matrix.ACCOUNT_ISOLATION = isolation
-    report.notes.push(`Account B email=${ACCOUNT_B.email}; A task visible to B=${!noLeak}`)
+    report.notes.push(
+      `Account B email=${ACCOUNT_B.email}; A task visible to B=${!noLeak}`,
+    )
     scrub(join(AIOS_ROOT, '__ios_isolation_b.html'))
     // Restore Account A session for remaining checks
     injectAuthBootstrap([AIOS_ROOT], sessionPayload, keys)
     launch(`${AIOS}/__ios_auth_bootstrap.html`)
     sleep(3000)
-    scrub(join(AIOS_ROOT, '__ios_auth_once.json'), join(AIOS_ROOT, '__ios_auth_bootstrap.html'))
+    scrub(
+      join(AIOS_ROOT, '__ios_auth_once.json'),
+      join(AIOS_ROOT, '__ios_auth_bootstrap.html'),
+    )
   } catch (e) {
     report.matrix.ACCOUNT_ISOLATION = 'FAIL'
     report.notes.push('isolation_error:' + String(e.message || e))
@@ -792,14 +952,19 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
 
   // ========== Offline / recovery ==========
   try {
-    execSync(`"${ROOT}/scripts/kenos-daily-beta/kenos-ctl.sh" stop`, { encoding: 'utf8' })
+    execSync(`"${ROOT}/scripts/kenos-daily-beta/kenos-ctl.sh" stop`, {
+      encoding: 'utf8',
+    })
     sleep(2000)
     launch(`${AIOS}/?iosNativeShell=1`)
     sleep(2000)
-    execSync(`KENOS_STATIC_BIND=0.0.0.0 "${ROOT}/scripts/kenos-daily-beta/kenos-ctl.sh" start`, {
-      encoding: 'utf8',
-      env: { ...process.env, KENOS_STATIC_BIND: '0.0.0.0' },
-    })
+    execSync(
+      `KENOS_STATIC_BIND=0.0.0.0 "${ROOT}/scripts/kenos-daily-beta/kenos-ctl.sh" start`,
+      {
+        encoding: 'utf8',
+        env: { ...process.env, KENOS_STATIC_BIND: '0.0.0.0' },
+      },
+    )
     sleep(2500)
     launch(`${AIOS}/?iosNativeShell=1`)
     sleep(2500)
@@ -808,9 +973,12 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
     report.matrix.OFFLINE_RECOVERY = 'FAIL'
     report.notes.push('offline:' + String(e.message || e))
     try {
-      execSync(`KENOS_STATIC_BIND=0.0.0.0 "${ROOT}/scripts/kenos-daily-beta/kenos-ctl.sh" start`, {
-        env: { ...process.env, KENOS_STATIC_BIND: '0.0.0.0' },
-      })
+      execSync(
+        `KENOS_STATIC_BIND=0.0.0.0 "${ROOT}/scripts/kenos-daily-beta/kenos-ctl.sh" start`,
+        {
+          env: { ...process.env, KENOS_STATIC_BIND: '0.0.0.0' },
+        },
+      )
     } catch {
       /* */
     }
@@ -861,7 +1029,9 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
   report.matrix.TARGETS_44 = 'PASS'
   report.matrix.DYNAMIC_TYPE = 'PASS_CODE_AND_DOM' // OS slider not automatable without XCUITest
   report.matrix.VOICEOVER_BASICS = 'PASS_LABELS_PRESENT' // labels present; full VO sweep soft residual
-  report.notes.push('Dynamic Type / VoiceOver full OS toggle: DOM labels+44px probed; OS Settings sweep residual if Owner wants')
+  report.notes.push(
+    'Dynamic Type / VoiceOver full OS toggle: DOM labels+44px probed; OS Settings sweep residual if Owner wants',
+  )
 
   // Rollback: stop/start already covered; mark
   report.matrix.ROLLBACK = report.matrix.OFFLINE_RECOVERY
@@ -883,7 +1053,12 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
   report.phase4 = 'EXIT_OPEN'
   if (!hardPass && !report.blocker) {
     report.blocker = {
-      type: report.flowA.status !== 'PASS' ? 'automation' : report.flowB.status !== 'PASS' ? 'product' : 'automation',
+      type:
+        report.flowA.status !== 'PASS'
+          ? 'automation'
+          : report.flowB.status !== 'PASS'
+            ? 'product'
+            : 'automation',
       failedAssertion:
         report.flowA.status !== 'PASS'
           ? 'Flow A'
@@ -897,48 +1072,58 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
   }
 
   writeFileSync(join(LOG_DIR, 'report.json'), JSON.stringify(report, null, 2))
-  writeFileSync(join(EVID, 'logs', 'ios-strict-acceptance-latest.json'), JSON.stringify(report, null, 2))
-  writeFileSync(join(EVID, 'ios-daily-beta-results.json'), JSON.stringify({
-    generatedAt: report.generatedAt,
-    runId: RUN_ID,
-    verdict: report.verdict,
-    overallPersonalDailyBeta: report.overallPersonalDailyBeta,
-    macWebDailyBeta: 'READY',
-    networkScope: 'LAN-DEPENDENT',
-    phase4: 'EXIT_OPEN',
-    buildSha: BUILD_SHA,
-    appVersion: APP_VERSION,
-    appBuild: APP_BUILD,
-    checks: {
-      INSTALL: report.matrix.INSTALL,
-      COLD_LAUNCH: report.matrix.COLD_LAUNCH,
-      AUTH: report.matrix.AUTH,
-      TODAY: report.matrix.TODAY,
-      ASSISTANT: report.matrix.ASSISTANT,
-      SPACES: report.matrix.SPACES,
-      INBOX: report.matrix.INBOX,
-      CONTINUE: report.matrix.CONTINUE,
-      PLANNER_FLOW_A: report.matrix.PLANNER_FLOW_A,
-      TRAINING_FLOW_B: report.matrix.TRAINING_FLOW_B,
-      ACCOUNT_ISOLATION: report.matrix.ACCOUNT_ISOLATION,
-      LIFECYCLE: report.matrix.LIFECYCLE_BG_FG,
-      FORCE_QUIT_REOPEN: report.matrix.FORCE_QUIT_REOPEN,
-      OFFLINE_RECOVERY: report.matrix.OFFLINE_RECOVERY,
-      ROLLBACK: report.matrix.ROLLBACK,
-      LIGHT_DARK: report.matrix.LIGHT_DARK,
-      DYNAMIC_TYPE: report.matrix.DYNAMIC_TYPE,
-      VOICEOVER_BASICS: report.matrix.VOICEOVER_BASICS,
-      REDUCE_MOTION: report.matrix.REDUCE_MOTION_PROBE,
-      TARGETS_44: report.matrix.TARGETS_44,
-      SAFE_AREA: report.matrix.SAFE_AREA,
-      P0_P1: 'NONE',
-    },
-    flowA: report.flowA,
-    flowB: report.flowB,
-    surfaces: report.surfaces,
-    blocker: report.blocker,
-    evidenceDir: `logs/${RUN_ID}`,
-  }, null, 2))
+  writeFileSync(
+    join(EVID, 'logs', 'ios-strict-acceptance-latest.json'),
+    JSON.stringify(report, null, 2),
+  )
+  writeFileSync(
+    join(EVID, 'ios-daily-beta-results.json'),
+    JSON.stringify(
+      {
+        generatedAt: report.generatedAt,
+        runId: RUN_ID,
+        verdict: report.verdict,
+        overallPersonalDailyBeta: report.overallPersonalDailyBeta,
+        macWebDailyBeta: 'READY',
+        networkScope: 'LAN-DEPENDENT',
+        phase4: 'EXIT_OPEN',
+        buildSha: BUILD_SHA,
+        appVersion: APP_VERSION,
+        appBuild: APP_BUILD,
+        checks: {
+          INSTALL: report.matrix.INSTALL,
+          COLD_LAUNCH: report.matrix.COLD_LAUNCH,
+          AUTH: report.matrix.AUTH,
+          TODAY: report.matrix.TODAY,
+          ASSISTANT: report.matrix.ASSISTANT,
+          SPACES: report.matrix.SPACES,
+          INBOX: report.matrix.INBOX,
+          CONTINUE: report.matrix.CONTINUE,
+          PLANNER_FLOW_A: report.matrix.PLANNER_FLOW_A,
+          TRAINING_FLOW_B: report.matrix.TRAINING_FLOW_B,
+          ACCOUNT_ISOLATION: report.matrix.ACCOUNT_ISOLATION,
+          LIFECYCLE: report.matrix.LIFECYCLE_BG_FG,
+          FORCE_QUIT_REOPEN: report.matrix.FORCE_QUIT_REOPEN,
+          OFFLINE_RECOVERY: report.matrix.OFFLINE_RECOVERY,
+          ROLLBACK: report.matrix.ROLLBACK,
+          LIGHT_DARK: report.matrix.LIGHT_DARK,
+          DYNAMIC_TYPE: report.matrix.DYNAMIC_TYPE,
+          VOICEOVER_BASICS: report.matrix.VOICEOVER_BASICS,
+          REDUCE_MOTION: report.matrix.REDUCE_MOTION_PROBE,
+          TARGETS_44: report.matrix.TARGETS_44,
+          SAFE_AREA: report.matrix.SAFE_AREA,
+          P0_P1: 'NONE',
+        },
+        flowA: report.flowA,
+        flowB: report.flowB,
+        surfaces: report.surfaces,
+        blocker: report.blocker,
+        evidenceDir: `logs/${RUN_ID}`,
+      },
+      null,
+      2,
+    ),
+  )
 
   console.log('\n=== STRICT REPORT ===')
   console.log(JSON.stringify(report, null, 2))

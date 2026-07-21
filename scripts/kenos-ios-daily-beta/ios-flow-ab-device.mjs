@@ -9,7 +9,13 @@
  * Requires: unlocked device, Daily Beta LAN up, Auth already on AIOS origin.
  */
 import { execSync, spawnSync } from 'node:child_process'
-import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs'
+import {
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  rmSync,
+  existsSync,
+} from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
@@ -18,7 +24,8 @@ import { createHash } from 'node:crypto'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '../..')
-const DEVICE = process.env.KENOS_IOS_DEVICE || '8097F071-CAB6-5AF0-8258-BCD985E9D79E'
+const DEVICE =
+  process.env.KENOS_IOS_DEVICE || '8097F071-CAB6-5AF0-8258-BCD985E9D79E'
 const BUNDLE = 'space.kenos.app.ios'
 const REF = 'iueozzuctstwvzbcxcyh'
 const OWNER = {
@@ -32,15 +39,21 @@ const RELEASE =
 const AIOS_ROOT = join(RELEASE, 'apps/aios/build')
 const PLANNER_ROOT = join(RELEASE, 'apps/planner/build')
 const FITNESS_ROOT = join(RELEASE, 'apps/fitness/build')
-const EVID = join(
-  ROOT,
-  'docs/qa/evidence/kenos-ios-daily-beta-2026-07-21',
-)
+const EVID = join(ROOT, 'docs/qa/evidence/kenos-ios-daily-beta-2026-07-21')
 const RUN_ID = `ios-flow-ab-${new Date().toISOString().replace(/[:.]/g, '-')}`
 const LOG_DIR = join(EVID, 'logs', RUN_ID)
-const AIOS_LOG = join(process.env.HOME, 'Library/Logs/KenosDailyBeta/aios.stderr.log')
-const PLANNER_LOG = join(process.env.HOME, 'Library/Logs/KenosDailyBeta/planner.stderr.log')
-const FITNESS_LOG = join(process.env.HOME, 'Library/Logs/KenosDailyBeta/fitness.stderr.log')
+const AIOS_LOG = join(
+  process.env.HOME,
+  'Library/Logs/KenosDailyBeta/aios.stderr.log',
+)
+const PLANNER_LOG = join(
+  process.env.HOME,
+  'Library/Logs/KenosDailyBeta/planner.stderr.log',
+)
+const FITNESS_LOG = join(
+  process.env.HOME,
+  'Library/Logs/KenosDailyBeta/fitness.stderr.log',
+)
 
 mkdirSync(LOG_DIR, { recursive: true })
 
@@ -106,7 +119,10 @@ function launchOnce(url) {
     { encoding: 'utf8' },
   )
   writeFileSync(
-    join(LOG_DIR, `launch-${createHash('sha1').update(url).digest('hex').slice(0, 8)}.txt`),
+    join(
+      LOG_DIR,
+      `launch-${createHash('sha1').update(url).digest('hex').slice(0, 8)}.txt`,
+    ),
     (r.stdout || '') + (r.stderr || ''),
   )
   return r
@@ -280,10 +296,17 @@ async function main() {
 
   const authBootstrap = `<!doctype html><html><body><script>
 (async function(){
-  const key='sb-${REF}-auth-token';
+  const key='life_os_auth';
   const res=await fetch('/__ios_auth_once.json',{cache:'no-store'});
   const session=await res.json();
   localStorage.setItem(key, JSON.stringify(session));
+  if (session.access_token && session.refresh_token) {
+    const tokens=encodeURIComponent(JSON.stringify({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    }));
+    document.cookie='lifeos_shared_session='+tokens+'; path=/; max-age=31536000; SameSite=Lax';
+  }
   const email=(session.user&&session.user.email)||'none';
   await fetch('/__health?kenos_auth_inject='+encodeURIComponent(email)+'&o='+encodeURIComponent(location.origin),{cache:'no-store'}).catch(()=>{});
   location.replace(location.origin+(location.port==='5219'?'/?iosNativeShell=1':'/'));
@@ -315,7 +338,7 @@ async function main() {
   const TASK_ID=${JSON.stringify(TASK_ID)};
   const MUT=${JSON.stringify(TASK_TITLE_MUT)};
   const OWNER_ID=${JSON.stringify(OWNER.id)};
-  const key='sb-'+REF+'-auth-token';
+  const key='life_os_auth';
   let status='fail';
   let detail={};
   try{
@@ -376,15 +399,24 @@ async function main() {
   launch(`${AIOS}/__ios_flow_a.html`)
   sleep(5000)
   const flowABeacons = tailPhoneBeacons(AIOS_LOG, 'kenos_flow_a=', phoneIp)
-  writeFileSync(join(LOG_DIR, 'flow-a-mutate-beacons.txt'), flowABeacons.join('\n'))
-  log('flowA.mutate.beacons', { n: flowABeacons.length, last: flowABeacons.at(-1)?.slice(0, 200) })
+  writeFileSync(
+    join(LOG_DIR, 'flow-a-mutate-beacons.txt'),
+    flowABeacons.join('\n'),
+  )
+  log('flowA.mutate.beacons', {
+    n: flowABeacons.length,
+    last: flowABeacons.at(-1)?.slice(0, 200),
+  })
 
   // Open Planner deep resume on device
   const plannerUrl = `${PLANNER}/upcoming?kenosTask=${encodeURIComponent(TASK_ID)}&kenosDetail=1`
   launch(plannerUrl)
   sleep(4000)
   const plannerHits = tailPhoneBeacons(PLANNER_LOG, 'kenosTask=', phoneIp)
-  writeFileSync(join(LOG_DIR, 'flow-a-planner-hits.txt'), plannerHits.join('\n'))
+  writeFileSync(
+    join(LOG_DIR, 'flow-a-planner-hits.txt'),
+    plannerHits.join('\n'),
+  )
 
   // Force quit + cold verify via probe (read-only)
   const verifyProbe = `<!doctype html><html><body><script>
@@ -392,7 +424,7 @@ async function main() {
   const REF='${REF}';
   const TASK_ID=${JSON.stringify(TASK_ID)};
   const MUT=${JSON.stringify(TASK_TITLE_MUT)};
-  const key='sb-'+REF+'-auth-token';
+  const key='life_os_auth';
   let status='fail'; let title=null;
   try{
     const sess=JSON.parse(localStorage.getItem(key)||'{}');
@@ -414,8 +446,15 @@ async function main() {
   sleep(1000)
   launch(`${AIOS}/__ios_flow_a_verify.html`)
   sleep(4500)
-  const verifyBeacons = tailPhoneBeacons(AIOS_LOG, 'kenos_flow_a_verify=', phoneIp)
-  writeFileSync(join(LOG_DIR, 'flow-a-verify-beacons.txt'), verifyBeacons.join('\n'))
+  const verifyBeacons = tailPhoneBeacons(
+    AIOS_LOG,
+    'kenos_flow_a_verify=',
+    phoneIp,
+  )
+  writeFileSync(
+    join(LOG_DIR, 'flow-a-verify-beacons.txt'),
+    verifyBeacons.join('\n'),
+  )
 
   // Also confirm DB from Mac with user JWT
   const clientA = createClient(url, keys.anon, {
@@ -427,7 +466,14 @@ async function main() {
     .select('id,data')
     .eq('id', TASK_ID)
   const dbTitle = afterRows?.[0]?.data?.title || null
-  const phoneMutOk = /kenos_flow_a=.*ok/.test(flowABeacons.join('\n')) || flowABeacons.some((l) => l.includes('%22status%22%3A%22ok%22') || l.includes('"status":"ok"') || decodeURIComponent(l).includes('"status":"ok"'))
+  const phoneMutOk =
+    /kenos_flow_a=.*ok/.test(flowABeacons.join('\n')) ||
+    flowABeacons.some(
+      (l) =>
+        l.includes('%22status%22%3A%22ok%22') ||
+        l.includes('"status":"ok"') ||
+        decodeURIComponent(l).includes('"status":"ok"'),
+    )
   const phoneVerifyOk = verifyBeacons.some((l) => {
     try {
       const q = l.split('kenos_flow_a_verify=')[1]?.split(' ')[0] || ''
@@ -506,24 +552,31 @@ async function main() {
   if (sessionId) {
     // Insert one completed set log if schema allows — best-effort
     // Schema: done int + sets jsonb (not per-set columns)
-    const { error: logErr } = await fitnessAdmin.from('fitness_exercise_logs').upsert(
-      {
-        session_id: sessionId,
-        user_id: OWNER.id,
-        exercise_id: EXERCISE_ID,
-        done: 1,
-        sets: [{ reps: 10, weight: 20, rir: null, ts: new Date().toISOString() }],
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'session_id,exercise_id' },
-    )
+    const { error: logErr } = await fitnessAdmin
+      .from('fitness_exercise_logs')
+      .upsert(
+        {
+          session_id: sessionId,
+          user_id: OWNER.id,
+          exercise_id: EXERCISE_ID,
+          done: 1,
+          sets: [
+            { reps: 10, weight: 20, rir: null, ts: new Date().toISOString() },
+          ],
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'session_id,exercise_id' },
+      )
     log('flowB.seed.set1', { sessionId, error: logErr?.message || null })
 
     const set2Url = `${FITNESS}/day/chest/focus?kenosEx=${EXERCISE_ID}&kenosSet=2`
     launch(set2Url)
     sleep(4000)
     const fitnessHits = tailPhoneBeacons(FITNESS_LOG, 'kenosSet=2', phoneIp)
-    writeFileSync(join(LOG_DIR, 'flow-b-fitness-hits.txt'), fitnessHits.join('\n'))
+    writeFileSync(
+      join(LOG_DIR, 'flow-b-fitness-hits.txt'),
+      fitnessHits.join('\n'),
+    )
 
     const resumeB = {
       v: 1,
@@ -539,7 +592,10 @@ async function main() {
     launch(handoff)
     sleep(3500)
     const continueHits = tailPhoneBeacons(AIOS_LOG, 'kenosResume=', phoneIp)
-    writeFileSync(join(LOG_DIR, 'flow-b-continue-hits.txt'), continueHits.join('\n'))
+    writeFileSync(
+      join(LOG_DIR, 'flow-b-continue-hits.txt'),
+      continueHits.join('\n'),
+    )
 
     // Re-open set 2 after terminate
     launch(set2Url)
@@ -567,7 +623,10 @@ async function main() {
   sleep(2000)
 
   writeFileSync(join(LOG_DIR, 'report.json'), JSON.stringify(report, null, 2))
-  writeFileSync(join(EVID, 'logs', 'ios-flow-ab-latest.json'), JSON.stringify(report, null, 2))
+  writeFileSync(
+    join(EVID, 'logs', 'ios-flow-ab-latest.json'),
+    JSON.stringify(report, null, 2),
+  )
   console.log('\n=== REPORT ===')
   console.log(JSON.stringify(report, null, 2))
 }

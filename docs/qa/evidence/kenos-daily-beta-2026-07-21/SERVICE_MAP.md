@@ -1,10 +1,10 @@
 # SERVICE_MAP
 
-| Service | Origin | Port | LaunchAgent | Build root |
-| ------- | ------ | ---- | ----------- | ---------- |
-| Kenos (aios) | `http://127.0.0.1:5219` | 5219 | `com.kenpan.kenos-daily-beta.aios` | `~/.kenos-daily-beta/current/apps/aios/build` |
-| Planner | `http://127.0.0.1:5188` | 5188 | `com.kenpan.kenos-daily-beta.planner` | `…/planner/build` |
-| Fitness | `http://127.0.0.1:5190` | 5190 | `com.kenpan.kenos-daily-beta.fitness` | `…/fitness/build` |
+| Service      | Origin                  | Port | LaunchAgent                           | Build root                                    |
+| ------------ | ----------------------- | ---- | ------------------------------------- | --------------------------------------------- |
+| Kenos (aios) | `http://127.0.0.1:5219` | 5219 | `com.kenpan.kenos-daily-beta.aios`    | `~/.kenos-daily-beta/current/apps/aios/build` |
+| Planner      | `http://127.0.0.1:5188` | 5188 | `com.kenpan.kenos-daily-beta.planner` | `…/planner/build`                             |
+| Fitness      | `http://127.0.0.1:5190` | 5190 | `com.kenpan.kenos-daily-beta.fitness` | `…/fitness/build`                             |
 
 ## Runtime
 

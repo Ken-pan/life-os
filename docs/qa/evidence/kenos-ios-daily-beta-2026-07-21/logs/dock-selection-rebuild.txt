@@ -1,0 +1,181 @@
+==> Daily Beta origin: http://10.20.202.15:5219
+==> Device: 8097F071-CAB6-5AF0-8258-BCD985E9D79E
+==> Team: 93NJ4CAU8B
+✔ Daily Beta stopped (data retained)
+✔ LaunchAgents installed (RunAtLoad + KeepAlive + kickstart)
+✔ Daily Beta up
+  Kenos  http://127.0.0.1:5219
+  Plan   http://127.0.0.1:5188
+  Fit    http://127.0.0.1:5190
+⚙️  Generating plists...
+⚙️  Generating project...
+⚙️  Writing project...
+Created project at /Users/kenpan/「Projects」/life-os/clients/apple/Apps/Kenos.xcodeproj
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project Kenos.xcodeproj -scheme KenosIOS -configuration Debug -destination generic/platform=iOS -derivedDataPath "/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device" -allowProvisioningUpdates DEVELOPMENT_TEAM=93NJ4CAU8B CODE_SIGN_STYLE=Automatic "KENOS_DAILY_BETA_ORIGIN=http://10.20.202.15:5219" CURRENT_PROJECT_VERSION=202607211332 MARKETING_VERSION=1.0.0 build
+
+Build settings from command line:
+    CODE_SIGN_STYLE = Automatic
+    CURRENT_PROJECT_VERSION = 202607211332
+    DEVELOPMENT_TEAM = 93NJ4CAU8B
+    KENOS_DAILY_BETA_ORIGIN = http://10.20.202.15:5219
+    MARKETING_VERSION = 1.0.0
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  KenosActions: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions
+  KenosContracts: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosContracts
+  KenosDesign: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosDesign
+  KenosStore: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore
+  KenosNotifications: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosNotifications
+  KenosClient: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient
+  KenosHandoff: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosHandoff
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (30 targets)
+    Target 'KenosIOS' in project 'Kenos'
+        ➜ Explicit dependency on target 'KenosWatch' in project 'Kenos'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosDesign' in project 'KenosDesign'
+        ➜ Explicit dependency on target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosHandoff' in project 'KenosHandoff'
+    Target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+    Target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+    Target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosDesign' in project 'KenosDesign'
+        ➜ Explicit dependency on target 'KenosDesign' in project 'KenosDesign'
+    Target 'KenosDesign' in project 'KenosDesign' (no dependencies)
+    Target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient_KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient_KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosClient_KenosClient' in project 'KenosClient' (no dependencies)
+    Target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosContracts' in project 'KenosContracts' (no dependencies)
+    Target 'KenosWatch' in project 'Kenos'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosHandoff' in project 'KenosHandoff'
+    Target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+    Target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+    Target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient_KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient_KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosClient_KenosClient' in project 'KenosClient' (no dependencies)
+    Target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosContracts' in project 'KenosContracts' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/kenpan/「Projects」/life-os/clients/apple/Apps/watchOS/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/kenpan/「Projects」/life-os/clients/apple/Apps/iOS/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+Build description signature: c16f6a5131ebce20d659408323110490
+Build description path: /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/XCBuildData/c16f6a5131ebce20d659408323110490.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps/Kenos.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -o /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.5.sdk /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/SDKStatCaches.noindex/watchos26.5-23T570-6c525d28bb7368d9e3b927c5b9753508.sdkstatcache
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps/Kenos.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.5.sdk -o /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/SDKStatCaches.noindex/watchos26.5-23T570-6c525d28bb7368d9e3b927c5b9753508.sdkstatcache
+
+SwiftDriver KenosDesign normal arm64 com.apple.xcode.tools.swift.compiler (in target 'KenosDesign' from project 'KenosDesign')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps/Kenos.xcodeproj
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name KenosDesign -Onone @/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosDesign.build/Debug-iphoneos/KenosDesign.build/Objects-normal/arm64/KenosDesign.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/Developer/Library/Frameworks -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache -output-file-map /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosDesign.build/Debug-iphoneos/KenosDesign.build/Objects-normal/arm64/KenosDesign-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex -sdk-module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosDesign.build/Debug-iphoneos/KenosDesign.build/Objects-normal/arm64/KenosDesign.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex/Session.modulevalidation -package-name kenosdesign -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosDesign.build/Debug-iphoneos/KenosDesign.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosDesign.build/Debug-iphoneos/KenosDesign.build/Objects-normal/arm64/KenosDesign_const_extract_protocols.json -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/include -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosDesign.build/Debug-iphoneos/KenosDesign.build/DerivedSources-normal/arm64 -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosDesign.build/Debug-iphoneos/KenosDesign.build/DerivedSources/arm64 -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosDesign.build/Debug-iphoneos/KenosDesign.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosDesign.build/Debug-iphoneos/KenosDesign.build/Objects-normal/arm64/KenosDesign-Swift.h -working-directory /Users/kenpan/「Projects」/life-os/clients/apple/Apps/Kenos.xcodeproj -experimental-emit-module-separately -disable-cmo

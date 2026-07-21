@@ -210,7 +210,7 @@ async function main() {
     refresh_token: session.refresh_token,
     user: session.user,
   })};
-  localStorage.setItem('sb-${REF}-auth-token', JSON.stringify(session));
+  localStorage.setItem('life_os_auth', JSON.stringify(session));
   await fetch('/__health?kenos_flow_b_clear=1',{cache:'no-store'}).catch(()=>{});
   // Start at Set 1 — NO kenosSet URL pin
   location.replace('/day/${DAY_ID}/focus?kenosEx=${EXERCISE_ID}');
@@ -393,7 +393,7 @@ async function beacon(o){try{await fetch('/__health?kenos_flow_b_assert='+encode
     refresh_token: sessionB.refresh_token,
     user: sessionB.user,
   })};
-  localStorage.setItem('sb-'+REF+'-auth-token', JSON.stringify(session));
+  localStorage.setItem('life_os_auth', JSON.stringify(session));
   await fetch('/__health?kenos_isolation='+encodeURIComponent(JSON.stringify({email:session.user.email})),{cache:'no-store'});
   location.replace('/?iosNativeShell=1&openContinue=1');
 })();
@@ -421,7 +421,7 @@ async function beacon(o){try{await fetch('/__health?kenos_flow_b_assert='+encode
     refresh_token: session.refresh_token,
     user: session.user,
   })};
-  localStorage.setItem('sb-'+REF+'-auth-token', JSON.stringify(session));
+  localStorage.setItem('life_os_auth', JSON.stringify(session));
   location.replace('/?iosNativeShell=1');
 })();
 </script></body></html>`

@@ -10,7 +10,7 @@
 
 - Continuity adapter `knowledgeSpaceAdapter.js` with `vaultWrite: false` always
 - DomainMusicHeader + hide BottomNav/SideNav under iosNativeShell
-- Dock: Notes · Library · Capture · Search
+- Dock: Inbox · Library · Recall · More
 - No silent vault writes from Continuity / leave-guard compose (opens Capture inbox only)
 
 ## Residuals

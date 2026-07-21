@@ -33,12 +33,12 @@ Kenos is the default personal homepage on this machine:
 
 ## Gates reused
 
-| Gate | Status |
-| ---- | ------ |
-| Visual Quality | PASSED (P5 Final Audit) |
+| Gate                    | Status                     |
+| ----------------------- | -------------------------- |
+| Visual Quality          | PASSED (P5 Final Audit)    |
 | Current-HEAD Continuity | PASSED (`…T01-39-14-798Z`) |
-| Owner Review rehearsal | PASSED (this package) |
-| Functional canonical | FROZEN `…T20-12-22-998Z` |
+| Owner Review rehearsal  | PASSED (this package)      |
+| Functional canonical    | FROZEN `…T20-12-22-998Z`   |
 
 ## Commands
 

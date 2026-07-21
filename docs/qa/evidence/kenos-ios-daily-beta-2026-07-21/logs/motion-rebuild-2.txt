@@ -1,0 +1,301 @@
+==> Daily Beta origin: http://10.20.202.15:5219
+==> Device: 8097F071-CAB6-5AF0-8258-BCD985E9D79E
+==> Team: 93NJ4CAU8B
+✔ Daily Beta stopped (data retained)
+✔ LaunchAgents installed (RunAtLoad + KeepAlive + kickstart)
+✔ Daily Beta up
+  Kenos  http://127.0.0.1:5219
+  Plan   http://127.0.0.1:5188
+  Fit    http://127.0.0.1:5190
+⚙️  Generating plists...
+⚙️  Generating project...
+⚙️  Writing project...
+Created project at /Users/kenpan/「Projects」/life-os/clients/apple/Apps/Kenos.xcodeproj
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project Kenos.xcodeproj -scheme KenosIOS -configuration Debug -destination generic/platform=iOS -derivedDataPath "/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device" -allowProvisioningUpdates DEVELOPMENT_TEAM=93NJ4CAU8B CODE_SIGN_STYLE=Automatic "KENOS_DAILY_BETA_ORIGIN=http://10.20.202.15:5219" CURRENT_PROJECT_VERSION=202607211403 MARKETING_VERSION=1.0.0 build
+
+Build settings from command line:
+    CODE_SIGN_STYLE = Automatic
+    CURRENT_PROJECT_VERSION = 202607211403
+    DEVELOPMENT_TEAM = 93NJ4CAU8B
+    KENOS_DAILY_BETA_ORIGIN = http://10.20.202.15:5219
+    MARKETING_VERSION = 1.0.0
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  KenosHandoff: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosHandoff
+  KenosClient: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient
+  KenosDesign: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosDesign
+  KenosActions: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions
+  KenosStore: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore
+  KenosContracts: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosContracts
+  KenosNotifications: /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosNotifications
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (30 targets)
+    Target 'KenosIOS' in project 'Kenos'
+        ➜ Explicit dependency on target 'KenosWatch' in project 'Kenos'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosDesign' in project 'KenosDesign'
+        ➜ Explicit dependency on target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosHandoff' in project 'KenosHandoff'
+    Target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+    Target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+    Target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosDesign' in project 'KenosDesign'
+        ➜ Explicit dependency on target 'KenosDesign' in project 'KenosDesign'
+    Target 'KenosDesign' in project 'KenosDesign' (no dependencies)
+    Target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient_KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient_KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosClient_KenosClient' in project 'KenosClient' (no dependencies)
+    Target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosContracts' in project 'KenosContracts' (no dependencies)
+    Target 'KenosWatch' in project 'Kenos'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosHandoff' in project 'KenosHandoff'
+    Target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+    Target 'KenosHandoff' in project 'KenosHandoff'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+    Target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosNotifications' in project 'KenosNotifications'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosActions' in project 'KenosActions'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosStore' in project 'KenosStore'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+    Target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient_KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosClient_KenosClient' in project 'KenosClient'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosClient_KenosClient' in project 'KenosClient' (no dependencies)
+    Target 'KenosContracts' in project 'KenosContracts'
+        ➜ Explicit dependency on target 'KenosContracts' in project 'KenosContracts'
+    Target 'KenosContracts' in project 'KenosContracts' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps/Kenos.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -o /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.5.sdk /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/SDKStatCaches.noindex/watchos26.5-23T570-6c525d28bb7368d9e3b927c5b9753508.sdkstatcache
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps/Kenos.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.5.sdk -o /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/SDKStatCaches.noindex/watchos26.5-23T570-6c525d28bb7368d9e3b927c5b9753508.sdkstatcache
+
+SwiftDriver KenosIOS normal arm64 com.apple.xcode.tools.swift.compiler (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name KenosIOS -Onone @/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.SwiftFileList -DDEBUG -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache -output-file-map /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex -sdk-module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS_const_extract_protocols.json -Xcc -iquote -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-generated-files.hmap -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-own-target-headers.hmap -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/Kenos-c9447fc016dca98af996523217ef5f02-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-project-headers.hmap -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/include -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/DerivedSources-normal/arm64 -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/DerivedSources/arm64 -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS-Swift.h -working-directory /Users/kenpan/「Projects」/life-os/clients/apple/Apps -experimental-emit-module-separately -disable-cmo
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ KenosIOS (in target 'KenosIOS' from project 'Kenos')
+
+EmitSwiftModule normal arm64 (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    
+/Users/kenpan/「Projects」/life-os/clients/apple/Apps/Shared/KenosWebSurfaceView.swift:431:14: warning: instance method 'webView(_:decidePolicyFor:decisionHandler:)' nearly matches optional requirement 'webView(_:decidePolicyFor:decisionHandler:)' of protocol 'WKNavigationDelegate'
+        func webView(
+             ^
+/Users/kenpan/「Projects」/life-os/clients/apple/Apps/Shared/KenosWebSurfaceView.swift:431:14: note: candidate has non-matching type '(WKWebView, WKNavigationAction, @escaping (WKNavigationActionPolicy) -> Void) -> ()'
+        func webView(
+             ^
+/Users/kenpan/「Projects」/life-os/clients/apple/Apps/Shared/KenosWebSurfaceView.swift:431:14: note: move 'webView(_:decidePolicyFor:decisionHandler:)' to an extension to silence this warning
+        func webView(
+             ^
+/Users/kenpan/「Projects」/life-os/clients/apple/Apps/Shared/KenosWebSurfaceView.swift:431:14: note: make 'webView(_:decidePolicyFor:decisionHandler:)' private to silence this warning
+        func webView(
+             ^
+        private 
+WebKit.WKNavigationDelegate.webView:3:28: note: requirement 'webView(_:decidePolicyFor:decisionHandler:)' declared here
+  @MainActor optional func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void)}
+                           ^
+
+SwiftCompile normal arm64 Compiling\ KenosRootView.swift /Users/kenpan/「Projects」/life-os/clients/apple/Apps/Shared/KenosRootView.swift (in target 'KenosIOS' from project 'Kenos')
+SwiftCompile normal arm64 /Users/kenpan/「Projects」/life-os/clients/apple/Apps/Shared/KenosRootView.swift (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling KenosRootView.swift (in target 'KenosIOS' from project 'Kenos')
+
+SwiftCompile normal arm64 Compiling\ KenosApp.swift /Users/kenpan/「Projects」/life-os/clients/apple/Apps/iOS/Sources/KenosApp.swift (in target 'KenosIOS' from project 'Kenos')
+
+SwiftCompile normal arm64 /Users/kenpan/「Projects」/life-os/clients/apple/Apps/iOS/Sources/KenosApp.swift (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling KenosApp.swift (in target 'KenosIOS' from project 'Kenos')
+
+SwiftDriver\ Compilation KenosIOS normal arm64 com.apple.xcode.tools.swift.compiler (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name KenosIOS -Onone @/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.SwiftFileList -DDEBUG -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache -output-file-map /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex -sdk-module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS_const_extract_protocols.json -Xcc -iquote -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-generated-files.hmap -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-own-target-headers.hmap -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/Kenos-c9447fc016dca98af996523217ef5f02-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-project-headers.hmap -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/include -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/DerivedSources-normal/arm64 -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/DerivedSources/arm64 -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS-Swift.h -working-directory /Users/kenpan/「Projects」/life-os/clients/apple/Apps -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for KenosIOS (in target 'KenosIOS' from project 'Kenos')
+
+SwiftDriver\ Compilation\ Requirements KenosIOS normal arm64 com.apple.xcode.tools.swift.compiler (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name KenosIOS -Onone @/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.SwiftFileList -DDEBUG -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache -output-file-map /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex -sdk-module-cache-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS_const_extract_protocols.json -Xcc -iquote -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-generated-files.hmap -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-own-target-headers.hmap -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/Kenos-c9447fc016dca98af996523217ef5f02-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-project-headers.hmap -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/include -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/DerivedSources-normal/arm64 -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/DerivedSources/arm64 -Xcc -I/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS-Swift.h -working-directory /Users/kenpan/「Projects」/life-os/clients/apple/Apps -experimental-emit-module-separately -disable-cmo
+
+Copy /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.swiftmodule/arm64-apple-ios.swiftmodule /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.swiftmodule (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.swiftmodule /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.swiftsourceinfo (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.swiftsourceinfo /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+Copy /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.swiftmodule/arm64-apple-ios.abi.json /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.abi.json (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.abi.json /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.swiftmodule/arm64-apple-ios.abi.json
+
+Ld /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/KenosIOS.debug.dylib normal (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -O0 -L/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos -filelist /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.LinkFileList -install_name @rpath/KenosIOS.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.swiftmodule @/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS-linker-args.resp -Wl,-no_warn_duplicate_libraries -Wl,-no_warn_duplicate_libraries -Wl,-no_warn_duplicate_libraries -Wl,-no_warn_duplicate_libraries -Wl,-no_warn_duplicate_libraries -Wl,-no_warn_duplicate_libraries -Wl,-no_warn_duplicate_libraries -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -Xlinker -no_adhoc_codesign -o /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/KenosIOS.debug.dylib -Xlinker -add_ast_path -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosContracts.build/Debug-iphoneos/KenosContracts.build/Objects-normal/arm64/KenosContracts.swiftmodule @/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosContracts.build/Debug-iphoneos/KenosContracts.build/Objects-normal/arm64/KenosContracts-linker-args.resp -Xlinker -add_ast_path -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosClient.build/Debug-iphoneos/KenosClient.build/Objects-normal/arm64/KenosClient.swiftmodule @/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosClient.build/Debug-iphoneos/KenosClient.build/Objects-normal/arm64/KenosClient-linker-args.resp -Xlinker -add_ast_path -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosStore.build/Debug-iphoneos/KenosStore.build/Objects-normal/arm64/KenosStore.swiftmodule @/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosStore.build/Debug-iphoneos/KenosStore.build/Objects-normal/arm64/KenosStore-linker-args.resp -Xlinker -add_ast_path -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosActions.build/Debug-iphoneos/KenosActions.build/Objects-normal/arm64/KenosActions.swiftmodule @/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosActions.build/Debug-iphoneos/KenosActions.build/Objects-normal/arm64/KenosActions-linker-args.resp -Xlinker -add_ast_path -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosDesign.build/Debug-iphoneos/KenosDesign.build/Objects-normal/arm64/KenosDesign.swiftmodule @/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosDesign.build/Debug-iphoneos/KenosDesign.build/Objects-normal/arm64/KenosDesign-linker-args.resp -Xlinker -add_ast_path -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosNotifications.build/Debug-iphoneos/KenosNotifications.build/Objects-normal/arm64/KenosNotifications.swiftmodule @/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosNotifications.build/Debug-iphoneos/KenosNotifications.build/Objects-normal/arm64/KenosNotifications-linker-args.resp -Xlinker -add_ast_path -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosHandoff.build/Debug-iphoneos/KenosHandoff.build/Objects-normal/arm64/KenosHandoff.swiftmodule @/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/KenosHandoff.build/Debug-iphoneos/KenosHandoff.build/Objects-normal/arm64/KenosHandoff-linker-args.resp
+
+ConstructStubExecutorLinkFileList /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-ExecutorLinkFileList-normal-arm64.txt (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    construct-stub-executor-link-file-list /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/KenosIOS.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'KenosIOS' from project 'Kenos')
+
+Ld /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/KenosIOS normal (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -O0 -L/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS-ExecutorLinkFileList-normal-arm64.txt /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/KenosIOS.debug.dylib -Xlinker -no_adhoc_codesign -o /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/KenosIOS
+
+ExtractAppIntentsMetadata (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name KenosIOS --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk --xcode-version 17F113 --platform-family iOS --deployment-target 17.0 --bundle-identifier space.kenos.app.ios --output /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app --target-triple arm64-apple-ios17.0 --binary-file /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/KenosIOS --dependency-file /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS_dependency_info.dat --stringsdata-file /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.SwiftFileList --metadata-file-list /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS.DependencyMetadataFileList --static-metadata-file-list /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS.DependencyStaticMetadataFileList --swift-const-vals-list /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/Objects-normal/arm64/KenosIOS.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-07-21 07:03:56.149 appintentsmetadataprocessor[27233:43741688] Starting appintentsmetadataprocessor export
+2026-07-21 07:03:56.153 appintentsmetadataprocessor[27233:43741688] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+CopySwiftLibs /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    builtin-swiftStdLibTool --copy --verbose --sign F7385C5C70C48A70F15EC9766E38D99812BDDA10 --scan-executable /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/KenosIOS.debug.dylib --scan-folder /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/Frameworks --scan-folder /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/PlugIns --scan-folder /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/SystemExtensions --scan-folder /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/Extensions --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+
+CodeSign /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/KenosIOS.debug.dylib (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    
+    Signing Identity:     "Apple Development: Pan Juncheng (24LGFN37R4)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (77e07e5d-9450-4db6-b5e2-cec750d384ae)
+    
+    /usr/bin/codesign --force --sign F7385C5C70C48A70F15EC9766E38D99812BDDA10 --timestamp\=none --generate-entitlement-der /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/KenosIOS.debug.dylib
+
+CodeSign /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/__preview.dylib (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    
+    Signing Identity:     "Apple Development: Pan Juncheng (24LGFN37R4)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (77e07e5d-9450-4db6-b5e2-cec750d384ae)
+    
+    /usr/bin/codesign --force --sign F7385C5C70C48A70F15EC9766E38D99812BDDA10 --timestamp\=none --generate-entitlement-der /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/__preview.dylib
+/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/__preview.dylib: replacing existing signature
+
+CodeSign /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    
+    Signing Identity:     "Apple Development: Pan Juncheng (24LGFN37R4)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (77e07e5d-9450-4db6-b5e2-cec750d384ae)
+    
+    /usr/bin/codesign --force --sign F7385C5C70C48A70F15EC9766E38D99812BDDA10 --entitlements /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Intermediates.noindex/Kenos.build/Debug-iphoneos/KenosIOS.build/KenosIOS.app.xcent --timestamp\=none --generate-entitlement-der /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app
+
+Validate /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app (in target 'KenosIOS' from project 'Kenos')
+    cd /Users/kenpan/「Projects」/life-os/clients/apple/Apps
+    builtin-validationUtility /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app -shallow-bundle -infoplist-subpath Info.plist
+warning: All interface orientations must be supported unless the app requires full screen. (in target 'KenosIOS' from project 'Kenos')
+
+** BUILD SUCCEEDED **
+
+==> CFBundleVersion=202607211403
+==> Installing /Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app
+07:03:56  Acquired tunnel connection to device.
+07:03:56  Enabling developer disk image services.
+07:03:56  Acquired usage assertion.
+App installed:
+• bundleID: space.kenos.app.ios
+• installationURL: file:///private/var/containers/Bundle/Application/DE50AF2F-B7BC-4137-9E05-57FD7DC4223D/KenosIOS.app/
+• launchServicesIdentifier: unknown
+• databaseUUID: 6A2B1109-D682-4C35-A1A8-E9B4FFD80DA7
+• databaseSequenceNumber: 4708
+• options: 
+==> Launching space.kenos.app.ios (unlock phone if needed)
+07:03:58  Acquired tunnel connection to device.
+07:03:58  Enabling developer disk image services.
+07:03:58  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+INSTALL_OK origin=http://10.20.202.15:5219 sha=4aa3a639e5cf4b9a68a212feaa2aecd08faa1ebb build=202607211403 launch_ec=0

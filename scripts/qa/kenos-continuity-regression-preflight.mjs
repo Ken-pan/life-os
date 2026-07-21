@@ -51,7 +51,10 @@ function push(id, ok, detail = {}, failureClass = 'environment') {
   })
   if (!asJson) {
     const mark = ok ? 'PASS' : 'FAIL'
-    console.log(`[${mark}] ${id}`, detail && Object.keys(detail).length ? detail : '')
+    console.log(
+      `[${mark}] ${id}`,
+      detail && Object.keys(detail).length ? detail : '',
+    )
   }
 }
 
@@ -104,7 +107,9 @@ async function main() {
   // 3 Planner module path (Vite DEV required by Continuity harness)
   let plannerModule = { ok: false }
   try {
-    const res = await fetch(PLANNER + '/src/lib/sync.js', { redirect: 'manual' })
+    const res = await fetch(PLANNER + '/src/lib/sync.js', {
+      redirect: 'manual',
+    })
     const ct = res.headers.get('content-type') || ''
     const body = await res.text()
     const looksLikeSource =
@@ -127,7 +132,9 @@ async function main() {
 
   let fitnessModule = { ok: false }
   try {
-    const res = await fetch(FITNESS + '/src/lib/sync.js', { redirect: 'manual' })
+    const res = await fetch(FITNESS + '/src/lib/sync.js', {
+      redirect: 'manual',
+    })
     const ct = res.headers.get('content-type') || ''
     const body = await res.text()
     const looksLikeSource =
@@ -162,18 +169,19 @@ async function main() {
     })
     sessionA = await sessionFor(admin, anon, OWNER.email)
     sessionB = await sessionFor(admin, anon, USER_B.email)
+    push('auth.sessions', Boolean(sessionA?.user?.id && sessionB?.user?.id), {
+      A: sessionA?.user?.id,
+      B: sessionB?.user?.id,
+      A_match: sessionA?.user?.id === OWNER.id,
+      B_match: sessionB?.user?.id === USER_B.id,
+    })
+  } catch (e) {
     push(
       'auth.sessions',
-      Boolean(sessionA?.user?.id && sessionB?.user?.id),
-      {
-        A: sessionA?.user?.id,
-        B: sessionB?.user?.id,
-        A_match: sessionA?.user?.id === OWNER.id,
-        B_match: sessionB?.user?.id === USER_B.id,
-      },
+      false,
+      { error: String(e?.message || e) },
+      'environment',
     )
-  } catch (e) {
-    push('auth.sessions', false, { error: String(e?.message || e) }, 'environment')
   }
 
   // DB query + cleanup capability
@@ -191,7 +199,12 @@ async function main() {
       error ? 'environment' : 'ok',
     )
   } catch (e) {
-    push('db.planner_query', false, { error: String(e?.message || e) }, 'environment')
+    push(
+      'db.planner_query',
+      false,
+      { error: String(e?.message || e) },
+      'environment',
+    )
   }
 
   const fitnessAdmin = admin
@@ -236,7 +249,9 @@ async function main() {
   try {
     // AIOS Continue harness
     {
-      const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } })
+      const ctx = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+      })
       const page = await ctx.newPage()
       await page.goto(AIOS + '/?kenosDemo=1', {
         waitUntil: 'domcontentloaded',
@@ -250,9 +265,14 @@ async function main() {
 
     // Planner #task-title after auth + open seeded-like upcoming
     if (sessionA && plannerModule.ok) {
-      const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+      const ctx = await browser.newContext({
+        viewport: { width: 1280, height: 800 },
+      })
       const page = await ctx.newPage()
-      await page.goto(PLANNER + '/', { waitUntil: 'domcontentloaded', timeout: 30000 })
+      await page.goto(PLANNER + '/', {
+        waitUntil: 'domcontentloaded',
+        timeout: 30000,
+      })
       await page.evaluate((s) => {
         localStorage.setItem('life_os_auth', JSON.stringify(s))
       }, sessionA)
@@ -286,7 +306,12 @@ async function main() {
         },
       })
       if (upsertErr) {
-        push('planner.task_title', false, { upsertErr: upsertErr.message }, 'fixture')
+        push(
+          'planner.task_title',
+          false,
+          { upsertErr: upsertErr.message },
+          'fixture',
+        )
       } else {
         const syncSeed = await page.evaluate(async (taskId) => {
           try {
@@ -297,7 +322,9 @@ async function main() {
             const { S } = await import('/src/lib/state.svelte.js')
             return {
               ok: true,
-              hasTask: Boolean(S.tasks?.find((t) => t.id === taskId && !t.deletedAt)),
+              hasTask: Boolean(
+                S.tasks?.find((t) => t.id === taskId && !t.deletedAt),
+              ),
             }
           } catch (e) {
             return { ok: false, reason: String(e?.message || e) }
@@ -312,7 +339,10 @@ async function main() {
         const titleCount = await page.locator('#task-title').count()
         const titleVal =
           titleCount > 0
-            ? await page.locator('#task-title').inputValue().catch(() => '')
+            ? await page
+                .locator('#task-title')
+                .inputValue()
+                .catch(() => '')
             : ''
         push(
           'planner.task_title',
@@ -322,7 +352,11 @@ async function main() {
         )
 
         // cleanup probe task
-        await admin.from('planner_tasks').delete().eq('id', probeId).eq('user_id', OWNER.id)
+        await admin
+          .from('planner_tasks')
+          .delete()
+          .eq('id', probeId)
+          .eq('user_id', OWNER.id)
       }
       await ctx.close()
     } else {
@@ -336,9 +370,14 @@ async function main() {
 
     // Fitness Set1 → Set2 CTA
     if (sessionA && fitnessModule.ok && fitnessAdmin) {
-      const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } })
+      const ctx = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+      })
       const page = await ctx.newPage()
-      await page.goto(FITNESS + '/', { waitUntil: 'domcontentloaded', timeout: 30000 })
+      await page.goto(FITNESS + '/', {
+        waitUntil: 'domcontentloaded',
+        timeout: 30000,
+      })
       await page.evaluate((s) => {
         localStorage.setItem('life_os_auth', JSON.stringify(s))
       }, sessionA)
@@ -379,7 +418,10 @@ async function main() {
           ctaText: cta?.textContent?.trim() || '',
           ctaVisible: Boolean(cta && cta.offsetParent !== null),
           bodyHasFly: /绳索夹胸|Cable fly|c_fly/i.test(document.body.innerText),
-          title: document.querySelector('h1, .ex-name, .focus-title')?.textContent?.trim() || '',
+          title:
+            document
+              .querySelector('h1, .ex-name, .focus-title')
+              ?.textContent?.trim() || '',
         }
       })
 
@@ -388,10 +430,12 @@ async function main() {
         await page.getByTestId('fitness-focus-complete-set').click()
         await page.waitForTimeout(1500)
         // Prefer product navigation; if still on set1 CTA, try focus URL set=2 after completion
-        await page.goto(
-          `${FITNESS}/day/chest/focus?kenosEx=${EXERCISE_ID}&kenosSet=2`,
-          { waitUntil: 'domcontentloaded', timeout: 30000 },
-        ).catch(() => {})
+        await page
+          .goto(
+            `${FITNESS}/day/chest/focus?kenosEx=${EXERCISE_ID}&kenosSet=2`,
+            { waitUntil: 'domcontentloaded', timeout: 30000 },
+          )
+          .catch(() => {})
         await page.waitForTimeout(1500)
         advanced = await page.evaluate(() => {
           const progress = document.querySelector(
@@ -400,7 +444,8 @@ async function main() {
           const cta = document.querySelector(
             '[data-testid="fitness-focus-complete-set"]',
           )
-          const t = (progress?.textContent || '') + ' ' + (cta?.textContent || '')
+          const t =
+            (progress?.textContent || '') + ' ' + (cta?.textContent || '')
           const onSet2 =
             /1\/3|第\s*2\s*组|完成第\s*2|Set\s*2/i.test(t) ||
             /完成第\s*2/.test(cta?.textContent || '')
@@ -467,10 +512,9 @@ async function main() {
     ok,
     failed: failed.map((f) => f.id),
     checks,
-    next:
-      ok
-        ? 'Safe to run: node scripts/qa/kenos-space-continuity-e2e-flows.mjs'
-        : 'Do NOT run full Continuity E2E. Fix environment/fixture first. No Gate change.',
+    next: ok
+      ? 'Safe to run: node scripts/qa/kenos-space-continuity-e2e-flows.mjs'
+      : 'Do NOT run full Continuity E2E. Fix environment/fixture first. No Gate change.',
   }
 
   const outDir = join(

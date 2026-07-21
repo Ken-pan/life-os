@@ -142,7 +142,7 @@ const boot = `<!doctype html><html><body><script>
     user: session.user,
   })};
   const task=${JSON.stringify(task)};
-  localStorage.setItem('sb-'+REF+'-auth-token', JSON.stringify(session));
+  localStorage.setItem('life_os_auth', JSON.stringify(session));
   let state=null; try{state=JSON.parse(localStorage.getItem('planos_v1')||'null')}catch(e){}
   if(!state||typeof state!=='object') state={tasks:[],lists:[],projects:[],settings:{},schemaVersion:1};
   state.tasks=(state.tasks||[]).filter(t=>t&&t.id!==task.id).concat([task]);
@@ -190,7 +190,7 @@ async function run(){
       const save=document.querySelector('button.btn-primary');
       if(save) save.click();
       await new Promise(r=>setTimeout(r,2500));
-      const sess=JSON.parse(localStorage.getItem('sb-'+REF+'-auth-token')||'{}');
+      const sess=JSON.parse(localStorage.getItem('life_os_auth')||'{}');
       // Hosted writer — same RPC Save uses (user JWT). Try common envelopes.
       const envelopes=[
         {action_request:{actionType:'plan.update_task_title',actorType:'user',actorId:OWNER_ID,authUserId:OWNER_ID,idempotencyKey:uuid(),correlationId:uuid(),payload:{taskId:TASK_ID,title:MUT}}},
@@ -256,7 +256,7 @@ writeFileSync(
   join(AIOS_ROOT, '__v.html'),
   `<!doctype html><html><body><script>
 (async function(){
- const sess=JSON.parse(localStorage.getItem('sb-${REF}-auth-token')||'{}');
+ const sess=JSON.parse(localStorage.getItem('life_os_auth')||'{}');
  const r=await fetch('https://${REF}.supabase.co/rest/v1/planner_tasks?id=eq.${TASK_ID}&select=id,data',{headers:{apikey:'${anon}',Authorization:'Bearer '+sess.access_token}});
  const rows=await r.json(); const title=(rows[0]&&rows[0].data&&rows[0].data.title)||null;
  await fetch('/__health?kenos_flow_a_verify='+encodeURIComponent(JSON.stringify({status:title===${JSON.stringify(MUT)}?'ok':'mismatch',title,taskId:'${TASK_ID}'})),{cache:'no-store'});

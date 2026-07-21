@@ -145,8 +145,8 @@ writeFileSync(
   join(OUT, 'README.md'),
   `# P5 Knife 5 — Today type & information rhythm
 
-**Date:** ${manifest.capturedAt.slice(0, 10)}  
-**Result:** ${manifest.pass ? 'PASS' : 'FAIL'}  
+**Date:** ${manifest.capturedAt.slice(0, 10)}
+**Result:** ${manifest.pass ? 'PASS' : 'FAIL'}
 **Continuity:** untouched · Owner Review **NOT OPEN** · Visual **IN_PROGRESS**
 
 ## Levels

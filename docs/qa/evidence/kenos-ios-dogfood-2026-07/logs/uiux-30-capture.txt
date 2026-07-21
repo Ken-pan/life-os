@@ -1,0 +1,38 @@
+==> LAN=10.20.202.15 DEVICE=8097F071-CAB6-5AF0-8258-BCD985E9D79E
+==> Kenos (10)
+  shot 01-today.png
+  shot 02-assistant.png
+  shot 03-spaces.png
+  shot 04-inbox.png
+  shot 05-settings.png
+  shot 06-spaces-work.png
+  shot 07-spaces-knowledge.png
+  shot 08-shell-today-deeplink.png
+  shot 09-uiux-states.png
+  shot 10-today-reload.png
+==> Plan Domain (10)
+  shot 01-tasks.png
+  shot 02-calendar.png
+  shot 03-projects.png
+  shot 04-search.png
+  shot 05-upcoming.png
+  shot 06-inbox.png
+  shot 07-completed.png
+  shot 08-insights.png
+  shot 09-settings.png
+  shot 10-space-shelf.png
+==> Training Domain (10)
+  shot 01-today.png
+  shot 02-session-workout.png
+  shot 03-library.png
+  shot 04-history.png
+  shot 05-program.png
+  shot 06-discover.png
+  shot 07-stats.png
+  shot 08-settings.png
+  shot 09-tools.png
+  shot 10-space-shelf.png
+CAPTURE_OK
+      10
+      10
+      10

@@ -28,25 +28,30 @@ See `docs/qa/kenos-ios-ia-model-2026-07-21.md`:
 
 1. Full OS Dynamic Type / VoiceOver Settings sweep (still needs unlocked 17 Pro OS Settings).
    - ~~LAN Web Continue/Quick Switch 44px + aria-label~~ → **PASS** (`ia-web-a11y-soft.mjs`) after SystemBar hit-target bump.
-   - ~~iOS native Continue/Quick Switch unlock recheck~~ → **PASS_LAUNCH_NO_USB_SHOT** (launch @ 06:20:41Z; PNG needs USB — Wi‑Fi CoreDevice only).
+   - ~~iOS native Continue/Quick Switch unlock recheck~~ → **PASS** (`04-ios-native-shell.png` via pymobiledevice3 DVT; `idevicescreenshot` screenshotr still broken on iOS 27).
    - ~~Focus timer fixed 44pt~~ → **SHIPPED** (`KenosTypography.display` scales with Dynamic Type). OS slider sweep still open.
 2. Wi‑Fi↔Cellular mid-session toggle.
 3. Network scope remains **LAN-DEPENDENT** until phone-reachable Owner canary replaces Mac LAN.
-4. ~~Hosted title writer OFF in Daily Beta~~ → **CLOSED for Owner keyboard Save**  
-   (`kenos-ctl` now bakes `PROD_WRITES` + `PLAN_UPDATE_TASK_TITLE_WRITER` for Owner email).  
+4. ~~Hosted title writer OFF in Daily Beta~~ → **CLOSED for Owner keyboard Save**
+   (`kenos-ctl` now bakes `PROD_WRITES` + `PLAN_UPDATE_TASK_TITLE_WRITER` for Owner email).
    Automation note: WKWebView synthetic/`insertText` still does not update Svelte 5 `bind:value`; Flow A harness keeps **user JWT PATCH fallback** after editor open (never service_role). See `PHASE4_NEXT_SLICE.md`.
-5. Optional: plug **USB** + unlock → `wait-usb-native-shot.sh` captures `04-ios-native-shell.png`.
+5. ~~USB native chrome screenshot~~ → **PASS** (DVT). Nav flow clean: `screenshots/nav-flow-clean/VERIFY.md` (**PASS_ON_DEVICE** · build `202607211239`).
+
+## Nav UIUX (2026-07-21)
+
+- SSOT: `docs/qa/kenos-nav-uiux-flow-2026-07-21.md` + `NAV_UIUX_FLOW.md`
+- Spaces left chip = Space Shelf only; Domain Continuity gets own capsule (bug fixed + retested).
 
 ## Phase 4 EXIT_OPEN
 
-| Item | Status |
-| --- | --- |
-| App Group 持久共享 | **LOCAL_FOUNDATION_ONLY** — `KenosAppGroupStore` + tests; entitlement/provisioning still open (`KR-P4B-TEMP-005`) |
-| APNs | OPEN |
-| Focus entitlement | OPEN |
-| TestFlight / distribution | OPEN |
-| Watch/macOS 跨端持久状态 | OPEN (needs live App Group suite) |
-| legacy Apple shell retirement | OPEN |
+| Item                          | Status                                                                                                            |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| App Group 持久共享            | **LOCAL_FOUNDATION_ONLY** — `KenosAppGroupStore` + tests; entitlement/provisioning still open (`KR-P4B-TEMP-005`) |
+| APNs                          | OPEN                                                                                                              |
+| Focus entitlement             | OPEN                                                                                                              |
+| TestFlight / distribution     | OPEN                                                                                                              |
+| Watch/macOS 跨端持久状态      | OPEN (needs live App Group suite)                                                                                 |
+| legacy Apple shell retirement | OPEN                                                                                                              |
 
 ## Not acceptance evidence
 

@@ -4,7 +4,46 @@
 > **Canonical 迁移目录：** `apps/finance/supabase/`（`schema.sql` + `migrations/`）
 > **路线图：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)
 
-**最后与代码同步：** 2026-07-17（链头含 `20260717220000 home_storage_snapshots` · HOME.MCP.13）
+**最后与代码同步：** 2026-07-21（仓内 tip `20260721180000_kenos_app_logs_analyze_alert`；生产 tip 以远程 `schema_migrations` 为准）
+
+### 2026-07-21 审计跟进（生产已 apply）
+
+| Version          | Name                          | 说明                                                                                                                                         |
+| ---------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `20260717230000` | `finance_purchase_notes`      | **FINC.PURCHASE.6b** · `purchase_notes` + RPC `purchase_note_get` / `purchase_note_set`（此前仓内有文件、远程未登记；本日补 apply）          |
+| `20260721144405` | `kenos_app_logs`              | `kenos_app_log_sessions` + `kenos_app_logs` + RPC `kenos_ingest_app_logs`；`bug_logs.app` 含 `kenos`（portal membership 放行）               |
+| `20260721160000` | `supabase_security_hygiene`   | Revoke trigger RPC `EXECUTE`（`trg_finance_bill_to_event` / `trg_fitness_workout_to_event`）；drop `paper_device_actions` 过宽 INSERT policy |
+| `20260721170000` | `supabase_security_hygiene_2` | Pin `search_path` on touch/bill triggers；`music-covers` 去掉公有 list，改为 authenticated 本人目录 SELECT（public URL 不受影响）            |
+
+### 2026-07-21 app logs analyze/alert（仓内；生产待 owner apply）
+
+| Version          | Name                           | 说明                                                                                                                                                              |
+| ---------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `20260721180000` | `kenos_app_logs_analyze_alert` | `bug_logs` +aios/knowledge；`kenos_app_log_alerts`；`kenos_app_log_summary` / `kenos_scan_app_log_alerts` / `_all`。见 [`kenos-app-logs.md`](./kenos-app-logs.md) |
+
+**Auth（非 migration）：** `password_hibp_enabled=true`（HaveIBeenPwned leaked-password protection，Management API 2026-07-21 开启）。
+
+**App env 接线示例：** `apps/{planner,fitness,finance,music,portal,home,aios,knowledge}/.env.example` 均指向同一项目 publishable key；Health 不接此库。
+
+### DEFINER 审计（2026-07-21 复核，无需再改）
+
+| 面                                     | 结论                                                                                        |
+| -------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `public.kenos_*_action`                | 薄包装 → `private.*`；EXECUTE 仅 `authenticated` + `service_role`（无 anon）                |
+| `private.kenos_*_action`               | 全部含 `auth.uid()` + `auth_required`；`search_path=''`                                     |
+| `private.kenos_transition_plan_outbox` | 内部 CAS；EXECUTE 仅 `kenos_outbox_worker`（非 Data API）                                   |
+| `paper_device_snapshot`                | anon/authenticated 可调，但 SHA-256 token + `user_id` + `user_has_app_access('paper')` 门禁 |
+| `portal_today_summary()`               | 零参包装 → `(text)` 版本；内部 `auth.uid()` 空则 `{ok:false}`                               |
+
+### 版本号漂移（内容已上线，登记时间戳与仓内文件名不同）
+
+| 远程 `schema_migrations` | 仓内 canonical 文件名（语义相同）                                         |
+| ------------------------ | ------------------------------------------------------------------------- |
+| `20260717204030`         | `apps/finance/.../20260717210000_purchase_review_rpc_revoke_anon.sql`     |
+| `20260717205329`         | `apps/home/.../20260717220000_home_storage_snapshots.sql`                 |
+| `20260717210914`         | （远程名 `planner_attachments_table`；attachments 另见 `20260709232245`） |
+
+勿按「本地文件名缺失」重复 apply；以远程 version + 对象存在为准。
 
 ## 执行 SQL（本网络推荐路径）
 
@@ -29,24 +68,24 @@
 
 以下均已出现在远程 `supabase_migrations.schema_migrations`（2026-07-17 通过 `supabase-sql.sh` 查询确认）：
 
-| Version          | Name                                   | 说明                                      |
-| ---------------- | -------------------------------------- | ----------------------------------------- |
-| `20260710160000` | `life_os_baseline`                     | 折叠 legacy 链 + 全站 DDL（含 Planner/Paper 读路径） |
-| `20260710161000` | `fitness_signup_membership`            | Auth signup 隔离 + `app_memberships`      |
-| `20260710203000` | `portal_today_summary_fitness_today` | **GYMS.PORTAL.2** · Portal Fitness 卡字段 |
-| `20260712200000` | `portal_today_summary_timezone_and_tombstones` | **PLNR.CORE.4** · tz + tombstone 对齐 |
-| `20260713120000` | `purchase_review_associations`         | **FINC.PURCHASE.6.a** · `purchase_associations`+`purchase_decisions`+RLS+3 RPC；273 回填 proposed（2026-07-13 部署 + 生产 RPC 往返验证） |
-| `20260714201817` | `home_scan_sync`                       | **HOME.SYNC.4** · `home` schema + `home.scans`（iOS RoomPlan 扫描同步；2026-07-14 部署 + REST 探针验证） |
-| `20260714201818` | `home_scan_storage`                    | **HOME.SYNC.4** · 私有桶 `home-scan-photos`（机位照片 + structure.json） |
-| `20260715090000` | `home_scan_model_mime`                 | **HOME.SYNC.4** · 3D model MIME / Storage 支持（2026-07-17 远程查询确认已 apply） |
-| `20260715210000` | `home_events`                          | **HOME.EVENTS** · append-only `home.events` 云镜像（2026-07-17 远程查询确认已 apply，为当前链头） |
+| Version          | Name                                           | 说明                                                                                                                                     |
+| ---------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `20260710160000` | `life_os_baseline`                             | 折叠 legacy 链 + 全站 DDL（含 Planner/Paper 读路径）                                                                                     |
+| `20260710161000` | `fitness_signup_membership`                    | Auth signup 隔离 + `app_memberships`                                                                                                     |
+| `20260710203000` | `portal_today_summary_fitness_today`           | **GYMS.PORTAL.2** · Portal Fitness 卡字段                                                                                                |
+| `20260712200000` | `portal_today_summary_timezone_and_tombstones` | **PLNR.CORE.4** · tz + tombstone 对齐                                                                                                    |
+| `20260713120000` | `purchase_review_associations`                 | **FINC.PURCHASE.6.a** · `purchase_associations`+`purchase_decisions`+RLS+3 RPC；273 回填 proposed（2026-07-13 部署 + 生产 RPC 往返验证） |
+| `20260714201817` | `home_scan_sync`                               | **HOME.SYNC.4** · `home` schema + `home.scans`（iOS RoomPlan 扫描同步；2026-07-14 部署 + REST 探针验证）                                 |
+| `20260714201818` | `home_scan_storage`                            | **HOME.SYNC.4** · 私有桶 `home-scan-photos`（机位照片 + structure.json）                                                                 |
+| `20260715090000` | `home_scan_model_mime`                         | **HOME.SYNC.4** · 3D model MIME / Storage 支持（2026-07-17 远程查询确认已 apply）                                                        |
+| `20260715210000` | `home_events`                                  | **HOME.EVENTS** · append-only `home.events` 云镜像（2026-07-17 远程查询确认已 apply，为当前链头）                                        |
 
 Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **语义吸收**；勿重复 apply 单文件 legacy migration。
 
 ### Home object recognition（已闭环）
 
-| Migration | 代码能力 | 口径（2026-07-17 晚） |
-| --- | --- | --- |
+| Migration                                                                  | 代码能力                      | 口径（2026-07-17 晚）                                                                                                            |
+| -------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `apps/home/supabase/migrations/20260717120000_home_object_recognition.sql` | 物体观察 / embedding 数据契约 | 远程已 apply + 注册；**git 真源已入仓**（`HOME.RECOG.0` ✅ · `5a2b7773`）；`embed_objects.py` / matcher / 证据 UI 随后续提交落地 |
 
 **新 schema 部署必做**：PostgREST Exposed schemas 追加名字（`GET` 后 `PATCH /v1/projects/<ref>/postgrest` 的 `db_schema` 与 `db_extra_search_path`，勿覆盖现值）。当前列表：`public,graphql_public,music,fitness,aios,home`（2026-07-14）。漏这步 = 该 schema 所有 REST 调用 PGRST106。
@@ -55,14 +94,14 @@ Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **
 
 ## 平台级迁移（Integration / 共享 public 表）
 
-| Version          | 文件                                                     | 阶段   | 远程状态（2026-07-09）                                 |
-| ---------------- | -------------------------------------------------------- | ------ | ------------------------------------------------------ |
-| `20260707230000` | `migrations/20260707230000_life_os_shared_identity.sql`  | INTG.IDENTITY.0   | ✅ 已 apply                                            |
-| `20260708000000` | `migrations/20260708000000_life_events_and_outbox.sql`   | INTG.EVENTS.1.5 | ✅ 已 apply（触发器挂 `finance_expected_occurrences`） |
-| `20260708120000` | `migrations/20260708120000_portal_app_id_constraint.sql` | INTG.EVENTS.1   | ✅ 已 apply（`app_id` 含 `portal` + 回填）             |
-| `20260708180000` | `migrations/20260708180000_home_app_id_constraint.sql`   | HOME.SSO.3   | ✅ 已 apply（`app_id` 含 `home` + 回填 + `life_os_modules`） |
-| `20260708191000` | `migrations/20260708191000_portal_today_summary_music.sql` | PORT.GROWTH.4b-M | ✅ 已 apply（Music 第四卡） |
-| `20260709021500` | `migrations/20260709021500_portal_today_summary_home.sql` | PORT.GROWTH.4b-H | ✅ 已 apply（Home 第五卡 · `core_user_app_settings`） |
+| Version          | 文件                                                       | 阶段             | 远程状态（2026-07-09）                                       |
+| ---------------- | ---------------------------------------------------------- | ---------------- | ------------------------------------------------------------ |
+| `20260707230000` | `migrations/20260707230000_life_os_shared_identity.sql`    | INTG.IDENTITY.0  | ✅ 已 apply                                                  |
+| `20260708000000` | `migrations/20260708000000_life_events_and_outbox.sql`     | INTG.EVENTS.1.5  | ✅ 已 apply（触发器挂 `finance_expected_occurrences`）       |
+| `20260708120000` | `migrations/20260708120000_portal_app_id_constraint.sql`   | INTG.EVENTS.1    | ✅ 已 apply（`app_id` 含 `portal` + 回填）                   |
+| `20260708180000` | `migrations/20260708180000_home_app_id_constraint.sql`     | HOME.SSO.3       | ✅ 已 apply（`app_id` 含 `home` + 回填 + `life_os_modules`） |
+| `20260708191000` | `migrations/20260708191000_portal_today_summary_music.sql` | PORT.GROWTH.4b-M | ✅ 已 apply（Music 第四卡）                                  |
+| `20260709021500` | `migrations/20260709021500_portal_today_summary_home.sql`  | PORT.GROWTH.4b-H | ✅ 已 apply（Home 第五卡 · `core_user_app_settings`）        |
 
 ### INTG.IDENTITY.0：`core_profiles` + `core_user_app_settings`
 
@@ -97,65 +136,67 @@ Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **
 
 **状态图例（三层）：**
 
-| 标记 | 含义 |
-| ---- | ---- |
+| 标记   | 含义                                                           |
+| ------ | -------------------------------------------------------------- |
 | **✅** | 该层已闭合（migration 已上生产 / 代码已合 master / gate PASS） |
-| **🟡** | 部分闭合或 ops 未强制验收 |
-| **⏳** | 进行中（Hub §Now/§Next 或快赢副线） |
-| **🔒** | 硬依赖未满足 |
-| **❌** | 未开始 |
+| **🟡** | 部分闭合或 ops 未强制验收                                      |
+| **⏳** | 进行中（Hub §Now/§Next 或快赢副线）                            |
+| **🔒** | 硬依赖未满足                                                   |
+| **❌** | 未开始                                                         |
 
 **Authoring：** `apps/planner/supabase/migrations/` · **Deploy：** `./scripts/supabase-sql.sh -f …` 或 fold 进 `apps/finance/supabase/migrations/`
 
 ### 主表 — ticket ↔ migration ↔ 三层状态
 
-| Hub Ticket | Migration 文件 | 生产 DB 对象 | Migration | App 代码 | Gate / 验收 | **Hub 状态** |
-| ---------- | -------------- | ------------ | --------- | -------- | ----------- | ------------ |
-| **（结构化同步）** | `05130000` + `05140000` | `planner_user_state` · `planner_tasks` · `planner_lists` | ✅ baseline | ✅ `sync.js` · `repo.js` | ✅ 生产同步 | **✅ Shipped** |
-| **PLNR.PROJ.0** | `10054418_planner_projects` | `planner_projects` | ✅ | ✅ `domain/projects.js` · structured pull/push | ✅ `repo.structured.test.js` | **✅ Shipped** |
-| **PLNR.PROJ.1** | ↑ 同上 | ↑ | ✅ | ✅ `/projects` 列表/详情 | ✅ E2E | **✅ Shipped** |
-| **PLNR.PROJ.2** | —（无额外 DDL） | ↑ | ✅ | ✅ QuickAddBar `@项目` · `projectId` | ✅ | **✅ Shipped** |
-| **PLNR.PROJ.3** | — | ↑ | ✅ | ✅ Roadmap/repo refs UI | ✅ `project-references.spec.js` | **✅ Shipped** |
-| **PLNR.CORE.1** | `09120000_planner_push_subscriptions` | `planner_push_subscriptions` · `planner_reminder_push_log` | ✅ | ✅ `pushSubscription.js` · `sendReminderPushes.mjs` | 🟡 VAPID/Netlify cron **未强制验收** | **🟡 Shipped（schema+code）** · ops 按需 |
-| **PLNR.CORE.3** | 平台 `08000000` life_events | `life_events` 消费 | ✅ | ✅ `lifeEventsInbox.js` | ✅ inbox tests | **✅ Shipped** |
-| **PLNR.CORE.5** | 平台 `08200000` fitness trigger | `fitness.workout_logged` | ✅ | ✅ inbox 打卡分支 | ✅ GYMS.EVENTS.1 | **✅ Shipped** |
-| **PLNR.CORE.6** | — | —（客户端 Auth） | N/A | ✅ `@life-os/sync` 单例 | ✅ `supabaseClient.test.mjs` | **✅ Shipped** |
-| **PLNR.CORE.4** | `20260712200000`（tz + tombstone） | `portal_today_summary()` 读 `planner_tasks` | ✅ RPC | ✅ `selectTodayGroups` 与 RPC 谓词对齐 · `selectors.test.js` 9/9 | ✅ 2026-07-13 | **✅ Shipped** |
-| **PLNR.ATTACH.0** | `20260709232245` | `planner_attachments` + bucket `planner-attachments` + Storage RLS | ✅ | ✅ | ✅ | **✅ Applied 2026-07-17** · table/bucket/policies 生产已就绪 |
-| **PAPR.DATA.verify** | `10000500_add_paper_device_snapshot_rpc` | `paper_device_config` · `paper_device_snapshot()` | ✅ | ✅ `/api/paper/*` · device `ApiClient` | ✅ PASS 2026-07-11 | **✅ Shipped** |
-| **PAPR.WRITE.5** | `09200000_add_paper_device_actions` | `paper_device_actions` | ❌ **表不存在** | ✅ `paperService.mjs` · `PAPER_ACTIONS_WRITE_ENABLED` 默认 off | ⏳ staging gate 未关 | **🟡 Code ✅ · DB ⏳ BLOCKED** · Hub Deferred |
-| **PAPR.SYNC.6** | _(blocked)_ | — | 🔒 | 🟡 client sync only | 🔒 依赖 PAPR.SYS.2 | **🔒 Blocked** |
+| Hub Ticket           | Migration 文件                           | 生产 DB 对象                                                       | Migration                      | App 代码                                                         | Gate / 验收                          | **Hub 状态**                                                 |
+| -------------------- | ---------------------------------------- | ------------------------------------------------------------------ | ------------------------------ | ---------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------ |
+| **（结构化同步）**   | `05130000` + `05140000`                  | `planner_user_state` · `planner_tasks` · `planner_lists`           | ✅ baseline                    | ✅ `sync.js` · `repo.js`                                         | ✅ 生产同步                          | **✅ Shipped**                                               |
+| **PLNR.PROJ.0**      | `10054418_planner_projects`              | `planner_projects`                                                 | ✅                             | ✅ `domain/projects.js` · structured pull/push                   | ✅ `repo.structured.test.js`         | **✅ Shipped**                                               |
+| **PLNR.PROJ.1**      | ↑ 同上                                   | ↑                                                                  | ✅                             | ✅ `/projects` 列表/详情                                         | ✅ E2E                               | **✅ Shipped**                                               |
+| **PLNR.PROJ.2**      | —（无额外 DDL）                          | ↑                                                                  | ✅                             | ✅ QuickAddBar `@项目` · `projectId`                             | ✅                                   | **✅ Shipped**                                               |
+| **PLNR.PROJ.3**      | —                                        | ↑                                                                  | ✅                             | ✅ Roadmap/repo refs UI                                          | ✅ `project-references.spec.js`      | **✅ Shipped**                                               |
+| **PLNR.CORE.1**      | `09120000_planner_push_subscriptions`    | `planner_push_subscriptions` · `planner_reminder_push_log`         | ✅                             | ✅ `pushSubscription.js` · `sendReminderPushes.mjs`              | 🟡 VAPID/Netlify cron **未强制验收** | **🟡 Shipped（schema+code）** · ops 按需                     |
+| **PLNR.CORE.3**      | 平台 `08000000` life_events              | `life_events` 消费                                                 | ✅                             | ✅ `lifeEventsInbox.js`                                          | ✅ inbox tests                       | **✅ Shipped**                                               |
+| **PLNR.CORE.5**      | 平台 `08200000` fitness trigger          | `fitness.workout_logged`                                           | ✅                             | ✅ inbox 打卡分支                                                | ✅ GYMS.EVENTS.1                     | **✅ Shipped**                                               |
+| **PLNR.CORE.6**      | —                                        | —（客户端 Auth）                                                   | N/A                            | ✅ `@life-os/sync` 单例                                          | ✅ `supabaseClient.test.mjs`         | **✅ Shipped**                                               |
+| **PLNR.CORE.4**      | `20260712200000`（tz + tombstone）       | `portal_today_summary()` 读 `planner_tasks`                        | ✅ RPC                         | ✅ `selectTodayGroups` 与 RPC 谓词对齐 · `selectors.test.js` 9/9 | ✅ 2026-07-13                        | **✅ Shipped**                                               |
+| **PLNR.ATTACH.0**    | `20260709232245`                         | `planner_attachments` + bucket `planner-attachments` + Storage RLS | ✅                             | ✅                                                               | ✅                                   | **✅ Applied 2026-07-17** · table/bucket/policies 生产已就绪 |
+| **PAPR.DATA.verify** | `10000500_add_paper_device_snapshot_rpc` | `paper_device_config` · `paper_device_snapshot()`                  | ✅                             | ✅ `/api/paper/*` · device `ApiClient`                           | ✅ PASS 2026-07-11                   | **✅ Shipped**                                               |
+| **PAPR.WRITE.5**     | `09200000_add_paper_device_actions`      | `paper_device_actions`                                             | ✅ 表已存在（2026-07-21 复核） | ✅ `paperService.mjs` · `PAPER_ACTIONS_WRITE_ENABLED` 默认 off   | 🟡 写开关仍默认 off                  | **🟡 DB ✅ · write gate 默认 off** · Hub 按产品开关          |
+| **PAPR.SYNC.6**      | _(blocked)_                              | —                                                                  | 🔒                             | 🟡 client sync only                                              | 🔒 依赖 PAPR.SYS.2                   | **🔒 Blocked**                                               |
 
 ### 非 Supabase（相关 · 勿写入 migration 表）
 
-| Hub Ticket | Supabase | 代码 | Gate | **Hub 状态** |
-| ---------- | -------- | ---- | ---- | ------------ |
-| **PLNR.SCHED.0.migrate** | — | ✅ `migrate.js` `tags: []` · **#15** `5c66d51e` | ✅ `migrate.integration.test.js` 23/23 | **✅ Shipped** |
-| **PLNR.SCHED.0**（父） | — | ✅ 10.pwa #18 · E2E 全绿 2026-07-13 | ⏳ **10b.ios** 待 Ken | **🟡 Open**（剩真机签收） |
+| Hub Ticket               | Supabase | 代码                                            | Gate                                   | **Hub 状态**              |
+| ------------------------ | -------- | ----------------------------------------------- | -------------------------------------- | ------------------------- |
+| **PLNR.SCHED.0.migrate** | —        | ✅ `migrate.js` `tags: []` · **#15** `5c66d51e` | ✅ `migrate.integration.test.js` 23/23 | **✅ Shipped**            |
+| **PLNR.SCHED.0**（父）   | —        | ✅ 10.pwa #18 · E2E 全绿 2026-07-13             | ⏳ **10b.ios** 待 Ken                  | **🟡 Open**（剩真机签收） |
 
-### 生产对象快照（2026-07-12 MCP）
+### 生产对象快照（2026-07-21 MCP）
 
-**已存在：** `planner_user_state` · `planner_tasks` · `planner_lists` · `planner_projects` · `planner_push_subscriptions` · `planner_reminder_push_log` · `paper_device_config` · `paper_device_snapshot()`
+**已存在：** `planner_user_state` · `planner_tasks` · `planner_lists` · `planner_projects` · `planner_push_subscriptions` · `planner_reminder_push_log` · `paper_device_config` · `paper_device_actions` · `paper_device_snapshot()` · `purchase_notes` · Kenos wave 表/RPC · `kenos_app_logs`
 
-**缺失（阻塞 PAPR.WRITE.5 DB 层）：** `paper_device_actions`
+**`paper_device_config`：** RLS on、无 Data API policy（刻意 deny-all；读写走 service_role / `paper_device_snapshot` DEFINER RPC）。
 
-**`schema_migrations` 登记：** `20260710160000` · `20260710161000` · `20260710203000`（Planner DDL 已吸收进 baseline，无独立 `20260705*` / `20260709*` / `20260710*` 行）
+**生产 tip：** `20260721170000`（`supabase_security_hygiene_2`）
 
 ### 下一步（仅 Supabase 动作）
 
-1. **PAPR.WRITE.5** — apply `09200000` 到 staging → gate → 生产；写开关仍默认 off
-2. **PLNR.CORE.4** — 纯 app/RPC 口径对齐（无 migration）
-3. ~~**PLNR.ATTACH.0**~~ — `planner_attachments` + `planner-attachments` bucket/RLS ✅ 2026-07-17
+1. ~~**FINC.PURCHASE.6b**~~ — `purchase_notes` ✅ 2026-07-21
+2. ~~**Security hygiene**~~ — trigger REVOKE + paper INSERT + HIBP + `search_path` + music-covers list ✅ 2026-07-21
+3. **PAPR.WRITE.5** — DB 已就绪；产品层写开关 `PAPER_ACTIONS_WRITE_ENABLED` 仍默认 off
 4. **PLNR.CORE.1** — 可选：VAPID + `planner-reminder-push` cron 生产验收
+5. **Advisor 余项（刻意保留，见上节 DEFINER 审计）**：`paper_device_config` RLS deny-all（INFO）；`paper_device_snapshot` anon DEFINER；`kenos_*_action` authenticated DEFINER
+6. **产品开关（非 DB）**：`PAPER_ACTIONS_WRITE_ENABLED` 默认 off；PLNR.CORE.1 VAPID/cron 按需验收
 
 ## App 级 schema（同项目，分 schema / 前缀）
 
-| App     | DB 位置                                    | 说明                                                     |
-| ------- | ------------------------------------------ | -------------------------------------------------------- |
-| Finance | `public` 表（`finance_*` 前缀）            | 主业务 + 扩展 sync                                       |
-| Planner | `public.planner_*` · `paper_device_*`      | Authoring：`apps/planner/supabase/migrations/` · ticket 表见上节 |
-| Fitness | `fitness` schema                           | baseline + `20260710161000`                              |
-| Music   | `music` schema + RPC                       | 见 `apps/music/supabase/migrations/`、`apps/music/docs/` |
+| App     | DB 位置                               | 说明                                                             |
+| ------- | ------------------------------------- | ---------------------------------------------------------------- |
+| Finance | `public` 表（`finance_*` 前缀）       | 主业务 + 扩展 sync                                               |
+| Planner | `public.planner_*` · `paper_device_*` | Authoring：`apps/planner/supabase/migrations/` · ticket 表见上节 |
+| Fitness | `fitness` schema                      | baseline + `20260710161000`                                      |
+| Music   | `music` schema + RPC                  | 见 `apps/music/supabase/migrations/`、`apps/music/docs/`         |
 
 ## Auth redirect URLs
 
@@ -170,11 +211,11 @@ Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **
 
 ## 相关脚本
 
-| 脚本                                      | 用途                                                               |
-| ----------------------------------------- | ------------------------------------------------------------------ |
-| `./scripts/verify-life-os-identity-p0.sh` | INTG.IDENTITY.0 自动化验收                                                    |
+| 脚本                                      | 用途                                                                        |
+| ----------------------------------------- | --------------------------------------------------------------------------- |
+| `./scripts/verify-life-os-identity-p0.sh` | INTG.IDENTITY.0 自动化验收                                                  |
 | `./scripts/test-outbox-trigger.sh`        | INTG.EVENTS.1.5 结构检查；`--smoke` 端到端；`--apply-migration` 首次 deploy |
-| `./scripts/supabase-sql.sh`               | 远程 SQL 执行                                                      |
+| `./scripts/supabase-sql.sh`               | 远程 SQL 执行                                                               |
 
 ## 回滚注意
 

@@ -17,7 +17,7 @@ status: LIVE_REVALIDATED
 | AIOS published                           | `6a5e3298a269f920f5314a01`                                                        |
 | Portal published                         | `6a5e347265864128941f0777` (Today soft-redirect Owner-limited)                    |
 | Rollback Portal                          | `6a5c617eceda660008ee2583`                                                        |
-| Migration tip                            | `20260720230000`                                                                  |
+| Migration tip                            | `20260721144405`（native app logs; prior Wave tip `20260720230000`）              |
 | Wave1                                    | `20260719130100`–`20260719130500` present                                         |
 | planner_tasks / projects                 | 1688 / 50                                                                         |
 | outbox / activity / approvals / captures | 44 / 49 / 0 / 2                                                                   |

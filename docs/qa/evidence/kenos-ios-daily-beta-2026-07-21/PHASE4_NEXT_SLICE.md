@@ -1,6 +1,6 @@
 # Phase 4 next slice — post iOS Daily Beta READY (2026-07-21)
 
-**Parent verdict:** IOS PERSONAL DAILY BETA READY · PHASE 4 still `EXIT_OPEN`  
+**Parent verdict:** IOS PERSONAL DAILY BETA READY · PHASE 4 still `EXIT_OPEN`
 **This slice does not close Phase 4.**
 
 ## What advanced (agent-executable)
@@ -33,15 +33,15 @@
 
 ## Still Owner / distribution gated
 
-| Gate | Status |
-| --- | --- |
-| Production App Group entitlement + provisioning | OPEN (`KR-P4B-TEMP-005`) |
-| APNs | OPEN |
-| Focus entitlement | OPEN |
-| TestFlight / App Store | OPEN |
-| Watch/macOS cross-device shared state via App Group | OPEN (needs suite) |
-| Phone-reachable canary replacing LAN-DEPENDENT | OPEN |
-| USB screenshot of native Continue chrome | OPEN (optional soft) |
+| Gate                                                | Status                   |
+| --------------------------------------------------- | ------------------------ |
+| Production App Group entitlement + provisioning     | OPEN (`KR-P4B-TEMP-005`) |
+| APNs                                                | OPEN                     |
+| Focus entitlement                                   | OPEN                     |
+| TestFlight / App Store                              | OPEN                     |
+| Watch/macOS cross-device shared state via App Group | OPEN (needs suite)       |
+| Phone-reachable canary replacing LAN-DEPENDENT      | OPEN                     |
+| USB screenshot of native Continue chrome            | OPEN (optional soft)     |
 
 ## Honesty
 

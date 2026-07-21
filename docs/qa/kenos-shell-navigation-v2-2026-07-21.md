@@ -1,153 +1,267 @@
-# Kenos Shell Navigation v2 — Three Modes + Space Shelf
+# Kenos Shell Navigation v2 — Research Freeze
 
-**Status:** `APPROVED_DIRECTION` — post–Daily Beta Stabilization  
-**Date:** 2026-07-21  
-**Does not supersede** the Daily Beta lock in `kenos-ios-ia-model-2026-07-21.md` until Stabilization exits and Owner schedules an IA slice.  
-**Does not close Phase 4.**
+**Status:** `RESEARCH_FROZEN` + `FOUNDATION_SHIPPED_ON_DEVICE` (partial Phase A/B)
+**Date:** 2026-07-21
+**Evidence:** `docs/qa/evidence/kenos-ios-dogfood-2026-07/screenshots/nav-v2/VERIFY.md`
+**Does not close Phase 4.** Does not claim Kenos shipped.
 
-## Relationship to frozen Daily Beta IA
+## TL;DR (frozen)
 
-| Layer | Status | Meaning |
-| --- | --- | --- |
-| Daily Beta IA | **LOCKED** | Four Kenos tabs always; domains via Continuity cover; Continue / Quick Switch / Live Accessory |
-| Navigation v2 | **APPROVED_DIRECTION** | Kenos Mode ↔ Domain Mode (dock replace) ↔ Focus Mode + Space Shelf |
-| Stabilization | **IN PROGRESS** | Do **not** implement v2 chrome during dogfood |
+> **可以做「领域模式切换 + 单一动态底栏 + Space Shelf」，但不要把左边缘滑动设成全局唯一入口。**
+> iPhone 上保留系统级返回手势；**只有领域根页面**左边缘拉动才打开 Shelf。
+> 日常可见入口：底栏固定 **Kenos**、页面标题、全局搜索 / Quick Switch。
 
-Daily Beta may temporarily show dual chrome (Kenos tabs + domain web bottom nav). That is a known P2 / structural debt — fix via this doc after dogfood, not by stacking more tabs.
-
-## Verdict
+Ideal model:
 
 ```text
-Kenos Shell Navigation
-+ Contextual Domain Dock (replace, never stack)
-+ Global Space Shelf (Stage Manager–like, live states)
-+ Immersive Focus Mode
+Kenos Mode          → 四个系统 Tab
+Domain Mode         → 一套领域 Dock，完全替换 Kenos Tab Bar
+Focus Mode          → Dock 暂时隐藏
 ```
 
-Core rule:
+---
 
-> In Kenos Mode you see Kenos navigation.  
-> In Domain Mode you see that domain’s navigation.  
-> At domain root, left-edge pull opens Space Shelf.  
-> In Focus Mode navigation exits.  
-> **Exactly one bottom bar at all times.**
+## Relationship to Daily Beta IA
+
+| Layer         | Status                           | Meaning                                                     |
+| ------------- | -------------------------------- | ----------------------------------------------------------- |
+| Daily Beta IA | **LOCKED** (Kenos Mode tabs)     | Today · Assistant · Spaces · Inbox in Kenos Mode            |
+| Navigation v2 | **RESEARCH_FROZEN** + foundation | Mode switch + dock replace + Shelf; Owner ordered implement |
+| Stabilization | **IN PROGRESS**                  | Dogfood continues; this IA landed by Owner order            |
+
+---
+
+## Research corrections (must keep)
+
+### 1. Do not steal all leading-edge swipes
+
+Apple: custom gestures are shortcuts, not replacements for visible controls; do not conflict with familiar system gestures ([HIG Gestures](https://developer.apple.com/design/human-interface-guidelines/gestures)).
+
+```text
+NavigationStack depth > 0  →  system Back
+NavigationStack depth = 0  →  Space Shelf (optional edge pull)
++ always visible buttons
+```
+
+### 2. Dynamic tab bar only at mode boundaries
+
+Apple: Tab Bar is top-level navigation; keep visible and stable; churning tabs confuse location ([HIG Tab bars](https://developer.apple.com/design/human-interface-guidelines/tab-bars)).
+
+Only replace when crossing **Kenos ↔ Domain ↔ Focus**. Inside one domain, dock slots stay stable.
+
+### 3. Borrow Stage Manager _state_, not macOS chrome
+
+Borrow: recent living contexts, restore-in-place, hideable shelf.
+Do **not** borrow: persistent left thumbnails, multi-window, desktop grouping on iPhone.
+iPhone Shelf = **overlay / sheet**, not mini Stage Manager ([Stage Manager](https://support.apple.com/guide/ipad/ipad1240f36f/ipados)).
+
+---
 
 ## Three modes
 
 ### A. Kenos Mode — system hall
 
-Surfaces: Today · Assistant · Spaces · Inbox (+ Settings).
-
 ```text
-Today · Assistant · Spaces · Inbox
+Spaces chip + Today · Assistant · Inbox · Settings
 ```
 
 ### B. Domain Mode — work surface
 
-Entering Plan / Training / Money / … **replaces** the Kenos tab bar with a domain dock. Slot 1 is always **Kenos** (return to prior Kenos context — not “quit app”).
+Kenos Tab Bar **hands off** to Domain Dock. Exactly one bottom bar.
 
-Unified five-slot semantics:
+Leading chip is **Spaces** (Shelf). Capsule = 4 domain slots (≤5 chrome total).
 
-| Slot | Meaning |
-| --- | --- |
-| 1 | **Kenos** — return system context |
-| 2 | Domain home / Today |
-| 3 | Primary work object |
-| 4 | Browse / history / library |
-| 5 | Search or More |
+| Domain   | 1      | 2      | 3        | 4        | More (sheet)                                        |
+| -------- | ------ | ------ | -------- | -------- | --------------------------------------------------- |
+| Plan     | Spaces | Tasks  | Calendar | Inbox    | Search · Upcoming · Projects · Completed · Insights |
+| Training | Spaces | Today  | Workout  | History  | Program · Library · Discover · Stats · Tools        |
+| Money    | Spaces | Today  | History  | Accounts | Forecast · Stocks · Decision · Review · Settings    |
+| Library  | Spaces | Inbox  | Library  | Recall   | Projects · Timeline · Overview · Settings           |
+| Music    | Spaces | Home   | Search   | Library  | Playlists · Liked · Browse · Import · Settings      |
+| Home     | Spaces | 平面   | 储藏     | 整理     | Settings                                            |
+| Health   | Spaces | Status | Focus    | Trends   | Settings                                            |
+| Work     | Spaces | Today  | Focus    | Inbox    | Assistant · Spaces · Settings                       |
 
-| Domain | 1 | 2 | 3 | 4 | 5 |
-| --- | --- | --- | --- | --- | --- |
-| Plan | Kenos | Tasks | Calendar | Projects | Search |
-| Training | Kenos | Today | Workout | Library | History |
-| Money | Kenos | Today | Transactions | Plan | Accounts |
-| Music | Kenos | Now Playing | Library | Discover | Search |
-| Knowledge | Kenos | Notes | Library | Capture | Search |
-| Home | Kenos | Home | Rooms | Items | Organize |
-| Work | Kenos | Today | Projects | Focus | Search |
+| Slot | Permanent meaning                                |
+| ---- | ------------------------------------------------ |
+| 1    | Spaces chip (Shelf; leave Domain via shelf row)  |
+| 2–4  | Domain primary destinations                      |
+| More | Secondary routes (not a 5th fantasy destination) |
 
-Within one domain, the dock **must not** appear/disappear per page (HIG tab-bar stability). Only whole-mode switches Kenos ↔ Domain ↔ Focus.
+**Kenos slot:**
 
-Tap **Kenos**: return previous Kenos tab context.  
-Long-press **Kenos**: open Space Shelf.
+| Action              | Result                          |
+| ------------------- | ------------------------------- |
+| Tap                 | Return prior Kenos tab + scroll |
+| Long-press          | Open Space Shelf                |
+| Optional double-tap | Jump Today root                 |
 
 ### C. Focus Mode — immersive
 
-Active Training, Deep Work, scan, capture, fullscreen edit: **hide** the dock. Exit / task / essential controls only. Matches existing Focus session direction.
+Active workout, Deep Work, scan, capture, long edit: **hide** dock. Clear exit only. Aligns with Live Activities “bounded task” guidance ([HIG Live Activities](https://developer.apple.com/design/human-interface-guidelines/live-activities)).
 
-## Space Shelf (not a second App Launcher)
+---
 
-### When left-edge gesture opens Shelf
+## Space Shelf
 
-| Navigation stack | Left-edge meaning |
-| --- | --- |
-| Has back stack | **System Back** only (HIG — do not steal) |
-| At domain root (empty stack) | **Space Shelf** pull |
+Not an App Switcher — living **domain environments** inside one Kenos product.
 
-Never: “any left-edge → always Shelf.”
+### Four blocks
 
-### Shelf content = live domain states
+1. **Kenos Home** — system exit (Today summary), not a normal space
+2. **Active** — truly running (Training, Focus, music, scan, record)
+3. **Recent** — restore context (entity, page, time, draft hint)
+4. **All Spaces** — full catalog (may cold-open domain home)
 
-Cards show resume truth, not icons-only:
+### Four entry points
+
+| Entry                                   | Behavior                                |
+| --------------------------------------- | --------------------------------------- |
+| **A** Left-edge at domain **root** only | Power-user Shelf pull                   |
+| **B** Long-press dock Kenos             | Discoverable Shelf                      |
+| **C** Tap domain title (`Plan ˅`)       | **Light Quick Switch** (not full Shelf) |
+| **D** Global Search / Quick Switch      | Name → destination                      |
+
+### Left-edge decision tree
 
 ```text
-domain · focused entity · stack depth hint · live status · relative time
+leading-edge drag
+├─ Sheet / Modal open          → no Shelf
+├─ Focus Mode                  → no Shelf (explicit Exit)
+├─ NavigationStack depth > 0   → system interactive Back
+├─ WebView canGoBack           → Web/router Back first
+├─ Horizontal editor gesture   → no Shelf
+└─ Domain Root                 → Space Shelf
 ```
 
-Persist (Continuity / ResumeDescriptor–aligned): domain, focused entity, navigation stack, scroll/draft where safe, last active, live status. Restore on switch — do not dump to domain home.
+Gesture thresholds are **device-tuning**, not product contracts (~16–22pt edge, ~28–34% width commit, etc.). Prefer `UIScreenEdgePanGestureRecognizer` coordinated with `interactivePopGestureRecognizer`.
 
-### Shelf entry points (gesture is not sole)
+---
 
-1. Left-edge at domain root  
-2. Long-press dock **Kenos**  
-3. Tap domain title (`Plan ˅`) → Shelf / Quick Switch  
-4. System / Quick Switch search  
+## Affordance matrix (do not merge UIs)
 
-## Distinction vs Continue / Quick Switch / Live Accessory
+| Capability     | User intent          | UI                  |
+| -------------- | -------------------- | ------------------- |
+| Live Accessory | Something is running | Thin bar above dock |
+| Continue       | Resume recent work   | Recent sheet        |
+| Space Shelf    | Visual domain switch | State-card overlay  |
+| Quick Switch   | I know the name      | Search panel        |
+| Spaces         | Browse full catalog  | Formal page         |
 
-| Affordance | Question |
-| --- | --- |
-| Live Accessory | What is running **now**? |
-| Continue | Where was I **recently**? |
-| Space Shelf | Switch to another **living domain state** (visual) |
-| Quick Switch | I know a **name** — search jump |
+Share: Destination Router · Recent Context Store · Domain Registry · Live State Store.
+Do **not** merge into one mega-panel.
 
-Shared destination router OK; **do not** merge into one mega-panel.
+---
 
-## Motion (restraint)
+## Domain Navigation Manifest (architecture)
 
-- Interactive pull follows finger; settle 180–240ms; cancel 140–180ms  
-- Domain switch: content + dock **morph together** (≤260ms); no dock lag  
-- Scale current page ~88–92% while Shelf open; light dim  
+> Domains **must not** paint their own physical BottomNav. They declare capability; **Kenos Shell** renders the only Dock.
 
-## Identity signals in Domain Mode
+```ts
+type DomainNavigationManifest = {
+  domainId: 'plan' | 'training' | string
+  version: 1
+  tabs: Array<{
+    id: string
+    label: string
+    icon: string
+    destination: string
+  }>
+}
+```
 
-- Domain title + light accent (amber Plan, coral Training, …)  
-- Dock slot 1 = Kenos  
-- Accent on active icon / 3px rail / selection — not full-page tint  
+Shell prepends fixed Kenos slot. Web domains enter `embedded-shell` / `iosNativeShell` and hide legacy BottomNav, duplicate headers, old switchers. Bridge reports: `activeTab`, `canGoBack`, `currentEntity`, `title`, `liveState`, `unsavedDraft`.
 
-## Risks & principles
+External legacy apps: system handoff only — never pretend in-shell Domain Mode.
 
-| Risk | Principle |
-| --- | --- |
-| Edge vs Back conflict | Back first; Shelf only at root |
-| Dock churn | Mode-boundary replace only; stable slots inside domain |
-| Per-domain stacks | Required; Continuity already points here |
-| WKWebView gesture | Domain Mode needs native dock + coordinated web scroll; hybrid honesty |
-| a11y | Buttons for Kenos / Shelf / title — not swipe-only |
-| Shelf snapshots | Privacy/perf — prefer descriptor + light preview, not raw secrets |
+---
 
-## Implementation gates (when Owner schedules)
+## State to persist (semantic, not bitmaps)
 
-1. Stabilization **PASSED** (or Owner explicitly prioritizes IA over LAN dogfood)  
-2. Spec dock morph + Shelf against HIG Back  
-3. Native Domain Mode chrome before hiding Kenos tabs under Continuity  
-4. Domain web UIs stop owning a second BottomNav when hosted in Kenos  
-5. No claim of Phase 4 closed from this IA alone  
+```text
+domainId · selectedDomainTab · navigationPath · focusedEntityId
+presentationMode · scrollAnchor · draftReference
+lastActiveAt · liveActivityReference · returnContext
+```
 
-## Non-goals until scheduled
+Avoid long-term: full bitmaps, secrets in previews, full body copies, opaque WK session dumps.
 
-- Implementing Shelf / dock replace during Stabilization  
-- Customizing Kenos four tabs  
-- Merging Shelf + Quick Switch UI  
-- ActivityKit / APNs as dependency for Shelf cards  
+**Privacy levels for Shelf cards:** Full / Private / Hidden (auto-downgrade on lock / Screen Mirroring / background snapshot).
+
+---
+
+## iPad / a11y / motion
+
+- **iPhone:** overlay Shelf
+- **iPad wide:** Sidebar (Active / Recent / All), not hidden edge-only ([HIG Sidebars](https://developer.apple.com/design/human-interface-guidelines/sidebars))
+- a11y: buttons, VoiceOver, Switch/Voice Control, Reduce Motion, Dynamic Type, glyphs+text
+- Suggested shortcuts: `⌘1–4` Kenos tabs · `⌘⇧S` Shelf · `⌘K` Quick Switch · `⌘[` Back
+- Mode transition ~220–280ms; Reduce Motion = crossfade only
+
+---
+
+## Frozen 12 rules
+
+1. Entire screen has **exactly one** bottom bar.
+2. Bottom bar replaces only on **Kenos ↔ Domain ↔ Focus** mode change.
+3. Slot 1 is always **Kenos**.
+4. Inside a domain, slot **semantics and order** stay stable.
+5. **Navigation Back always beats** Space Shelf.
+6. Shelf edge-pull **only** at domain root.
+7. Gesture is **never** the only entry.
+8. Only **Focus Mode** hides all navigation.
+9. Domains emit **Navigation Manifest**; no second physical bottom nav.
+10. Shelf restores **semantic** state, not real window processes.
+11. Sensitive domains support **privacy previews**.
+12. iPad wide uses **Sidebar**, not hidden Shelf alone.
+
+---
+
+## Phased delivery
+
+| Phase | Scope                                                                                                    | Est.  | Status (2026-07-21)                                                                                                                                          |
+| ----- | -------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **A** | `NavigationMode` + Manifest stub + Shell single Dock + Plan/Training + hide web BottomNav + Kenos return | 1–2d  | **Mostly done** — dock replace + return + Plan/Training web BottomNav hide shipped; Manifest/bridge still open                                               |
+| **B** | Shelf MVP: Kenos/Active/Recent/All + restore + long-press Kenos + title→Quick Switch + root edge         | 2–4d  | **Mostly done** — Shelf + long-press + root edge + title→Quick Switch; Active block / VoiceOver polish open                                                  |
+| **C** | Per-domain NavigationPath, scroll/draft, transition, Reduce Motion, privacy                              | 2–5d  | Open                                                                                                                                                         |
+| **D** | Live Activities, Spotlight, Shortcuts, Handoff, iPad/Mac Sidebar                                         | later | **Partial** — Live Activity hooks + App Intents/Shortcuts + local notifs + Spotlight/`NSUserActivity`; ActivityKit/APNs/Widget embed/iPad Sidebar still open |
+
+### Phase A acceptance
+
+```text
+无双底栏（原生 Dock 唯一；web BottomNav 在 embedded 隐藏）
+Plan / Training 可完整导航
+返回 Kenos 恢复原位置
+```
+
+### Phase B acceptance
+
+```text
+Back 不冲突
+所有领域 ≤2 taps 可达
+状态可恢复
+VoiceOver 有入口
+标题 → Quick Switch；长按 Kenos / 根页左缘 → Shelf
+```
+
+---
+
+## Shipped vs remaining (honest)
+
+| Item                                                 | State                                                          |
+| ---------------------------------------------------- | -------------------------------------------------------------- |
+| Three modes + Domain dock replace (Plan/Training)    | Shipped on device                                              |
+| Kenos slot tap return + long-press Shelf             | Shipped                                                        |
+| Left-edge Shelf only when `!webCanGoBack`            | Shipped                                                        |
+| Space Shelf overlay (System / Recent / All)          | Shipped (Active block still thin)                              |
+| Title → full Shelf                                   | Fixed → title opens **Quick Switch**                           |
+| Plan/Training web BottomNav hide in `iosNativeShell` | **Shipped** (helper + layout CSS; shots `06`/`07`)             |
+| Domain Navigation Manifest + bridge                  | **Shipped** — all Continuity domains publish via `kenosNative` |
+| Privacy levels / iPad Sidebar / Phase C–D            | Open                                                           |
+
+---
+
+## Final judgment
+
+Direction is correct: **Shell-owned single dynamic Dock + root-only Shelf + Back first + visible Kenos/title/search entries.**
+Highest leverage next work remains **Phase A residual**: Manifest + hide domain web BottomNav — so dual chrome disappears by architecture, not CSS luck alone.

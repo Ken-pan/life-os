@@ -37,13 +37,13 @@
         "appClip" : false,
         "builtByDeveloper" : true,
         "bundleIdentifier" : "space.kenos.app.ios",
-        "bundleVersion" : "20260721",
+        "bundleVersion" : "202607211624",
         "defaultApp" : false,
         "hidden" : false,
         "internalApp" : false,
         "name" : "Kenos",
         "removable" : true,
-        "url" : "file:///private/var/containers/Bundle/Application/26CA4810-17A0-4E68-B2E8-BEA584384EBF/KenosIOS.app/",
+        "url" : "file:///private/var/containers/Bundle/Application/BB18D3FE-7BB9-4BD8-8E05-13EBBD29FACD/KenosIOS.app/",
         "version" : "1.0.0"
       },
       {

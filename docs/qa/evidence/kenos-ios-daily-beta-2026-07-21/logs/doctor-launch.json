@@ -45,12 +45,12 @@
         501,
         501,
         501,
-        8615,
+        16518,
         0,
-        22683
+        40706
       ],
-      "executable" : "file:///private/var/containers/Bundle/Application/26CA4810-17A0-4E68-B2E8-BEA584384EBF/KenosIOS.app/KenosIOS",
-      "processIdentifier" : 8615
+      "executable" : "file:///private/var/containers/Bundle/Application/BB18D3FE-7BB9-4BD8-8E05-13EBBD29FACD/KenosIOS.app/KenosIOS",
+      "processIdentifier" : 16518
     }
   }
 }

@@ -212,11 +212,12 @@ async function main() {
     if (set1) {
       await page.getByTestId('fitness-focus-complete-set').click()
       await page.waitForTimeout(1200)
-      const text = await page
+      set2 = (await page
         .locator('[data-testid="fitness-focus-set-progress"]')
-        .innerText()
-        .catch(() => '')
-      set2 = /1\/3|第\s*2/.test(text) || (await page.getByTestId('fitness-focus-complete-set').innerText().catch(() => '')).includes('2')
+        .getAttribute('data-next-set')
+        .catch(() => '')) === '2' ||
+        (await page.getByTestId('fitness-focus-complete-set').getAttribute('data-set').catch(() => '')) === '2' ||
+        (await page.getByTestId('fitness-focus-complete-set').innerText().catch(() => '')).includes('2')
     }
     const fCont = await page.getByTestId('fitness-focus-kenos-continue').count()
     record(

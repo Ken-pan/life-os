@@ -46,11 +46,26 @@ def release_payload() -> dict:
 
 
 class Handler(SimpleHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
     def log_message(self, fmt: str, *args) -> None:
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
+
+    def handle(self) -> None:
+        # WKWebView opens many parallel connections; client resets are normal.
+        try:
+            super().handle()
+        except (ConnectionResetError, BrokenPipeError, TimeoutError):
+            pass
+
+    def handle_one_request(self) -> None:
+        try:
+            super().handle_one_request()
+        except (ConnectionResetError, BrokenPipeError, TimeoutError):
+            self.close_connection = True
 
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
@@ -58,6 +73,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/__health":
             self.send_response(200)
             self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.send_header("Connection", "close")
             self.end_headers()
             self.wfile.write(b"ok")
             return
@@ -66,6 +82,7 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
+            self.send_header("Connection", "close")
             self.end_headers()
             self.wfile.write(body)
             return
@@ -81,6 +98,11 @@ class Handler(SimpleHTTPRequestHandler):
         if candidate.is_dir():
             candidate = candidate / "index.html"
         if not candidate.is_file():
+            # Missing immutable assets must 404 — never SPA-fallback JS/CSS
+            # (fallback HTML parsed as JS → blank UI / confusing client errors).
+            if path.startswith("/_app/") or path.startswith("/assets/"):
+                self.send_error(404)
+                return
             candidate = ROOT / "index.html"
         if not candidate.is_file():
             self.send_error(404)
@@ -95,24 +117,35 @@ class Handler(SimpleHTTPRequestHandler):
         elif candidate.suffix == ".html":
             ctype = "text/html; charset=utf-8"
         immutable = "/_app/immutable/" in str(candidate)
-        self.send_response(200)
-        self.send_header("Content-Type", ctype)
-        self.send_header("Content-Length", str(len(data)))
-        self.send_header(
-            "Cache-Control",
-            "public, max-age=31536000, immutable" if immutable else "no-cache",
-        )
-        self.end_headers()
-        self.wfile.write(data)
+        try:
+            self.send_response(200)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header(
+                "Cache-Control",
+                "public, max-age=31536000, immutable" if immutable else "no-cache",
+            )
+            self.send_header("Connection", "close")
+            self.end_headers()
+            self.wfile.write(data)
+        except (ConnectionResetError, BrokenPipeError, TimeoutError):
+            self.close_connection = True
 
 
 class Server(ThreadingHTTPServer):
     allow_reuse_address = True
+    # Default backlog is 5 — WKWebView loads 20+ chunks at once and gets RST →
+    # SvelteKit dynamic import fails → client shows "500 Internal Error".
+    request_queue_size = 256
+    daemon_threads = True
 
 
 def main() -> None:
     httpd = Server((BIND, PORT), Handler)
-    print(f"[kenos-static:{APP}] {ROOT} → http://{BIND}:{PORT}", flush=True)
+    print(
+        f"[kenos-static:{APP}] {ROOT} → http://{BIND}:{PORT} (backlog={httpd.request_queue_size})",
+        flush=True,
+    )
     httpd.serve_forever()
 
 

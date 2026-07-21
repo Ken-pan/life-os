@@ -2,7 +2,7 @@
 
 ## Daily entry
 
-Open: **http://127.0.0.1:5219/**  
+Open: **http://127.0.0.1:5219/**
 (Chrome app mode: `bash scripts/kenos-daily-beta/kenos-ctl.sh open`)
 
 ## Lifecycle
@@ -23,8 +23,8 @@ Login auto-start: LaunchAgents `RunAtLoad=true` + `KeepAlive=true`.
 
 ## Rollback rehearsal (executed)
 
-1. `kenos-rollback` → previous release `58b6c183b687` served; health PASS  
-2. `kenos-rollback` again → restored `aff9303903c1`; health PASS  
+1. `kenos-rollback` → previous release `58b6c183b687` served; health PASS
+2. `kenos-rollback` again → restored `aff9303903c1`; health PASS
 3. No cloud rows deleted; localStorage origins unchanged
 
 ## Uninstall agents (fallback to old entry)

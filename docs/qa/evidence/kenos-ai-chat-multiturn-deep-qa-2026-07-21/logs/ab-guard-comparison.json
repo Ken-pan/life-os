@@ -1,0 +1,165 @@
+{
+  "generatedAt": "2026-07-21T04:10:54.949Z",
+  "method": "A/B same scenarios; GUARD=0 vs GUARD=1; detectors from replyGuard.core.js + soft heuristics; Grok-style verdict labels",
+  "comparison": [
+    {
+      "id": "MT01",
+      "off": {
+        "grokLike": "fail-constraint",
+        "hardViolations": 1,
+        "guardHits": 0,
+        "soft": {
+          "noCodeAsk": true,
+          "t1LeakedCode": true,
+          "t1HasStack": true,
+          "t1HasPhases": true,
+          "verdict": "fail-constraint"
+        }
+      },
+      "on": {
+        "grokLike": "pass-constraint",
+        "hardViolations": 0,
+        "guardHits": 1,
+        "soft": {
+          "noCodeAsk": true,
+          "t1LeakedCode": false,
+          "t1HasStack": false,
+          "t1HasPhases": true,
+          "verdict": "pass-constraint"
+        }
+      },
+      "improved": true,
+      "sameGood": false,
+      "regress": false,
+      "offViolations": [
+        {
+          "turn": 1,
+          "kinds": [
+            "no-code"
+          ],
+          "sample": "### 项目阶段与验收标准\n\n**阶段 1：数据源定义与静态原型（第 1-2 天）**\n*   **目标**：确定“今日任务”和“健身完成度”的数据来源（本地 JSON、SQLite 还是手动输入），并画出 UI 草图。\n*   **验收标准**：\n    1.  明确数据存储方案（建议初期使用本地 JSON 或 SQ"
+        }
+      ],
+      "onViolations": []
+    },
+    {
+      "id": "MT04",
+      "off": {
+        "grokLike": "weak-soft",
+        "hardViolations": 0,
+        "guardHits": 0,
+        "soft": {
+          "questionBudgetOk": false,
+          "hasAssumptionPlan": true,
+          "notLongQuestionnaire": false,
+          "verdict": "weak-soft"
+        }
+      },
+      "on": {
+        "grokLike": "weak-soft",
+        "hardViolations": 0,
+        "guardHits": 0,
+        "soft": {
+          "questionBudgetOk": false,
+          "hasAssumptionPlan": true,
+          "notLongQuestionnaire": false,
+          "verdict": "weak-soft"
+        }
+      },
+      "sameGood": false,
+      "regress": false,
+      "offViolations": [],
+      "onViolations": []
+    },
+    {
+      "id": "MT10",
+      "off": {
+        "grokLike": "partial-soft",
+        "hardViolations": 0,
+        "guardHits": 0,
+        "soft": {
+          "leadsWithTodayAction": true,
+          "dumps12WeekFirst": true,
+          "verdict": "partial-soft"
+        }
+      },
+      "on": {
+        "grokLike": "partial-soft",
+        "hardViolations": 0,
+        "guardHits": 0,
+        "soft": {
+          "leadsWithTodayAction": true,
+          "dumps12WeekFirst": true,
+          "verdict": "partial-soft"
+        }
+      },
+      "sameGood": false,
+      "regress": false,
+      "offViolations": [],
+      "onViolations": []
+    },
+    {
+      "id": "MT12",
+      "off": {
+        "grokLike": "partial",
+        "hardViolations": 1,
+        "guardHits": 0,
+        "soft": {
+          "hasDualStructure": true,
+          "hasFakePct": true,
+          "verdict": "partial"
+        }
+      },
+      "on": {
+        "grokLike": "pass-constraint",
+        "hardViolations": 0,
+        "guardHits": 1,
+        "soft": {
+          "hasDualStructure": true,
+          "hasFakePct": false,
+          "verdict": "pass-constraint"
+        }
+      },
+      "improved": true,
+      "sameGood": false,
+      "regress": false,
+      "offViolations": [
+        {
+          "turn": 3,
+          "kinds": [
+            "no-fabricated-metrics"
+          ],
+          "sample": "更短版：\n1. 本地助手：更快了\n2. 升级：响应提速\n3. 本地助手已优化\n\n更具体版：\n1. 本地助手升级：启动与响应速度提升 50%\n2. 您的私人 AI 助手已优化，操作更流畅\n3. 体验升级：本地助手响应延迟显著降低"
+        }
+      ],
+      "onViolations": []
+    }
+  ],
+  "samples": {
+    "MT01": {
+      "offT1": "### 项目阶段与验收标准 |  | **阶段 1：数据源定义与静态原型（第 1-2 天）** | *   **目标**：确定“今日任务”和“健身完成度”的数据来源（本地 JSON、SQLite 还是手动输入），并画出 UI 草图。 | *   **验收标准**： |     1.  明确数据存储方案（建议初期使用本地 JSON 或 SQLite 以简化部署）。 |     2.  输出静态 UI 布局图（HTML/CSS 静态页），包含“今日任务列表”和“健身进度环/条”。 |     3.  确认技术栈（如 React/Vue + Tailwind 或原生 HTML/JS）。 | ",
+      "onT1": "### 项目阶段与验收标准 |  | **阶段 1：需求确认与界面草图（第 1-2 天）** | *   **目标**：明确“今日任务”和“健身完成度”的核心交互逻辑，并绘制低保真界面草图。 | *   **验收标准**： |     1.  确定数据录入方式（如手动输入或快捷选择），暂不涉及具体技术实现。 |     2.  输出界面布局草图，包含“今日任务列表”区域和“健身进度”可视化区域。 |     3.  确认核心交互流程：添加任务、标记完成、记录健身。 |  | **阶段 2：核心功能开发 - 今日任务（第 3-5 天）** | *   **目标**：实现任务的增、删、查，并自动过"
+    },
+    "MT04": {
+      "offT1": "为了给你制定一个**今天就能开始、约 2 小时内能完成**的具体计划，我需要先确认几个关键信息。请回答以下 3 个问题： |  | 1. **目标**：你是想减脂、增肌、还是仅仅为了改善体态/缓解久坐疲劳？ | 2. **设备与环境**：你是在健身房练，还是在家练？家里有哪些器械（如哑铃、弹力带、瑜伽垫，还是完全徒手）？ | 3. **时间频率**：你每周能抽出几天锻炼？每次大概多久？ |  | --- |  | **如果你现在不想思考，我们可以先做一个“最小可行性”的假设方案：** |  | *   **假设**：你在**家**，只有**瑜伽垫**，目标是**激活身体/缓解疲劳**，时间**",
+      "onT1": "为了给你制定一个**今天就能开始、约 2 小时内能完成**的具体计划，我需要先确认几个关键信息。请回答以下 3 个问题： |  | 1. **目标**：你是想减脂、增肌、还是仅仅为了改善体态/缓解久坐疲劳？ | 2. **设备与环境**：你是在健身房练，还是在家练？家里有哪些器械（如哑铃、弹力带、瑜伽垫，还是完全徒手）？ | 3. **时间频率**：你每周能抽出几天锻炼？每次大概多久？ |  | --- |  | **如果你现在不想思考，我们可以先做一个“最小可行性”的假设方案：** |  | *   **假设**：你在**家**，只有**瑜伽垫**，目标是**激活身体/缓解疲劳**，时间**"
+    },
+    "MT10": {
+      "offT1": "焦虑是因为“任务太大”且“没有抓手”。三个月（约12周）写完毕业论文完全可行，但必须把“文献综述”这个模糊的大概念拆解为**本周可执行**的小动作。 |  | ### 🚀 今天（2小时内）可完成的一件事 |  | **不要试图“读完所有文献”，而是建立“文献地图”骨架。** |  | 1.  **打开 Word 或 Notion**，新建文档，标题设为《毕业论文文献综述框架 v1.0》。 | 2.  **列出 3-5 个核心关键词**（例如：你的研究主题 + 2个关键变量/方法）。 | 3.  **搜索并下载 5-10 篇高相关度文献**（优先选近3-5年的综述类文章或高引用核心期刊",
+      "onT1": "焦虑是因为“任务太大”且“没有抓手”。三个月（约12周）写完毕业论文完全可行，但必须把“文献综述”这个模糊的大概念拆解为**本周可执行**的小动作。 |  | ### 🚀 今天（2小时内）可完成的一件事 |  | **不要试图“读完所有文献”，而是建立“文献地图”骨架。** |  | 1.  **打开 Word 或 Notion**，新建文档，标题设为《毕业论文文献综述框架 v1.0》。 | 2.  **列出 3-5 个核心关键词**（例如：你的研究主题 + 2个关键变量/方法）。 | 3.  **搜索并下载 5-10 篇高相关度文献**（优先选近3-5年的综述类文章或高引用核心期刊"
+    },
+    "MT12": {
+      "offT1": "1. 🚀 本地助手升级：响应速度大幅提升 | 2. 更快、更流畅：您的私人 AI 助手已优化 | 3. 体验升级：本地助手启动与响应速度加倍",
+      "onT1": "1. 🚀 本地助手升级：响应速度大幅提升 | 2. 更快、更流畅：您的私人 AI 助手已优化 | 3. 体验升级：本地助手启动与响应速度加倍",
+      "offRewrite": "更短版： | 1. 本地助手：更快了 | 2. 升级：响应提速 | 3. 本地助手已优化 |  | 更具体版： | 1. 本地助手升级：启动与响应速度提升 50% | 2. 您的私人 AI 助手已优化，操作更流畅 | 3. 体验升级：本地助手响应延迟显著降低",
+      "onRewrite": "更短版： | 1. 本地助手：响应更快 | 2. 升级：响应更迅速 | 3. 本地助手已优化 |  | 更具体版： | 1. 本地助手升级：启动与响应速度显著提升 | 2. 您的私人 AI 助手已优化，操作更流畅 | 3. 体验升级：本地助手响应延迟明显降低"
+    }
+  },
+  "verdict": {
+    "guardEffectivelyHelps": true,
+    "noRegressions": true,
+    "promptSoftGainsHold": false,
+    "mt01CleanWithGuard": true,
+    "mt12CleanWithGuard": true
+  }
+}

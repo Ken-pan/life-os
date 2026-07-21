@@ -113,7 +113,7 @@ async function main() {
     user: session.user,
   })};
   const task=${JSON.stringify(taskObj)};
-  localStorage.setItem('sb-'+REF+'-auth-token', JSON.stringify(session));
+  localStorage.setItem('life_os_auth', JSON.stringify(session));
   let state=null;
   try { state=JSON.parse(localStorage.getItem('planos_v1')||'null'); } catch(e){}
   if(!state||typeof state!=='object') state={ tasks:[], lists:[], projects:[], settings:{}, schemaVersion:1 };
@@ -162,7 +162,7 @@ async function run(){
       await new Promise(r=>setTimeout(r,400));
       save.click();
       await new Promise(r=>setTimeout(r,3000));
-      const sess=JSON.parse(localStorage.getItem('sb-'+REF+'-auth-token')||'{}');
+      const sess=JSON.parse(localStorage.getItem('life_os_auth')||'{}');
       const r=await fetch('https://'+REF+'.supabase.co/rest/v1/planner_tasks?id=eq.'+encodeURIComponent(TASK_ID)+'&select=id,data',{headers:{apikey:ANON,Authorization:'Bearer '+sess.access_token,Accept:'application/json'}});
       const rows=await r.json();
       const title=(rows[0]&&rows[0].data&&rows[0].data.title)||null;
@@ -203,7 +203,7 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,500));
   sleep(1500)
   const verify = `<!doctype html><html><body><script>
 (async function(){
-  const sess=JSON.parse(localStorage.getItem('sb-${REF}-auth-token')||'{}');
+  const sess=JSON.parse(localStorage.getItem('life_os_auth')||'{}');
   const r=await fetch('https://${REF}.supabase.co/rest/v1/planner_tasks?id=eq.'+encodeURIComponent(${JSON.stringify(TASK_ID)})+'&select=id,data',{headers:{apikey:${JSON.stringify(keys.anon)},Authorization:'Bearer '+sess.access_token,Accept:'application/json'}});
   const rows=await r.json(); const title=(rows[0]&&rows[0].data&&rows[0].data.title)||null;
   await fetch('/__health?kenos_flow_a_verify='+encodeURIComponent(JSON.stringify({status:title===${JSON.stringify(MUT)}?'ok':'mismatch',title})),{cache:'no-store'});
@@ -273,7 +273,7 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,500));
     refresh_token: session.refresh_token,
     user: session.user,
   })};
-  localStorage.setItem('sb-${REF}-auth-token', JSON.stringify(session));
+  localStorage.setItem('life_os_auth', JSON.stringify(session));
   await fetch('/__health?kenos_flow_b_clear=1',{cache:'no-store'}).catch(()=>{});
   location.replace('/day/${DAY_ID}/focus?kenosEx=${EXERCISE_ID}');
 })();

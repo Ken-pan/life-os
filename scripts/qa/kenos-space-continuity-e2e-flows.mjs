@@ -135,7 +135,16 @@ async function shot(page, name, meta) {
   const pageUrl = page.url().slice(0, 120)
   await page
     .evaluate(
-      ({ runId, stepId, contextId, uidShort, accountLabel, ts, pageUrl, assertedState }) => {
+      ({
+        runId,
+        stepId,
+        contextId,
+        uidShort,
+        accountLabel,
+        ts,
+        pageUrl,
+        assertedState,
+      }) => {
         const id = 'kenos-continuity-qa-watermark'
         document.getElementById(id)?.remove()
         const el = document.createElement('div')
@@ -183,7 +192,9 @@ async function shot(page, name, meta) {
   const path = join(EVID, `${name}.png`)
   await page.screenshot({ path, fullPage: false })
   await page
-    .evaluate(() => document.getElementById('kenos-continuity-qa-watermark')?.remove())
+    .evaluate(() =>
+      document.getElementById('kenos-continuity-qa-watermark')?.remove(),
+    )
     .catch(() => {})
   const sha256 = createHash('sha256').update(readFileSync(path)).digest('hex')
   const binding = {
@@ -205,7 +216,9 @@ async function shot(page, name, meta) {
 
 async function readFocusSet(page) {
   return page.evaluate(() => {
-    const el = document.querySelector('[data-testid="fitness-focus-set-progress"]')
+    const el = document.querySelector(
+      '[data-testid="fitness-focus-set-progress"]',
+    )
     if (!el) return { nextSet: null, done: null, total: null, text: '' }
     return {
       nextSet: el.getAttribute('data-next-set')
@@ -223,7 +236,12 @@ async function main() {
     run_id: RUN_ID,
     startedAt: new Date().toISOString(),
     accounts: { A: OWNER, B: USER_B },
-    entityIds: { taskId: TASK_ID, exerciseId: EXERCISE_ID, dayId: 'chest', date: TODAY },
+    entityIds: {
+      taskId: TASK_ID,
+      exerciseId: EXERCISE_ID,
+      dayId: 'chest',
+      date: TODAY,
+    },
     stamps: {
       flowA: 'NOT_YET_VALIDATED',
       flowB: 'NOT_YET_VALIDATED',
@@ -311,9 +329,7 @@ async function main() {
   push('db.before.isolation', report.db.before)
 
   const isoPass =
-    (beforeA?.length ?? 0) === 1 &&
-    (beforeB?.length ?? 0) === 0 &&
-    !beforeAErr
+    (beforeA?.length ?? 0) === 1 && (beforeB?.length ?? 0) === 0 && !beforeAErr
   if (isoPass) report.stamps.accountIsolation = 'PARTIAL' // UI/Continue still pending
 
   const browser = await chromium.launch({ headless: true })
@@ -325,7 +341,7 @@ async function main() {
   })
   // Prefer Playwright internal guid when present; else synthetic.
   const ctxA =
-    typeof /** @type {any} */ (context)._guid === 'string'
+    typeof (/** @type {any} */ (context)._guid) === 'string'
       ? `ctx-A-${/** @type {any} */ (context)._guid}`
       : `ctx-A-${Date.now().toString(36)}`
   let activeCtx = ctxA
@@ -372,7 +388,7 @@ async function main() {
             'button.sheet-close, [aria-label="Close"], [aria-label="关闭"]',
           )
           .forEach((el) => {
-            /** @type {HTMLElement} */ (el).click()
+            /** @type {HTMLElement} */ ;(el).click()
           })
       })
       .catch(() => {})
@@ -474,7 +490,9 @@ async function main() {
           const { S } = await import('/src/lib/state.svelte.js')
           return {
             ok: true,
-            hasTask: Boolean(S.tasks?.find((t) => t.id === taskId && !t.deletedAt)),
+            hasTask: Boolean(
+              S.tasks?.find((t) => t.id === taskId && !t.deletedAt),
+            ),
             taskCount: S.tasks?.length ?? 0,
           }
         } catch (e) {
@@ -496,7 +514,8 @@ async function main() {
           try {
             const sync = await import('/src/lib/sync.js')
             if (typeof sync.syncNow === 'function') await sync.syncNow('merge')
-            const adapter = await import('/src/lib/kenos/plannerSpaceAdapter.js')
+            const adapter =
+              await import('/src/lib/kenos/plannerSpaceAdapter.js')
             await adapter.resumePlannerSpace({
               spaceId: 'plan',
               route: `/upcoming?kenosTask=${taskId}&kenosDetail=1`,
@@ -526,7 +545,9 @@ async function main() {
       .count()
       .then((n) => n > 0)
       .catch(() => false)
-    const bodyHas = (await page.locator('body').innerText()).includes(TASK_TITLE)
+    const bodyHas = (await page.locator('body').innerText()).includes(
+      TASK_TITLE,
+    )
     const taskVisible = titleInInput || titleAttr || bodyHas
     push('flowA.taskVisible', { taskVisible, titleInInput, titleAttr, bodyHas })
 
@@ -615,7 +636,9 @@ async function main() {
 
         const cont = page.getByTestId('planner-kenos-continue')
         if ((await cont.count()) === 0) {
-          report.blockers.push('Planner Continue control missing (stale build?)')
+          report.blockers.push(
+            'Planner Continue control missing (stale build?)',
+          )
           report.stamps.flowA = 'PARTIAL'
         } else {
           await Promise.all([
@@ -662,11 +685,9 @@ async function main() {
             .getByTestId('kenos-space-switcher')
             .innerText()
             .catch(() => page.locator('body').innerText())
-          const planInSheet =
-            /Plan|Continuity|Upcoming|MUT/i.test(sheetText)
-          const kenosSeesMutatedTitle = String(sheetText).includes(
-            TASK_TITLE_MUTATED,
-          )
+          const planInSheet = /Plan|Continuity|Upcoming|MUT/i.test(sheetText)
+          const kenosSeesMutatedTitle =
+            String(sheetText).includes(TASK_TITLE_MUTATED)
           push('flowA.continueSheet', {
             planInSheet,
             kenosSeesMutatedTitle,
@@ -686,7 +707,7 @@ async function main() {
             hasTouch: true,
           })
           activeCtx =
-            typeof /** @type {any} */ (context)._guid === 'string'
+            typeof (/** @type {any} */ (context)._guid) === 'string'
               ? `ctx-A-reload-${/** @type {any} */ (context)._guid}`
               : `ctx-A-reload-${Date.now().toString(36)}`
           activeUid = OWNER.id
@@ -713,7 +734,8 @@ async function main() {
             .evaluate(async () => {
               try {
                 const mod = await import('/src/lib/sync.js')
-                if (typeof mod.syncNow === 'function') await mod.syncNow('replace')
+                if (typeof mod.syncNow === 'function')
+                  await mod.syncNow('replace')
                 else if (typeof mod.pullFromCloud === 'function')
                   await mod.pullFromCloud('replace')
               } catch {
@@ -752,7 +774,8 @@ async function main() {
             .evaluate(async () => {
               try {
                 const mod = await import('/src/lib/sync.js')
-                if (typeof mod.syncNow === 'function') await mod.syncNow('replace')
+                if (typeof mod.syncNow === 'function')
+                  await mod.syncNow('replace')
               } catch {
                 /* ignore */
               }
@@ -836,7 +859,9 @@ async function main() {
     await gotoReady(
       page,
       `${FITNESS}/day/chest/focus?kenosEx=${EXERCISE_ID}&kenosSet=1`,
-      { selector: '[data-testid="fitness-focus-set-progress"], .focus-cta-set' },
+      {
+        selector: '[data-testid="fitness-focus-set-progress"], .focus-cta-set',
+      },
     )
     await page.waitForTimeout(1400)
     await shotA('B01-fitness-focus-set1', 'B01')
@@ -1089,7 +1114,7 @@ async function main() {
         hasTouch: true,
       })
       activeCtx =
-        typeof /** @type {any} */ (context)._guid === 'string'
+        typeof (/** @type {any} */ (context)._guid) === 'string'
           ? `ctx-A-cold-${/** @type {any} */ (context)._guid}`
           : `ctx-A-cold-${Date.now().toString(36)}`
       activeUid = OWNER.id
@@ -1174,11 +1199,7 @@ async function main() {
         report.blockers.push(
           'B08: cold Continue Recent empty after auth-ready reload — Continue→Fitness path not proven',
         )
-        await shotA(
-          'B08-UNEXPECTED-continue-empty',
-          'B08',
-          'FAIL empty Recent',
-        )
+        await shotA('B08-UNEXPECTED-continue-empty', 'B08', 'FAIL empty Recent')
       } else {
         await shotA(
           'B08-kenos-continue-fresh-before-fitness',
@@ -1274,7 +1295,8 @@ async function main() {
         .evaluate(async () => {
           try {
             const mod = await import('/src/lib/sync.js')
-            if (typeof mod.pullFromCloud === 'function') await mod.pullFromCloud()
+            if (typeof mod.pullFromCloud === 'function')
+              await mod.pullFromCloud()
           } catch {
             /* ignore */
           }
@@ -1410,7 +1432,7 @@ async function main() {
       hasTouch: true,
     })
     const ctxB =
-      typeof /** @type {any} */ (contextB)._guid === 'string'
+      typeof (/** @type {any} */ (contextB)._guid) === 'string'
         ? `ctx-B-${/** @type {any} */ (contextB)._guid}`
         : `ctx-B-${Date.now().toString(36)}`
     const pageB = await contextB.newPage()
@@ -1465,7 +1487,7 @@ async function main() {
     activeUid = USER_B.id
     activeLabel = 'B'
     activeCtx =
-      typeof /** @type {any} */ (context)._guid === 'string'
+      typeof (/** @type {any} */ (context)._guid) === 'string'
         ? `ctx-B-switch-${/** @type {any} */ (context)._guid}`
         : `ctx-B-switch-${Date.now().toString(36)}`
     await gotoReady(page, `${AIOS}/?openContinue=1`, {
@@ -1531,8 +1553,9 @@ async function main() {
         report.db.finalIsolation.fitnessBSeesA === null)
     const isoUi = aHasTrainingOrPlan && !bLeaksA && !switchLeaksA
     const isoBinding =
-      screenshotBindings.filter((b) => b.step_id === 'C01' || b.step_id === 'C02')
-        .length >= 2 &&
+      screenshotBindings.filter(
+        (b) => b.step_id === 'C01' || b.step_id === 'C02',
+      ).length >= 2 &&
       screenshotBindings.some(
         (b) => b.step_id === 'C01' && b.auth_uid === OWNER.id,
       ) &&
@@ -1591,7 +1614,11 @@ async function main() {
       mode: 'vite-dev',
     },
     accounts: {
-      A: { email: OWNER.email, authUid: OWNER.id, authUidShort: OWNER.id.slice(-4) },
+      A: {
+        email: OWNER.email,
+        authUid: OWNER.id,
+        authUidShort: OWNER.id.slice(-4),
+      },
       B: {
         email: USER_B.email,
         authUid: USER_B.id,
@@ -1621,8 +1648,8 @@ async function main() {
         report.steps.find((s) => s.step === 'flowA.reload')?.reloadSeesTask ??
         null,
       reloadSeesMutated:
-        report.steps.find((s) => s.step === 'flowA.reload')?.reloadSeesMutated ??
-        null,
+        report.steps.find((s) => s.step === 'flowA.reload')
+          ?.reloadSeesMutated ?? null,
       reloginSeesMutated:
         report.steps.find((s) => s.step === 'flowA.relogin')
           ?.reloginSeesMutated ?? null,

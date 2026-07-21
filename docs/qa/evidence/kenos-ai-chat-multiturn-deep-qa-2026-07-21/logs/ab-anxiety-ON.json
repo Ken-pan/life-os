@@ -1,0 +1,116 @@
+{
+  "generatedAt": "2026-07-21T04:14:29.011Z",
+  "gateway": "http://127.0.0.1:18888",
+  "model": "llm-fast",
+  "judgeModel": "llm-fast",
+  "product": "apps/aios Assistant (/assistant)",
+  "method": [
+    "MT-Bench 式多轮追问：后轮比首轮更苛刻，放大上下文与指令遵循差距",
+    "DeepEval 核心度量：Completeness / Knowledge Retention / Role Adherence / Turn Relevancy / Consistency / Recovery",
+    "自适应用户模拟：nextUser(lastAssistant) 根据回复分支追问，可提前结束",
+    "双轨判定：确定性硬探针 + LLM-as-Judge（G-Eval JSON rubric）",
+    "路径覆盖：happy / recovery / refusal / stress / iterative / planning"
+  ],
+  "summary": {
+    "counts": {
+      "pass": 1,
+      "partial": 0,
+      "fail": 0
+    },
+    "passRate": 100,
+    "judgeAvg": 5,
+    "totalAssistantTurns": 4,
+    "scenarioCount": 1
+  },
+  "observations": [
+    "单轮「会答」不等于多轮「能把事做完」：本轮按 Conversation Completeness / Retention / Role / Relevancy / Consistency 整段打分。",
+    "12 个自适应多轮场景均达通过线；下一步可加压到 8–12 轮与对抗人格。",
+    "相对 GPT/Claude：差距通常出现在长程一致性、改需求后的方案切换干净度、以及拒答后仍保持高帮助性——而不是第一句问候。",
+    "本轮用户侧为规则自适应追问（读上一轮再决定下一句），比预写死多轮脚本更接近真实用户；尚未上线完全自由的 LLM-as-user 人格农场。",
+    "Judge 与被测同族本地模型，存在自偏好风险；结论以硬探针为准、judge 为辅。若要对标产品级，应用更强独立 judge（云端 GPT/Claude）复评失败用例。"
+  ],
+  "results": [
+    {
+      "id": "MT10",
+      "title": "任务拆解到可执行下一步",
+      "path": "happy",
+      "persona": "想把大目标落到「今天就能做」的用户",
+      "goal": "从愿景收到今日唯一行动，并解释为何选它",
+      "expectedOutcome": "最终给出单一今日行动；与「写毕业论文文献综述」相关；可在 2 小时内完成",
+      "turnCount": 4,
+      "verdict": "pass",
+      "note": "硬探针全过；judge 均分 5",
+      "hardChecks": [
+        {
+          "id": "actionable",
+          "pass": true,
+          "note": "落到今日可执行行动"
+        },
+        {
+          "id": "checkbox",
+          "pass": true,
+          "note": "末轮勾选文案去空白 ≤20 字（去掉 length>0 兜底）"
+        }
+      ],
+      "judge": {
+        "pass": true,
+        "scores": {
+          "completeness": 5,
+          "retention": 5,
+          "role": 5,
+          "relevancy": 5,
+          "consistency": 5,
+          "recovery": 5
+        },
+        "issues": [],
+        "summary": "AI严格遵循用户指令，精准拆解任务并给出单一、可执行且符合时长限制的今日行动，逻辑清晰且无冗余。",
+        "raw": "{\n  \"completeness\": 5,\n  \"retention\": 5,\n  \"role\": 5,\n  \"relevancy\": 5,\n  \"consistency\": 5,\n  \"recovery\": 5,\n  \"pass\": true,\n  \"issues\": [],\n  \"summary\": \"AI严格遵循用户指令，精准拆解任务并给出单一、可执行且符合时长限制的今日行动，逻辑清晰且无冗余。\"\n}"
+      },
+      "ms": 22140,
+      "turns": [
+        {
+          "user": "我想三个月内写完毕业论文，现在还没开始文献综述，好焦虑。",
+          "assistant": "焦虑是因为“任务太大”且“没有抓手”。三个月写完毕业论文完全可行，但必须把“文献综述”这个模糊的大词，拆解成今天就能做的具体动作。\n\n### 🚀 今天 2 小时内可完成的一件事\n\n**不要试图“读完所有文献”，而是完成“核心文献地图”的初稿。**\n\n1.  **锁定范围 (30分钟)**：\n    *   打开你的开题报告或导师给的题目。\n    *   列出 3-5 个**核心关键词**（例如：`[你的主题]` + `[关键变量A]` + `[关键变量B]`）。\n2.  **精准搜索 (45分钟)**：\n    *   去学校图书馆数据库（CNKI/Web of Science/IEEE等）。\n    *   搜索上述关键词组合。\n    *   **只下载/阅读**最近 3-5 年的 **10-15 篇高引用论文** 或 **导师推荐的必读文献**。不要贪多。\n3.  **建立表格 (45分钟)**：\n    *   新建一个 Excel 或 Notion 表格，包含列：`作者/年份`、`研究问题`、`主要方法`、`核心结论`、`对我的启发/不足`。\n    *   把这 10-15 篇文献的关键信息填进去。\n4.  **产出物**：\n    *   你不需要写出完整的综述段落，你只需要拥有一个**结构化的文献清单**。这就是你焦虑的解药——你手里有“砖头”了，接下来只是砌墙。\n\n如果你需要更长期的规划，请告诉我。",
+          "guarded": true,
+          "violations": [
+            {
+              "kind": "anxiety-today-only",
+              "note": "用户焦虑/阻塞,但回复附带了多周长计划"
+            }
+          ],
+          "model": "llm-fast",
+          "ms": {
+            "prompt_tokens": 489,
+            "completion_tokens": 700,
+            "total_tokens": 1189,
+            "prompt_tokens_details": {
+              "cached_tokens": 465
+            }
+          }
+        },
+        {
+          "user": "不要鸡汤。给我今天唯一要做的一件事，必须能在 2 小时内完成。",
+          "assistant": "**任务：建立“文献速览矩阵”表格**\n\n1.  **动作**：打开 Excel/Notion，创建包含以下 5 列的表格：`标题`、`作者/年份`、`核心观点`、`研究方法`、`与我的关联`。\n2.  **执行**：在知网/Web of Science 搜索你的核心关键词，**仅下载**最近 3 年的 **5 篇**高引用或导师推荐论文。\n3.  **产出**：将这 5 篇论文的上述 5 项信息填入表格。\n\n**停止搜索，停止阅读其他文章，完成此表格即视为今日任务结束。**",
+          "guarded": false,
+          "violations": [],
+          "model": "llm-fast"
+        },
+        {
+          "user": "为什么是这一件而不是别的？用两句话。",
+          "assistant": "因为焦虑源于“未知”，而表格能将模糊的阅读压力转化为具体的填空动作，强制你从海量信息中锁定最核心的 5 篇文献。这是构建文献综述骨架的最小可行单元，能立即提供进度反馈以缓解焦虑。",
+          "guarded": false,
+          "violations": [],
+          "model": "llm-fast"
+        },
+        {
+          "user": "把那件今日行动改写成一个可勾选 checkbox 文案，≤20 字。",
+          "assistant": "填好5篇核心文献的速览表格",
+          "guarded": false,
+          "violations": [],
+          "model": "llm-fast"
+        }
+      ],
+      "guardRewrites": 1
+    }
+  ]
+}

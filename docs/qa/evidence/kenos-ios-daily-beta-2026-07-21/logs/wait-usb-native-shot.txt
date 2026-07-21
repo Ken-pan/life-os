@@ -1,0 +1,185 @@
+2026-07-21T11:06:40Z wait-usb-shot start max_min=15 udid=00008150-000C38C20AC0401C pid=60953
+2026-07-21T11:06:40Z poll=1 usb=1 lan=10.20.202.15
+04:06:40  Acquired tunnel connection to device.
+04:06:40  Enabling developer disk image services.
+04:06:40  Acquired usage assertion.
+ERROR: The application failed to launch. (com.apple.dt.CoreDeviceError error 10002 (0x2712))
+       BundleIdentifier = space.kenos.app.ios
+       ----------------------------------------
+           The request to open "space.kenos.app.ios" failed. (FBSOpenApplicationServiceErrorDomain error 1 (0x01))
+           NSLocalizedFailureReason = The request was denied by service delegate (SBMainWorkspace) for reason: Locked ("Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked").
+           BSErrorCodeDescription = RequestDenied
+           FBSOpenApplicationRequestID = 0x3920
+       ----------------------------------------
+               The operation couldn’t be completed. Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked. (FBSOpenApplicationErrorDomain error 7 (0x07))
+               BSErrorCodeDescription = Locked
+               NSLocalizedFailureReason = Unable to launch space.kenos.app.ios because the device was not, or could not be, unlocked.
+2026-07-21T11:06:51Z usb present but locked/failed ec=1
+2026-07-21T11:06:59Z poll=2 usb=1 lan=10.20.202.15
+04:06:59  Acquired tunnel connection to device.
+04:06:59  Enabling developer disk image services.
+04:06:59  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:06:59Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:07:01Z screenshot failed ec=255
+2026-07-21T11:07:09Z poll=3 usb=1 lan=10.20.202.15
+04:07:09  Acquired tunnel connection to device.
+04:07:09  Enabling developer disk image services.
+04:07:09  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:07:09Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:07:11Z screenshot failed ec=255
+2026-07-21T11:07:19Z poll=4 usb=1 lan=10.20.202.15
+04:07:19  Acquired tunnel connection to device.
+04:07:20  Enabling developer disk image services.
+04:07:20  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:07:20Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:07:22Z screenshot failed ec=255
+2026-07-21T11:07:30Z poll=5 usb=1 lan=10.20.202.15
+04:07:30  Acquired tunnel connection to device.
+04:07:30  Enabling developer disk image services.
+04:07:30  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:07:30Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:07:32Z screenshot failed ec=255
+2026-07-21T11:07:40Z poll=6 usb=1 lan=10.20.202.15
+04:07:40  Acquired tunnel connection to device.
+04:07:40  Enabling developer disk image services.
+04:07:40  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:07:40Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:07:42Z screenshot failed ec=255
+2026-07-21T11:07:50Z poll=7 usb=1 lan=10.20.202.15
+04:07:51  Acquired tunnel connection to device.
+04:07:51  Enabling developer disk image services.
+04:07:51  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:07:51Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:07:53Z screenshot failed ec=255
+2026-07-21T11:08:01Z poll=8 usb=1 lan=10.20.202.15
+04:08:01  Acquired tunnel connection to device.
+04:08:01  Enabling developer disk image services.
+04:08:01  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:08:01Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:08:03Z screenshot failed ec=255
+2026-07-21T11:08:11Z poll=9 usb=1 lan=10.20.202.15
+04:08:11  Acquired tunnel connection to device.
+04:08:11  Enabling developer disk image services.
+04:08:11  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:08:11Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:08:13Z screenshot failed ec=255
+2026-07-21T11:08:21Z poll=10 usb=1 lan=10.20.202.15
+04:08:22  Acquired tunnel connection to device.
+04:08:22  Enabling developer disk image services.
+04:08:22  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:08:22Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:08:24Z screenshot failed ec=255
+2026-07-21T11:08:32Z poll=11 usb=1 lan=10.20.202.15
+04:08:32  Acquired tunnel connection to device.
+04:08:32  Enabling developer disk image services.
+04:08:32  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:08:32Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:08:34Z screenshot failed ec=255
+2026-07-21T11:08:42Z poll=12 usb=1 lan=10.20.202.15
+04:08:42  Acquired tunnel connection to device.
+04:08:42  Enabling developer disk image services.
+04:08:42  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:08:42Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:08:44Z screenshot failed ec=255
+2026-07-21T11:08:52Z poll=13 usb=1 lan=10.20.202.15
+04:08:52  Acquired tunnel connection to device.
+04:08:53  Enabling developer disk image services.
+04:08:53  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:08:53Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:08:55Z screenshot failed ec=255
+2026-07-21T11:09:03Z poll=14 usb=1 lan=10.20.202.15
+04:09:03  Acquired tunnel connection to device.
+04:09:03  Enabling developer disk image services.
+04:09:03  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:09:03Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:09:05Z screenshot failed ec=255
+2026-07-21T11:09:13Z poll=15 usb=1 lan=10.20.202.15
+04:09:13  Acquired tunnel connection to device.
+04:09:13  Enabling developer disk image services.
+04:09:13  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:09:13Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:09:15Z screenshot failed ec=255
+2026-07-21T11:09:23Z poll=16 usb=1 lan=10.20.202.15
+04:09:23  Acquired tunnel connection to device.
+04:09:23  Enabling developer disk image services.
+04:09:23  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:09:24Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:09:26Z screenshot failed ec=255
+2026-07-21T11:09:34Z poll=17 usb=1 lan=10.20.202.15
+04:09:34  Acquired tunnel connection to device.
+04:09:34  Enabling developer disk image services.
+04:09:34  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:09:34Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:09:36Z screenshot failed ec=255
+2026-07-21T11:09:44Z poll=18 usb=1 lan=10.20.202.15
+04:09:44  Acquired tunnel connection to device.
+04:09:44  Enabling developer disk image services.
+04:09:44  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:09:44Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:09:46Z screenshot failed ec=255
+2026-07-21T11:09:54Z poll=19 usb=1 lan=10.20.202.15
+04:09:54  Acquired tunnel connection to device.
+04:09:54  Enabling developer disk image services.
+04:09:54  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:09:55Z UNLOCKED+USB — screenshot
+Could not start screenshotr service: Invalid service
+Remember that you have to mount the Developer disk image on your device if you want to use the screenshotr service.
+2026-07-21T11:09:57Z screenshot failed ec=255
+2026-07-21T11:10:05Z poll=20 usb=1 lan=10.20.202.15
+04:10:05  Acquired tunnel connection to device.
+04:10:05  Enabling developer disk image services.
+04:10:05  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.
+2026-07-21T11:10:05Z UNLOCKED+USB — screenshot

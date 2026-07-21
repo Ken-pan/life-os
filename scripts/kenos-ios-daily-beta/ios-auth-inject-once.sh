@@ -73,13 +73,20 @@ cat >"$AIOS_ROOT/__ios_auth_bootstrap.html" <<'HTML'
 <p id=s>登录中…</p>
 <script>
 (async function () {
-  const key = 'sb-iueozzuctstwvzbcxcyh-auth-token';
+  const key = 'life_os_auth';
   const sEl = document.getElementById('s');
   try {
     const res = await fetch('/__ios_auth_once.json', { cache: 'no-store' });
     if (!res.ok) throw new Error('once ' + res.status);
     const session = await res.json();
     localStorage.setItem(key, JSON.stringify(session));
+    if (session.access_token && session.refresh_token) {
+      const tokens = encodeURIComponent(JSON.stringify({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      }));
+      document.cookie = 'lifeos_shared_session=' + tokens + '; path=/; max-age=31536000; SameSite=Lax';
+    }
     const got = localStorage.getItem(key);
     const parsed = got ? JSON.parse(got) : null;
     const email = parsed && parsed.user && parsed.user.email;

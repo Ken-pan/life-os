@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-app="planner" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>PLANNER.OS</title>
+  <meta name="description" content="阳光感任务清单 · 轻松规划每一天" />
+  <meta name="application-name" content="PLANNER.OS" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="theme-color" content="#f5f3f0" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#f5f3f0" id="theme-color-meta" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="PLANNER.OS" />
+  <meta property="og:title" content="PLANNER.OS" />
+  <meta property="og:description" content="阳光感任务清单 · 轻松规划每一天" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:locale:alternate" content="en_US" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="PLANNER.OS" />
+  <meta name="twitter:description" content="阳光感任务清单 · 轻松规划每一天" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PLANNER.OS" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      try {
+        var pref = 'auto';
+        var raw = localStorage.getItem('planos_v1');
+        if (raw) {
+          var s = JSON.parse(raw);
+          if (s.settings && s.settings.theme) pref = s.settings.theme;
+        }
+        var dark =
+          pref === 'dark' ||
+          (pref === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        var resolved = dark ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', resolved);
+        document.documentElement.style.colorScheme = resolved;
+        var meta = document.getElementById('theme-color-meta');
+        if (meta) meta.content = resolved === 'dark' ? '#121110' : '#f5f3f0';
+      } catch (e) { }
+    })();
+    (function () {
+      var pwaSim = /(?:^|[?&])pwa_sim=1(?:&|$)/.test(location.search);
+      var standalone =
+        pwaSim ||
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator && window.navigator.standalone === true);
+      document.documentElement.classList.toggle('standalone-pwa', standalone);
+      var vh = standalone
+        ? '100vh'
+        : ((window.visualViewport && window.visualViewport.height) || window.innerHeight) + 'px';
+      document.documentElement.style.setProperty('--app-vh', vh);
+      if (standalone) {
+        document.documentElement.style.setProperty('--safe-top-effective', '59px');
+      }
+    })();
+  </script>
+  <link href="/_app/immutable/entry/start.DrvyB878.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/O7YxLnQ4.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/CNI7fGQc.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/DK3Fl9T5.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/BuFlayix.js" rel="modulepreload">
+		<link href="/_app/immutable/entry/app.CoLBPmoI.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/xihTtKlq.js" rel="modulepreload">
+		<link href="/_app/immutable/nodes/0.BywR5zI8.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/BRjUM0DB.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/Bb8DJ85m.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/DiBtJK-q.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/CevX2dYm.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/BAF4-qba.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/DzNakOF_.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/DHwEfnYW.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/C1er-2ti.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/2XKYdJzt.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/DSQbJ_hD.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/CBlakDLZ.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/DsoMfTYC.js" rel="modulepreload">
+		<link href="/_app/immutable/chunks/DVqx0FOD.js" rel="modulepreload">
+		
+		<link href="/_app/immutable/assets/AttachmentUploader.B2Gy2osP.css" rel="stylesheet">
+		<link href="/_app/immutable/assets/0.ajc8Sp1-.css" rel="stylesheet">
+</head>
+<body data-sveltekit-preload-data="hover">
+  <div style="display: contents">
+			<script>
+				{
+					__sveltekit_1l3s61k = {
+						base: ""
+					};
+
+					const element = document.currentScript.parentElement;
+
+					Promise.all([
+						import("/_app/immutable/entry/start.DrvyB878.js"),
+						import("/_app/immutable/entry/app.CoLBPmoI.js")
+					]).then(([kit, app]) => {
+						kit.start(app, element);
+					});
+				}
+			</script>
+		</div>
+</body>
+</html>

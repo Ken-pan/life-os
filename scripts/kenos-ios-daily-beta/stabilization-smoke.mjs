@@ -12,12 +12,17 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '../..')
 const DOG = join(ROOT, 'docs/qa/evidence/kenos-ios-dogfood-2026-07')
-const DEVICE = process.env.KENOS_IOS_DEVICE || '8097F071-CAB6-5AF0-8258-BCD985E9D79E'
+const DEVICE =
+  process.env.KENOS_IOS_DEVICE || '8097F071-CAB6-5AF0-8258-BCD985E9D79E'
 const BUNDLE = 'space.kenos.app.ios'
 const LAN =
   process.env.KENOS_LAN_IP ||
-  spawnSync('ipconfig', ['getifaddr', 'en0'], { encoding: 'utf8' }).stdout.trim() ||
-  spawnSync('ipconfig', ['getifaddr', 'en1'], { encoding: 'utf8' }).stdout.trim()
+  spawnSync('ipconfig', ['getifaddr', 'en0'], {
+    encoding: 'utf8',
+  }).stdout.trim() ||
+  spawnSync('ipconfig', ['getifaddr', 'en1'], {
+    encoding: 'utf8',
+  }).stdout.trim()
 
 mkdirSync(join(DOG, 'smoke'), { recursive: true })
 mkdirSync(join(DOG, 'logs'), { recursive: true })
@@ -38,14 +43,25 @@ function event(type, data) {
 
 function classifyLaunch(stdout, stderr, status) {
   const blob = `${stdout}${stderr}`
-  if (blob.includes('Locked')) return { ok: false, class: 'environment', reason: 'device_locked' }
-  if (status !== 0) return { ok: false, class: 'environment', reason: 'launch_failed' }
+  if (blob.includes('Locked'))
+    return { ok: false, class: 'environment', reason: 'device_locked' }
+  if (status !== 0)
+    return { ok: false, class: 'environment', reason: 'launch_failed' }
   return { ok: true, class: 'product', reason: 'launched' }
 }
 
 function probeOrigin(label, url) {
   const t0 = Date.now()
-  const r = sh('curl', ['-sf', '--max-time', '3', '-o', '/dev/null', '-w', '%{http_code}', url])
+  const r = sh('curl', [
+    '-sf',
+    '--max-time',
+    '3',
+    '-o',
+    '/dev/null',
+    '-w',
+    '%{http_code}',
+    url,
+  ])
   const ms = Date.now() - t0
   const code = (r.stdout || '').trim()
   const ok = r.status === 0 && code === '200'
@@ -70,7 +86,9 @@ function gitSha() {
 }
 
 function dailyBetaRelease() {
-  const link = sh('readlink', [join(process.env.HOME || '', '.kenos-daily-beta/current')]).stdout.trim()
+  const link = sh('readlink', [
+    join(process.env.HOME || '', '.kenos-daily-beta/current'),
+  ]).stdout.trim()
   return link ? link.split('/').pop() : null
 }
 
@@ -115,18 +133,26 @@ for (const [label, url] of origins) {
 }
 report.lan = {
   results: lanResults,
-  allCriticalOk: lanResults.filter((x) => x.label.startsWith('kenos')).every((x) => x.ok),
+  allCriticalOk: lanResults
+    .filter((x) => x.label.startsWith('kenos'))
+    .every((x) => x.ok),
 }
 
 // Temporary unavailable simulation: probe bogus port — App must not be tested here; just document expected class
-const miss = probeOrigin('bogus_port', `http://${LAN || '127.0.0.1'}:5999/__health`)
+const miss = probeOrigin(
+  'bogus_port',
+  `http://${LAN || '127.0.0.1'}:5999/__health`,
+)
 miss.class = 'network'
 miss.note = 'expected_fail_for_classification'
 lanResults.push(miss)
 event('lan_probe', miss)
 
 // --- USB / unlock / cold launch ---
-const usbList = sh('idevice_id', ['-l']).stdout.trim().split('\n').filter(Boolean)
+const usbList = sh('idevice_id', ['-l'])
+  .stdout.trim()
+  .split('\n')
+  .filter(Boolean)
 report.usb = { present: usbList.length > 0, count: usbList.length }
 event('usb_probe', report.usb)
 
@@ -138,9 +164,7 @@ const launch = sh('xcrun', [
   '--terminate-existing',
   '--device',
   DEVICE,
-  ...(LAN
-    ? ['--payload-url', `http://${LAN}:5219/?iosNativeShell=1`]
-    : []),
+  ...(LAN ? ['--payload-url', `http://${LAN}:5219/?iosNativeShell=1`] : []),
   BUNDLE,
 ])
 const launchClass = classifyLaunch(launch.stdout, launch.stderr, launch.status)
@@ -197,9 +221,18 @@ if (launchClass.ok) {
   }
 }
 
-writeFileSync(join(DOG, 'smoke/lan-probe-day0.json'), JSON.stringify(report.lan, null, 2))
-writeFileSync(join(DOG, 'smoke/entry-smoke-day0.json'), JSON.stringify(report.entry, null, 2))
-writeFileSync(join(DOG, 'smoke/stabilization-smoke-day0.json'), JSON.stringify(report, null, 2))
+writeFileSync(
+  join(DOG, 'smoke/lan-probe-day0.json'),
+  JSON.stringify(report.lan, null, 2),
+)
+writeFileSync(
+  join(DOG, 'smoke/entry-smoke-day0.json'),
+  JSON.stringify(report.entry, null, 2),
+)
+writeFileSync(
+  join(DOG, 'smoke/stabilization-smoke-day0.json'),
+  JSON.stringify(report, null, 2),
+)
 
 // Patch NETWORK report with Day-0 results
 const netMd = join(DOG, 'NETWORK_RECOVERY_REPORT.md')
@@ -217,7 +250,8 @@ ${lanResults
 
 Cold launch: **${launchClass.ok ? 'PASS' : 'FAIL'}** (${launchClass.class}/${launchClass.reason})
 `
-  if (!t.includes('Day-0 automated results')) t = t.trimEnd() + '\n' + block + '\n'
+  if (!t.includes('Day-0 automated results'))
+    t = t.trimEnd() + '\n' + block + '\n'
   writeFileSync(netMd, t)
 }
 
