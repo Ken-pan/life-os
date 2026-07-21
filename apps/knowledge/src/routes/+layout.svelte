@@ -7,8 +7,18 @@
   import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
   import { bindViewportHeight, resetScrollLock } from '@life-os/theme'
   import AppBar from '$lib/components/AppBar.svelte'
+  import DomainMusicHeader from '$lib/components/DomainMusicHeader.svelte'
   import SideNav from '$lib/components/SideNav.svelte'
   import BottomNav from '$lib/components/BottomNav.svelte'
+  import {
+    markIosNativeShellDom,
+    isIosNativeShell,
+  } from '@life-os/platform-web/ios-native-shell'
+  import {
+    installLibraryLeaveGuard,
+    persistLibraryContinue,
+    suspendLibrarySpace,
+  } from '$lib/kenos/knowledgeSpaceAdapter.js'
   import { ICONS } from '$lib/iconRegistry.js'
   import {
     S,
@@ -35,6 +45,7 @@
     page.url.pathname.startsWith('/library') && page.url.searchParams.has('note'),
   )
   const hideHeader = $derived(libraryDetail && narrowLayout)
+  const nativeShell = $derived(isIosNativeShell())
 
   const pageTitle = $derived.by(() => {
     const p = page.url.pathname
@@ -48,6 +59,11 @@
   })
 
   onMount(() => {
+    markIosNativeShellDom()
+    if (isIosNativeShell()) {
+      installLibraryLeaveGuard()
+      persistLibraryContinue(suspendLibrarySpace())
+    }
     applyTheme()
     applyLocale()
     initBackend().then(() => startVaultWatcher())
@@ -96,7 +112,9 @@
   testIdPrefix="knowledge-shell"
 >
   {#snippet navigation(projection)}
-    {#if projection === 'desktop'}
+    {#if nativeShell}
+      <!-- Domain Dock owns bottom chrome -->
+    {:else if projection === 'desktop'}
       <SideNav />
     {:else}
       <BottomNav />
@@ -104,7 +122,11 @@
   {/snippet}
 
   {#snippet header()}
-    <AppBar title={pageTitle} hidden={hideHeader} />
+    {#if nativeShell && !hideHeader}
+      <DomainMusicHeader title={pageTitle} domainLabel="Library" showCompose={true} />
+    {:else}
+      <AppBar title={pageTitle} hidden={hideHeader} />
+    {/if}
   {/snippet}
 
   {#snippet main()}

@@ -63,6 +63,26 @@ enum KenosDailyBetaConfig {
         rewritePort(kenOsOrigin, to: 5190)
     }
 
+    static var financeOrigin: URL {
+        rewritePort(kenOsOrigin, to: 5180)
+    }
+
+    static var musicOrigin: URL {
+        rewritePort(kenOsOrigin, to: 5189)
+    }
+
+    static var homeOrigin: URL {
+        rewritePort(kenOsOrigin, to: 5196)
+    }
+
+    static var knowledgeOrigin: URL {
+        rewritePort(kenOsOrigin, to: 5879)
+    }
+
+    static var healthOrigin: URL {
+        rewritePort(kenOsOrigin, to: 5192)
+    }
+
     private static func rewritePort(_ base: URL, to port: Int) -> URL {
         var c = URLComponents(url: base, resolvingAgainstBaseURL: false) ?? URLComponents()
         c.port = port

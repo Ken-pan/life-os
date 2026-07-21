@@ -54,7 +54,7 @@ export function suspendMoneySpace(opts = {}) {
     opts.pathname ?? (isBrowser() ? window.location.pathname : '/home/today')
   const search = opts.search ?? (isBrowser() ? window.location.search : '')
   const route = `${pathname}${search}`
-  const section =
+  const sectionRaw =
     opts.sectionLabel ||
     (pathname.includes('transaction')
       ? 'Transactions'
@@ -63,13 +63,14 @@ export function suspendMoneySpace(opts = {}) {
         : pathname.includes('account')
           ? 'Accounts'
           : 'Today')
+  const section = sanitizeMoneySubtitle(sectionRaw)
 
   return buildResumeDescriptor({
     userId: opts.userId ?? null,
     spaceId: MONEY_SPACE_ID,
     route: route.startsWith('http') ? route : route || '/home/today',
     displayTitle: 'Money',
-    displaySubtitle: sanitizeMoneySubtitle(section),
+    displaySubtitle: section,
     substate: {
       section,
       // Never persist raw balances in Continuity global state.

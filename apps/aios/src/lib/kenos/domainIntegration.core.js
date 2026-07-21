@@ -266,8 +266,16 @@ export const DOMAIN_REGISTRY = Object.freeze({
     aliases: ['knowledge', 'knowledgeos', 'knowledge-os'],
     accent: domainAccent('knowledge'),
     icon: domainIcon('knowledge'),
-    integrationStatus: 'partial',
+    integrationStatus: 'integrated',
     dataOwner: 'knowledge',
+    providers: {
+      continue: true,
+      shelf: true,
+      today: false,
+      inbox: true,
+      assistant: false,
+      quickSwitch: true,
+    },
   }),
   music: defineDomain({
     id: 'music',
