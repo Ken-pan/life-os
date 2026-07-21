@@ -46,6 +46,7 @@
     TextAlignStart,
     TextAlignCenter,
     TextAlignEnd,
+    ArrowLeft,
   } from '@lucide/svelte'
   import {
     markdownToBlocks,
@@ -77,7 +78,7 @@
     selectionCollapsed,
   } from '$lib/editor/caret.js'
   import {
-    KEYBOARD_INSET_FLOOR_PX,
+    resolveKeyboardInset,
     clampPopoverPosition,
     createImeGuard,
   } from '@life-os/theme'
@@ -179,6 +180,8 @@
   let confirmDelete = $state(false)
   /** visualViewport keyboard open — swaps .ed-scroll bottom pad. */
   let keyboardOpen = $state(false)
+  /** Mobile compact format bar (fixed bottom) vs desktop bubble. */
+  let compactFormatBar = $state(false)
   const ime = createImeGuard()
 
   /** contenteditable 节点表：块 id → DOM（焦点/光标管理）。 */
@@ -212,15 +215,21 @@
     confirmDelete = false
     collapsed = new Set()
     closeMenus()
-    // 内联无焦点陷阱：显式聚焦（空笔记→标题；否则→首块）
+    // 内联无焦点陷阱：仅新空笔记自动聚焦（移动端→正文首块，桌面→标题）；
+    // 已有笔记不抢焦点，便于浏览阅读。
     if (inline) {
       const isBlank = composeStub
       // 首块是被隐藏的重复 H1 时，焦点落到下一个可见块
       const skip = firstHeadingMatchesTitle(blocks, title) ? 1 : 0
       const focusTarget = blocks[skip] || blocks[0]
       tick().then(() => {
-        if (isBlank) titleEl?.focus()
-        else if (focusTarget) focusBlock(focusTarget.id, 'start')
+        // Existing notes: leave focus alone (read/browse).
+        if (!isBlank) return
+        const mobile =
+          typeof window !== 'undefined' &&
+          window.matchMedia('(max-width: 640px)').matches
+        if (mobile && focusTarget) focusBlock(focusTarget.id, 'start')
+        else titleEl?.focus()
       })
     }
   })
@@ -250,20 +259,13 @@
       if (vvRaf) return
       vvRaf = requestAnimationFrame(() => {
         vvRaf = 0
-        const vv = window.visualViewport
-        const inset = vv
-          ? Math.max(
-              0,
-              Math.round(window.innerHeight - vv.height - vv.offsetTop),
-            )
-          : 0
-        const floor = KEYBOARD_INSET_FLOOR_PX
-        keyboardOpen = inset > floor
+        const inset = resolveKeyboardInset()
+        keyboardOpen = inset > 0
         // Only scroll caret when keyboard inset crosses the open/close threshold
         // (bindViewportHeight also scrolls; this covers editor-local menus).
         const crossed =
-          (lastVvInset <= floor && inset > floor) ||
-          (lastVvInset > floor && inset <= floor)
+          (lastVvInset <= 0 && inset > 0) ||
+          (lastVvInset > 0 && inset <= 0)
         lastVvInset = inset
         if (crossed) {
           const active = document.activeElement
@@ -292,6 +294,13 @@
     }
     window.visualViewport?.addEventListener('resize', onVvChange)
     window.visualViewport?.addEventListener('scroll', onVvChange)
+
+    const compactMq = window.matchMedia('(max-width: 640px)')
+    const syncCompactFormatBar = () => {
+      compactFormatBar = compactMq.matches
+    }
+    syncCompactFormatBar()
+    compactMq.addEventListener('change', syncCompactFormatBar)
 
     const session = {
       isDirty() {
@@ -336,6 +345,7 @@
       document.removeEventListener('visibilitychange', onVis)
       window.visualViewport?.removeEventListener('resize', onVvChange)
       window.visualViewport?.removeEventListener('scroll', onVvChange)
+      compactMq.removeEventListener('change', syncCompactFormatBar)
       if (vvRaf) cancelAnimationFrame(vvRaf)
       clearLibraryEditorSession(session)
     }
@@ -926,6 +936,12 @@
 
   /* ============ 选区格式工具条 ============ */
   let toolbar = $state({ open: false, x: 0, y: 0, active: {} })
+  function isCompactFormatBar() {
+    return (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(max-width: 640px)').matches
+    )
+  }
   function refreshToolbar() {
     if (!inEditor()) {
       toolbar.open = false
@@ -934,6 +950,10 @@
     const rect = selectionRect()
     if (!rect) {
       toolbar.open = false
+      return
+    }
+    if (isCompactFormatBar()) {
+      toolbar = { open: true, x: 0, y: 0, active: activeFormats() }
       return
     }
     // Bubble anchors above selection via CSS translateY(-100%); keep anchor in VV.
@@ -1502,6 +1522,11 @@
 {#snippet topbarUi()}
   <div class="ed-topbar">
     <div class="ed-topbar__inner">
+      {#if inline && onClose}
+        <button type="button" class="ed-back" onclick={onClose}>
+          <ArrowLeft size={16} strokeWidth={2.2} /><span>{t('nav.allNotes')}</span>
+        </button>
+      {/if}
       {#if S.saveError}
         <button
           type="button"
@@ -1941,50 +1966,65 @@
   </LifeOsSheet>
 {/if}
 
-<!-- 选区格式工具条（气泡菜单） -->
-{#if toolbar.open}
-  <div
-    class="ed-bubble"
-    use:portal
-    style="left:{toolbar.x}px; top:{toolbar.y}px"
+<!-- 选区格式工具条：移动端底部固定条 / 桌面气泡 -->
+{#snippet formatActions()}
+  <button
+    type="button"
+    class:is-on={toolbar.active.bold}
+    onmousedown={(e) => e.preventDefault()}
+    onclick={() => applyFormat('bold')}
+    title={t('editor.bold')}><Bold size={15} /></button
   >
-    <button
-      type="button"
-      class:is-on={toolbar.active.bold}
-      onmousedown={(e) => e.preventDefault()}
-      onclick={() => applyFormat('bold')}
-      title={t('editor.bold')}><Bold size={15} /></button
+  <button
+    type="button"
+    class:is-on={toolbar.active.italic}
+    onmousedown={(e) => e.preventDefault()}
+    onclick={() => applyFormat('italic')}
+    title={t('editor.italic')}><Italic size={15} /></button
+  >
+  <button
+    type="button"
+    class:is-on={toolbar.active.strike}
+    onmousedown={(e) => e.preventDefault()}
+    onclick={() => applyFormat('strike')}
+    title={t('editor.strike')}><Strikethrough size={15} /></button
+  >
+  <button
+    type="button"
+    class:is-on={toolbar.active.code}
+    onmousedown={(e) => e.preventDefault()}
+    onclick={() => applyFormat('code')}
+    title={t('editor.inlineCode')}><Code size={15} /></button
+  >
+  <span class="ed-bubble-div" aria-hidden="true"></span>
+  <button
+    type="button"
+    class:is-on={toolbar.active.link}
+    onmousedown={(e) => e.preventDefault()}
+    onclick={() => applyFormat('link')}
+    title={t('editor.link')}><Link2 size={15} /></button
+  >
+{/snippet}
+
+{#if toolbar.open}
+  {#if compactFormatBar}
+    <div
+      class="ed-formatbar"
+      use:portal
+      role="toolbar"
+      aria-label={t('editor.formatBar')}
     >
-    <button
-      type="button"
-      class:is-on={toolbar.active.italic}
-      onmousedown={(e) => e.preventDefault()}
-      onclick={() => applyFormat('italic')}
-      title={t('editor.italic')}><Italic size={15} /></button
+      {@render formatActions()}
+    </div>
+  {:else}
+    <div
+      class="ed-bubble"
+      use:portal
+      style="left:{toolbar.x}px; top:{toolbar.y}px"
     >
-    <button
-      type="button"
-      class:is-on={toolbar.active.strike}
-      onmousedown={(e) => e.preventDefault()}
-      onclick={() => applyFormat('strike')}
-      title={t('editor.strike')}><Strikethrough size={15} /></button
-    >
-    <button
-      type="button"
-      class:is-on={toolbar.active.code}
-      onmousedown={(e) => e.preventDefault()}
-      onclick={() => applyFormat('code')}
-      title={t('editor.inlineCode')}><Code size={15} /></button
-    >
-    <span class="ed-bubble-div" aria-hidden="true"></span>
-    <button
-      type="button"
-      class:is-on={toolbar.active.link}
-      onmousedown={(e) => e.preventDefault()}
-      onclick={() => applyFormat('link')}
-      title={t('editor.link')}><Link2 size={15} /></button
-    >
-  </div>
+      {@render formatActions()}
+    </div>
+  {/if}
 {/if}
 
 <!-- 斜杠菜单 -->
@@ -2106,12 +2146,45 @@
   }
   .ed-topbar__inner {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-1);
+    row-gap: var(--space-1);
     width: 100%;
+  }
+  .ed-back {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1, 4px);
+    padding: var(--space-1, 4px) var(--space-2, 8px);
+    border: none;
+    border-radius: var(--radius-control, 8px);
+    background: transparent;
+    color: var(--t2, var(--text-secondary));
+    font-size: var(--text-sm, 12px);
+    font-family: inherit;
+    cursor: pointer;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .ed-back:hover {
+    background: color-mix(in srgb, var(--t1, var(--text)) 6%, transparent);
+    color: var(--t1, var(--text));
+  }
+  /* Native detail: reserve trailing space for overlay domain action bubble. */
+  :global(html[data-ios-native-shell='true']) .ed-back {
+    max-width: calc(100% - 56px);
+  }
+  /* 桌面双列不需要返回键（列表仍可见） */
+  @container life-os-main (min-width: 840px) {
+    .ed-back {
+      display: none;
+    }
   }
   .ed-spacer {
     flex: 1;
+    min-width: 8px;
   }
   .ed-icon {
     display: inline-flex;
@@ -2137,6 +2210,7 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    min-width: 0;
     font-size: var(--text-xs);
     font-weight: 500;
     color: var(--t2, var(--text-secondary));
@@ -2144,6 +2218,9 @@
     background: transparent;
     padding: 0;
     font-family: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .ed-save :global(.ed-save-ic) {
     color: var(--feedback-success);
@@ -2224,9 +2301,10 @@
     scrollbar-color: color-mix(in srgb, var(--t1, var(--text)) 16%, transparent)
       transparent;
   }
-  /* Keyboard open: replace comfort pad — do not max() with 28vh (stacks with Dock). */
+  /* Keyboard open: replace comfort pad — do not max() with 28vh (stacks with Dock).
+     +56px reserves compact format bar (~40 + pad) above keyboard. */
   .ed-pane.has-keyboard .ed-scroll {
-    padding-bottom: calc(var(--keyboard-inset, 0px) + 48px);
+    padding-bottom: calc(var(--keyboard-inset, 0px) + 56px);
   }
   .ed-canvas {
     max-width: 720px;
@@ -2817,7 +2895,7 @@
     box-decoration-break: clone;
   }
 
-  /* ——— 气泡工具条 ——— */
+  /* ——— 气泡工具条 / 移动端底部格式条 ——— */
   .ed-bubble {
     position: fixed;
     transform: translate(-50%, calc(-100% - 8px));
@@ -2832,7 +2910,27 @@
     z-index: 220;
     animation: ed-pop 0.12s ease-out;
   }
-  .ed-bubble button {
+  .ed-formatbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    /* Above keyboard when open; otherwise clear BottomNav / dock inset. */
+    bottom: max(
+      var(--keyboard-inset, 0px),
+      var(--mobile-content-inset-tabbar, 0px)
+    );
+    z-index: 220;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface-1, var(--surface));
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
+  }
+  .ed-bubble button,
+  .ed-formatbar button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2847,10 +2945,16 @@
       background var(--motion-fast) var(--ease),
       color var(--motion-fast) var(--ease);
   }
-  .ed-bubble button:hover {
+  .ed-formatbar button {
+    width: 40px;
+    height: 40px;
+  }
+  .ed-bubble button:hover,
+  .ed-formatbar button:hover {
     background: var(--wash-strong);
   }
-  .ed-bubble button.is-on {
+  .ed-bubble button.is-on,
+  .ed-formatbar button.is-on {
     background: var(--accent-bg, var(--accent-subtle));
     color: var(--accent);
   }
@@ -2859,6 +2963,10 @@
     height: 18px;
     margin: 0 2px;
     background: var(--border);
+  }
+  .ed-formatbar .ed-bubble-div {
+    height: 22px;
+    margin: 0 4px;
   }
 
   /* ——— 弹出菜单（斜杠 / 双链）——— */
@@ -2982,6 +3090,16 @@
     .ed-pane .ed-topbar,
     .ed-scroll {
       padding-inline: var(--space-4, 16px);
+    }
+    /* Keyboard closed: tabbar + safe-area pad (keyboard-open rule above replaces this). */
+    .ed-scroll {
+      padding-bottom: calc(
+        var(--mobile-content-inset-tabbar, 0px) +
+          env(safe-area-inset-bottom, 0px) + 48px
+      );
+    }
+    .ed-pane.has-keyboard .ed-scroll {
+      padding-bottom: calc(var(--keyboard-inset, 0px) + 56px);
     }
     .ed-gutter {
       display: none;
