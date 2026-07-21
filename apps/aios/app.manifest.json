@@ -23,7 +23,7 @@
   ],
   "workspace": "aios-os",
   "devPort": 5197,
-  "domain": "aios.kenos.space",
+  "domain": "www.kenos.space",
   "shellType": "main-wrap-main",
   "wordmarkAccent": {
     "light": "#5d5d5d",

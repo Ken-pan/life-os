@@ -55,7 +55,7 @@ assert.equal(on.find((row) => row.source === 'portal_today_soft_redirect').visib
 
 assert.equal(
   buildPortalDeepLinkUrl('aios', '/assistant?return=%2Finbox'),
-  'https://aios.kenos.space/assistant?return=%2Finbox',
+  'https://www.kenos.space/assistant?return=%2Finbox',
 )
 
 const aiosManifest = JSON.parse(readFileSync(new URL('../../aios/app.manifest.json', import.meta.url)))

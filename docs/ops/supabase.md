@@ -209,6 +209,11 @@ Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **
 
 **Home（HOME.SSO.3）：** `https://home.kenos.space/**` + `https://homeos-ken.netlify.app/**`（2026-07-09 远程已对齐）
 
+**Kenos 主站 + Knowledge（2026-07-21）：** 需在 Auth allow list 加入（若尚未）：
+
+- `https://www.kenos.space/**` + `https://kenos.space/**` + `https://kenos-www.netlify.app/**`
+- `https://knowledge.kenos.space/**` + `https://knowledgeos-ken.netlify.app/**`
+
 ## 相关脚本
 
 | 脚本                                      | 用途                                                                        |

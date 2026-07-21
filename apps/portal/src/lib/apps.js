@@ -52,9 +52,9 @@ export const PORTAL_APPS = [
   },
   {
     id: 'aios',
-    url: 'https://aios.kenos.space',
-    iconLight: 'https://aios.kenos.space/brand-square-light-96.png',
-    iconDark: 'https://aios.kenos.space/brand-square-dark-96.png',
+    url: 'https://www.kenos.space',
+    iconLight: 'https://www.kenos.space/brand-square-light-96.png',
+    iconDark: 'https://www.kenos.space/brand-square-dark-96.png',
     accent: '#5d5d5d',
     experimental: true,
   },

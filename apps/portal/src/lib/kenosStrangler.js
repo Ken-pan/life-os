@@ -1,7 +1,7 @@
 const KENOS_APP_ID = 'aios'
 
-/** Production AIOS Today host (custom aios.kenos.space DNS not wired). */
-export const KENOS_TODAY_ORIGIN = 'https://aios-kenos.netlify.app'
+/** Production Kenos Today host (www primary; Netlify canary fallback). */
+export const KENOS_TODAY_ORIGIN = 'https://www.kenos.space'
 
 /** @param {string} hostname */
 function localHostname(hostname) {

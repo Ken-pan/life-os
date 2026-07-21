@@ -233,7 +233,7 @@ export const LIFE_OS_APP_ORIGINS = {
   music: { production: "https://music.kenos.space", devPort: 5189 },
   home: { production: "https://home.kenos.space", devPort: 5196 },
   portal: { production: "https://portal.kenos.space", devPort: 5195 },
-  aios: { production: "https://aios.kenos.space", devPort: 5197 },
+  aios: { production: "https://www.kenos.space", devPort: 5197 },
   health: { production: "https://health.kenos.space", devPort: 5192 },
   knowledge: { production: "https://knowledge.kenos.space", devPort: 5879 },
 }
