@@ -15,7 +15,11 @@
   import FocusSessionShell from '$lib/components/FocusSessionShell.svelte'
   import SpaceSwitcher from '$lib/components/SpaceSwitcher.svelte'
   import KenosSystemBar from '$lib/components/KenosSystemBar.svelte'
-  import { FOCUS, focusFlags, hydrateFocusStore } from '$lib/kenos/focusStore.svelte.js'
+  import {
+    FOCUS,
+    focusFlags,
+    hydrateFocusStore,
+  } from '$lib/kenos/focusStore.svelte.js'
   import {
     SPACE_SWITCHER,
     hydrateSpaceSwitcher,
@@ -34,7 +38,14 @@
     hydrateMemoryFromLocalStorage,
     seedDefaultMemories,
   } from '$lib/memory.svelte.js'
-  import { initCloud, syncNow, CLOUD, isCloudAuthorized } from '$lib/cloud.svelte.js'
+  import {
+    initCloud,
+    syncNow,
+    CLOUD,
+    isCloudAuthorized,
+  } from '$lib/cloud.svelte.js'
+  import { installKenosAppLogs } from '@life-os/platform-web/kenos-app-logs'
+  import { supabase } from '$lib/supabase.js'
   import {
     startDailyBriefScheduler,
     stopDailyBriefScheduler,
@@ -107,12 +118,15 @@
     ].includes(page.url.pathname) || !knownRoutes.has(page.url.pathname),
   )
   const hideGlobalNav = $derived(
-    (focusFlags().hideGlobalNav && page.url.pathname === '/focus') || isIosNativeShell(),
+    (focusFlags().hideGlobalNav && page.url.pathname === '/focus') ||
+      isIosNativeShell(),
   )
   const showReturnBanner = $derived(focusFlags().showReturnBanner)
 
   let captureOpen = $state(false)
-  let online = $state(typeof navigator !== 'undefined' ? navigator.onLine : true)
+  let online = $state(
+    typeof navigator !== 'undefined' ? navigator.onLine : true,
+  )
   let wasOffline = $state(false)
   let reconnectAttempts = $state(0)
   let reconnectTimer = null
@@ -125,15 +139,15 @@
     if (p === '/approvals') return t('nav.approvals')
     if (p === '/activity') return t('nav.activity')
     if (p === '/spaces') return t('nav.spaces')
-    if (p === '/spaces/training') return 'Training'
-    if (p === '/spaces/work') return 'Deep Work'
-    if (p === '/spaces/plan') return 'Plan'
-    if (p === '/spaces/money') return 'Money'
-    if (p === '/spaces/music') return 'Music'
-    if (p === '/spaces/home') return 'Home'
-    if (p === '/spaces/knowledge') return 'Knowledge'
-    if (p === '/focus') return FOCUS.focus?.title || 'Focus'
-    if (p === '/work') return 'Work'
+    if (p === '/spaces/training') return t('nav.spaceTraining')
+    if (p === '/spaces/work') return t('nav.spaceWork')
+    if (p === '/spaces/plan') return t('nav.spacePlan')
+    if (p === '/spaces/money') return t('nav.spaceMoney')
+    if (p === '/spaces/music') return t('nav.spaceMusic')
+    if (p === '/spaces/home') return t('nav.spaceHome')
+    if (p === '/spaces/knowledge') return t('nav.spaceKnowledge')
+    if (p === '/focus') return FOCUS.focus?.title || t('nav.focus')
+    if (p === '/work') return t('nav.work')
     if (p === '/uiux-states') return 'UIUX States'
     if (p === '/') return t('nav.today')
     if (p === '/assistant' || p === '/chat') return t('chat.title')
@@ -149,7 +163,11 @@
     if (gated) return
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
       const tag = /** @type {HTMLElement | null} */ (event.target)?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || /** @type {HTMLElement} */ (event.target)?.isContentEditable) {
+      if (
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        /** @type {HTMLElement} */ (event.target)?.isContentEditable
+      ) {
         return
       }
       event.preventDefault()
@@ -159,7 +177,11 @@
     // Continue — Cmd/Ctrl + .  ·  Quick Switch — Cmd/Ctrl + Shift + .
     if ((event.metaKey || event.ctrlKey) && event.key === '.') {
       const tag = /** @type {HTMLElement | null} */ (event.target)?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || /** @type {HTMLElement} */ (event.target)?.isContentEditable) {
+      if (
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        /** @type {HTMLElement} */ (event.target)?.isContentEditable
+      ) {
         return
       }
       event.preventDefault()
@@ -258,6 +280,10 @@
     if (typeof navigator !== 'undefined') {
       navigator.serviceWorker?.register('/service-worker.js').catch(() => {})
     }
+    const disposeAppLogs = installKenosAppLogs({
+      app: 'aios',
+      getSupabase: () => supabase,
+    })
 
     return () => {
       clearTimeout(dreamTimer)
@@ -265,6 +291,7 @@
       cleanupTheme()
       cleanupViewport()
       cleanupVisibility()
+      disposeAppLogs()
       stopDailyBriefScheduler()
       window.removeEventListener('offline', onWindowOffline)
       window.removeEventListener('online', onWindowOnline)
@@ -326,7 +353,10 @@
     {/snippet}
 
     {#snippet header()}
-      <LifeOsAppBar title={pageTitle} hidden={isAssistant || hasCustomHeader || hideGlobalNav}>
+      <LifeOsAppBar
+        title={pageTitle}
+        hidden={isAssistant || hasCustomHeader || hideGlobalNav}
+      >
         {#snippet trailing()}
           {#if !hideGlobalNav}
             <!-- Desktop AppBar — Continue + Quick Switch (Switch Space lives in sidebar All) -->
@@ -356,9 +386,12 @@
     {/snippet}
 
     {#snippet main()}
-      {#if page.url.pathname !== '/focus'}
-        <!-- Music-style: title + action bubble scroll with content (not fixed overlay). -->
-        <KenosSystemBar title={pageTitle} onCapture={() => (captureOpen = true)} />
+      {#if page.url.pathname !== '/focus' && !isAssistant}
+        <!-- Music-style title chrome — Assistant owns its own floating chat top bar. -->
+        <KenosSystemBar
+          title={pageTitle}
+          onCapture={() => (captureOpen = true)}
+        />
       {/if}
       {@render children()}
     {/snippet}
@@ -395,7 +428,10 @@
   :global(.space-switcher-trigger) {
     appearance: none;
     border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-    background: var(--kenos-chrome-bg, color-mix(in srgb, var(--bg) 80%, transparent));
+    background: var(
+      --kenos-chrome-bg,
+      color-mix(in srgb, var(--bg) 80%, transparent)
+    );
     backdrop-filter: blur(12px);
     color: var(--t1);
     font: inherit;
@@ -417,7 +453,9 @@
   /* iOS KenosIOS WKWebView — native TabView owns bottom IA (CSS belt + hideGlobalNav) */
   :global(html[data-ios-native-shell='true'] .bottom-nav-host),
   :global(html[data-ios-native-shell='true'] nav.bottom-nav),
-  :global(html[data-ios-native-shell='true'] [data-testid='aios-shell-bottom-nav']) {
+  :global(
+      html[data-ios-native-shell='true'] [data-testid='aios-shell-bottom-nav']
+    ) {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
@@ -473,7 +511,6 @@
     padding: 0 !important;
     border: 0 !important;
   }
-  :global(html[data-ios-native-shell='true'] .today-intro),
   :global(html[data-ios-native-shell='true'] .control-page-intro),
   :global(html[data-ios-native-shell='true'] .spaces-header .intro) {
     /* Keep one short line of context; tighten under Music title */
@@ -486,23 +523,20 @@
   :global(html[data-ios-native-shell='true'] .control-page-header),
   :global(html[data-ios-native-shell='true'] .spaces-header) {
     padding-top: 0 !important;
-    padding-bottom: 12px !important;
+    padding-bottom: 8px !important;
     border-bottom: 0 !important;
   }
   :global(html[data-ios-native-shell='true'] .today-actions) {
     /* Refresh lives as content affordance — demote vs Music bubble */
-    opacity: 0.72;
+    opacity: 0.55;
   }
   :global(html[data-ios-native-shell='true'] .kenos-page-title) {
     margin-top: 0;
     line-height: 1.15;
   }
-  /* Assistant: Music title owns chrome; keep Scope/model, drop competing top density */
+  /* Assistant owns floating chrome — don't force a transparent strip that fights the veil. */
   :global(html[data-ios-native-shell='true'] .chat-top) {
-    padding-top: 0 !important;
-    padding-bottom: 8px !important;
     min-height: 0 !important;
     border-bottom: 0 !important;
-    background: transparent !important;
   }
 </style>

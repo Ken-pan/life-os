@@ -1,5 +1,7 @@
 <script>
   import Icon from '@life-os/platform-web/svelte/icon'
+  import { sensory } from '@life-os/platform-web/kenos-sensory'
+  import { createImeGuard } from '@life-os/theme'
   import { t } from '$lib/i18n/index.js'
   import {
     C,
@@ -14,6 +16,8 @@
 
   /** @type {{ autofocus?: boolean }} */
   let { autofocus = false } = $props()
+
+  const ime = createImeGuard()
 
   let text = $state(getDraft(C.activeId))
   let images = $state([])
@@ -33,10 +37,33 @@
 
   /* —— 「+」能力菜单:让附件/生图/搜索等能力显性可发现(ChatGPT 式) —— */
   const menuItems = $derived([
-    { key: 'files', icon: 'paperclip', title: t('chat.menuAttach'), desc: t('chat.menuAttachDesc') },
-    { key: 'image', icon: 'image', title: t('chat.menuImage'), desc: t('chat.menuImageDesc'), prefix: t('chat.menuImagePrefix') },
-    { key: 'search', icon: 'search', title: t('chat.menuSearch'), desc: t('chat.menuSearchDesc'), prefix: t('chat.menuSearchPrefix') },
-    { key: 'notes', icon: 'notebook', title: t('chat.menuNotes'), desc: t('chat.menuNotesDesc'), prefix: t('chat.menuNotesPrefix') },
+    {
+      key: 'files',
+      icon: 'paperclip',
+      title: t('chat.menuAttach'),
+      desc: t('chat.menuAttachDesc'),
+    },
+    {
+      key: 'image',
+      icon: 'image',
+      title: t('chat.menuImage'),
+      desc: t('chat.menuImageDesc'),
+      prefix: t('chat.menuImagePrefix'),
+    },
+    {
+      key: 'search',
+      icon: 'search',
+      title: t('chat.menuSearch'),
+      desc: t('chat.menuSearchDesc'),
+      prefix: t('chat.menuSearchPrefix'),
+    },
+    {
+      key: 'notes',
+      icon: 'notebook',
+      title: t('chat.menuNotes'),
+      desc: t('chat.menuNotesDesc'),
+      prefix: t('chat.menuNotesPrefix'),
+    },
   ])
 
   function menuAction(item) {
@@ -57,7 +84,8 @@
   $effect(() => {
     if (!menuOpen) return
     const onDocClick = (e) => {
-      if (!menuEl?.contains(e.target) && !menuBtn?.contains(e.target)) menuOpen = false
+      if (!menuEl?.contains(e.target) && !menuBtn?.contains(e.target))
+        menuOpen = false
     }
     const onDocKey = (e) => {
       if (e.key === 'Escape') {
@@ -103,7 +131,8 @@
   /* —— 整页拖拽上传:拖文件到页面任意处即可添加(对齐 GPT/Claude)——
      只有一个 Composer 实例在场(空态 hero 或底部 dock),故 document 级监听即"全页" */
   $effect(() => {
-    const isFileDrag = (e) => [...(e.dataTransfer?.types ?? [])].includes('Files')
+    const isFileDrag = (e) =>
+      [...(e.dataTransfer?.types ?? [])].includes('Files')
     const onEnter = (e) => {
       if (!isFileDrag(e)) return
       e.preventDefault()
@@ -139,6 +168,7 @@
   })
 
   async function submit() {
+    if (ime.isComposing()) return
     if (C.streaming) {
       stopStreaming()
       return
@@ -152,11 +182,14 @@
     files = []
     setDraft(C.activeId, '') // 发送即清掉该会话草稿
     requestAnimationFrame(autogrow)
+    void sensory('soft')
     await sendMessage(value, attachedImages, attachedFiles)
   }
 
   function onKeydown(event) {
-    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      // Let IME confirm candidates; do not preventDefault while composing.
+      if (ime.isComposing(event)) return
       event.preventDefault()
       submit()
       return
@@ -167,7 +200,7 @@
       !text.trim() &&
       !images.length &&
       !files.length &&
-      !event.isComposing &&
+      !ime.isComposing(event) &&
       requestEditLastUser()
     ) {
       event.preventDefault()
@@ -198,7 +231,8 @@
       if (imported.pageImages?.length) {
         images = [...images, ...imported.pageImages].slice(0, 4)
         imported.pageImages = undefined
-        imported.text = '(扫描版 PDF,无文本层;页面已作为图片附上,请直接阅读图片。)'
+        imported.text =
+          '(扫描版 PDF,无文本层;页面已作为图片附上,请直接阅读图片。)'
       }
       files = [...files, imported]
     } catch (err) {
@@ -254,7 +288,9 @@
       recorder.onstop = async () => {
         stream.getTracks().forEach((track) => track.stop())
         recording = false
-        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' })
+        const blob = new Blob(chunks, {
+          type: recorder.mimeType || 'audio/webm',
+        })
         recorder = null
         if (blob.size < 1000) return
         transcribing = true
@@ -301,7 +337,11 @@
       {/each}
       {#each files as file, i (file.name + i)}
         <div class="file-pill">
-          <Icon name={file.kind === 'audio' ? 'mic' : 'file'} size={14} strokeWidth={1.75} />
+          <Icon
+            name={file.kind === 'audio' ? 'mic' : 'file'}
+            size={14}
+            strokeWidth={1.75}
+          />
           <span class="file-pill-name">{file.name}</span>
           <button
             type="button"
@@ -337,9 +377,19 @@
       <Icon name="plus" size={19} strokeWidth={1.9} />
     </button>
     {#if menuOpen}
-      <div bind:this={menuEl} class="menu" role="menu" aria-label={t('chat.openMenu')}>
+      <div
+        bind:this={menuEl}
+        class="menu"
+        role="menu"
+        aria-label={t('chat.openMenu')}
+      >
         {#each menuItems as item (item.key)}
-          <button type="button" role="menuitem" class="menu-item" onclick={() => menuAction(item)}>
+          <button
+            type="button"
+            role="menuitem"
+            class="menu-item"
+            onclick={() => menuAction(item)}
+          >
             <span class="menu-icon">
               <Icon name={item.icon} size={16} strokeWidth={1.8} />
             </span>
@@ -362,6 +412,11 @@
       bind:this={textarea}
       bind:value={text}
       rows="1"
+      enterkeyhint="send"
+      autocomplete="off"
+      autocorrect="on"
+      autocapitalize="sentences"
+      spellcheck="true"
       placeholder={recording
         ? t('chat.listening')
         : transcribing
@@ -371,6 +426,9 @@
       oninput={onInput}
       onkeydown={onKeydown}
       onpaste={onPaste}
+      oncompositionstart={ime.compositionstart}
+      oncompositionend={(e) => ime.compositionend(e)}
+      oncompositioncancel={ime.compositioncancel}
     ></textarea>
 
     <button
@@ -462,12 +520,15 @@
     display: grid;
     gap: 8px;
     width: 100%;
-    padding: 10px;
-    background: var(--bg);
-    border: 1px solid var(--border-l);
-    border-radius: 28px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-    transition: border-color var(--dur-fast, 120ms) var(--ease, ease);
+    padding: 8px 10px;
+    background: color-mix(in srgb, var(--bg-2, var(--card)) 55%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--t1) 10%, transparent);
+    border-radius: 24px;
+    box-shadow: 0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset;
+    transition:
+      border-color 160ms ease,
+      background 160ms ease,
+      box-shadow 160ms ease;
   }
 
   /* —— 「+」能力菜单 —— */
@@ -531,16 +592,17 @@
     color: var(--t1);
   }
   .composer:focus-within {
-    border-color: var(--t3);
+    border-color: color-mix(in srgb, var(--t1) 18%, transparent);
+    background: color-mix(in srgb, var(--bg) 92%, var(--card));
   }
   .composer.recording {
-    border-color: var(--t1);
+    border-color: color-mix(in srgb, var(--t1) 28%, transparent);
   }
 
   .row {
     display: flex;
     align-items: flex-end;
-    gap: 6px;
+    gap: 4px;
   }
 
   .attachments {
@@ -649,28 +711,32 @@
     outline: none;
     color: var(--t1);
     font: inherit;
-    font-size: var(--text-base, 15px);
-    line-height: 1.5;
-    padding: 8px 2px;
+    /* ≥16px on iOS — smaller scoped sizes override theme and zoom the page */
+    font-size: max(16px, var(--text-base, 15px));
+    line-height: 1.45;
+    padding: 7px 4px;
   }
   textarea::placeholder {
-    color: var(--t3);
+    color: color-mix(in srgb, var(--t3) 92%, transparent);
   }
 
   .aux-btn {
     flex: 0 0 auto;
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border: none;
     border-radius: 50%;
     background: transparent;
     color: var(--t2);
     cursor: pointer;
+    transition:
+      background 160ms ease,
+      color 160ms ease;
   }
   .aux-btn:hover {
-    background: var(--card);
+    background: color-mix(in srgb, var(--t1) 8%, transparent);
     color: var(--t1);
   }
   .aux-btn:disabled {
@@ -696,22 +762,26 @@
     flex: 0 0 auto;
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border: none;
     border-radius: 50%;
-    background: var(--accent);
-    color: var(--on-accent);
+    background: var(--t1);
+    color: var(--bg);
     cursor: pointer;
     transition:
-      opacity var(--dur-fast, 120ms) var(--ease, ease),
-      transform var(--dur-fast, 120ms) var(--ease, ease);
+      opacity 160ms ease,
+      transform 160ms ease,
+      background 160ms ease;
   }
   .send-btn:disabled {
-    opacity: 0.25;
+    opacity: 0.22;
     cursor: default;
   }
   .send-btn:not(:disabled):active {
-    transform: scale(0.92);
+    transform: scale(0.94);
+  }
+  .send-btn.stop {
+    background: var(--t1);
   }
 </style>

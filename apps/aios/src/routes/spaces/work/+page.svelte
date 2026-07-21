@@ -4,7 +4,9 @@
   import { page } from '$app/state'
   import { FOCUS, startDeepWork } from '$lib/kenos/focusStore.svelte.js'
   import {
+    ensureNativeUnlock,
     isIosNativeShell,
+    NATIVE_UNLOCK_KEYS,
     requestNativeSpaceShelf,
   } from '$lib/kenos/iosNativeShell.js'
   import {
@@ -13,9 +15,22 @@
     suspendWorkSpace,
   } from '$lib/kenos/workSpaceAdapter.js'
 
+  let unlockState = $state(/** @type {'pending'|'open'|'locked'} */ ('open'))
+
   const nativeShell = $derived(
     page.url.searchParams.get('iosNativeShell') === '1' || isIosNativeShell(),
   )
+
+  function requestWorkUnlock({ force = false } = {}) {
+    unlockState = 'pending'
+    void ensureNativeUnlock({
+      storageKey: NATIVE_UNLOCK_KEYS.work,
+      reason: 'Unlock Work',
+      force,
+    }).then((result) => {
+      unlockState = result.ok || result.skipped ? 'open' : 'locked'
+    })
+  }
 
   onMount(() => {
     installWorkLeaveGuard()
@@ -27,6 +42,9 @@
         projectId: 'a1000000-0000-4000-8000-000000000001',
       }),
     )
+    if (isIosNativeShell()) {
+      requestWorkUnlock()
+    }
   })
 
   function begin() {
@@ -46,25 +64,39 @@
 </script>
 
 <div class="space-page" class:native-shell={nativeShell} data-domain="work">
-  <h1 class="kenos-page-title">Deep Work</h1>
-  <p class="intro">进入当前项目的专注模式。只保留与这次工作相关的上下文。</p>
+  {#if unlockState === 'locked' || unlockState === 'pending'}
+    <section data-testid="work-native-unlock-gate" aria-busy={unlockState === 'pending'}>
+      <h1 class="kenos-page-title">Work locked</h1>
+      <p class="intro">
+        {unlockState === 'pending'
+          ? 'Unlocking Work…'
+          : 'Use Face ID or passcode to open Work in Kenos.'}
+      </p>
+      {#if unlockState === 'locked'}
+        <button type="button" onclick={() => requestWorkUnlock({ force: true })}>Unlock</button>
+      {/if}
+    </section>
+  {:else}
+    <h1 class="kenos-page-title">Deep Work</h1>
+    <p class="intro">进入当前项目的专注模式。只保留与这次工作相关的上下文。</p>
 
-  <section class="project">
-    <h2>Kenos IA</h2>
-    <p>导航信息架构与 Focus 上下文</p>
-    <ul>
-      <li>下一步：Focus contracts</li>
-      <li>相关任务在 Plan 中查看</li>
-    </ul>
-    <button type="button" onclick={begin}>开始 Deep Work</button>
-  </section>
+    <section class="project">
+      <h2>Kenos IA</h2>
+      <p>导航信息架构与 Focus 上下文</p>
+      <ul>
+        <li>下一步：Focus contracts</li>
+        <li>相关任务在 Plan 中查看</li>
+      </ul>
+      <button type="button" onclick={begin}>开始 Deep Work</button>
+    </section>
 
-  <div class="links">
-    <a href="/work">打开 Work</a>
-    {#if !nativeShell}
-      <a href="/spaces" onclick={openSpacesShelf}>‹ All Spaces</a>
-    {/if}
-  </div>
+    <div class="links">
+      <a href="/work">打开 Work</a>
+      {#if !nativeShell}
+        <a href="/spaces" onclick={openSpacesShelf}>‹ All Spaces</a>
+      {/if}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -97,9 +129,11 @@
     padding-left: 1.2em;
     color: var(--t3);
   }
-  .project button {
+  .project button,
+  [data-testid='work-native-unlock-gate'] button {
     appearance: none;
     min-height: 44px;
+    margin-top: 16px;
     padding: 0 16px;
     border: 0;
     border-radius: var(--kenos-radius-control, 8px);
@@ -108,6 +142,9 @@
     font: inherit;
     font-weight: 600;
     cursor: pointer;
+  }
+  .project button {
+    margin-top: 0;
   }
   .links {
     display: flex;

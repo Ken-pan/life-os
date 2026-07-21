@@ -1,7 +1,6 @@
 /**
- * Kenos System top-level IA (tranche 1):
- * Today · Assistant · Spaces · Inbox
- * Approvals/Activity nest under Inbox; Work nests under Spaces.
+ * Kenos System top-level IA:
+ * Leading Spaces chip + capsule (Today · Assistant · Inbox · Settings) = 5.
  */
 
 export const SYSTEM_NAV_HREFS = Object.freeze({
@@ -9,6 +8,7 @@ export const SYSTEM_NAV_HREFS = Object.freeze({
   assistant: '/assistant',
   spaces: '/spaces',
   inbox: '/inbox',
+  settings: '/settings',
 })
 
 /** Paths that should highlight Spaces in the shell. */
@@ -32,17 +32,57 @@ export function isSystemNavActive(pathname, href) {
 }
 
 /**
- * @param {(key: string) => string} t i18n helper
+ * Leading Spaces button (standalone).
+ * @param {(key: string) => string} t
  */
-export function systemNavItems(t) {
+export function systemNavSpacesItem(t) {
+  return {
+    href: SYSTEM_NAV_HREFS.spaces,
+    // layout-grid ↔ iOS `square.grid.2x2` (KenosGlobalDock Spaces chip)
+    icon: 'layout-grid',
+    label: t('nav.spaces'),
+    key: 'spaces',
+  }
+}
+
+/**
+ * Capsule items (four) — paired with leading Spaces.
+ * @param {(key: string) => string} t
+ */
+export function systemNavCapsuleItems(t) {
   return [
-    { href: SYSTEM_NAV_HREFS.today, icon: 'dashboard', label: t('nav.today') },
+    // sun ↔ iOS `sun.max` — must not collide with Spaces `layout-grid`
+    {
+      href: SYSTEM_NAV_HREFS.today,
+      icon: 'sun',
+      label: t('nav.today'),
+      key: 'today',
+    },
     {
       href: SYSTEM_NAV_HREFS.assistant,
       icon: 'chat',
       label: t('nav.assistant'),
+      key: 'assistant',
     },
-    { href: SYSTEM_NAV_HREFS.spaces, icon: 'globe', label: t('nav.spaces') },
-    { href: SYSTEM_NAV_HREFS.inbox, icon: 'list-todo', label: t('nav.inbox') },
+    {
+      href: SYSTEM_NAV_HREFS.inbox,
+      icon: 'list-todo',
+      label: t('nav.inbox'),
+      key: 'inbox',
+    },
+    {
+      href: SYSTEM_NAV_HREFS.settings,
+      icon: 'settings',
+      label: t('nav.settings'),
+      key: 'settings',
+    },
   ]
+}
+
+/**
+ * Flat five for sidebar / tests (Spaces first).
+ * @param {(key: string) => string} t i18n helper
+ */
+export function systemNavItems(t) {
+  return [systemNavSpacesItem(t), ...systemNavCapsuleItems(t)]
 }

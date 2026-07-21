@@ -25,6 +25,34 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script>
+    // LAN Daily Beta (http://10.x / http://192.168.x) is not a secure context —
+    // crypto.randomUUID is missing and SvelteKit boots into "500 Internal Error".
+    (function () {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
+          crypto.randomUUID = function () {
+            var bytes = new Uint8Array(16);
+            if (crypto.getRandomValues) crypto.getRandomValues(bytes);
+            else for (var i = 0; i < 16; i++) bytes[i] = (Math.random() * 256) | 0;
+            bytes[6] = (bytes[6] & 0x0f) | 0x40;
+            bytes[8] = (bytes[8] & 0x3f) | 0x80;
+            var hex = [];
+            for (var j = 0; j < 16; j++) hex.push((bytes[j] + 0x100).toString(16).slice(1));
+            return (
+              hex.slice(0, 4).join('') +
+              '-' +
+              hex.slice(4, 6).join('') +
+              '-' +
+              hex.slice(6, 8).join('') +
+              '-' +
+              hex.slice(8, 10).join('') +
+              '-' +
+              hex.slice(10, 16).join('')
+            );
+          };
+        }
+      } catch (e) { }
+    })();
     (function () {
       try {
         var pref = 'dark';
@@ -41,7 +69,7 @@
         document.documentElement.style.colorScheme = resolved;
         var meta = document.getElementById('theme-color-meta');
         if (meta) meta.content = resolved === 'light' ? '#ffffff' : '#212121';
-      } catch (e) {}
+      } catch (e) { }
     })();
     (function () {
       var pwaSim = /(?:^|[?&])pwa_sim=1(?:&|$)/.test(location.search);

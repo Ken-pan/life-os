@@ -17,6 +17,10 @@ import {
   startTrainingFocus,
   temporarilyLeaveFocus,
 } from './focusStore.core.js'
+import {
+  endFocusLiveActivity,
+  publishFocusLiveActivity,
+} from './kenosLiveActivity.js'
 
 export const FOCUS = $state(emptyFocusState())
 
@@ -25,28 +29,46 @@ function commit(next) {
   if (browser) saveFocusState(FOCUS)
 }
 
+function syncLiveActivity(next = FOCUS) {
+  if (!browser) return
+  const focus = next?.focus
+  if (!focus) return
+  const status = String(focus.status || '')
+  if (['active', 'paused', 'temporarily_left', 'ending'].includes(status)) {
+    void publishFocusLiveActivity(focus)
+  }
+}
+
 export function hydrateFocusStore() {
   if (!browser) return
   const loaded = loadFocusState()
   Object.assign(FOCUS, loaded)
 }
 
-export function startTraining() {
+export function startTraining(options) {
   hydrateFocusStore()
-  commit(startTrainingFocus({ ...FOCUS }))
+  const next = startTrainingFocus({ ...FOCUS }, options)
+  commit(next)
+  syncLiveActivity(next)
 }
 
 export function startDeepWork(options) {
   hydrateFocusStore()
-  commit(startDeepWorkFocus({ ...FOCUS }, options))
+  const next = startDeepWorkFocus({ ...FOCUS }, options)
+  commit(next)
+  syncLiveActivity(next)
 }
 
 export function pauseSession() {
-  commit(pauseFocus({ ...FOCUS }))
+  const next = pauseFocus({ ...FOCUS })
+  commit(next)
+  syncLiveActivity(next)
 }
 
 export function resumeSession() {
-  commit(resumeFocus({ ...FOCUS }))
+  const next = resumeFocus({ ...FOCUS })
+  commit(next)
+  syncLiveActivity(next)
 }
 
 export function askLeaveSession() {
@@ -58,19 +80,29 @@ export function cancelLeavePrompt() {
 }
 
 export function leaveSessionTemporarily() {
-  commit(temporarilyLeaveFocus({ ...FOCUS }))
+  const next = temporarilyLeaveFocus({ ...FOCUS })
+  commit(next)
+  syncLiveActivity(next)
 }
 
 export function returnSession() {
-  commit(returnToFocus({ ...FOCUS }))
+  const next = returnToFocus({ ...FOCUS })
+  commit(next)
+  syncLiveActivity(next)
 }
 
 export function endSession(options) {
-  commit(endFocus({ ...FOCUS }, options))
+  const mode = FOCUS.focus?.mode
+  const next = endFocus({ ...FOCUS }, options)
+  commit(next)
+  void endFocusLiveActivity(mode)
 }
 
 export function cancelSession() {
-  commit(cancelFocus({ ...FOCUS }))
+  const mode = FOCUS.focus?.mode
+  const next = cancelFocus({ ...FOCUS })
+  commit(next)
+  void endFocusLiveActivity(mode)
 }
 
 export function dismissFocusSuggestion(id) {

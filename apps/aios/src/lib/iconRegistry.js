@@ -43,10 +43,13 @@ import GitPullRequest from '@lucide/svelte/icons/git-pull-request'
 import Wallet from '@lucide/svelte/icons/wallet'
 import ListTodo from '@lucide/svelte/icons/list-todo'
 import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard'
+import LayoutGrid from '@lucide/svelte/icons/layout-grid'
+import Menu from '@lucide/svelte/icons/menu'
 import Plug from '@lucide/svelte/icons/plug'
 import Square from '@lucide/svelte/icons/square'
 import SquarePen from '@lucide/svelte/icons/square-pen'
 import Star from '@lucide/svelte/icons/star'
+import Sun from '@lucide/svelte/icons/sun'
 import Trash2 from '@lucide/svelte/icons/trash-2'
 import Wrench from '@lucide/svelte/icons/wrench'
 import X from '@lucide/svelte/icons/x'
@@ -98,10 +101,13 @@ export const ICONS = {
   wallet: Wallet,
   'list-todo': ListTodo,
   dashboard: LayoutDashboard,
+  'layout-grid': LayoutGrid,
+  menu: Menu,
   plug: Plug,
   stop: Square,
   compose: SquarePen,
   star: Star,
+  sun: Sun,
   trash: Trash2,
   wrench: Wrench,
   x: X,

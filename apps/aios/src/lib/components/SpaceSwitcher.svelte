@@ -22,9 +22,7 @@
     SYSTEM_RETURN_LIST_KEY,
   } from '$lib/kenos/spaceSwitcher.core.js'
   import { PRODUCT_COPY } from '$lib/kenos/productStates.core.js'
-  import {
-    resolveContinueOverlayModeFromWindow,
-  } from '$lib/kenos/continueOverlayMode.core.js'
+  import { resolveContinueOverlayModeFromWindow } from '$lib/kenos/continueOverlayMode.core.js'
   import {
     anchoredContinuePanelStyle,
     computeAnchoredContinuePanel,
@@ -194,7 +192,8 @@
   function onPin(listKey, event) {
     event.preventDefault()
     event.stopPropagation()
-    if (listKey === SYSTEM_RETURN_LIST_KEY || listKey.startsWith('system:')) return
+    if (listKey === SYSTEM_RETURN_LIST_KEY || listKey.startsWith('system:'))
+      return
     togglePinnedSpace(listKey)
   }
 
@@ -253,7 +252,11 @@
     {#if showSearch}
       <label class="search">
         <span class="visually-hidden">{searchPlaceholder}</span>
-        <input type="search" placeholder={searchPlaceholder} bind:value={query} />
+        <input
+          type="search"
+          placeholder={searchPlaceholder}
+          bind:value={query}
+        />
       </label>
     {/if}
 
@@ -269,7 +272,9 @@
       </section>
     {:else if isContinue && !recentSection?.items?.length}
       <div class="empty-recent" role="status">
-        <strong class="empty-title">{PRODUCT_COPY.continueEmptyRecent.title}</strong>
+        <strong class="empty-title"
+          >{PRODUCT_COPY.continueEmptyRecent.title}</strong
+        >
         <p class="empty-body">{PRODUCT_COPY.continueEmptyRecent.body}</p>
         <button type="button" class="empty-action" onclick={goSpacesDirectory}>
           {PRODUCT_COPY.continueEmptyRecent.action}
@@ -305,7 +310,9 @@
                   <a
                     class="row"
                     href={space.href}
-                    aria-current={current === space.listKey ? 'true' : undefined}
+                    aria-current={current === space.listKey
+                      ? 'true'
+                      : undefined}
                     onclick={(e) => onSelect(space, e)}
                   >
                     <span
@@ -327,7 +334,8 @@
                         <strong>{space.label}</strong>
                         {#if space.expired || space.statusBadge}
                           <span class="status-badge">
-                            {space.statusBadge || PRODUCT_COPY.continueExpired.badge}
+                            {space.statusBadge ||
+                              PRODUCT_COPY.continueExpired.badge}
                           </span>
                         {/if}
                       </span>
@@ -363,8 +371,12 @@
                     <button
                       type="button"
                       class="pin"
-                      class:on={SPACE_SWITCHER.state.pinned.includes(space.listKey)}
-                      aria-label={SPACE_SWITCHER.state.pinned.includes(space.listKey)
+                      class:on={SPACE_SWITCHER.state.pinned.includes(
+                        space.listKey,
+                      )}
+                      aria-label={SPACE_SWITCHER.state.pinned.includes(
+                        space.listKey,
+                      )
                         ? `Unpin ${space.label}`
                         : `Pin ${space.label}`}
                       onclick={(e) => onPin(space.listKey, e)}
@@ -376,9 +388,17 @@
               {:else}
                 {#if section.id === 'all'}
                   <li class="empty-search" role="status">
-                    <strong class="empty-title">{PRODUCT_COPY.continueSearchEmpty.title}</strong>
-                    <p class="empty-body">{PRODUCT_COPY.continueSearchEmpty.body}</p>
-                    <button type="button" class="empty-action" onclick={() => (query = '')}>
+                    <strong class="empty-title"
+                      >{PRODUCT_COPY.continueSearchEmpty.title}</strong
+                    >
+                    <p class="empty-body">
+                      {PRODUCT_COPY.continueSearchEmpty.body}
+                    </p>
+                    <button
+                      type="button"
+                      class="empty-action"
+                      onclick={() => (query = '')}
+                    >
                       {PRODUCT_COPY.continueSearchEmpty.action}
                     </button>
                   </li>
@@ -454,7 +474,8 @@
   }
 
   .sheet-close:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
+    outline: 2px solid
+      color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
     outline-offset: 2px;
   }
 
@@ -470,7 +491,9 @@
     justify-content: center;
   }
 
-  :global(.sheet-bg.space-switcher-sheet-bg.layout-mobile .space-switcher-sheet) {
+  :global(
+      .sheet-bg.space-switcher-sheet-bg.layout-mobile .space-switcher-sheet
+    ) {
     width: 100%;
     max-width: none;
     border-radius: 22px 22px 0 0;
@@ -486,15 +509,21 @@
   :global(.sheet-bg.space-switcher-sheet-bg.layout-tablet-lg) {
     align-items: center;
     justify-content: center;
-    padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px))
-      max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
+    padding: max(24px, env(safe-area-inset-top, 0px))
+      max(24px, env(safe-area-inset-right, 0px))
+      max(24px, env(safe-area-inset-bottom, 0px))
+      max(24px, env(safe-area-inset-left, 0px));
     background: color-mix(in srgb, #000 28%, transparent);
     -webkit-backdrop-filter: blur(8px) saturate(1.05);
     backdrop-filter: blur(8px) saturate(1.05);
   }
 
-  :global(.sheet-bg.space-switcher-sheet-bg.layout-tablet .space-switcher-sheet),
-  :global(.sheet-bg.space-switcher-sheet-bg.layout-tablet-lg .space-switcher-sheet) {
+  :global(
+      .sheet-bg.space-switcher-sheet-bg.layout-tablet .space-switcher-sheet
+    ),
+  :global(
+      .sheet-bg.space-switcher-sheet-bg.layout-tablet-lg .space-switcher-sheet
+    ) {
     width: min(560px, calc(100vw - 48px));
     max-width: min(560px, calc(100vw - 48px));
     border-radius: 22px;
@@ -510,14 +539,18 @@
   }
 
   /* Large tablet / Stage Manager — slightly wider form, still not anchored desktop */
-  :global(.sheet-bg.space-switcher-sheet-bg.layout-tablet-lg .space-switcher-sheet) {
+  :global(
+      .sheet-bg.space-switcher-sheet-bg.layout-tablet-lg .space-switcher-sheet
+    ) {
     width: min(640px, calc(100vw - 64px));
     max-width: min(640px, calc(100vw - 64px));
     max-height: min(76dvh, var(--app-vh, 100dvh));
   }
 
   @media (min-width: 1100px) {
-    :global(.sheet-bg.space-switcher-sheet-bg.layout-tablet-lg .space-switcher-sheet) {
+    :global(
+        .sheet-bg.space-switcher-sheet-bg.layout-tablet-lg .space-switcher-sheet
+      ) {
       width: min(680px, calc(100vw - 72px));
       max-width: min(680px, calc(100vw - 72px));
     }
@@ -533,7 +566,9 @@
     padding: 0;
   }
 
-  :global(.sheet-bg.space-switcher-sheet-bg.layout-desktop .space-switcher-sheet) {
+  :global(
+      .sheet-bg.space-switcher-sheet-bg.layout-desktop .space-switcher-sheet
+    ) {
     width: min(440px, calc(100vw - 24px));
     max-width: 440px;
     border-radius: 14px;
@@ -549,8 +584,16 @@
   }
 
   /* Dark: keep text contrast independent of frost */
-  :global([data-app='aios'][data-theme='dark'] .sheet-bg.space-switcher-sheet-bg.layout-tablet .space-switcher-sheet),
-  :global([data-app='aios'][data-theme='dark'] .sheet-bg.space-switcher-sheet-bg.layout-tablet-lg .space-switcher-sheet) {
+  :global(
+      [data-app='aios'][data-theme='dark']
+        .sheet-bg.space-switcher-sheet-bg.layout-tablet
+        .space-switcher-sheet
+    ),
+  :global(
+      [data-app='aios'][data-theme='dark']
+        .sheet-bg.space-switcher-sheet-bg.layout-tablet-lg
+        .space-switcher-sheet
+    ) {
     background: color-mix(in srgb, var(--card, var(--bg)) 94%, #000 6%);
     border-color: color-mix(in srgb, var(--border) 70%, transparent);
   }
@@ -622,7 +665,8 @@
   }
 
   .empty-action:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
+    outline: 2px solid
+      color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
     outline-offset: 2px;
   }
 
@@ -669,7 +713,8 @@
   }
 
   .search input:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
+    outline: 2px solid
+      color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
     outline-offset: 2px;
   }
 
@@ -735,7 +780,8 @@
 
   .row:focus-visible {
     background: color-mix(in srgb, var(--t1) 5%, transparent);
-    outline: 2px solid color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
+    outline: 2px solid
+      color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
     outline-offset: 2px;
     box-shadow: none;
   }
@@ -852,7 +898,8 @@
   }
 
   .dismiss:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
+    outline: 2px solid
+      color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
     outline-offset: 2px;
     color: var(--t1);
   }
@@ -893,7 +940,8 @@
   }
 
   .pin:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
+    outline: 2px solid
+      color-mix(in srgb, var(--accent, var(--t1)) 55%, transparent);
     outline-offset: 2px;
     opacity: 1;
   }
@@ -928,10 +976,8 @@
     border: 0;
   }
 
+  /* Sheet enter/exit: theme kenos-sheet-motion + PRM opacity-only. Rows stay quiet. */
   @media (prefers-reduced-motion: reduce) {
-    :global(.sheet-bg.space-switcher-sheet-bg),
-    :global(.sheet.space-switcher-sheet),
-    :global(.sheet-bg.space-switcher-sheet-bg .space-switcher-sheet),
     .row,
     .pin,
     .dismiss,

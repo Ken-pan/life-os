@@ -32,6 +32,12 @@ export const PRODUCT_COPY = Object.freeze({
     actionContinue: '继续刚才的事',
     actionAssistant: '问 Assistant',
   }),
+  todayNeedSignIn: Object.freeze({
+    title: '登录后查看今日摘要',
+    body: '云端 Today / Inbox 需要 Life OS 账户。Spaces 仍可先打开使用。',
+    actionContinue: '继续刚才的事',
+    actionSettings: '去设置登录',
+  }),
   todayLoading: Object.freeze({
     label: '正在汇总各 Space 状态…',
   }),

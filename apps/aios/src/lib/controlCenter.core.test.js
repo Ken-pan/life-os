@@ -33,7 +33,10 @@ describe('Kenos Phase 2 control center read model', () => {
         href: 'https://planner.kenos.space/upcoming',
       },
     )
-    assert.deepEqual(model.signals.map((signal) => signal.id), ['training', 'money'])
+    assert.deepEqual(
+      model.signals.map((signal) => signal.id),
+      ['training', 'money'],
+    )
     assert.equal(model.priorities[0].ownerDomain, 'plan')
     assert.equal(model.signals[1].source, 'portal_today_summary.finance')
     assert.equal(model.signals[1].futureActionAllowed, false)
@@ -49,6 +52,33 @@ describe('Kenos Phase 2 control center read model', () => {
       source: 'public.portal_today_summary',
       status: 'unavailable',
     })
+  })
+
+  it('surfaces Health readiness without vitals when Portal summary is offline', () => {
+    const model = buildTodayReadModel(null, {
+      now: Date.parse('2026-07-19T12:05:00Z'),
+      healthReadiness: {
+        version: 1,
+        asOf: '2026-07-19T12:00:00Z',
+        source: 'healthkit',
+        dayCount: 7,
+        dims: {
+          energy: 'watch',
+          focus: 'unknown',
+          recovery: 'watch',
+          stress: 'ok',
+          sleepDebt: 'bad',
+          physical: 'watch',
+        },
+        headlineKey: 'state.h_sleepDebt',
+        focusCapacity: 'low',
+        training: { code: 'recover', trained: false },
+        policy: { driver: 'sleepDebt', limitMinutes: 12 },
+      },
+    })
+    assert.ok(model.priorities.some((p) => p.id === 'health-readiness'))
+    assert.ok(model.signals.some((s) => s.id === 'health'))
+    assert.doesNotMatch(JSON.stringify(model), /sleepHours|hrv|restingHR/)
   })
 
   it('counts open control items without treating terminal records as pending', () => {
@@ -102,8 +132,14 @@ describe('Kenos Phase 2 control center read model', () => {
       { id: 'old', occurredAt: '2026-07-18T10:00:00Z' },
       { id: 'new', occurredAt: '2026-07-19T10:00:00Z' },
     ]
-    assert.deepEqual(sortActivityNewestFirst(records).map((item) => item.id), ['new', 'old'])
-    assert.deepEqual(records.map((item) => item.id), ['old', 'new'])
+    assert.deepEqual(
+      sortActivityNewestFirst(records).map((item) => item.id),
+      ['new', 'old'],
+    )
+    assert.deepEqual(
+      records.map((item) => item.id),
+      ['old', 'new'],
+    )
   })
 
   it('normalizes legacy and Today cards to the same shadow comparison shape', () => {

@@ -1,0 +1,2 @@
+# SPA fallback. /api/ai/chat is mounted by netlify/functions/ai-chat.mjs (config.path).
+/* /index.html 200

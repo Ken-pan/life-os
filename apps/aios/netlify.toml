@@ -1,7 +1,6 @@
-# AIOS 云端只读/轻量版(Netlify)
-# 注意:AIOS 是本地优先 app,推理全在本机网关(127.0.0.1:18888)+ 本地生图。
-# 云端版主要是「登录后查看已同步的对话/记忆/图片」的只读查看器;生成新回复
-# 需要连回某台运行本地 AI 网关的机器。VITE_AIOS_CLOUD 让前端切到云端文案与登录引导。
+# AIOS 云端版(Netlify)
+# 本地优先:有可达 LocalAI 网关时走本机全功能;网关不可达时经 /api/ai/chat
+# 回退到 Moonshot/Kimi(需站点 env KIMI_API_KEY)。VITE_AIOS_CLOUD=1 启用云端文案与登录门禁。
 
 [build]
   command = "npm run build -w aios-os"
@@ -11,6 +10,9 @@
 [build.environment]
   NODE_VERSION = "22"
   VITE_AIOS_CLOUD = "1"
+
+[functions]
+  directory = "apps/aios/netlify/functions"
 
 [dev]
   command = "npm run dev -w aios-os"
@@ -34,7 +36,5 @@
   [headers.values]
     Cache-Control = "public, max-age=86400"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# SPA catch-all lives in static/_redirects (same pattern as planner).
+# /api/ai/chat is mounted by netlify/functions/ai-chat.mjs (export config.path).

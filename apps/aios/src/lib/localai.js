@@ -5,12 +5,19 @@
  */
 
 import { browser } from '$app/environment'
+import { CLOUD_BUILD } from '$lib/env.js'
+import {
+  mapUiModelToKimi,
+  messagesHaveImageParts,
+  resolveChatBackendKind,
+} from '$lib/cloudChat.core.js'
 
 /** 网关地址是**设备本地**配置(不进云同步):本地形态用 127.0.0.1,
  *  云端版可在设置里填你暴露出来的公网网关。改这里不会覆盖别的设备。
  *  live binding:consumers 以 `${GATEWAY}/...` 在调用时读取最新值。 */
 const GATEWAY_KEY = 'aios_gateway_url_v1'
 export const DEFAULT_GATEWAY = 'http://127.0.0.1:18888'
+export { mapUiModelToKimi, resolveChatBackendKind }
 
 function initGateway() {
   if (!browser) return DEFAULT_GATEWAY
@@ -66,16 +73,34 @@ export function modelById(id) {
   return MODELS.find((m) => m.id === id) ?? MODELS[0]
 }
 
+/** Short-lived ping cache — avoid a 3s stall on every message when the gateway is down. */
+let pingCache = { at: 0, ok: false }
+const PING_CACHE_MS = 5000
+
 /** @returns {Promise<boolean>} 网关是否可达 */
 export async function pingGateway() {
+  const now = Date.now()
+  if (now - pingCache.at < PING_CACHE_MS) return pingCache.ok
   try {
     const res = await fetch(`${GATEWAY}/v1/models`, {
       signal: AbortSignal.timeout(3000),
     })
-    return res.ok
+    pingCache = { at: now, ok: res.ok }
+    return pingCache.ok
   } catch {
+    pingCache = { at: now, ok: false }
     return false
   }
+}
+
+/**
+ * 解析本轮对话后端:云端构建且本机网关不可达 → Kimi 代理,否则 LocalAI。
+ * @returns {Promise<{ kind: 'local'|'kimi', gatewayOk: boolean }>}
+ */
+export async function resolveChatBackend() {
+  const gatewayOk = await pingGateway()
+  const kind = resolveChatBackendKind({ cloudBuild: CLOUD_BUILD, gatewayOk })
+  return { kind, gatewayOk }
 }
 
 /**
@@ -89,6 +114,7 @@ export async function pingGateway() {
  *   maxTokens?: number,
  *   tools?: Array<object>,
  *   thinking?: boolean,
+ *   backend?: { kind?: 'local'|'kimi' },
  *   onDelta?: (chunk: { content?: string, reasoning?: string }) => void,
  * }} options
  * @returns {Promise<{
@@ -104,8 +130,46 @@ export async function streamChat({
   maxTokens = 4096,
   tools,
   thinking = false,
+  backend,
   onDelta,
 }) {
+  const kind = backend?.kind === 'kimi' ? 'kimi' : 'local'
+
+  if (kind === 'kimi') {
+    if (messagesHaveImageParts(messages)) {
+      throw new Error('kimi_vision_unsupported')
+    }
+    /** @type {Record<string, unknown>} */
+    const body = {
+      model: mapUiModelToKimi(model),
+      messages,
+      stream: true,
+      temperature,
+      max_tokens: maxTokens,
+      thinking: Boolean(thinking),
+    }
+    if (tools?.length) body.tools = tools
+
+    const res = await fetch('/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal,
+    })
+    if (!res.ok || !res.body) {
+      let code = `kimi_${res.status}`
+      try {
+        const errBody = await res.json()
+        if (errBody?.error === 'not_configured') code = 'kimi_not_configured'
+        else if (typeof errBody?.error === 'string') code = errBody.error
+      } catch {
+        /* keep status code */
+      }
+      throw new Error(code)
+    }
+    return parseChatCompletionStream(res, onDelta)
+  }
+
   const spec = modelById(model)
   const body = {
     model,
@@ -140,7 +204,15 @@ export async function streamChat({
   if (!res.ok || !res.body) {
     throw new Error(`gateway ${res.status}`)
   }
+  return parseChatCompletionStream(res, onDelta)
+}
 
+/**
+ * Shared SSE / JSON completion parser for LocalAI and Kimi proxy.
+ * @param {Response} res
+ * @param {((chunk: { content?: string, reasoning?: string }) => void) | undefined} onDelta
+ */
+async function parseChatCompletionStream(res, onDelta) {
   // 部分后端(VLM 服务壳)忽略 stream 参数直接返回整块 JSON
   const contentType = res.headers.get('content-type') ?? ''
   if (!contentType.includes('text/event-stream')) {
@@ -226,7 +298,9 @@ export async function streamChat({
         const delta = choice.delta
         if (!delta) continue
         if (delta.content || delta.reasoning_content || delta.reasoning) {
-          generated += (delta.reasoning_content || delta.reasoning || '') + (delta.content || '')
+          generated +=
+            (delta.reasoning_content || delta.reasoning || '') +
+            (delta.content || '')
           if (isLooping()) {
             finishReason = 'loop'
             aborted = true
@@ -309,7 +383,11 @@ export function cosine(a, b) {
 export async function transcribe(blob) {
   const form = new FormData()
   form.append('model', TRANSCRIBE_MODEL)
-  const ext = blob.type.includes('mp4') ? 'mp4' : blob.type.includes('ogg') ? 'ogg' : 'webm'
+  const ext = blob.type.includes('mp4')
+    ? 'mp4'
+    : blob.type.includes('ogg')
+      ? 'ogg'
+      : 'webm'
   form.append('file', blob, `recording.${ext}`)
   const res = await fetchWithColdRetry(() =>
     fetch(`${GATEWAY}/v1/audio/transcriptions`, {
@@ -429,7 +507,8 @@ async function pcmStreamToBuffer(res, ctx) {
   const buf = ctx.createBuffer(1, total || 1, sr)
   const ch = buf.getChannelData(0)
   let o = 0
-  for (const c of chunks) for (let k = 0; k < c.length; k++) ch[o++] = c[k] / 32768
+  for (const c of chunks)
+    for (let k = 0; k < c.length; k++) ch[o++] = c[k] / 32768
   return buf
 }
 
@@ -491,7 +570,10 @@ export function createSpeechSession(text, opts = {}) {
       const res = await fetch(`${GATEWAY}/v1/audio/speech`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...ttsRequestBody(sentences[i], voice), stream: true }),
+        body: JSON.stringify({
+          ...ttsRequestBody(sentences[i], voice),
+          stream: true,
+        }),
         signal: ac.signal,
       })
       if (!res.ok || !res.body) throw new Error(`tts ${res.status}`)
@@ -701,7 +783,10 @@ export async function polishTranscript(text) {
     { maxTokens: 1024, temperature: 0.1 },
   )
   // 长度偏差过大说明模型自由发挥了,退回原文
-  if (!polished || Math.abs(polished.length - trimmed.length) > trimmed.length * 0.3) {
+  if (
+    !polished ||
+    Math.abs(polished.length - trimmed.length) > trimmed.length * 0.3
+  ) {
     return trimmed
   }
   return polished

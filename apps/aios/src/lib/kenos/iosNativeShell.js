@@ -1,19 +1,56 @@
 /**
- * Detect Kenos iOS native WKWebView shell (vs browser / PWA / Tauri).
- * Injected by clients/apple KenosWebSurfaceView as window.__KENOS_IOS_NATIVE_SHELL__.
+ * AIOS Kenos shell helpers — SSOT detection/CSS lives in @life-os/platform-web.
+ * Keep Space Shelf + bridge re-exports here for AIOS call sites.
  */
-export function isIosNativeShell() {
-  if (typeof window === 'undefined') return false
-  if (window.__KENOS_IOS_NATIVE_SHELL__ === true) return true
+import { isIosNativeShell } from '@life-os/platform-web/ios-native-shell'
+
+export {
+  isIosNativeShell,
+  markIosNativeShellDom,
+  ensureIosNativeShellChromeCss,
+  IOS_NATIVE_SHELL_TOP_PAD_PX,
+  IOS_NATIVE_SHELL_BOTTOM_PAD_PX,
+} from '@life-os/platform-web/ios-native-shell'
+
+/**
+ * Open native Space Shelf (dock Spaces SSOT). Returns true if handled.
+ * Browser / PWA callers should fall through to `/spaces`.
+ */
+export function requestNativeSpaceShelf() {
+  if (!isIosNativeShell()) return false
   try {
-    return new URLSearchParams(window.location.search).get('iosNativeShell') === '1'
+    window.location.href = 'kenos://shelf'
+    return true
   } catch {
     return false
   }
 }
 
-/** Mark <html> for CSS (hide duplicate chrome). Safe to call repeatedly. */
-export function markIosNativeShellDom() {
-  if (!isIosNativeShell() || typeof document === 'undefined') return
-  document.documentElement.dataset.iosNativeShell = 'true'
+export {
+  isNativeBridgeAvailable,
+  getNativeCapabilities,
+  nativeHaptic,
+  nativeShare,
+  nativeAuthenticate,
+  ensureNativeUnlock,
+  clearNativeUnlock,
+  nativeNowPlayingUpdate,
+  nativeNowPlayingUpdatePosition,
+  nativeNowPlayingClear,
+  nativeLiveActivityUpsert,
+  nativeLiveActivityEnd,
+  publishNavManifest,
+  installNavManifestPublisher,
+} from '@life-os/platform-web/kenos-native-bridge'
+
+export {
+  sensory,
+  normalizeSensoryIntent,
+  SENSORY_MAP,
+} from '@life-os/platform-web/kenos-sensory'
+
+/** Session unlock keys for sensitive Continuity domains. */
+export const NATIVE_UNLOCK_KEYS = {
+  money: 'kenos.unlock.money',
+  work: 'kenos.unlock.work',
 }

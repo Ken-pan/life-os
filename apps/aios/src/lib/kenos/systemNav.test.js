@@ -1,13 +1,27 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { isSystemNavActive, systemNavItems } from './systemNav.js'
+import {
+  isSystemNavActive,
+  systemNavCapsuleItems,
+  systemNavItems,
+  systemNavSpacesItem,
+} from './systemNav.js'
 
 describe('systemNav', () => {
-  it('exposes four top-level entries', () => {
+  it('exposes five top-level entries with Spaces first', () => {
     const items = systemNavItems((k) => k)
     assert.deepEqual(
       items.map((i) => i.href),
-      ['/', '/assistant', '/spaces', '/inbox'],
+      ['/spaces', '/', '/assistant', '/inbox', '/settings'],
+    )
+  })
+
+  it('splits Spaces chip from four-item capsule', () => {
+    const t = (k) => k
+    assert.equal(systemNavSpacesItem(t).href, '/spaces')
+    assert.deepEqual(
+      systemNavCapsuleItems(t).map((i) => i.href),
+      ['/', '/assistant', '/inbox', '/settings'],
     )
   })
 

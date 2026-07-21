@@ -1,8 +1,16 @@
 <script>
   import { tick } from 'svelte'
   import Icon from '@life-os/platform-web/svelte/icon'
-  import { AG, agentInfo, agentSend, agentRefresh, clearAgentThread } from '$lib/agents.svelte.js'
+  import { createImeGuard } from '@life-os/theme'
+  import {
+    AG,
+    agentInfo,
+    agentSend,
+    agentRefresh,
+    clearAgentThread,
+  } from '$lib/agents.svelte.js'
 
+  const ime = createImeGuard()
   const info = $derived(agentInfo(AG.active))
   const thread = $derived(AG.threads[AG.active] ?? { messages: [] })
 
@@ -21,6 +29,7 @@
   })
 
   async function submit() {
+    if (ime.isComposing()) return
     const text = draft.trim()
     if (!text || AG.busy) return
     draft = ''
@@ -29,32 +38,52 @@
   }
 
   function onKeydown(e) {
-    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
-      e.preventDefault()
-      submit()
-    }
+    if (e.key !== 'Enter' || e.shiftKey) return
+    if (ime.isComposing(e)) return
+    e.preventDefault()
+    submit()
   }
 
   function fmtTime(at) {
-    return new Date(at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    return new Date(at).toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
   }
 </script>
 
 <div class="agent-thread">
   <header class="agent-head">
     <div class="agent-id">
-      <span class="agent-avatar"><Icon name={info?.icon ?? 'monitor'} size={16} strokeWidth={1.75} /></span>
+      <span class="agent-avatar"
+        ><Icon
+          name={info?.icon ?? 'monitor'}
+          size={16}
+          strokeWidth={1.75}
+        /></span
+      >
       <div class="agent-name">
         <strong>{info?.short}</strong>
         <span class="agent-desc">{info?.desc}</span>
       </div>
     </div>
     <div class="agent-actions">
-      <button type="button" class="agent-btn" disabled={AG.busy} onclick={() => agentRefresh()} title="截屏读取该应用当前状态(会短暂前置它)">
+      <button
+        type="button"
+        class="agent-btn"
+        disabled={AG.busy}
+        onclick={() => agentRefresh()}
+        title="截屏读取该应用当前状态(会短暂前置它)"
+      >
         <Icon name="refresh" size={14} strokeWidth={1.75} />
         查看进展
       </button>
-      <button type="button" class="agent-btn subtle" onclick={() => clearAgentThread(AG.active)} title="清空这条线程的本地记录(不影响对方应用)">
+      <button
+        type="button"
+        class="agent-btn subtle"
+        onclick={() => clearAgentThread(AG.active)}
+        title="清空这条线程的本地记录(不影响对方应用)"
+      >
         <Icon name="trash" size={14} strokeWidth={1.75} />
       </button>
     </div>
@@ -65,14 +94,21 @@
       {#if thread.messages.length === 0}
         <div class="agent-empty">
           <p>这是与 <strong>{info?.label}</strong> 的直连线程。</p>
-          <p>在下面输入任务或问题,会原样发进它的输入框;「查看进展」会截屏读取它当前在做什么、有什么需要你确认。</p>
+          <p>
+            在下面输入任务或问题,会原样发进它的输入框;「查看进展」会截屏读取它当前在做什么、有什么需要你确认。
+          </p>
         </div>
       {/if}
       {#each thread.messages as m, i (i)}
         {#if m.role === 'user'}
-          <div class="bubble user">{m.content}<span class="stamp">{fmtTime(m.at)}</span></div>
+          <div class="bubble user">
+            {m.content}<span class="stamp">{fmtTime(m.at)}</span>
+          </div>
         {:else if m.role === 'agent'}
-          <div class="bubble agent">{m.content}<span class="stamp">{info?.short} · {fmtTime(m.at)}</span></div>
+          <div class="bubble agent">
+            {m.content}<span class="stamp">{info?.short} · {fmtTime(m.at)}</span
+            >
+          </div>
         {:else}
           <div class="note">{m.content}</div>
         {/if}
@@ -91,12 +127,25 @@
       </label>
       <textarea
         rows="1"
+        enterkeyhint="send"
+        autocomplete="off"
+        autocapitalize="sentences"
+        spellcheck="true"
         placeholder={`发给 ${info?.short ?? ''} 的任务或回复…`}
         bind:value={draft}
         onkeydown={onKeydown}
+        oncompositionstart={ime.compositionstart}
+        oncompositionend={(e) => ime.compositionend(e)}
+        oncompositioncancel={ime.compositioncancel}
         disabled={AG.busy}
       ></textarea>
-      <button type="button" class="send" disabled={AG.busy || !draft.trim()} onclick={submit} aria-label="发送">
+      <button
+        type="button"
+        class="send"
+        disabled={AG.busy || !draft.trim()}
+        onclick={submit}
+        aria-label="发送"
+      >
         <Icon name="arrow-up" size={16} strokeWidth={2} />
       </button>
     </div>
@@ -295,7 +344,7 @@
     background: transparent;
     color: var(--t1);
     font: inherit;
-    font-size: 14px;
+    font-size: max(16px, var(--text-base, 14px));
     line-height: 1.5;
     padding: 5px 2px;
     max-height: 140px;

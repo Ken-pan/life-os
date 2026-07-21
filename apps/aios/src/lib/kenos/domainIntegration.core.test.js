@@ -84,9 +84,12 @@ describe('domainIntegration.core — navigation manifests', () => {
     assert.equal(plan.slots[0].title, 'Tasks')
     assert.equal(plan.slots[2].path, '/inbox')
     assert.equal(plan.slots[3].opensMore, true)
+    assert.ok(plan.more.some((m) => m.path === '/settings#cloud'))
+    assert.ok(plan.more.some((m) => m.path === '/triage'))
     const training = getDomainNavigationManifest('training')
     assert.equal(training.slots[1].path, '/session')
     assert.equal(training.slots[2].path, '/discover/records')
+    assert.ok(training.more.some((m) => m.path === '/settings#cloud'))
   })
 
   it('work manifest includes Focus + Inbox (no duplicate Today path)', () => {
@@ -117,6 +120,7 @@ describe('domainIntegration.core — navigation manifests', () => {
     assert.ok(home.more.some((m) => m.path === 'homescan://find'))
     assert.ok(home.more.some((m) => m.path === 'homescan://container'))
     assert.equal(DOMAIN_REGISTRY.home.homePath, '/plan')
+    assert.equal(DOMAIN_REGISTRY.library.homePath, '/library')
     assert.equal(DOMAIN_REGISTRY.home.privacy, 'sensitive')
   })
 })

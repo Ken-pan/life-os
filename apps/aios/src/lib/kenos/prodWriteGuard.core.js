@@ -256,6 +256,9 @@ export function assertDispatcherWriteAllowed(toolName, env = import.meta.env) {
   if (!deniedTools.has(String(toolName || ''))) return { ok: true }
   return {
     ok: false,
-    error: `生产写入已关闭（Read Client Canary fail-closed）：${toolName}`,
+    // 产品文案：给模型与用户都看懂——勿假装写入成功（GAP / OTHER_ANGLES）
+    error:
+      `[写入未开放] 当前环境生产写入已关闭（只读/演示，fail-closed）。` +
+      `工具 ${toolName} 未执行。请列出建议写入内容，说明需在对应 App 手动添加或等待写入能力开放，不要声称已添加成功。`,
   }
 }

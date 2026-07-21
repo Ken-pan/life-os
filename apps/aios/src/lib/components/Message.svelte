@@ -1,5 +1,6 @@
 <script>
   import Icon from '@life-os/platform-web/svelte/icon'
+  import { createImeGuard } from '@life-os/theme'
   import { t } from '$lib/i18n/index.js'
   import { renderMarkdown, splitThinking } from '$lib/markdown.js'
   import {
@@ -10,10 +11,17 @@
     switchBranch,
     activeConversation,
   } from '$lib/chat.svelte.js'
+
+  const ime = createImeGuard()
   import { toolIcon } from '$lib/tools.js'
   import { createSpeechSession } from '$lib/localai.js'
   import { S, save } from '$lib/state.svelte.js'
-  import { openArtifact, openUrl, openFile, openImage } from '$lib/panel.svelte.js'
+  import {
+    openArtifact,
+    openUrl,
+    openFile,
+    openImage,
+  } from '$lib/panel.svelte.js'
   import { IMG } from '$lib/imageProgress.svelte.js'
   import { imageUrlFromPath } from '$lib/cloud.svelte.js'
 
@@ -45,7 +53,12 @@
     if (!isLast || message.role !== 'assistant') return null
     const msgs = activeConversation()?.messages ?? []
     for (let i = index - 1; i >= 0; i--) {
-      if (msgs[i].role === 'user') return { index: i, count: msgs[i].branches?.length ?? 0, active: msgs[i].branch ?? 0 }
+      if (msgs[i].role === 'user')
+        return {
+          index: i,
+          count: msgs[i].branches?.length ?? 0,
+          active: msgs[i].branch ?? 0,
+        }
     }
     return null
   })
@@ -123,7 +136,11 @@
     const out = []
     for (const tc of message.toolCalls ?? []) {
       if (tc.name !== 'open_browser_page' && tc.name !== 'fetch_url') continue
-      if (tc.running || (typeof tc.result === 'string' && tc.result.startsWith('错误'))) continue
+      if (
+        tc.running ||
+        (typeof tc.result === 'string' && tc.result.startsWith('错误'))
+      )
+        continue
       const url = argsOf(tc).url
       if (!url || seen.has(url)) continue
       seen.add(url)
@@ -134,13 +151,17 @@
   /** 域名 → 稳定的柔和主题色(本地生成,不发外部 favicon 请求) */
   function hostHue(host) {
     let h = 0
-    for (let i = 0; i < host.length; i++) h = (h * 31 + host.charCodeAt(i)) % 360
+    for (let i = 0; i < host.length; i++)
+      h = (h * 31 + host.charCodeAt(i)) % 360
     return h
   }
 
   /* —— 等待/思考状态(ChatGPT 式:实时计时 + 思考流预览)—— */
   const thinkingLive = $derived(
-    streamingThis && !!thinkingText && !parts.answer && !message.toolCalls?.length,
+    streamingThis &&
+      !!thinkingText &&
+      !parts.answer &&
+      !message.toolCalls?.length,
   )
   let thinkOpen = $state(false)
   let startTs = $state(null)
@@ -160,7 +181,10 @@
   // 迟迟没有首个 token:多半是 llama-swap 正在冷加载模型
   const coldStart = $derived(elapsedS >= 6 && !thinkingText && !parts.answer)
   const thinkSeconds = $derived(
-    Math.max(1, Math.round((message.thinkingMs ?? message.durationMs ?? 0) / 1000)),
+    Math.max(
+      1,
+      Math.round((message.thinkingMs ?? message.durationMs ?? 0) / 1000),
+    ),
   )
 
   async function copy() {
@@ -177,7 +201,8 @@
   async function onMdClick(event) {
     const copyBtn = event.target.closest?.('[data-md-copy]')
     if (copyBtn) {
-      const code = copyBtn.closest('.md-code')?.querySelector('code')?.textContent ?? ''
+      const code =
+        copyBtn.closest('.md-code')?.querySelector('code')?.textContent ?? ''
       try {
         await navigator.clipboard.writeText(code)
         copyBtn.textContent = '✓'
@@ -189,7 +214,8 @@
     }
     const previewBtn = event.target.closest?.('[data-md-preview]')
     if (previewBtn) {
-      const code = previewBtn.closest('.md-code')?.querySelector('code')?.textContent ?? ''
+      const code =
+        previewBtn.closest('.md-code')?.querySelector('code')?.textContent ?? ''
       openArtifact({ lang: previewBtn.dataset.lang || 'html', code })
       return
     }
@@ -226,11 +252,13 @@
     editing = true
   }
   async function saveEdit() {
+    if (ime.isComposing()) return
     editing = false
     await editUserMessage(index, editText)
   }
   function onEditKeydown(event) {
-    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      if (ime.isComposing(event)) return
       event.preventDefault()
       saveEdit()
     } else if (event.key === 'Escape') {
@@ -309,7 +337,8 @@
   }
 
   function highlightSentence(sentence) {
-    if (!mdEl || !window.CSS?.highlights || typeof Highlight === 'undefined') return
+    if (!mdEl || !window.CSS?.highlights || typeof Highlight === 'undefined')
+      return
     const range = findTextRange(mdEl, sentence)
     clearHighlight()
     if (!range) return // 该句在正文里定位不到(如原属代码块),不高亮但照常朗读
@@ -409,11 +438,21 @@
     {#if message.files?.length}
       <div class="user-files">
         {#each message.files as file (file.name)}
-          <button type="button" class="file-chip" onclick={() => openFile(file)}>
-            <Icon name={file.kind === 'audio' ? 'mic' : 'file'} size={14} strokeWidth={1.75} />
+          <button
+            type="button"
+            class="file-chip"
+            onclick={() => openFile(file)}
+          >
+            <Icon
+              name={file.kind === 'audio' ? 'mic' : 'file'}
+              size={14}
+              strokeWidth={1.75}
+            />
             <span class="file-chip-name">{file.name}</span>
             <span class="file-chip-size"
-              >{file.size < 1024 ? `${file.size}B` : `${(file.size / 1024).toFixed(0)}KB`}</span
+              >{file.size < 1024
+                ? `${file.size}B`
+                : `${(file.size / 1024).toFixed(0)}KB`}</span
             >
           </button>
         {/each}
@@ -421,9 +460,25 @@
     {/if}
     {#if editing}
       <div class="edit-box">
-        <textarea bind:this={editArea} bind:value={editText} rows="3" onkeydown={onEditKeydown}></textarea>
+        <textarea
+          bind:this={editArea}
+          bind:value={editText}
+          rows="3"
+          enterkeyhint="done"
+          autocomplete="off"
+          autocapitalize="sentences"
+          spellcheck="true"
+          onkeydown={onEditKeydown}
+          oncompositionstart={ime.compositionstart}
+          oncompositionend={(e) => ime.compositionend(e)}
+          oncompositioncancel={ime.compositioncancel}
+        ></textarea>
         <div class="edit-actions">
-          <button type="button" class="edit-cancel" onclick={() => (editing = false)}>
+          <button
+            type="button"
+            class="edit-cancel"
+            onclick={() => (editing = false)}
+          >
             {t('chat.cancel')}
           </button>
           <button type="button" class="edit-save" onclick={saveEdit}>
@@ -501,7 +556,10 @@
                 <pre class="tool-args aios-scroll">{tc.arguments}</pre>
               {/if}
               {#if tc.result}
-                <pre class="tool-result aios-scroll">{tc.result.slice(0, 1500)}{tc.result.length > 1500 ? '…' : ''}</pre>
+                <pre class="tool-result aios-scroll">{tc.result.slice(
+                    0,
+                    1500,
+                  )}{tc.result.length > 1500 ? '…' : ''}</pre>
               {/if}
               {#if tc.name === 'fetch_url' && tc.result && !tc.result.startsWith('错误')}
                 <button
@@ -527,7 +585,10 @@
               <div class="img-progress-row">
                 <span class="img-progress-text shimmer">
                   {IMG.phase === 'generating' && IMG.steps
-                    ? t('chat.imgGenerating', { step: IMG.step, steps: IMG.steps })
+                    ? t('chat.imgGenerating', {
+                        step: IMG.step,
+                        steps: IMG.steps,
+                      })
                     : IMG.phase === 'saving'
                       ? t('chat.imgSaving')
                       : IMG.elapsed >= 15
@@ -574,7 +635,11 @@
                   },
                 })}
             >
-              <img src={img.src} alt={t('chat.generatedImage')} loading="lazy" />
+              <img
+                src={img.src}
+                alt={t('chat.generatedImage')}
+                loading="lazy"
+              />
             </button>
           {:else if img.path}
             {#await imageUrlFromPath(img.path) then url}
@@ -583,9 +648,14 @@
                   type="button"
                   class="gen-image-btn"
                   title={t('chat.viewImage')}
-                  onclick={() => openImage({ src: url, title: t('chat.generatedImage') })}
+                  onclick={() =>
+                    openImage({ src: url, title: t('chat.generatedImage') })}
                 >
-                  <img src={url} alt={t('chat.generatedImage')} loading="lazy" />
+                  <img
+                    src={url}
+                    alt={t('chat.generatedImage')}
+                    loading="lazy"
+                  />
                 </button>
               {/if}
             {/await}
@@ -605,14 +675,17 @@
       <div class="sr-only" aria-live="polite">{ttsAnnounce}</div>
     {:else if streamingThis && !thinkingText && !message.toolCalls?.length}
       <div class="pending" role="status" aria-label={t('chat.loading')}>
-        <span class="shimmer">{coldStart ? t('chat.pendingCold') : t('chat.pending')}</span>
+        <span class="shimmer"
+          >{coldStart ? t('chat.pendingCold') : t('chat.pending')}</span
+        >
       </div>
     {/if}
 
     {#if !streamingThis && parts.answer && sources.length}
       <div class="sources">
         <span class="sources-label"
-          >{t('chat.sources')}<span class="sources-count">{sources.length}</span></span
+          >{t('chat.sources')}<span class="sources-count">{sources.length}</span
+          ></span
         >
         <div class="sources-row">
           {#each sources as s, i (s.url)}
@@ -635,7 +708,11 @@
     {/if}
 
     {#if !streamingThis && isLast && !message.error && message.finishReason === 'length'}
-      <button type="button" class="continue-btn" onclick={() => continueGenerating()}>
+      <button
+        type="button"
+        class="continue-btn"
+        onclick={() => continueGenerating()}
+      >
         <Icon name="arrow-down" size={13} strokeWidth={2} />
         {t('chat.continueGenerating')}
       </button>
@@ -643,10 +720,21 @@
 
     {#if message.error}
       <div class="error" role="alert">
-        <!-- 只有网关确实不可达才提示去重启 LocalAI;流超时/工具失败/检索没收尾等
-             网关健在的错误显示通用文案,避免误导用户白重启服务 -->
-        <p>{C.gatewayOk === false ? t('chat.gatewayDown') : t('chat.genError')}</p>
-        <p class="error-detail">{message.error}</p>
+        <!-- 网关不可达且未走 Kimi 时才提示重启 LocalAI;Kimi 未配置/看图不支持用专用文案 -->
+        <p>
+          {#if message.error === 'kimi_not_configured' || message.error === 'not_configured'}
+            {t('chat.kimiNotConfigured')}
+          {:else if message.error === 'kimi_vision_unsupported' || message.error === 'vision_unsupported'}
+            {t('chat.kimiVisionUnsupported')}
+          {:else if C.gatewayOk === false && C.chatBackend !== 'kimi'}
+            {t('chat.gatewayDown')}
+          {:else}
+            {t('chat.genError')}
+          {/if}
+        </p>
+        {#if message.error !== 'kimi_not_configured' && message.error !== 'not_configured' && message.error !== 'kimi_vision_unsupported' && message.error !== 'vision_unsupported'}
+          <p class="error-detail">{message.error}</p>
+        {/if}
         <button type="button" onclick={() => regenerate()}>
           <Icon name="refresh" size={13} strokeWidth={2} />
           {t('chat.retry')}
@@ -668,7 +756,9 @@
             >
               <Icon name="chevron-left" size={14} strokeWidth={2} />
             </button>
-            <span class="branch-count">{turnUser.active + 1}/{turnUser.count}</span>
+            <span class="branch-count"
+              >{turnUser.active + 1}/{turnUser.count}</span
+            >
             <button
               type="button"
               class="branch-arrow"
@@ -688,7 +778,11 @@
             aria-label={copied ? t('chat.copied') : t('chat.copy')}
             onclick={copy}
           >
-            <Icon name={copied ? 'check' : 'copy'} size={14} strokeWidth={1.75} />
+            <Icon
+              name={copied ? 'check' : 'copy'}
+              size={14}
+              strokeWidth={1.75}
+            />
           </button>
           <button
             type="button"
@@ -722,13 +816,19 @@
             <button
               type="button"
               class="speaking"
-              title={ttsState === 'paused' ? t('chat.resumeSpeaking') : t('chat.pauseSpeaking')}
+              title={ttsState === 'paused'
+                ? t('chat.resumeSpeaking')
+                : t('chat.pauseSpeaking')}
               aria-label={ttsState === 'paused'
                 ? t('chat.resumeSpeaking')
                 : t('chat.pauseSpeaking')}
               onclick={togglePause}
             >
-              <Icon name={ttsState === 'paused' ? 'play' : 'pause'} size={14} strokeWidth={1.75} />
+              <Icon
+                name={ttsState === 'paused' ? 'play' : 'pause'}
+                size={14}
+                strokeWidth={1.75}
+              />
             </button>
             <button
               type="button"
@@ -749,7 +849,10 @@
                 aria-label={t('chat.readingProgress')}
                 title={`${ttsIndex + 1} / ${ttsTotal}`}
               >
-                <span class="tts-progress-bar" style="--p:{(ttsIndex + 1) / ttsTotal}"></span>
+                <span
+                  class="tts-progress-bar"
+                  style="--p:{(ttsIndex + 1) / ttsTotal}"
+                ></span>
                 <span class="tts-progress-num">{ttsIndex + 1}/{ttsTotal}</span>
               </span>
             {/if}
@@ -766,7 +869,8 @@
           </button>
         {/if}
         {#if message.durationMs}
-          <span class="duration">{(message.durationMs / 1000).toFixed(1)}s</span>
+          <span class="duration">{(message.durationMs / 1000).toFixed(1)}s</span
+          >
         {/if}
       </div>
     {/if}
@@ -838,13 +942,13 @@
   }
 
   .bubble {
-    max-width: min(78%, 560px);
-    background: var(--card);
+    max-width: min(72%, 520px);
+    background: color-mix(in srgb, var(--card) 88%, var(--bg));
     color: var(--t1);
-    padding: 10px 16px;
-    border-radius: 22px;
-    font-size: var(--text-base, 15px);
-    line-height: 1.55;
+    padding: 9px 14px;
+    border-radius: 18px;
+    font-size: 15px;
+    line-height: 1.5;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
@@ -852,7 +956,7 @@
   .user-actions {
     display: flex;
     opacity: 0;
-    transition: opacity var(--dur-fast, 120ms) var(--ease, ease);
+    transition: opacity var(--dur-fast) var(--ease, ease);
   }
   .row.user:hover .user-actions,
   .user-actions:focus-within {
@@ -895,7 +999,7 @@
     outline: none;
     color: var(--t1);
     font: inherit;
-    font-size: var(--text-base, 15px);
+    font-size: max(16px, var(--text-base, 15px));
     line-height: 1.5;
     min-height: 60px;
   }
@@ -1430,7 +1534,7 @@
     color: var(--t1);
   }
   .think-toggle :global(svg) {
-    transition: transform var(--dur-fast, 120ms) var(--ease, ease);
+    transition: transform var(--dur-fast) var(--ease, ease);
     transform: rotate(-90deg);
   }
   .think.open .think-toggle :global(svg) {
@@ -1518,7 +1622,7 @@
     font-size: var(--text-sm, 13px);
     font-weight: 550;
     cursor: pointer;
-    transition: background var(--dur-fast, 120ms) var(--ease, ease);
+    transition: background var(--dur-fast) var(--ease, ease);
   }
   .continue-btn:hover {
     background: var(--card);
@@ -1568,7 +1672,7 @@
     display: flex;
     gap: 2px;
     opacity: 0;
-    transition: opacity var(--dur-fast, 120ms) var(--ease, ease);
+    transition: opacity var(--dur-fast) var(--ease, ease);
   }
   .row.assistant:hover .actions,
   .actions:focus-within {
@@ -1683,7 +1787,11 @@
   }
   /* 逐句跟读高亮(CSS Custom Highlight API,不改 DOM) */
   ::highlight(tts) {
-    background-color: color-mix(in srgb, var(--accent, #4a9eff) 26%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--accent, #4a9eff) 26%,
+      transparent
+    );
     color: var(--t1);
   }
   /* 读屏专用:视觉隐藏但仍在无障碍树内 */

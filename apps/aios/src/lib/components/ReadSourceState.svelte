@@ -10,7 +10,7 @@
     stale: '显示的是已保存内容',
     offline: '当前离线',
     unavailable: '当前能力尚未开启',
-    permission_denied: '登录或权限失效',
+    permission_denied: '需要登录',
     unsupported: '当前能力尚未开启',
     error: '读取失败',
   }[state?.status] ?? '状态未知')
@@ -30,7 +30,9 @@
     {/if}
   </div>
   {#if state?.message}<p>{state.message}</p>{/if}
-  {#if state?.retryable && onRetry}
+  {#if state?.status === 'permission_denied'}
+    <a class="read-source-state__action" href="/settings#cloud">去设置登录</a>
+  {:else if state?.retryable && onRetry}
     <button type="button" onclick={onRetry}>重试</button>
   {/if}
 </div>
@@ -78,7 +80,8 @@
     margin: 0;
     max-width: 680px;
   }
-  .read-source-state button {
+  .read-source-state button,
+  .read-source-state__action {
     justify-self: start;
     min-height: 36px;
     padding: 0 11px;
@@ -88,5 +91,8 @@
     color: var(--t1);
     font: inherit;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
   }
 </style>

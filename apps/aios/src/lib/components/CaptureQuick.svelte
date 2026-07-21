@@ -2,7 +2,11 @@
   import { goto } from '$app/navigation'
   import Icon from '@life-os/platform-web/svelte/icon'
   import { t } from '$lib/i18n/index.js'
-  import { startNewChat, setDraft, activeConversation } from '$lib/chat.svelte.js'
+  import {
+    startNewChat,
+    setDraft,
+    activeConversation,
+  } from '$lib/chat.svelte.js'
   import { isCaptureIngestWriterEnabled } from '$lib/kenos/captureWriters.core.js'
   import { ingestCaptureViaHostedKenosWriter } from '$lib/kenos/captureWriters.host.js'
 
@@ -75,7 +79,13 @@
   >
     <header class="capture-head">
       <h2 id="capture-quick-title">{t('nav.capture')}</h2>
-      <button type="button" class="capture-icon-btn" aria-label={t('chat.cancel')} disabled={saving} onclick={close}>
+      <button
+        type="button"
+        class="capture-icon-btn"
+        aria-label={t('chat.cancel')}
+        disabled={saving}
+        onclick={close}
+      >
         <Icon name="x" size={18} strokeWidth={1.75} />
       </button>
     </header>
@@ -84,6 +94,10 @@
       bind:this={textareaEl}
       bind:value={draft}
       rows="4"
+      enterkeyhint="done"
+      autocomplete="off"
+      autocapitalize="sentences"
+      spellcheck="true"
       placeholder={t('nav.capturePlaceholder')}
       aria-label={t('nav.capture')}
     ></textarea>
@@ -91,8 +105,18 @@
       <p role="alert">{errorMessage}</p>
     {/if}
     <div class="capture-actions">
-      <button type="button" class="secondary" disabled={saving} onclick={saveOrOpenInbox}>{t('nav.captureToInbox')}</button>
-      <button type="button" class="primary" disabled={saving} onclick={sendToAssistant}>{t('nav.captureToAssistant')}</button>
+      <button
+        type="button"
+        class="secondary"
+        disabled={saving}
+        onclick={saveOrOpenInbox}>{t('nav.captureToInbox')}</button
+      >
+      <button
+        type="button"
+        class="primary"
+        disabled={saving}
+        onclick={sendToAssistant}>{t('nav.captureToAssistant')}</button
+      >
     </div>
   </div>
 {/if}
@@ -111,6 +135,8 @@
     top: min(18vh, 140px);
     transform: translateX(-50%);
     width: min(100% - 32px, 440px);
+    max-height: min(78dvh, var(--app-vh, 100dvh));
+    overflow: auto;
     display: grid;
     gap: 12px;
     padding: 18px;
@@ -118,6 +144,7 @@
     background: var(--bg);
     color: var(--t1);
     box-shadow: 0 24px 64px color-mix(in srgb, var(--t1) 28%, transparent);
+    /* keyboard-open padding comes from ios-safari.css */
   }
   .capture-head {
     display: flex;
@@ -146,6 +173,7 @@
     background: transparent;
     color: inherit;
     font: inherit;
+    font-size: max(16px, var(--text-base, 15px));
   }
   .capture-actions {
     display: flex;

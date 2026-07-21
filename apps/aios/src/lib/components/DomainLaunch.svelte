@@ -1,7 +1,8 @@
 <script>
   /**
-   * Legacy /spaces/{domain} routes: leave Kenos for the real domain app (same tab).
-   * Probe Continuity origin first so domains never sit forever on “Opening…”.
+   * Legacy /spaces/{domain} routes: leave Kenos for the real domain app.
+   * In iOS native shell → open Continuity via bridge (no “Opening…” trap).
+   * Elsewhere → probe origin first so domains never sit forever on “Opening…”.
    */
   import { onMount } from 'svelte'
   import { rememberExternalResume } from '$lib/kenos/spaceSwitcher.svelte.js'
@@ -10,6 +11,8 @@
     isLocalDailyBeta,
     rewriteLoopbackToPageHost,
   } from '$lib/kenos/domainResume.core.js'
+  import { isIosNativeShell } from '$lib/kenos/iosNativeShell.js'
+  import { nativeOpenContinuity } from '@life-os/platform-web/kenos-native-bridge'
 
   /**
    * @type {{
@@ -20,17 +23,13 @@
    *   filter?: string,
    * }}
    */
-  let {
-    domainId,
-    listKey,
-    title,
-    path = '/',
-    filter = '',
-  } = $props()
+  let { domainId, listKey, title, path = '/', filter = '' } = $props()
 
   /** library is the frozen domain id; deep-link helper still keys knowledge for the app origin. */
   const deepLinkId = $derived(domainId === 'library' ? 'knowledge' : domainId)
-  const href = $derived(rewriteLoopbackToPageHost(domainDeepLink(deepLinkId, path)))
+  const href = $derived(
+    rewriteLoopbackToPageHost(domainDeepLink(deepLinkId, path)),
+  )
 
   /** @type {'probing' | 'opening' | 'unavailable'} */
   let phase = $state('probing')
@@ -67,6 +66,21 @@
 
     let cancelled = false
     ;(async () => {
+      // Native shell: hand Continuity to Swift immediately — no intermediate Safari jump.
+      if (isIosNativeShell()) {
+        phase = 'opening'
+        const result = await nativeOpenContinuity({
+          url: href,
+          domainId,
+          path,
+        })
+        if (cancelled) return
+        if (result?.ok) return
+        // Bridge unavailable — fall through to location.assign (WK policy still intercepts).
+        window.location.assign(href)
+        return
+      }
+
       const daily = isLocalDailyBeta()
       const ok = await probeOrigin(href)
       if (cancelled) return
@@ -91,12 +105,12 @@
     <p class="detail">{detail}</p>
     <div class="actions">
       <a class="primary" href="/spaces">‹ 返回 Spaces</a>
-      <a href={href} rel="noopener">仍尝试打开</a>
+      <a {href} rel="noopener">仍尝试打开</a>
     </div>
   {:else}
     <p>
       {phase === 'probing' ? `正在检查 ${title}…` : `正在打开 ${title}…`}
-      <a href={href}>若未自动跳转，点此继续</a>
+      <a {href}>若未自动跳转，点此继续</a>
     </p>
   {/if}
 </div>

@@ -106,7 +106,7 @@
 
 <style>
   .spaces-page {
-    width: min(100% - 32px, var(--kenos-content-max, 820px));
+    width: min(100% - (2 * var(--kenos-space-inline, 16px)), var(--kenos-content-max, 820px));
     margin-inline: auto;
     padding: var(--kenos-space-page-top, 24px) 0 var(--kenos-mobile-bottom-pad, 96px);
   }

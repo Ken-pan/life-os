@@ -265,7 +265,8 @@ export const DOMAIN_REGISTRY = Object.freeze({
     appId: 'knowledge',
     productionOrigin: 'https://knowledge.kenos.space',
     devPort: 5879,
-    homePath: '/',
+    // Notes workbench — align Swift KenosDomainRegistry + knowledge APP_HOME.
+    homePath: '/library',
     systemImage: 'books.vertical',
     aliases: ['knowledge', 'knowledgeos', 'knowledge-os'],
     accent: domainAccent('knowledge'),
@@ -346,7 +347,8 @@ export const DOMAIN_REGISTRY = Object.freeze({
       shelf: true,
       today: true,
       inbox: false,
-      assistant: false,
+      /** Assistant may consume readiness summary only — never vitals. */
+      assistant: true,
       quickSwitch: true,
     },
   }),
@@ -402,6 +404,11 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
         path: '/upcoming',
       }),
       Object.freeze({
+        title: 'Triage',
+        systemImage: 'sparkles',
+        path: '/triage',
+      }),
+      Object.freeze({
         title: 'Projects',
         systemImage: 'folder',
         path: '/projects',
@@ -415,6 +422,11 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
         title: 'Insights',
         systemImage: 'chart.bar',
         path: '/insights',
+      }),
+      Object.freeze({
+        title: 'Settings',
+        systemImage: 'gearshape',
+        path: '/settings#cloud',
       }),
     ]),
   }),
@@ -464,6 +476,11 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
         systemImage: 'wrench.and.screwdriver',
         path: '/discover/tools',
       }),
+      Object.freeze({
+        title: 'Settings',
+        systemImage: 'gearshape',
+        path: '/settings#cloud',
+      }),
     ]),
   }),
   work: Object.freeze({
@@ -496,7 +513,7 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
       Object.freeze({
         title: 'Settings',
         systemImage: 'gearshape',
-        path: '/settings',
+        path: '/settings#cloud',
       }),
     ]),
   }),
@@ -548,7 +565,7 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
       Object.freeze({
         title: 'Settings',
         systemImage: 'gearshape',
-        path: '/settings/assumptions',
+        path: '/settings/app#cloud',
       }),
     ]),
   }),
@@ -591,7 +608,7 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
       Object.freeze({
         title: 'Settings',
         systemImage: 'gearshape',
-        path: '/settings',
+        path: '/settings#cloud',
       }),
     ]),
   }),
@@ -635,7 +652,7 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
       Object.freeze({
         title: 'Settings',
         systemImage: 'gearshape',
-        path: '/settings',
+        path: '/settings#cloud',
       }),
     ]),
   }),
@@ -683,12 +700,12 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
       Object.freeze({
         title: 'Cloud scans',
         systemImage: 'icloud.and.arrow.down',
-        path: '/settings',
+        path: '/settings#cloud',
       }),
       Object.freeze({
         title: 'Settings',
         systemImage: 'gearshape',
-        path: '/settings',
+        path: '/settings#cloud',
       }),
     ]),
   }),
@@ -716,7 +733,7 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
       Object.freeze({
         title: 'Settings',
         systemImage: 'gearshape',
-        path: '/settings',
+        path: '/settings#cloud',
       }),
     ]),
   }),

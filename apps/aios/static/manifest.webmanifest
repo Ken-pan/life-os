@@ -1,11 +1,11 @@
 {
-  "name": "Kenos Assistant",
-  "short_name": "Assistant",
+  "name": "Kenos",
+  "short_name": "Kenos",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#212121",
-  "theme_color": "#212121",
+  "background_color": "#08090a",
+  "theme_color": "#08090a",
   "icons": [
     {
       "src": "/icon-192.png",

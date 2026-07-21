@@ -21,7 +21,9 @@
   import { launchSpace } from '$lib/kenos/spaceSwitcher.svelte.js'
   import { domainDeepLink } from '$lib/kenos/domainResume.core.js'
   import {
+    ensureNativeUnlock,
     isIosNativeShell,
+    NATIVE_UNLOCK_KEYS,
     requestNativeSpaceShelf,
   } from '$lib/kenos/iosNativeShell.js'
   import {
@@ -30,6 +32,8 @@
     persistWorkContinue,
     suspendWorkSpace,
   } from '$lib/kenos/workSpaceAdapter.js'
+
+  let unlockState = $state(/** @type {'pending'|'open'|'locked'} */ ('open'))
 
   const nativeShell = $derived(
     page.url.searchParams.get('iosNativeShell') === '1' || isIosNativeShell(),
@@ -61,6 +65,17 @@
     })
   }
 
+  function requestWorkUnlock({ force = false } = {}) {
+    unlockState = 'pending'
+    void ensureNativeUnlock({
+      storageKey: NATIVE_UNLOCK_KEYS.work,
+      reason: 'Unlock Work',
+      force,
+    }).then((result) => {
+      unlockState = result.ok || result.skipped ? 'open' : 'locked'
+    })
+  }
+
   onMount(() => {
     installWorkLeaveGuard()
     void applyWorkResumeFromLocation()
@@ -72,6 +87,9 @@
         userId: null,
       }),
     )
+    if (isIosNativeShell()) {
+      requestWorkUnlock()
+    }
   })
 
   function openSpacesShelf(event) {
@@ -82,6 +100,27 @@
 </script>
 
 <div class="work-page" class:native-shell={nativeShell} data-domain="work">
+  {#if unlockState === 'locked' || unlockState === 'pending'}
+    <section
+      class="state-panel"
+      data-testid="work-native-unlock-gate"
+      aria-busy={unlockState === 'pending'}
+    >
+      <h2>Work locked</h2>
+      <p>
+        {unlockState === 'pending'
+          ? 'Unlocking Work…'
+          : 'Use Face ID or passcode to open Work in Kenos.'}
+      </p>
+      {#if unlockState === 'locked'}
+        <div class="state-actions">
+          <button type="button" class="primary" onclick={() => requestWorkUnlock({ force: true })}>
+            Unlock
+          </button>
+        </div>
+      {/if}
+    </section>
+  {:else}
   <header class="work-header">
     <div>
       {#if !nativeShell}
@@ -293,6 +332,7 @@
       {/if}
     </section>
   {/if}
+  {/if}
 </div>
 
 <style>
@@ -326,15 +366,6 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     align-items: center;
-  }
-  .work-badge {
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 0.2rem 0.6rem;
-    font-size: 0.75rem;
-  }
-  .work-badge--warn {
-    border-color: var(--warning);
   }
   .quiet, .primary {
     display: inline-flex;

@@ -1,15 +1,44 @@
 import { GATEWAY } from '$lib/localai.js'
 import { addMemory, searchMemories } from '$lib/memory.svelte.js'
-import { startImageProgress, stopImageProgress } from '$lib/imageProgress.svelte.js'
-import { isNative, NATIVE_DEFS, isNativeTool, executeNativeTool } from '$lib/native.js'
-import { lifeOsToday, financeSummary, plannerTasks, plannerAddTask } from '$lib/lifeos.js'
-import { assertDispatcherWriteAllowed } from '$lib/kenos/prodWriteGuard.core.js'
+import {
+  startImageProgress,
+  stopImageProgress,
+} from '$lib/imageProgress.svelte.js'
+import {
+  isNative,
+  NATIVE_DEFS,
+  isNativeTool,
+  executeNativeTool,
+} from '$lib/native.js'
+import {
+  lifeOsToday,
+  financeSummary,
+  plannerTasks,
+  plannerAddTask,
+} from '$lib/lifeos.js'
+import {
+  areProductionWritesBlocked,
+  assertDispatcherWriteAllowed,
+} from '$lib/kenos/prodWriteGuard.core.js'
 import { mcpToolDefinitions, isMcpTool, executeMcpTool } from '$lib/mcp.js'
 import {
   filterBuiltinToolEntries,
   formatCalculateResult,
   safeCalculate,
 } from '$lib/local-tools.core.js'
+import {
+  adaptToolDefsForKimi,
+  filterToolDefsForBackend,
+} from '$lib/cloudChat.core.js'
+import {
+  applyEndFocus,
+  applyStartFocus,
+  formatFocusStatus,
+} from '$lib/kenos/focusAssistantTools.core.js'
+import {
+  buildLibraryComposeHref,
+  resolveOpenSpaceTarget,
+} from '$lib/kenos/kenosNavTools.core.js'
 
 /**
  * 内置工具(OpenAI function calling 格式)。
@@ -46,7 +75,8 @@ const DEFS = [
           properties: {
             expression: {
               type: 'string',
-              description: 'JavaScript 数学表达式,例如 "(1234.5 * 6789) / 42" 或 "Math.sqrt(2) * 100"',
+              description:
+                'JavaScript 数学表达式,例如 "(1234.5 * 6789) / 42" 或 "Math.sqrt(2) * 100"',
             },
           },
           required: ['expression'],
@@ -186,8 +216,14 @@ const DEFS = [
         parameters: {
           type: 'object',
           properties: {
-            vault: { type: 'string', description: "vault id,来自搜索结果(默认 'vault')" },
-            path: { type: 'string', description: '笔记相对路径,如 030_Frameworks/xxx.md' },
+            vault: {
+              type: 'string',
+              description: "vault id,来自搜索结果(默认 'vault')",
+            },
+            path: {
+              type: 'string',
+              description: '笔记相对路径,如 030_Frameworks/xxx.md',
+            },
           },
           required: ['path'],
         },
@@ -259,25 +295,33 @@ const DEFS = [
             },
             negative_prompt: {
               type: 'string',
-              description: '不想出现的元素(已内置解剖/手部质量兜底,只需补充场景相关的)',
+              description:
+                '不想出现的元素(已内置解剖/手部质量兜底,只需补充场景相关的)',
             },
             character: {
               type: 'string',
-              description: '使用已注册角色的名字,让同一角色出现在新场景(prompt 只需描述新场景)',
+              description:
+                '使用已注册角色的名字,让同一角色出现在新场景(prompt 只需描述新场景)',
             },
             save_character: {
               type: 'string',
-              description: '把本次生成的形象注册为角色,供之后 character 参数复用',
+              description:
+                '把本次生成的形象注册为角色,供之后 character 参数复用',
             },
             style: {
               type: 'string',
-              description: '使用已注册风格的名字,让新内容沿用该视觉风格(色调/笔触/质感)',
+              description:
+                '使用已注册风格的名字,让新内容沿用该视觉风格(色调/笔触/质感)',
             },
             save_style: {
               type: 'string',
-              description: '把本次画面的视觉风格注册为风格,供之后 style 参数复用',
+              description:
+                '把本次画面的视觉风格注册为风格,供之后 style 参数复用',
             },
-            seed: { type: 'number', description: '随机种子;复现或微调上一张时传入其 seed' },
+            seed: {
+              type: 'number',
+              description: '随机种子;复现或微调上一张时传入其 seed',
+            },
           },
           required: ['prompt'],
         },
@@ -292,7 +336,8 @@ const DEFS = [
       type: 'function',
       function: {
         name: 'list_characters',
-        description: '列出已注册的生图角色(名字、描述、参考图数量)。用户问"有哪些角色"或 generate_image 报角色不存在时使用。',
+        description:
+          '列出已注册的生图角色(名字、描述、参考图数量)。用户问"有哪些角色"或 generate_image 报角色不存在时使用。',
         parameters: { type: 'object', properties: {} },
       },
     },
@@ -305,7 +350,8 @@ const DEFS = [
       type: 'function',
       function: {
         name: 'list_styles',
-        description: '列出已注册的生图风格(名字、描述、参考图数量)。用户问"有哪些风格"或 generate_image 报风格不存在时使用。',
+        description:
+          '列出已注册的生图风格(名字、描述、参考图数量)。用户问"有哪些风格"或 generate_image 报风格不存在时使用。',
         parameters: { type: 'object', properties: {} },
       },
     },
@@ -319,7 +365,7 @@ const DEFS = [
       function: {
         name: 'life_os_today',
         description:
-          '获取 Life OS 今日跨 app 快照:待办(今日到期/逾期)、财务(本月收支结余)、健身(今天是否训练)、音乐、家务。用户问"今天怎么样""我的近况""有什么要做的"或需要综合当前生活状态时使用。数据来自用户本人账户,已登录才可用。',
+          '获取 Life OS 今日跨 app 快照:待办(今日到期/逾期)、财务(本月收支结余)、健身(今天是否训练)、音乐、家务,以及 Health 准备度摘要(只含 focusCapacity/training code/六维 level,不含 HRV/睡眠小时/步数)。用户问"今天怎么样""我的近况""适不适合训练""有什么要做的"时使用。云端部分需登录;Health 摘要可在 iOS 本机注入时单独出现。',
         parameters: { type: 'object', properties: {} },
       },
     },
@@ -351,10 +397,22 @@ const DEFS = [
               ],
               description: '时间范围,默认 this_month(本月至今)。',
             },
-            from: { type: 'string', description: '起始日期 YYYY-MM-DD(覆盖 period)' },
-            to: { type: 'string', description: '结束日期 YYYY-MM-DD(覆盖 period)' },
-            category: { type: 'string', description: '按支出分类过滤(模糊匹配,如「餐饮」)' },
-            merchant: { type: 'string', description: '按商家过滤(模糊匹配,如「星巴克」)' },
+            from: {
+              type: 'string',
+              description: '起始日期 YYYY-MM-DD(覆盖 period)',
+            },
+            to: {
+              type: 'string',
+              description: '结束日期 YYYY-MM-DD(覆盖 period)',
+            },
+            category: {
+              type: 'string',
+              description: '按支出分类过滤(模糊匹配,如「餐饮」)',
+            },
+            merchant: {
+              type: 'string',
+              description: '按商家过滤(模糊匹配,如「星巴克」)',
+            },
           },
         },
       },
@@ -381,7 +439,8 @@ const DEFS = [
             },
             area: {
               type: 'string',
-              description: '按领域过滤:life/work/planner/fitness/finance/home/other',
+              description:
+                '按领域过滤:life/work/planner/fitness/finance/home/other',
             },
           },
         },
@@ -403,9 +462,119 @@ const DEFS = [
           properties: {
             title: { type: 'string', description: '待办标题(必填,简洁一句话)' },
             notes: { type: 'string', description: '备注/细节(可选)' },
-            dueDate: { type: 'string', description: '到期日 YYYY-MM-DD(可选,只接受这个格式)' },
+            dueDate: {
+              type: 'string',
+              description: '到期日 YYYY-MM-DD(可选,只接受这个格式)',
+            },
           },
           required: ['title'],
+        },
+      },
+    },
+  },
+  {
+    key: 'focus_status',
+    icon: 'focus',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'focus_status',
+        description:
+          '查看当前 Kenos Focus Session(开始计划/专注)状态:是否进行中、mode、title。用户问「我在专注吗」「现在的计划会话」时用。',
+        parameters: { type: 'object', properties: {} },
+      },
+    },
+  },
+  {
+    key: 'start_focus',
+    icon: 'focus',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'start_focus',
+        description:
+          '开始 Focus Session(开始计划/深度工作或训练专注)。用户明确说开始专注/开始 Deep Work/开始训练计划时调用。已有进行中的 Focus 时不要重复开始,应先 focus_status 或 end_focus。',
+        parameters: {
+          type: 'object',
+          properties: {
+            mode: {
+              type: 'string',
+              enum: ['deep_work', 'training'],
+              description: 'deep_work=工作/计划专注(默认);training=训练专注',
+            },
+            title: {
+              type: 'string',
+              description: '会话标题,如项目名或课表名(可选)',
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    key: 'end_focus',
+    icon: 'focus',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'end_focus',
+        description:
+          '结束当前 Focus Session(结束计划/结束专注)。仅当用户明确要求结束时调用;不要擅自结束。',
+        parameters: {
+          type: 'object',
+          properties: {
+            notes: {
+              type: 'string',
+              description: '结束备注/小结(可选)',
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    key: 'open_space',
+    icon: 'external',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'open_space',
+        description:
+          '打开 Kenos Space 或系统页(Plan/Money/Library/Work/Today 等)。用户要去某个 Space、读 Library、看 Plan 时用。打开即导航,不读取笔记正文。',
+        parameters: {
+          type: 'object',
+          properties: {
+            space: {
+              type: 'string',
+              description:
+                'plan|money|training|health|music|home|library|work|focus|today|inbox|assistant|spaces|settings',
+            },
+          },
+          required: ['space'],
+        },
+      },
+    },
+  },
+  {
+    key: 'compose_library_note',
+    icon: 'notebook',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'compose_library_note',
+        description:
+          '在 Knowledge Library 起草一篇笔记:打开 Library 并预填标题/正文。用户明确要写笔记/记到知识库时用。不会经云端服务器写 Vault;数据落在用户本机 Knowledge。',
+        parameters: {
+          type: 'object',
+          properties: {
+            title: { type: 'string', description: '笔记标题' },
+            body: { type: 'string', description: '笔记正文(Markdown 可)' },
+          },
         },
       },
     },
@@ -509,7 +678,10 @@ const DEFS = [
               enum: ['scroll_bottom', 'click', 'fill', 'press'],
               description: '动作类型',
             },
-            selector: { type: 'string', description: '目标元素(click/fill/press 需要)' },
+            selector: {
+              type: 'string',
+              description: '目标元素(click/fill/press 需要)',
+            },
             text: { type: 'string', description: 'fill 要填入的文本' },
             key: { type: 'string', description: 'press 的按键,如 Enter' },
           },
@@ -533,7 +705,8 @@ const DEFS = [
           properties: {
             question: {
               type: 'string',
-              description: '想了解页面视觉内容的什么,例如"页面上的产品图是什么样的"',
+              description:
+                '想了解页面视觉内容的什么,例如"页面上的产品图是什么样的"',
             },
             fullPage: {
               type: 'boolean',
@@ -549,16 +722,36 @@ const DEFS = [
 
 /** @param {{ webAccess?: boolean }} opts */
 export function toolDefinitions({ webAccess = true } = {}) {
-  const defs = filterBuiltinToolEntries(DEFS, { webAccess })
+  let defs = filterBuiltinToolEntries(DEFS, { webAccess })
+  // Fail-closed production writes: do not advertise planner_add_task to the model.
+  if (areProductionWritesBlocked()) {
+    defs = defs.filter((t) => t.key !== 'planner_add_task')
+  }
   // 原生壳(Tauri)里追加 Mac 专属工具;浏览器里 isNative=false 自动不注册
-  const builtin = (isNative ? [...defs, ...NATIVE_DEFS] : defs).map((t) => t.def)
+  const builtin = (isNative ? [...defs, ...NATIVE_DEFS] : defs).map(
+    (t) => t.def,
+  )
   // 外部 MCP server 发现的工具(已在 mcp.js 缓存;未配置则为空)
   return [...builtin, ...mcpToolDefinitions()]
 }
 
+/**
+ * @param {'local'|'kimi'} kind
+ * @param {{ webAccess?: boolean }} [opts]
+ */
+export function toolDefinitionsForBackend(kind, opts = {}) {
+  const filtered = filterToolDefsForBackend(toolDefinitions(opts), kind)
+  return kind === 'kimi' ? adaptToolDefsForKimi(filtered) : filtered
+}
+
 export function toolIcon(name) {
   if (isMcpTool(name)) return 'plug'
-  return (DEFS.find((t) => t.key === name) ?? NATIVE_DEFS.find((t) => t.key === name))?.icon ?? 'wrench'
+  return (
+    (
+      DEFS.find((t) => t.key === name) ??
+      NATIVE_DEFS.find((t) => t.key === name)
+    )?.icon ?? 'wrench'
+  )
 }
 
 /* —— 执行器 —— */
@@ -625,7 +818,9 @@ function runInSandbox(code, timeoutMs = 8000) {
 /** HTML → 可读正文(标题 + 去脚本样式导航的文本) */
 function htmlToText(html) {
   const doc = new DOMParser().parseFromString(html, 'text/html')
-  for (const el of doc.querySelectorAll('script, style, noscript, svg, nav, footer, iframe')) {
+  for (const el of doc.querySelectorAll(
+    'script, style, noscript, svg, nav, footer, iframe',
+  )) {
     el.remove()
   }
   const title = doc.title?.trim()
@@ -638,7 +833,8 @@ function htmlToText(html) {
 
 export async function fetchUrl(url) {
   const target = String(url).trim()
-  if (!/^https?:\/\//i.test(target)) throw new Error('URL 必须以 http(s):// 开头')
+  if (!/^https?:\/\//i.test(target))
+    throw new Error('URL 必须以 http(s):// 开头')
 
   const get = async (u, ms) => {
     const res = await fetch(u, { signal: AbortSignal.timeout(ms) })
@@ -659,15 +855,21 @@ export async function fetchUrl(url) {
       html = await Promise.any(proxies.map((p) => get(p, 15000)))
     } catch (err) {
       const reason =
-        err?.errors?.map((e) => e?.message ?? e).filter(Boolean).join(' / ') ||
-        String(err?.message ?? err)
+        err?.errors
+          ?.map((e) => e?.message ?? e)
+          .filter(Boolean)
+          .join(' / ') || String(err?.message ?? err)
       throw new Error(`读取失败(${reason})`)
     }
   }
 
-  const text = /<\s*(html|body|div|p|head)[\s>]/i.test(html) ? htmlToText(html) : html.trim()
+  const text = /<\s*(html|body|div|p|head)[\s>]/i.test(html)
+    ? htmlToText(html)
+    : html.trim()
   if (!text) throw new Error('页面没有可读文本')
-  return text.length > 8000 ? `${text.slice(0, 8000)}\n\n[已截断,原文 ${text.length} 字符]` : text
+  return text.length > 8000
+    ? `${text.slice(0, 8000)}\n\n[已截断,原文 ${text.length} 字符]`
+    : text
 }
 
 /** Bing 跳转链接(/ck/a?…&u=a1<base64url>)→ 真实 URL */
@@ -689,9 +891,12 @@ async function webSearch(query) {
   // 主源:Bing HTML 经 CORS 代理;后备:Wikipedia opensearch(官方 CORS)
   try {
     const url = `https://www.bing.com/search?q=${encodeURIComponent(query)}&setlang=zh-hans`
-    const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`, {
-      signal: AbortSignal.timeout(20000),
-    })
+    const res = await fetch(
+      `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+      {
+        signal: AbortSignal.timeout(20000),
+      },
+    )
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const doc = new DOMParser().parseFromString(await res.text(), 'text/html')
     const items = [...doc.querySelectorAll('li.b_algo')]
@@ -701,7 +906,8 @@ async function webSearch(query) {
         const title = a?.textContent.trim()
         const href = a?.getAttribute('href')
         const snippet = (
-          li.querySelector('.b_caption p, .b_lineclamp2, .b_paractl')?.textContent ?? ''
+          li.querySelector('.b_caption p, .b_lineclamp2, .b_paractl')
+            ?.textContent ?? ''
         ).trim()
         if (!title || !href) return null
         return `- **${title}**\n  ${decodeBingUrl(href)}\n  ${snippet.slice(0, 200)}`
@@ -732,19 +938,29 @@ const BRIDGE = `${GATEWAY}/upstream/web-state-bridge`
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const truncateText = (text, max = 8000) =>
-  text.length > max ? `${text.slice(0, max)}\n\n[已截断,原文 ${text.length} 字符]` : text
+  text.length > max
+    ? `${text.slice(0, max)}\n\n[已截断,原文 ${text.length} 字符]`
+    : text
 
 async function bridgeFetch(path, init = {}, timeoutMs = 30000) {
   let res
   try {
-    res = await fetch(`${BRIDGE}${path}`, { signal: AbortSignal.timeout(timeoutMs), ...init })
+    res = await fetch(`${BRIDGE}${path}`, {
+      signal: AbortSignal.timeout(timeoutMs),
+      ...init,
+    })
   } catch (err) {
-    throw new Error(`bridge 不可达(LocalAI 网关 ${GATEWAY} 可能没有运行):${err?.message ?? err}`)
+    throw new Error(
+      `bridge 不可达(LocalAI 网关 ${GATEWAY} 可能没有运行):${err?.message ?? err}`,
+    )
   }
   // bridge 刚被网关拉起或刚崩溃重启的瞬间会透传一次 502,等一下重试
   if (res.status === 502) {
     await sleep(1500)
-    res = await fetch(`${BRIDGE}${path}`, { signal: AbortSignal.timeout(timeoutMs), ...init })
+    res = await fetch(`${BRIDGE}${path}`, {
+      signal: AbortSignal.timeout(timeoutMs),
+      ...init,
+    })
   }
   return res
 }
@@ -803,8 +1019,12 @@ async function browserStatus() {
   const res = await bridgeFetch('/latest')
   if (res.ok) {
     const snapshot = (await res.json()).snapshot ?? {}
-    const capturedAt = snapshot.capturedAt ? new Date(snapshot.capturedAt) : null
-    const ageMin = capturedAt ? Math.round((Date.now() - capturedAt.getTime()) / 60000) : null
+    const capturedAt = snapshot.capturedAt
+      ? new Date(snapshot.capturedAt)
+      : null
+    const ageMin = capturedAt
+      ? Math.round((Date.now() - capturedAt.getTime()) / 60000)
+      : null
     lines.push(
       `最新快照:${snapshot.page?.title ?? '(无标题)'} — ${snapshot.page?.url ?? '未知'}${ageMin != null ? `(${ageMin} 分钟前采集)` : ''}`,
     )
@@ -878,7 +1098,11 @@ let lastNavAt = 0
 
 async function navigateAndCapture(url) {
   await ensureExtension()
-  if (agentTabId != null && url === lastNavUrl && Date.now() - lastNavAt < 60000) {
+  if (
+    agentTabId != null &&
+    url === lastNavUrl &&
+    Date.now() - lastNavAt < 60000
+  ) {
     return { tabId: agentTabId, url, snapshot: null, reused: true }
   }
   // active:false = 后台标签页加载,不打断用户当前浏览(需扩展 ≥ 本次改动;旧版忽略该参数)
@@ -889,7 +1113,11 @@ async function navigateAndCapture(url) {
     result = await bridgeAction('navigate_and_capture', params, 90000)
   } catch (err) {
     // 权限类错误直接上抛;标签页被用户关闭才值得换新标签页重试
-    if (agentTabId == null || /实时操控未开启|不可达/.test(String(err?.message))) throw err
+    if (
+      agentTabId == null ||
+      /实时操控未开启|不可达/.test(String(err?.message))
+    )
+      throw err
     agentTabId = null
     result = await bridgeAction(
       'navigate_and_capture',
@@ -927,7 +1155,8 @@ async function openBrowserPage(url) {
   try {
     body = await readPageText(0)
   } catch {
-    body = (await readPageSummary()) ?? '(正文读取失败,可用 read_browser_page 重试)'
+    body =
+      (await readPageSummary()) ?? '(正文读取失败,可用 read_browser_page 重试)'
   }
   return `【${title || target}】${target}\n\n${body}`
 }
@@ -939,7 +1168,8 @@ async function readBrowserPage(part = 'summary', offset = 0) {
   }
   if (part === 'links') {
     const res = await bridgeFetch('/latest')
-    if (res.status === 404) return '还没有页面快照,先用 open_browser_page 打开一个页面。'
+    if (res.status === 404)
+      return '还没有页面快照,先用 open_browser_page 打开一个页面。'
     if (!res.ok) return `错误:读取快照失败 HTTP ${res.status}`
     const snapshot = (await res.json()).snapshot ?? {}
     const links = (snapshot.links ?? [])
@@ -947,7 +1177,10 @@ async function readBrowserPage(part = 'summary', offset = 0) {
       .slice(0, 60)
       .map((l) => `- ${(l.text || '(无文字)').slice(0, 80)} — ${l.href}`)
     if (!links.length) return '页面上没有提取到链接。'
-    return truncateText(`页面链接(${links.length} 条):\n${links.join('\n')}`, 8000)
+    return truncateText(
+      `页面链接(${links.length} 条):\n${links.join('\n')}`,
+      8000,
+    )
   }
   const summary = await readPageSummary()
   if (!summary) {
@@ -973,7 +1206,9 @@ function resolveResultUrl(href) {
 async function browserSearch(query) {
   const q = String(query ?? '').trim()
   if (!q) return '错误:缺少搜索关键词'
-  await navigateAndCapture(`https://www.bing.com/search?q=${encodeURIComponent(q)}&setlang=zh-hans`)
+  await navigateAndCapture(
+    `https://www.bing.com/search?q=${encodeURIComponent(q)}&setlang=zh-hans`,
+  )
 
   const res = await bridgeFetch('/latest')
   if (!res.ok) return `错误:读取搜索结果快照失败 HTTP ${res.status}`
@@ -997,9 +1232,13 @@ async function browserSearch(query) {
     const exact = links.filter((l) => l.href && (l.text ?? '').includes(title))
     const pool = exact.length
       ? exact
-      : links.filter((l) => l.href && (l.text ?? '').includes(title.slice(0, 18)))
+      : links.filter(
+          (l) => l.href && (l.text ?? '').includes(title.slice(0, 18)),
+        )
     if (!pool.length) continue
-    const best = pool.sort((a, b) => (a.text ?? '').length - (b.text ?? '').length)[0]
+    const best = pool.sort(
+      (a, b) => (a.text ?? '').length - (b.text ?? '').length,
+    )[0]
     const url = resolveResultUrl(best.href)
     if (url) push(title, url)
   }
@@ -1024,7 +1263,8 @@ async function browserSearch(query) {
         maxChars: 2500,
       })
       const body = (serp.text ?? '').trim()
-      if (body) snippets = `\n\n——搜索页摘要文本(供筛选,链接以上方列表为准)——\n${body}`
+      if (body)
+        snippets = `\n\n——搜索页摘要文本(供筛选,链接以上方列表为准)——\n${body}`
     } catch {
       /* 摘要拿不到不影响结果列表 */
     }
@@ -1032,8 +1272,14 @@ async function browserSearch(query) {
   }
 
   // 链接抽取失败(页面结构变化):退回读正文让模型自己看
-  const text = await bridgeAction('get_text', agentTabId != null ? { tabId: agentTabId } : {})
-  return truncateText(`没有解析出结果链接,以下是搜索页正文:\n\n${text.text ?? ''}`, 6000)
+  const text = await bridgeAction(
+    'get_text',
+    agentTabId != null ? { tabId: agentTabId } : {},
+  )
+  return truncateText(
+    `没有解析出结果链接,以下是搜索页正文:\n\n${text.text ?? ''}`,
+    6000,
+  )
 }
 
 async function browserInteract({ action, selector, text, key }) {
@@ -1110,12 +1356,16 @@ async function lookAtBrowserPage(question, fullPage = false) {
       format: 'jpeg',
       quality: 70,
       detachCdp: true,
-      ...(fullPage ? { fullPage: true, maxDimension: 4000, maxPixels: 8_000_000 } : {}),
+      ...(fullPage
+        ? { fullPage: true, maxDimension: 4000, maxPixels: 8_000_000 }
+        : {}),
     },
     60000,
   )
   if (!shot?.data) return '错误:截图失败'
-  const image = await downscaleForVlm(`data:${shot.mimeType};base64,${shot.data}`)
+  const image = await downscaleForVlm(
+    `data:${shot.mimeType};base64,${shot.data}`,
+  )
 
   // 本地 VLM 看图回答(冷启动可能要等模型加载)
   const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
@@ -1159,7 +1409,8 @@ async function searchNotes(query) {
     body: JSON.stringify({ query, k: 6 }),
     signal: AbortSignal.timeout(120000),
   })
-  if (!res.ok) throw new Error(`vault 服务 HTTP ${res.status}(首次调用需等索引服务拉起)`)
+  if (!res.ok)
+    throw new Error(`vault 服务 HTTP ${res.status}(首次调用需等索引服务拉起)`)
   const { results } = await res.json()
   if (!results?.length) return '笔记库中没有找到相关内容。'
   return results
@@ -1187,11 +1438,15 @@ async function askNotes(query) {
     body: JSON.stringify({ query, k: 6 }),
     signal: AbortSignal.timeout(180000),
   })
-  if (!res.ok) throw new Error(`vault 问答 HTTP ${res.status}(首次调用需等索引服务拉起)`)
+  if (!res.ok)
+    throw new Error(`vault 问答 HTTP ${res.status}(首次调用需等索引服务拉起)`)
   const { answer, citations } = await res.json()
   if (!answer) return '知识库里没有找到相关内容。'
   const refs = (citations || [])
-    .map((c) => `[${c.n}] ${c.breadcrumb || c.title} — [在 Obsidian 打开](${c.obsidianUrl})`)
+    .map(
+      (c) =>
+        `[${c.n}] ${c.breadcrumb || c.title} — [在 Obsidian 打开](${c.obsidianUrl})`,
+    )
     .join('\n')
   return refs ? `${answer}\n\n**引用**\n${refs}` : answer
 }
@@ -1200,12 +1455,39 @@ async function askNotes(query) {
 
 const IMAGE_API = `${GATEWAY}/upstream/image`
 
-/** 本轮工具调用产出的图片(WebP data URL),由 chat 循环取走挂到消息上 */
-let pendingImages = []
-export function consumePendingImages() {
-  const images = pendingImages
-  pendingImages = []
+/**
+ * Per-tool-call image buckets — avoids overlapping turns stealing each other's
+ * generate_image output via a single global queue.
+ * @type {Map<string, string[]>}
+ */
+const pendingImagesByCall = new Map()
+/** Fallback when callId is missing (tests / legacy). */
+let pendingImagesLegacy = []
+
+/**
+ * @param {string} [callId]
+ * @returns {string[]}
+ */
+export function consumePendingImages(callId) {
+  if (callId) {
+    const images = pendingImagesByCall.get(callId) ?? []
+    pendingImagesByCall.delete(callId)
+    return images
+  }
+  const images = pendingImagesLegacy
+  pendingImagesLegacy = []
   return images
+}
+
+/** @param {string | undefined} callId @param {string} dataUrl */
+function pushPendingImage(callId, dataUrl) {
+  if (callId) {
+    const list = pendingImagesByCall.get(callId) ?? []
+    list.push(dataUrl)
+    pendingImagesByCall.set(callId, list)
+    return
+  }
+  pendingImagesLegacy.push(dataUrl)
 }
 
 /** PNG base64 → WebP data URL(约缩到 1/10 体积,localStorage 友好);失败退回 PNG */
@@ -1216,7 +1498,10 @@ async function pngToWebpDataUrl(b64) {
     const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
     canvas.getContext('2d').drawImage(bitmap, 0, 0)
     bitmap.close()
-    const blob = await canvas.convertToBlob({ type: 'image/webp', quality: 0.85 })
+    const blob = await canvas.convertToBlob({
+      type: 'image/webp',
+      quality: 0.85,
+    })
     return await new Promise((resolve) => {
       const reader = new FileReader()
       reader.onload = () => resolve(reader.result)
@@ -1259,7 +1544,10 @@ async function enhancePrompt(prompt) {
     const json = await res.json()
     let out = json.choices?.[0]?.message?.content?.trim()
     if (!out) return null
-    out = out.replace(/^["“「『]+/, '').replace(/["”」』]+$/, '').trim()
+    out = out
+      .replace(/^["“「『]+/, '')
+      .replace(/["”」』]+$/, '')
+      .trim()
     // 扩写理应更长;若模型没听话(更短/空),回退原文
     return out.length > prompt.length ? out : null
   } catch {
@@ -1267,7 +1555,7 @@ async function enhancePrompt(prompt) {
   }
 }
 
-async function generateImage(args) {
+async function generateImage(args, callId) {
   const rawPrompt = String(args.prompt ?? '').trim()
   if (!rawPrompt) return '错误:prompt 不能为空'
 
@@ -1278,7 +1566,8 @@ async function generateImage(args) {
   let enhancedFrom = null
   const wantEnhance =
     !isEdit &&
-    (args.enhance_prompt === true || (args.enhance_prompt !== false && [...rawPrompt].length < 40))
+    (args.enhance_prompt === true ||
+      (args.enhance_prompt !== false && [...rawPrompt].length < 40))
   if (wantEnhance) {
     const better = await enhancePrompt(rawPrompt)
     if (better) {
@@ -1325,7 +1614,7 @@ async function generateImage(args) {
   }
   for (const item of json.data ?? []) {
     if (item.b64_json) {
-      pendingImages.push(await pngToWebpDataUrl(item.b64_json))
+      pushPendingImage(callId, await pngToWebpDataUrl(item.b64_json))
     }
     lines.push(
       `图片已生成并直接展示给用户(${item.width}×${item.height},seed ${item.seed},模型 ${json.model},耗时 ${Math.round((json.timing_ms ?? 0) / 1000)}s)。`,
@@ -1342,31 +1631,43 @@ async function generateImage(args) {
     }
   }
   if (!lines.length) return '错误:服务没有返回图片'
-  lines.push('图片已在界面中展示,回答时简短确认即可,不要输出图片链接或 markdown 图片语法。')
+  lines.push(
+    '图片已在界面中展示,回答时简短确认即可,不要输出图片链接或 markdown 图片语法。',
+  )
   return lines.join('\n')
 }
 
 async function listCharacters() {
-  const res = await fetch(`${IMAGE_API}/characters`, { signal: AbortSignal.timeout(60000) })
+  const res = await fetch(`${IMAGE_API}/characters`, {
+    signal: AbortSignal.timeout(60000),
+  })
   if (!res.ok) throw new Error(`生图服务 HTTP ${res.status}`)
   const { characters } = await res.json()
   if (!characters?.length) {
     return '角色库为空。可在 generate_image 时传 save_character="角色名" 注册角色。'
   }
   return characters
-    .map((c) => `- ${c.name}(参考图 ${c.refs} 张)${c.description ? `:${c.description}` : ''}`)
+    .map(
+      (c) =>
+        `- ${c.name}(参考图 ${c.refs} 张)${c.description ? `:${c.description}` : ''}`,
+    )
     .join('\n')
 }
 
 async function listStyles() {
-  const res = await fetch(`${IMAGE_API}/styles`, { signal: AbortSignal.timeout(60000) })
+  const res = await fetch(`${IMAGE_API}/styles`, {
+    signal: AbortSignal.timeout(60000),
+  })
   if (!res.ok) throw new Error(`生图服务 HTTP ${res.status}`)
   const { styles } = await res.json()
   if (!styles?.length) {
     return '风格库为空。可在 generate_image 时传 save_style="风格名" 注册风格。'
   }
   return styles
-    .map((s) => `- ${s.name}(参考图 ${s.refs} 张)${s.description ? `:${s.description}` : ''}`)
+    .map(
+      (s) =>
+        `- ${s.name}(参考图 ${s.refs} 张)${s.description ? `:${s.description}` : ''}`,
+    )
     .join('\n')
 }
 
@@ -1374,15 +1675,86 @@ async function listStyles() {
  * 执行一个工具调用,永远返回字符串(错误也以文本返回给模型)。
  * @param {string} name
  * @param {string} argsJson
+ * @param {{ callId?: string }} [opts]
  * @returns {Promise<string>}
  */
-export async function executeTool(name, argsJson) {
+async function runFocusStatusTool() {
+  const { FOCUS, hydrateFocusStore } =
+    await import('$lib/kenos/focusStore.svelte.js')
+  hydrateFocusStore()
+  return formatFocusStatus(FOCUS)
+}
+
+async function runStartFocusTool(args = {}) {
+  const focusApi = await import('$lib/kenos/focusStore.svelte.js')
+  focusApi.hydrateFocusStore()
+  const preview = applyStartFocus(focusApi.FOCUS, args)
+  if (!preview.ok) return preview.message
+  const mode =
+    String(args.mode || '').toLowerCase() === 'training'
+      ? 'training'
+      : 'deep_work'
+  const title = String(args.title || '').trim() || undefined
+  if (mode === 'training') focusApi.startTraining(title ? { title } : {})
+  else focusApi.startDeepWork(title ? { title } : {})
+  try {
+    const { goto } = await import('$app/navigation')
+    await goto(mode === 'training' ? '/spaces/training' : '/spaces/work', {
+      keepFocus: true,
+      noScroll: true,
+    })
+  } catch {
+    /* navigation optional in tests */
+  }
+  return `已开始 Focus。\n${formatFocusStatus(focusApi.FOCUS)}`
+}
+
+async function runEndFocusTool(args = {}) {
+  const focusApi = await import('$lib/kenos/focusStore.svelte.js')
+  focusApi.hydrateFocusStore()
+  const preview = applyEndFocus(focusApi.FOCUS, args)
+  if (!preview.ok) return preview.message
+  focusApi.endSession({ notes: String(args.notes || '').trim() || undefined })
+  return preview.message
+}
+
+async function runOpenSpaceTool(args = {}) {
+  const resolved = resolveOpenSpaceTarget(args.space, { env: import.meta.env })
+  if (!resolved.ok) return resolved.message
+  try {
+    if (resolved.external && typeof window !== 'undefined') {
+      window.location.assign(resolved.href)
+    } else {
+      const { goto } = await import('$app/navigation')
+      await goto(resolved.href, { keepFocus: true, noScroll: true })
+    }
+  } catch (err) {
+    return `已解析 ${resolved.label} → ${resolved.href},但导航失败:${err?.message ?? err}`
+  }
+  return `已打开 ${resolved.label}(${resolved.href})。`
+}
+
+async function runComposeLibraryNoteTool(args = {}) {
+  const built = buildLibraryComposeHref(args, { env: import.meta.env })
+  if (!built.ok) return built.message
+  try {
+    if (typeof window !== 'undefined') {
+      window.location.assign(built.href)
+    }
+  } catch (err) {
+    return `已生成 Library 起草链接,但打开失败:${err?.message ?? err}\n${built.href}`
+  }
+  return built.message
+}
+
+export async function executeTool(name, argsJson, opts = {}) {
   let args = {}
   try {
     args = argsJson ? JSON.parse(argsJson) : {}
   } catch {
     return '错误:工具参数不是合法 JSON'
   }
+  const callId = opts.callId
   if (isNativeTool(name)) {
     try {
       return await executeNativeTool(name, args)
@@ -1430,7 +1802,7 @@ export async function executeTool(name, argsJson) {
       case 'web_search':
         return await webSearch(args.query)
       case 'generate_image':
-        return await generateImage(args)
+        return await generateImage(args, callId)
       case 'list_characters':
         return await listCharacters()
       case 'list_styles':
@@ -1448,14 +1820,30 @@ export async function executeTool(name, argsJson) {
       case 'planner_tasks':
         return await plannerTasks(args)
       case 'planner_add_task': {
-        const writeGate = assertDispatcherWriteAllowed('planner_add_task', import.meta.env)
+        const writeGate = assertDispatcherWriteAllowed(
+          'planner_add_task',
+          import.meta.env,
+        )
         if (!writeGate.ok) return writeGate.error
         return await plannerAddTask(args)
       }
+      case 'focus_status':
+        return await runFocusStatusTool()
+      case 'start_focus':
+        return await runStartFocusTool(args)
+      case 'end_focus':
+        return await runEndFocusTool(args)
+      case 'open_space':
+        return await runOpenSpaceTool(args)
+      case 'compose_library_note':
+        return await runComposeLibraryNoteTool(args)
       case 'browser_status':
         return await browserStatus()
       case 'read_browser_page':
-        return await readBrowserPage(args.part || 'summary', Number(args.offset) || 0)
+        return await readBrowserPage(
+          args.part || 'summary',
+          Number(args.offset) || 0,
+        )
       case 'open_browser_page':
         return await openBrowserPage(args.url)
       case 'browser_search':
@@ -1463,7 +1851,10 @@ export async function executeTool(name, argsJson) {
       case 'browser_interact':
         return await browserInteract(args)
       case 'look_at_browser_page':
-        return await lookAtBrowserPage(args.question ?? '这个页面上有什么?', args.fullPage === true)
+        return await lookAtBrowserPage(
+          args.question ?? '这个页面上有什么?',
+          args.fullPage === true,
+        )
       default:
         return `错误:未知工具 ${name}`
     }

@@ -2,10 +2,9 @@
 @import '@life-os/theme/brands/aios.css';
 
 /*
-  Kenos Assistant 品牌层 — 无彩色(achromatic)灰阶配色。
-  品牌 token 由 @life-os/theme/brands/aios.css 提供,
-  真源在 packages/design-tokens/tokens/brands/aios.json。
-  本文件只保留 app 专属扩展(细滚动条工具类)。
+  Kenos Assistant 品牌层 — ink-black + clear accent (not muddy mid-gray).
+  Dark: near-black canvas (#08090a) + luminance stacking + Kenos blue accent.
+  Brand token 真源: packages/design-tokens/tokens/brands/aios.json
 */
 
 /*
@@ -54,18 +53,22 @@
   --kenos-space-xl: var(--space-8);
   --kenos-space-section: var(--space-7);
   --kenos-space-page-top: var(--space-6);
+  /* Apple Music–like page gutter — SSOT for SystemBar + content (16pt). */
+  --kenos-space-inline: var(--space-4, 16px);
   --kenos-title-to-body: var(--space-2-5);
   --kenos-section-gap: clamp(28px, 4vw, 40px);
   --kenos-system-bar-h: 48px;
 
+  /* Continuity motion tokens: @life-os/theme kenos-motion.css (KenosMotion mirror). */
+
   --kenos-surface-canvas: var(--bg);
-  --kenos-surface-group: color-mix(in srgb, var(--t1) 3.5%, var(--bg));
-  --kenos-surface-interactive: color-mix(in srgb, var(--t1) 5%, var(--bg));
-  --kenos-surface-raised: color-mix(in srgb, var(--t1) 7%, var(--bg));
-  --kenos-surface-overlay: color-mix(in srgb, var(--bg) 88%, transparent);
-  --kenos-surface-selected: color-mix(in srgb, var(--accent) 12%, transparent);
-  --kenos-chrome-bg: color-mix(in srgb, var(--bg) 78%, transparent);
-  --kenos-chrome-border: color-mix(in srgb, var(--border) 85%, transparent);
+  --kenos-surface-group: color-mix(in srgb, var(--accent) 5%, var(--bg));
+  --kenos-surface-interactive: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  --kenos-surface-raised: color-mix(in srgb, var(--t1) 8%, var(--bg));
+  --kenos-surface-overlay: color-mix(in srgb, var(--bg) 86%, transparent);
+  --kenos-surface-selected: color-mix(in srgb, var(--accent) 16%, transparent);
+  --kenos-chrome-bg: color-mix(in srgb, var(--bg) 72%, transparent);
+  --kenos-chrome-border: color-mix(in srgb, var(--border) 90%, transparent);
 
   --kenos-radius-control: var(--radius-control);
   --kenos-radius-group: 0;
@@ -80,6 +83,7 @@
 }
 
 @media (min-width: 900px) {
+
   :root,
   [data-app='aios'] {
     --kenos-type-body: 16px;
@@ -90,6 +94,19 @@
     --kenos-type-button: 14px;
     --sidebar-w: 240px;
   }
+}
+
+/* Dark: ink void + tinted elevation (Linear-style luminance stacking). */
+:root[data-theme='dark'],
+[data-app='aios'][data-theme='dark'],
+[data-app='aios'][data-mode='dark'] {
+  --kenos-surface-canvas: var(--bg);
+  --kenos-surface-group: color-mix(in srgb, #5b8cff 4.5%, var(--bg));
+  --kenos-surface-interactive: color-mix(in srgb, #5b8cff 7%, var(--bg));
+  --kenos-surface-raised: color-mix(in srgb, #ffffff 7%, var(--bg));
+  --kenos-surface-overlay: color-mix(in srgb, var(--bg) 82%, transparent);
+  --kenos-chrome-bg: color-mix(in srgb, var(--bg) 64%, transparent);
+  --kenos-chrome-border: rgba(255, 255, 255, 0.1);
 }
 
 /* Light: warmer canvas + clearer chrome separation (not pure paper white wash). */
@@ -105,6 +122,7 @@
 
 /* Mobile chrome materials — system bar + bottom tab */
 @media (max-width: 899px) {
+
   [data-app='aios'] .bottom-nav,
   [data-app='aios'] nav.bottom-nav,
   [data-app='aios'] [class*='bottom-nav'] {
@@ -174,28 +192,34 @@
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
+
 .aios-scroll:hover,
 .aios-scroll:focus-within {
   scrollbar-color: var(--sb-thumb) transparent;
 }
+
 .aios-scroll::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
+
 .aios-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .aios-scroll::-webkit-scrollbar-thumb {
   background: transparent;
   border: 3px solid transparent;
   border-radius: 999px;
   background-clip: padding-box;
 }
+
 .aios-scroll:hover::-webkit-scrollbar-thumb,
 .aios-scroll:focus-within::-webkit-scrollbar-thumb {
   background: var(--sb-thumb);
   background-clip: padding-box;
 }
+
 .aios-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--sb-thumb-hover);
   background-clip: padding-box;
@@ -203,11 +227,12 @@
 
 /* Phase 2 Assistant control surfaces: typography + dividers, not card mosaics. */
 .control-page {
-  width: min(100% - 32px, var(--kenos-content-max, 880px));
+  width: min(100% - (2 * var(--kenos-space-inline, 16px)), var(--kenos-content-max, 880px));
   margin-inline: auto;
   padding: var(--kenos-space-page-top, 24px) 0 var(--kenos-mobile-bottom-pad, 96px);
   background: var(--kenos-surface-canvas, var(--bg));
 }
+
 .control-page-header {
   display: flex;
   align-items: flex-end;
@@ -216,6 +241,7 @@
   padding-bottom: var(--kenos-space-lg, 24px);
   border-bottom: 1px solid var(--border);
 }
+
 .control-page-kicker {
   margin: 0 0 6px;
   color: var(--t3);
@@ -224,6 +250,7 @@
   letter-spacing: var(--kenos-tracking-meta, 0.08em);
   text-transform: uppercase;
 }
+
 .control-page h1 {
   margin: 0;
   color: var(--t1);
@@ -232,6 +259,7 @@
   letter-spacing: var(--kenos-tracking-page);
   line-height: var(--kenos-leading-page);
 }
+
 .control-page-intro {
   max-width: 36rem;
   margin: var(--kenos-title-to-body, 10px) 0 0;
@@ -240,21 +268,25 @@
   font-weight: var(--kenos-weight-body);
   line-height: var(--kenos-leading-body);
 }
+
 .control-page-section {
   margin-top: var(--kenos-section-gap, 36px);
 }
+
 .control-page-section h2 {
   margin: 0 0 12px;
   color: var(--t1);
   font-size: var(--kenos-type-section);
   font-weight: var(--kenos-weight-section);
 }
+
 .inbox-subnav {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin: 20px 0 8px;
 }
+
 .inbox-subnav a {
   min-height: 34px;
   padding: 0 12px;
@@ -266,14 +298,17 @@
   align-items: center;
   font-size: var(--text-sm);
 }
+
 .inbox-subnav a.active {
   color: var(--t1);
   border-color: color-mix(in srgb, var(--t1) 35%, var(--border-l));
   background: color-mix(in srgb, var(--t1) 6%, transparent);
 }
+
 .control-list {
   border-top: 1px solid var(--border);
 }
+
 .control-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -281,9 +316,11 @@
   padding: 20px 0;
   border-bottom: 1px solid var(--border);
 }
+
 .control-row-main {
   min-width: 0;
 }
+
 .control-row-meta {
   display: flex;
   align-items: center;
@@ -293,6 +330,7 @@
   color: var(--t3);
   font-size: var(--text-xs);
 }
+
 .control-row h3 {
   margin: 0;
   color: var(--t1);
@@ -300,18 +338,21 @@
   font-weight: 580;
   line-height: 1.4;
 }
+
 .control-row-detail {
   margin: 6px 0 0;
   color: var(--t3);
   font-size: var(--text-md);
   line-height: 1.5;
 }
+
 .control-row-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
 }
+
 .control-badge {
   display: inline-flex;
   align-items: center;
@@ -324,14 +365,17 @@
   font-weight: 650;
   letter-spacing: 0.04em;
 }
+
 .control-badge--critical,
 .control-badge--failed {
   border-color: color-mix(in srgb, var(--critical) 35%, var(--border));
   color: var(--critical);
 }
+
 .control-badge--success {
   color: var(--positive);
 }
+
 .control-button {
   min-height: 34px;
   padding: 0 12px;
@@ -343,27 +387,33 @@
   font-size: var(--text-sm);
   cursor: pointer;
 }
+
 .control-button:hover {
   background: var(--card);
 }
+
 .control-button--primary {
   border-color: var(--t1);
   background: var(--t1);
   color: var(--bg);
 }
+
 .control-button--primary:hover {
   opacity: 0.88;
   background: var(--t1);
 }
+
 .control-button--link {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
 }
+
 .control-link-unavailable {
   color: var(--t3);
   font-size: var(--text-sm);
 }
+
 .control-notice,
 .control-empty {
   margin: 24px 0 0;
@@ -371,32 +421,41 @@
   font-size: var(--text-md);
   line-height: 1.55;
 }
+
 .control-notice {
   padding-left: 12px;
   border-left: 2px solid var(--border-l);
 }
+
 .control-empty {
   padding: 28px 0;
   border-block: 1px solid var(--border);
 }
+
 .control-empty strong {
   display: block;
   margin-bottom: 5px;
   color: var(--t1);
   font-weight: 580;
 }
+
 @media (max-width: 640px) {
   .control-page {
     width: min(100% - 28px, 880px);
   }
+
   .control-page-header {
     align-items: flex-start;
     flex-direction: column;
   }
+
   .control-row {
     grid-template-columns: 1fr;
   }
+
   .control-row-actions {
     justify-content: flex-start;
   }
 }
+
+/* Page enter: packages/theme/src/kenos-motion.css */

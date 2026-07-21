@@ -1,12 +1,31 @@
 <script>
   import Icon from '@life-os/platform-web/svelte/icon'
+  import SettingsSyncBlock from '@life-os/platform-web/svelte/settings/sync-block'
+  import SettingsAppearanceBlock from '@life-os/platform-web/svelte/settings/appearance-block'
   import { S, save, applyTheme } from '$lib/state.svelte.js'
   import { t, setLocale } from '$lib/i18n/index.js'
-  import { MODELS, TTS_VOICES, GATEWAY, DEFAULT_GATEWAY, setGateway } from '$lib/localai.js'
+  import {
+    MODELS,
+    TTS_VOICES,
+    GATEWAY,
+    DEFAULT_GATEWAY,
+    setGateway,
+  } from '$lib/localai.js'
   import { CLOUD_BUILD } from '$lib/env.js'
   import { C, refreshGateway, clearAllConversations } from '$lib/chat.svelte.js'
-  import { M, deleteMemory, clearMemories, addMemory } from '$lib/memory.svelte.js'
-  import { CLOUD, signInCloud, signOutCloud, syncNow, getCloudAccessToken } from '$lib/cloud.svelte.js'
+  import {
+    M,
+    deleteMemory,
+    clearMemories,
+    addMemory,
+  } from '$lib/memory.svelte.js'
+  import {
+    CLOUD,
+    signInCloud,
+    signOutCloud,
+    syncNow,
+    getCloudAccessToken,
+  } from '$lib/cloud.svelte.js'
   import { isNative } from '$lib/native.js'
   import {
     loadServers,
@@ -28,17 +47,20 @@
     relaunchApp,
   } from '$lib/permissions.svelte.js'
   import { onMount } from 'svelte'
-
-  const themeOptions = $derived([
-    { value: 'light', label: t('settings.themeLight') },
-    { value: 'dark', label: t('settings.themeDark') },
-    { value: 'auto', label: t('settings.themeAuto') },
-  ])
+  import { scrollToSettingsHash } from '@life-os/platform-web/settings-hash'
 
   const smartToggles = $derived([
     { key: 'tools', label: t('settings.tools'), desc: t('settings.toolsDesc') },
-    { key: 'webAccess', label: t('settings.webAccess'), desc: t('settings.webAccessDesc') },
-    { key: 'memory', label: t('settings.memory'), desc: t('settings.memoryDesc') },
+    {
+      key: 'webAccess',
+      label: t('settings.webAccess'),
+      desc: t('settings.webAccessDesc'),
+    },
+    {
+      key: 'memory',
+      label: t('settings.memory'),
+      desc: t('settings.memoryDesc'),
+    },
   ])
 
   function setTheme(value) {
@@ -58,13 +80,15 @@
   }
 
   function toggleDailyBrief() {
-    if (!S.settings.dailyBrief) S.settings.dailyBrief = { enabled: false, time: '08:00' }
+    if (!S.settings.dailyBrief)
+      S.settings.dailyBrief = { enabled: false, time: '08:00' }
     S.settings.dailyBrief.enabled = !S.settings.dailyBrief.enabled
     save()
   }
 
   function setBriefTime(e) {
-    if (!S.settings.dailyBrief) S.settings.dailyBrief = { enabled: false, time: '08:00' }
+    if (!S.settings.dailyBrief)
+      S.settings.dailyBrief = { enabled: false, time: '08:00' }
     S.settings.dailyBrief.time = e.target.value || '08:00'
     save()
   }
@@ -103,7 +127,13 @@
     while (taken.has(id)) id = `${base}_${i++}`
     mcpServers = [
       ...mcpServers,
-      { id, name, url, token: mcpDraft.token.trim() || undefined, enabled: true },
+      {
+        id,
+        name,
+        url,
+        token: mcpDraft.token.trim() || undefined,
+        enabled: true,
+      },
     ]
     persistMcp()
     mcpDraft = { name: '', url: '', token: '' }
@@ -144,7 +174,11 @@
     const r = await testServer($state.snapshot(server))
     mcpBusy = false
     mcpStatus = r.ok
-      ? t('settings.mcpTestOk', { name: server.name, n: r.tools.length, tools: r.tools.slice(0, 12).join(', ') })
+      ? t('settings.mcpTestOk', {
+          name: server.name,
+          n: r.tools.length,
+          tools: r.tools.slice(0, 12).join(', '),
+        })
       : t('settings.mcpTestFail', { name: server.name, error: r.error })
   }
 
@@ -230,11 +264,15 @@
      挂载即静默探测;窗口重新聚焦时复查,用户从系统设置回来对勾会自动变绿。 */
   let permBusy = $state('') // 正在请求的权限 key,禁用按钮防重复点
   onMount(() => {
-    if (!isNative) return
+    const disposeScroll = scrollToSettingsHash('cloud')
+    if (!isNative) return disposeScroll
     refreshPermissions()
     const onFocus = () => refreshPermissions()
     window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
+    return () => {
+      disposeScroll()
+      window.removeEventListener('focus', onFocus)
+    }
   })
 
   const PERM_REQ = {
@@ -264,6 +302,75 @@
 </script>
 
 <div class="wrap">
+  <SettingsSyncBlock
+    title={t('settings.cloud')}
+    signedOutDesc={t('settings.cloudDesc')}
+    ssoHint={t('settings.cloudSsoHint')}
+    signedInDesc={`${t('settings.cloudLastSync')}: ${CLOUD.syncing ? t('settings.cloudSyncing') : lastSyncLabel(CLOUD.lastSyncAt)}`}
+    email={CLOUD.user?.email}
+    configured={CLOUD.configured}
+    signedIn={!!CLOUD.user}
+    unavailableDesc={t('settings.cloudDesc')}
+  >
+    {#snippet actions()}
+      <button
+        type="button"
+        class="btn-secondary"
+        disabled={CLOUD.syncing}
+        onclick={() => syncNow()}
+      >
+        {t('settings.cloudSyncNow')}
+      </button>
+      <button
+        type="button"
+        class="btn-secondary"
+        disabled={CLOUD.busy}
+        onclick={signOutCloud}
+      >
+        {t('settings.cloudSignOut')}
+      </button>
+    {/snippet}
+    {#snippet footer()}
+      <p class="block-desc">{t('settings.cloudPrivacyNote')}</p>
+      {#if CLOUD.error}
+        <p class="block-desc cloud-error">{CLOUD.error}</p>
+      {/if}
+    {/snippet}
+    {#snippet signedOut()}
+      <div class="cloud-login">
+        <input
+          type="email"
+          class="cloud-input"
+          autocomplete="email"
+          placeholder={t('settings.cloudEmail')}
+          bind:value={cloudEmail}
+          aria-label={t('settings.cloudEmail')}
+        />
+        <input
+          type="password"
+          class="cloud-input"
+          autocomplete="current-password"
+          placeholder={t('settings.cloudPassword')}
+          bind:value={cloudPassword}
+          onkeydown={(e) =>
+            e.key === 'Enter' && !e.isComposing && cloudSignIn()}
+          aria-label={t('settings.cloudPassword')}
+        />
+        <button
+          type="button"
+          class="mini-btn cloud-connect"
+          disabled={!cloudEmail.trim() || !cloudPassword || CLOUD.busy}
+          onclick={cloudSignIn}
+        >
+          {t('settings.cloudSignIn')}
+        </button>
+      </div>
+      {#if CLOUD.error}
+        <p class="block-desc cloud-error">{CLOUD.error}</p>
+      {/if}
+    {/snippet}
+  </SettingsSyncBlock>
+
   <section class="card">
     <h2>{t('settings.ai')}</h2>
 
@@ -278,7 +385,12 @@
         {#if C.gatewayOk === true}{t('settings.gatewayOk')}
         {:else if C.gatewayOk === false}{t('settings.gatewayDown')}
         {:else}…{/if}
-        <button type="button" class="mini-btn" disabled={checking} onclick={checkGateway}>
+        <button
+          type="button"
+          class="mini-btn"
+          disabled={checking}
+          onclick={checkGateway}
+        >
           {t('settings.gatewayCheck')}
         </button>
       </span>
@@ -291,7 +403,8 @@
           type="url"
           placeholder={DEFAULT_GATEWAY}
           bind:value={gatewayInput}
-          onkeydown={(e) => e.key === 'Enter' && !e.isComposing && applyGateway()}
+          onkeydown={(e) =>
+            e.key === 'Enter' && !e.isComposing && applyGateway()}
           aria-label={t('settings.gatewayUrl')}
         />
         <button
@@ -304,7 +417,9 @@
         </button>
       </div>
       <p class="note">
-        {CLOUD_BUILD ? t('settings.gatewayUrlCloudNote') : t('settings.gatewayUrlNote')}
+        {CLOUD_BUILD
+          ? t('settings.gatewayUrlCloudNote')
+          : t('settings.gatewayUrlNote')}
       </p>
     </div>
 
@@ -379,13 +494,17 @@
             </span>
             <span class="perm-why">{p.why}</span>
             {#if st !== true && p.needsRestart}
-              <span class="perm-why perm-hint">授权后需重启 AIOS 才对截屏生效。</span>
+              <span class="perm-why perm-hint"
+                >授权后需重启 AIOS 才对截屏生效。</span
+              >
             {/if}
           </span>
           <span class="perm-actions">
             {#if st === true}
               {#if p.needsRestart}
-                <button type="button" class="mini-btn" onclick={relaunchApp}>重启</button>
+                <button type="button" class="mini-btn" onclick={relaunchApp}
+                  >重启</button
+                >
               {/if}
             {:else}
               <button
@@ -396,7 +515,11 @@
               >
                 {permBusy === p.key ? '请求中…' : '授权'}
               </button>
-              <button type="button" class="mini-btn" onclick={() => openPrivacyPane(p.pane)}>
+              <button
+                type="button"
+                class="mini-btn"
+                onclick={() => openPrivacyPane(p.pane)}
+              >
                 打开设置
               </button>
             {/if}
@@ -499,7 +622,9 @@
   <section class="card">
     <h2>
       {t('settings.mcp')}
-      {#if mcpToolN}<span class="count">{t('settings.mcpToolCount', { n: mcpToolN })}</span>{/if}
+      {#if mcpToolN}<span class="count"
+          >{t('settings.mcpToolCount', { n: mcpToolN })}</span
+        >{/if}
     </h2>
     <p class="note">{t('settings.mcpDesc')}</p>
     <p class="note">{t('settings.mcpLifeOsHint')}</p>
@@ -529,10 +654,19 @@
           <span class="mcp-name">{server.name}</span>
           <span class="mcp-url">{server.url}</span>
         </span>
-        <button type="button" class="mini-btn" disabled={mcpBusy} onclick={() => testMcpServer(server)}>
+        <button
+          type="button"
+          class="mini-btn"
+          disabled={mcpBusy}
+          onclick={() => testMcpServer(server)}
+        >
           {t('settings.mcpTest')}
         </button>
-        <button type="button" class="mini-btn" onclick={() => removeMcpServer(server.id)}>
+        <button
+          type="button"
+          class="mini-btn"
+          onclick={() => removeMcpServer(server.id)}
+        >
           {t('settings.mcpRemove')}
         </button>
       </div>
@@ -561,11 +695,21 @@
         aria-label="Token"
       />
       <div class="mcp-actions">
-        <button type="button" class="mini-btn primary" disabled={mcpBusy} onclick={addMcpServer}>
+        <button
+          type="button"
+          class="mini-btn primary"
+          disabled={mcpBusy}
+          onclick={addMcpServer}
+        >
           {t('settings.mcpAdd')}
         </button>
         {#if mcpServers.length}
-          <button type="button" class="mini-btn" disabled={mcpBusy} onclick={refreshMcp}>
+          <button
+            type="button"
+            class="mini-btn"
+            disabled={mcpBusy}
+            onclick={refreshMcp}
+          >
             {t('settings.mcpRefresh')}
           </button>
         {/if}
@@ -649,108 +793,26 @@
     {/if}
   </section>
 
-  <section class="card">
-    <h2>{t('settings.theme')}</h2>
-    <div class="seg" role="group" aria-label={t('settings.theme')}>
-      {#each themeOptions as option (option.value)}
-        <button
-          type="button"
-          class:on={S.settings.theme === option.value}
-          aria-pressed={S.settings.theme === option.value}
-          onclick={() => setTheme(option.value)}
-        >
-          {option.label}
-        </button>
-      {/each}
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>{t('settings.language')}</h2>
-    <div class="seg" role="group" aria-label={t('settings.language')}>
-      <button
-        type="button"
-        class:on={S.settings.locale === 'zh'}
-        aria-pressed={S.settings.locale === 'zh'}
-        onclick={() => setLocale('zh')}
-      >
-        中文
-      </button>
-      <button
-        type="button"
-        class:on={S.settings.locale === 'en'}
-        aria-pressed={S.settings.locale === 'en'}
-        onclick={() => setLocale('en')}
-      >
-        English
-      </button>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>{t('settings.cloud')}</h2>
-    <p class="note">{t('settings.cloudDesc')}</p>
-
-    {#if CLOUD.user}
-      <div class="row">
-        <span class="row-label">{t('settings.cloudSignedInAs')}</span>
-        <span class="row-value">
-          <span class="status-dot ok"></span>
-          {CLOUD.user.email}
-        </span>
-      </div>
-      <div class="row">
-        <span class="row-label">{t('settings.cloudLastSync')}</span>
-        <span class="row-value">
-          {CLOUD.syncing ? t('settings.cloudSyncing') : lastSyncLabel(CLOUD.lastSyncAt)}
-          <button
-            type="button"
-            class="mini-btn"
-            disabled={CLOUD.syncing}
-            onclick={() => syncNow()}
-          >
-            {t('settings.cloudSyncNow')}
-          </button>
-          <button type="button" class="mini-btn" disabled={CLOUD.busy} onclick={signOutCloud}>
-            {t('settings.cloudSignOut')}
-          </button>
-        </span>
-      </div>
-      <p class="note">{t('settings.cloudPrivacyNote')}</p>
-    {:else}
-      <div class="cloud-login">
-        <input
-          type="email"
-          class="cloud-input"
-          autocomplete="email"
-          placeholder={t('settings.cloudEmail')}
-          bind:value={cloudEmail}
-          aria-label={t('settings.cloudEmail')}
-        />
-        <input
-          type="password"
-          class="cloud-input"
-          autocomplete="current-password"
-          placeholder={t('settings.cloudPassword')}
-          bind:value={cloudPassword}
-          onkeydown={(e) => e.key === 'Enter' && !e.isComposing && cloudSignIn()}
-          aria-label={t('settings.cloudPassword')}
-        />
-        <button
-          type="button"
-          class="mini-btn cloud-connect"
-          disabled={!cloudEmail.trim() || !cloudPassword || CLOUD.busy}
-          onclick={cloudSignIn}
-        >
-          {t('settings.cloudSignIn')}
-        </button>
-      </div>
-    {/if}
-
-    {#if CLOUD.error}
-      <p class="note cloud-error">{CLOUD.error}</p>
-    {/if}
-  </section>
+  <SettingsAppearanceBlock
+    title={t('settings.appearance')}
+    theme={S.settings.theme || 'auto'}
+    onThemeChange={setTheme}
+    themeOptions={[
+      { value: 'light', label: t('settings.themeLight') },
+      { value: 'dark', label: t('settings.themeDark') },
+      { value: 'auto', label: t('settings.themeAuto') },
+    ]}
+    themeLabel={t('settings.theme')}
+    themeDesc={t('settings.themeDesc')}
+    locale={S.settings.locale}
+    onLocaleChange={setLocale}
+    localeOptions={[
+      { value: 'zh', label: t('settings.langZh') },
+      { value: 'en', label: t('settings.langEn') },
+    ]}
+    languageLabel={t('settings.language')}
+    languageDesc={t('settings.languageDesc')}
+  />
 
   <section class="card">
     <h2>{t('settings.data')}</h2>
@@ -922,7 +984,7 @@
     border-radius: 999px;
     background: var(--card-h);
     position: relative;
-    transition: background var(--dur-fast, 120ms) var(--ease, ease);
+    transition: background var(--dur-fast) var(--ease, ease);
   }
   .switch::after {
     content: '';
@@ -934,7 +996,7 @@
     border-radius: 50%;
     background: var(--bg);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-    transition: transform var(--dur-fast, 120ms) var(--ease, ease);
+    transition: transform var(--dur-fast) var(--ease, ease);
   }
   .switch.on {
     background: var(--accent);

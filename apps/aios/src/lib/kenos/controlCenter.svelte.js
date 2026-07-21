@@ -21,7 +21,12 @@ import {
   legacyPortalPendingShadowFixture,
 } from './shadowLegacyFixtures.js'
 import { buildCapabilityRegistry } from './capabilityRegistry.core.js'
-import { isProdFocusReadEnabled, isProdShadowCompareEnabled, isProdWorkReadEnabled, prodReadFlagSnapshot } from './prodReadFlags.core.js'
+import {
+  isProdFocusReadEnabled,
+  isProdShadowCompareEnabled,
+  isProdWorkReadEnabled,
+  prodReadFlagSnapshot,
+} from './prodReadFlags.core.js'
 import { recordShadowObservation } from './readObservability.core.js'
 import { isWorkFoundationEnabled } from './workCommand.core.js'
 import { FOCUS } from './focusStore.svelte.js'
@@ -34,7 +39,11 @@ const DEMO_SUMMARY = Object.freeze({
   planner: { todayOpen: 4, overdue: 1 },
   finance: { monthSurplus: 1840, monthIncome: 7800, monthExpense: 5960 },
   fitness: { workedOutToday: false, lastSessionDate: '昨天', lastDayId: 'B' },
-  music: { trackTitle: 'A Walk', trackArtist: 'Tycho', playedAt: '2026-07-19T01:10:00Z' },
+  music: {
+    trackTitle: 'A Walk',
+    trackArtist: 'Tycho',
+    playedAt: '2026-07-19T01:10:00Z',
+  },
   home: { storageZoneCount: 12, reportedAt: '2026-07-19T01:00:00Z' },
 })
 
@@ -70,7 +79,14 @@ const DEMO_APPROVALS = Object.freeze([
     requestedAt: '2026-07-19T17:08:00.000Z',
     expiresAt: '2026-07-19T19:08:00.000Z',
     executorAvailable: false,
-    entityReferences: [{ id: 'task-demo-1', type: 'plan.task', ownerDomain: 'plan', ownerId: 'task-demo-1' }],
+    entityReferences: [
+      {
+        id: 'task-demo-1',
+        type: 'plan.task',
+        ownerDomain: 'plan',
+        ownerId: 'task-demo-1',
+      },
+    ],
   },
   {
     id: 'approval-demo-expired',
@@ -132,8 +148,12 @@ function clone(items) {
 
 function approvalDemoSourceState() {
   try {
-    const requested = new URLSearchParams(location.search).get('kenosApprovalState')
-    return ['ready', 'empty', 'partial', 'stale', 'offline'].includes(requested) ? requested : 'ready'
+    const requested = new URLSearchParams(location.search).get(
+      'kenosApprovalState',
+    )
+    return ['ready', 'empty', 'partial', 'stale', 'offline'].includes(requested)
+      ? requested
+      : 'ready'
   } catch {
     return 'ready'
   }
@@ -143,7 +163,11 @@ function loadDemoControlState() {
   try {
     const parsed = JSON.parse(sessionStorage.getItem(DEMO_STATE_KEY) ?? 'null')
     if (!parsed || typeof parsed !== 'object') return null
-    if (!Array.isArray(parsed.inbox) || !Array.isArray(parsed.approvals) || !Array.isArray(parsed.activities)) {
+    if (
+      !Array.isArray(parsed.inbox) ||
+      !Array.isArray(parsed.approvals) ||
+      !Array.isArray(parsed.activities)
+    ) {
       return null
     }
     return parsed
@@ -182,12 +206,22 @@ export const CONTROL = $state({
   refreshedAt: 0,
   sources: {
     today: sourceState('loading', { source: 'public.portal_today_summary' }),
-    inbox: sourceState('loading', { source: 'public.life_events + public.planner_tasks' }),
-    approvals: sourceState('loading', { source: 'public.kenos_list_action_approvals' }),
+    inbox: sourceState('loading', {
+      source: 'public.life_events + public.planner_tasks',
+    }),
+    approvals: sourceState('loading', {
+      source: 'public.kenos_list_action_approvals',
+    }),
     activity: sourceState('loading', { source: 'public.life_events' }),
-    focus: sourceState('loading', { source: 'public.kenos_list_focus_contexts' }),
-    focusDeferred: sourceState('unsupported', { source: 'public.kenos_deferred_items' }),
-    focusSuggestions: sourceState('unsupported', { source: 'public.kenos_proactive_suggestions' }),
+    focus: sourceState('loading', {
+      source: 'public.kenos_list_focus_contexts',
+    }),
+    focusDeferred: sourceState('unsupported', {
+      source: 'public.kenos_deferred_items',
+    }),
+    focusSuggestions: sourceState('unsupported', {
+      source: 'public.kenos_proactive_suggestions',
+    }),
     work: sourceState('loading', { source: 'public.kenos_list_work_projects' }),
   },
   capabilities: buildCapabilityRegistry(),
@@ -200,7 +234,9 @@ let inflight = null
 
 function applySourceResult(key, value) {
   if (!value?.state) return
-  const failed = ['offline', 'unavailable', 'permission_denied'].includes(value.state.status)
+  const failed = ['offline', 'unavailable', 'permission_denied'].includes(
+    value.state.status,
+  )
   if (key === 'today') {
     if (value.summary) CONTROL.summary = value.summary
     else if (!CONTROL.summary) CONTROL.summary = null
@@ -211,40 +247,69 @@ function applySourceResult(key, value) {
     const side = value.sideCapabilities || {}
     const mapSide = (cap, source) => {
       if (cap === 'unavailable') return sourceState('unsupported', { source })
-      if (cap === 'error') return sourceState('unavailable', { source, message: '读取失败', retryable: true })
-      if (cap === 'empty') return sourceState('empty', { source, availableCount: 0 })
-      if (cap === 'ready') return sourceState('ready', { source, availableCount: 1 })
+      if (cap === 'error')
+        return sourceState('unavailable', {
+          source,
+          message: '读取失败',
+          retryable: true,
+        })
+      if (cap === 'empty')
+        return sourceState('empty', { source, availableCount: 0 })
+      if (cap === 'ready')
+        return sourceState('ready', { source, availableCount: 1 })
       return sourceState('unsupported', { source })
     }
-    CONTROL.sources.focusDeferred = mapSide(side.deferred, 'public.kenos_deferred_items')
-    CONTROL.sources.focusSuggestions = mapSide(side.suggestions, 'public.kenos_proactive_suggestions')
+    CONTROL.sources.focusDeferred = mapSide(
+      side.deferred,
+      'public.kenos_deferred_items',
+    )
+    CONTROL.sources.focusSuggestions = mapSide(
+      side.suggestions,
+      'public.kenos_proactive_suggestions',
+    )
   } else if (key === 'work') {
-    if (value.projects?.length || value.cards?.length || !failed || !CONTROL.workProjects?.length) {
+    if (
+      value.projects?.length ||
+      value.cards?.length ||
+      !failed ||
+      !CONTROL.workProjects?.length
+    ) {
       CONTROL.workProjects = value.projects ?? []
       CONTROL.workCards = value.cards ?? []
     }
   } else {
     const field = key === 'activity' ? 'activities' : key
-    if (value.items?.length || !failed || !CONTROL[field]?.length) CONTROL[field] = value.items ?? []
+    if (value.items?.length || !failed || !CONTROL[field]?.length)
+      CONTROL[field] = value.items ?? []
   }
   const retained =
     (key === 'today' && CONTROL.summary) ||
     (key === 'focus' && CONTROL.focusContexts?.length) ||
-    (key === 'work' && (CONTROL.workProjects?.length || CONTROL.workCards?.length)) ||
-    (key !== 'today' && key !== 'focus' && key !== 'work' && CONTROL[key === 'activity' ? 'activities' : key]?.length)
-  CONTROL.sources[key] = failed && retained
-    ? {
-        ...value.state,
-        status: 'stale',
-        stale: true,
-        message: `${value.state.message} 正在显示上一次只读 projection。`,
-      }
-    : value.state
+    (key === 'work' &&
+      (CONTROL.workProjects?.length || CONTROL.workCards?.length)) ||
+    (key !== 'today' &&
+      key !== 'focus' &&
+      key !== 'work' &&
+      CONTROL[key === 'activity' ? 'activities' : key]?.length)
+  CONTROL.sources[key] =
+    failed && retained
+      ? {
+          ...value.state,
+          status: 'stale',
+          stale: true,
+          message: `${value.state.message} 正在显示上一次只读 projection。`,
+        }
+      : value.state
 }
 
 export async function refreshControlCenter({ force = false } = {}) {
   if (!browser) return
-  if (!force && CONTROL.refreshedAt && Date.now() - CONTROL.refreshedAt < 30_000) return
+  if (
+    !force &&
+    CONTROL.refreshedAt &&
+    Date.now() - CONTROL.refreshedAt < 30_000
+  )
+    return
   if (inflight) return inflight
 
   inflight = (async () => {
@@ -256,7 +321,10 @@ export async function refreshControlCenter({ force = false } = {}) {
         CONTROL.sources = Object.fromEntries(
           Object.entries(CONTROL.sources).map(([key, state]) => [
             key,
-            sourceState('loading', { source: state.source, lastUpdated: state.lastUpdated }),
+            sourceState('loading', {
+              source: state.source,
+              lastUpdated: state.lastUpdated,
+            }),
           ]),
         )
       }
@@ -269,34 +337,63 @@ export async function refreshControlCenter({ force = false } = {}) {
       if (demo) {
         CONTROL.inbox = clone(savedDemo?.inbox ?? DEMO_INBOX)
         const approvalState = approvalDemoSourceState()
-        CONTROL.approvals = approvalState === 'empty' ? [] : clone(savedDemo?.approvals ?? DEMO_APPROVALS)
+        CONTROL.approvals =
+          approvalState === 'empty'
+            ? []
+            : clone(savedDemo?.approvals ?? DEMO_APPROVALS)
         CONTROL.activities = clone(savedDemo?.activities ?? DEMO_ACTIVITY)
       }
       const demoApprovalState = demo ? approvalDemoSourceState() : null
       CONTROL.sources = demo
         ? {
-            today: sourceState('ready', { source: 'local opt-in rehearsal', availableCount: 1 }),
-            inbox: sourceState('ready', { source: 'local opt-in rehearsal', availableCount: CONTROL.inbox.length }),
+            today: sourceState('ready', {
+              source: 'local opt-in rehearsal',
+              availableCount: 1,
+            }),
+            inbox: sourceState('ready', {
+              source: 'local opt-in rehearsal',
+              availableCount: CONTROL.inbox.length,
+            }),
             approvals: sourceState(demoApprovalState, {
               source: 'local opt-in rehearsal',
               availableCount: CONTROL.approvals.length,
               malformedCount: demoApprovalState === 'partial' ? 1 : 0,
               stale: demoApprovalState === 'stale',
-              retryable: ['partial', 'stale', 'offline'].includes(demoApprovalState),
-              message: demoApprovalState === 'partial'
-                ? '一项 QA fixture 被安全降级；其余 projection 仍只读。'
-                : demoApprovalState === 'stale'
-                  ? 'QA projection 已超过 freshness 阈值；未执行任何动作。'
-                  : demoApprovalState === 'offline'
-                    ? '设备离线；仅显示上一次 QA projection。'
-                    : '',
+              retryable: ['partial', 'stale', 'offline'].includes(
+                demoApprovalState,
+              ),
+              message:
+                demoApprovalState === 'partial'
+                  ? '一项 QA fixture 被安全降级；其余 projection 仍只读。'
+                  : demoApprovalState === 'stale'
+                    ? 'QA projection 已超过 freshness 阈值；未执行任何动作。'
+                    : demoApprovalState === 'offline'
+                      ? '设备离线；仅显示上一次 QA projection。'
+                      : '',
             }),
-            activity: sourceState('ready', { source: 'local opt-in rehearsal', availableCount: CONTROL.activities.length }),
-            focus: sourceState('unsupported', { source: 'local opt-in rehearsal' }),
-            work: sourceState('unsupported', { source: 'local opt-in rehearsal' }),
+            activity: sourceState('ready', {
+              source: 'local opt-in rehearsal',
+              availableCount: CONTROL.activities.length,
+            }),
+            focus: sourceState('unsupported', {
+              source: 'local opt-in rehearsal',
+            }),
+            work: sourceState('unsupported', {
+              source: 'local opt-in rehearsal',
+            }),
           }
         : CONTROL.sources
-      const todayModel = buildTodayReadModel(CONTROL.summary)
+      let healthReadiness = null
+      try {
+        const { loadHealthReadiness } =
+          await import('./healthReadiness.host.js')
+        healthReadiness = loadHealthReadiness({ now: Date.now() })
+      } catch {
+        healthReadiness = null
+      }
+      const todayModel = buildTodayReadModel(CONTROL.summary, {
+        healthReadiness,
+      })
       const toShadowShape = (item) => ({
         id: item.id,
         ownerDomain: item.ownerDomain,
@@ -377,7 +474,9 @@ export async function refreshControlCenter({ force = false } = {}) {
                 })
               : []),
           ]
-      CONTROL.shadowSummary = summarizeShadowMismatches(CONTROL.shadowMismatches)
+      CONTROL.shadowSummary = summarizeShadowMismatches(
+        CONTROL.shadowMismatches,
+      )
       if (shadowEnabled) {
         recordShadowObservation({
           domain: 'control',
@@ -390,11 +489,14 @@ export async function refreshControlCenter({ force = false } = {}) {
         flags: CONTROL.flags,
         sources: CONTROL.sources,
         workFoundationEnabled: isWorkFoundationEnabled(import.meta.env),
-        focusLocalActive: Boolean(FOCUS?.focus?.status && FOCUS.focus.status !== 'idle'),
+        focusLocalActive: Boolean(
+          FOCUS?.focus?.status && FOCUS.focus.status !== 'idle',
+        ),
       })
       CONTROL.refreshedAt = Date.now()
     } catch (error) {
-      CONTROL.error = error instanceof Error ? error.message : 'Today 暂时无法刷新'
+      CONTROL.error =
+        error instanceof Error ? error.message : 'Today 暂时无法刷新'
       CONTROL.summary = null
     } finally {
       CONTROL.loading = false
@@ -407,7 +509,8 @@ export async function refreshControlCenter({ force = false } = {}) {
 
 export function resolveDemoApproval(id, decision) {
   // Production Approval decision / Executor remain unavailable — demo path only.
-  if (!CONTROL.demo || !['approved', 'rejected'].includes(decision)) return false
+  if (!CONTROL.demo || !['approved', 'rejected'].includes(decision))
+    return false
   const approval = CONTROL.approvals.find((item) => item.id === id)
   if (!approval || approval.status !== 'pending') return false
   approval.status = decision
@@ -435,7 +538,8 @@ export function resolveDemoApproval(id, decision) {
 export function retryDemoActivity(id) {
   if (!CONTROL.demo) return false
   const activity = CONTROL.activities.find((item) => item.id === id)
-  if (!activity || activity.status !== 'failed' || !activity.retryable) return false
+  if (!activity || activity.status !== 'failed' || !activity.retryable)
+    return false
   activity.status = 'queued'
   activity.result = '本地 UI 演练已加入重试队列；未连接生产 worker'
   persistDemoControlState()

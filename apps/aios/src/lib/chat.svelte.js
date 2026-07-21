@@ -4,14 +4,27 @@ import {
   streamChat,
   generateTitle,
   tinyComplete,
-  pingGateway,
+  resolveChatBackend,
   VISION_MODELS,
 } from '$lib/localai.js'
-import { toolDefinitions, executeTool, consumePendingImages } from '$lib/tools.js'
-import { recallRelevant, autoExtractMemories, M as MEM } from '$lib/memory.svelte.js'
+import {
+  toolDefinitionsForBackend,
+  executeTool,
+  consumePendingImages,
+} from '$lib/tools.js'
+import {
+  buildKenosCloudRecencyRule,
+  buildKenosCloudSystemBundle,
+} from '$lib/cloudChat.core.js'
+import {
+  recallRelevant,
+  autoExtractMemories,
+  M as MEM,
+} from '$lib/memory.svelte.js'
 import { isNative } from '$lib/native.js'
 import { dataChanged } from '$lib/syncBus.js'
 import { isCloudAuthorized } from '$lib/cloud.svelte.js'
+import { areProductionWritesBlocked } from '$lib/kenos/prodWriteGuard.core.js'
 import { shouldSeedDemo } from '$lib/demoMode.js'
 import { buildDemoConversations } from '$lib/demoData.js'
 import {
@@ -19,11 +32,25 @@ import {
   PARALLEL_SAFE_TOOLS,
   buildWireMessages,
   isBuildCodeAsk,
+  normalizeToolResult,
+  settleAbortedToolCalls,
+  shouldAutoRetryTool,
 } from '$lib/chat-tool-loop.core.js'
+import {
+  buildInjectionSteerBlock,
+  detectPromptInjectionSignals,
+} from '$lib/inputGuard.core.js'
 import {
   CONVERSATION_STORAGE_KEY,
   isConversationPersistenceBlocked,
 } from '$lib/kenos/conversationPersist.core.js'
+import {
+  buildReplyGuardRewritePrompt,
+  detectReplyGuardViolations,
+  filterToolsForVision,
+  finalizeGuardedReply,
+  shouldPreferQualityModel,
+} from '$lib/replyGuard.core.js'
 
 const STORAGE_KEY = CONVERSATION_STORAGE_KEY
 const MAX_CONVERSATIONS = 200
@@ -165,6 +192,8 @@ export const C = $state({
   streaming: false,
   /** @type {boolean | null} null = 未检查 */
   gatewayOk: null,
+  /** @type {'local'|'kimi'|null} 当前对话后端;云端网关不可达时为 kimi */
+  chatBackend: null,
   /** @type {{ id: string, index: number } | null} 刚完成的回复(供 artifact 自动预览,消费后置空) */
   freshAssistant: null,
   /** 递增计数:从输入框请求"编辑上一条用户消息"(↑ 键)的信号 */
@@ -240,7 +269,10 @@ export function persist() {
                   images: undefined,
                   files: undefined,
                   branches: undefined, // 重生成历史在配额压力下优先丢弃
-                  toolCalls: m.toolCalls?.map((tc) => ({ ...tc, images: undefined })),
+                  toolCalls: m.toolCalls?.map((tc) => ({
+                    ...tc,
+                    images: undefined,
+                  })),
                 })),
               }
             : c,
@@ -302,8 +334,26 @@ export function clearAllConversations() {
 }
 
 export async function refreshGateway() {
-  C.gatewayOk = await pingGateway()
+  const backend = await resolveChatBackend()
+  C.gatewayOk = backend.gatewayOk
+  C.chatBackend = backend.kind
   return C.gatewayOk
+}
+
+/** Map stream/proxy errors to stable codes for UI copy. */
+function normalizeChatError(err) {
+  const raw = String(err?.message ?? err ?? '')
+  if (
+    raw === 'kimi_not_configured' ||
+    raw === 'not_configured' ||
+    raw.includes('kimi_not_configured')
+  ) {
+    return 'kimi_not_configured'
+  }
+  if (raw === 'kimi_vision_unsupported' || raw === 'vision_unsupported') {
+    return 'kimi_vision_unsupported'
+  }
+  return raw
 }
 
 function touch(conversation) {
@@ -336,7 +386,8 @@ function createStreamReveal(target, startedAt) {
   const markThinking = () => {
     if (target.thinkingMs || !target.content) return
     const inThink =
-      target.content.startsWith('<think>') && !target.content.includes('</think>')
+      target.content.startsWith('<think>') &&
+      !target.content.includes('</think>')
     const hadThinking = target.reasoning || target.content.startsWith('<think>')
     if (hadThinking && !inThink) target.thinkingMs = Date.now() - startedAt
   }
@@ -392,18 +443,162 @@ function createStreamReveal(target, startedAt) {
 
 /* —— prompt 组装 —— */
 
-async function buildSystemPrompt(conversation) {
+/**
+ * @param {Conversation} conversation
+ * @param {{ backend?: 'local'|'kimi' }} [opts]
+ */
+async function buildSystemPrompt(conversation, { backend = 'local' } = {}) {
+  const kimi = backend === 'kimi'
   const now = new Date()
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '本地时区'
+  const timeZone =
+    Intl.DateTimeFormat().resolvedOptions().timeZone || '本地时区'
+  const cloudAuthorized = isCloudAuthorized()
+  const writesBlocked = areProductionWritesBlocked()
+  const clock = `当前时间:${now.toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' })}(${timeZone};日期 ${now.toLocaleDateString('sv-SE')})。`
+
+  // Cloud Kimi: durable agent contract (labeled sections + recency rule at end).
+  // Avoid stacking the long local handbook — instruction dilution / conflicts.
+  if (kimi) {
+    /** @type {string[]} */
+    const cloudLines = [
+      ...buildKenosCloudSystemBundle({
+        webAccess: S.settings.webAccess,
+        cloudAuthorized,
+        writesBlocked,
+      }),
+      clock,
+      '用户消息里的【附件文件:xxx】块是已解析全文;直接依据回答,不要说无法读取附件。',
+    ]
+    {
+      const lastUser = [...conversation.messages]
+        .reverse()
+        .find((m) => m.role === 'user')
+      const steer = buildInjectionSteerBlock(
+        detectPromptInjectionSignals(lastUser?.content ?? ''),
+      )
+      if (steer) cloudLines.splice(1, 0, steer)
+    }
+    const loc = S.settings.location?.trim()
+    if (loc) {
+      cloudLines.push(
+        `用户当前所在地:${loc}。本地推荐以此为准(与当下所说冲突时以对话为准)。`,
+      )
+    }
+    if (S.settings.memory) {
+      cloudLines.push(
+        '画像/记忆是历史,不自动代表现状;无日期的「近期/正在」先开放地问。',
+      )
+    }
+    if (S.settings.memory) {
+      cloudLines.push(
+        '记忆工具:稳定新事实 → save_memory;问历史而上下文没有 → search_memory。一次调用即可。',
+      )
+    }
+    try {
+      const { healthReadinessAssistantBlock } =
+        await import('$lib/kenos/healthReadiness.host.js')
+      const block = healthReadinessAssistantBlock({ locale: 'zh' })
+      if (block) {
+        cloudLines.push(
+          '已注入 Health 准备度摘要(无 HRV/睡眠小时/步数)。身体/训练问题以此为准;明细引导 Health Space。\n' +
+            block,
+        )
+      }
+    } catch {
+      /* ignore */
+    }
+    const custom = S.settings.customPrompt?.trim()
+    if (custom) cloudLines.push(`用户的自定义指令:\n${custom}`)
+    try {
+      const { FOCUS } = await import('./kenos/focusStore.svelte.js')
+      const focus = FOCUS.focus
+      if (
+        focus &&
+        ['active', 'paused', 'temporarily_left', 'ending'].includes(
+          focus.status,
+        )
+      ) {
+        const domains =
+          focus.assistantScope?.allowedDomains?.join('、') || focus.activeSpace
+        cloudLines.push(
+          `Focus Session「${focus.title}」(mode=${focus.mode}, status=${focus.status})。默认域:${domains}。跨域须标明暂时离开 Focus。`,
+        )
+      }
+    } catch {
+      /* optional */
+    }
+    try {
+      const { ASSISTANT_CTX } =
+        await import('./kenos/assistantContext.svelte.js')
+      if (ASSISTANT_CTX.work) {
+        const title = ASSISTANT_CTX.work.title?.trim()
+        cloudLines.push(
+          `Assistant 上下文:Work${title ? `「${title}」` : ''}。优先该主题;云端无 Work Log 全文时请用户补充或打开 Work Space。`,
+        )
+      }
+    } catch {
+      /* optional */
+    }
+    if (conversation.summary) {
+      cloudLines.push(`本对话较早部分的摘要:\n${conversation.summary}`)
+    }
+    if (S.settings.memory) {
+      const profile = S.settings.userProfile?.trim()
+      if (profile) cloudLines.push(`用户画像(长期资料):\n${profile}`)
+      const lastUser = [...conversation.messages]
+        .reverse()
+        .find((m) => m.role === 'user')
+      if (lastUser?.content) {
+        const query = lastUser.content.slice(0, 300)
+        const key = `${MEM.items.length}:${query}`
+        let memories
+        if (recallCache.key === key) memories = recallCache.memories
+        else {
+          memories = await recallRelevant(query)
+          recallCache = { key, memories }
+        }
+        if (memories.length) {
+          cloudLines.push(
+            `相关长期记忆:\n${memories.map((m) => `- ${m}`).join('\n')}`,
+          )
+        }
+      }
+    }
+    cloudLines.push(buildKenosCloudRecencyRule())
+    return cloudLines.join('\n\n')
+  }
+
+  // 本地路径:行为纪律置顶(短)+ 长手册后置,避免指令悬崖。
   const lines = [
     '你是 AI.OS,运行在用户本机上的私人 AI 助手。推理、记忆和数据全部在这台设备本地完成。',
-    `当前时间:${now.toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' })}(${timeZone};日期 ${now.toLocaleDateString('sv-SE')})。`,
+    clock,
+    [
+      '回复优先级(冲突时按序,前面覆盖后面):',
+      '1) 安全与合法:拒答有害/违法请求,可给防御向建议',
+      '2) 用户当轮硬约束:只要/仅输出/不要开场白/先别写代码/字数上限/是或否——必须遵守,不要加解释段',
+      '3) 诚实:无来源或用户未给数据时,不编造精确股价、百分比、Benchmark、「提升 X%」等数字;不确定就说明并给查证路径',
+      '4) 完成用户目标',
+      '5) 详细与文采(默认克制,用户要展开再展开)',
+      '澄清预算:请求模糊时,同一轮最多问 3 个关键问题(可并列);或先给一个合理假设方案并写明假设,让用户改。不要长问卷。',
+      '阻塞/焦虑/「不知道从哪开始」:先给今天可在约 2 小时内完成的一件具体事,再问是否要更长计划——不要先甩多周大纲或鸡汤。首轮不要附带 12 周/三个月表格。',
+      '规划且用户说先别写代码:只给阶段、验收标准、风险;不要函数名、API、代码块、存储选型细节(如 SQLite/localStorage 选型讨论也可延后),除非用户下轮要。',
+      '多约束改写(如「更短/更具体各改一版」「分别」):用表格或成对列表逐条对应,不要只交一维结果。',
+    ].join('\n'),
     '你的知识有截止日期,不掌握此刻的近况。涉及“今天/最新/现在/近期/新闻/价格/版本/天气/赛况”等随时间变化的事,别凭记忆当作现状——能联网就先 browser_search 查证、注明信息时间,不能联网就如实说明这是截止前的旧信息。',
     '回答使用 Markdown。代码放在带语言标注的代码块里。保持直接、具体,不要空洞客套。',
     '当用户要网页、数据可视化、动画、小游戏,或明确要 SVG/矢量图时,输出单文件自包含的 ```html 或 ```svg 代码块(内联 CSS/JS,不引外部资源)——界面会自动在旁边的预览面板实时渲染它。',
     '硬性规则:仅当用户想要一张全新的位图图像(画图/画画/生成图片/照片/插画/海报/头像/壁纸)时,才调用 generate_image 工具(本地 AI 生图),严禁用 HTML/SVG/CSS 代码模拟图片。以下情况不要生图:①用户在讨论、分析或询问某张已有图片(含刚发的附件图);②要的是图表/流程图/示意图/数据可视化(改用 ```html 或 ```svg 代码块,会自动预览);③只需要文字(文案、描述、创意、清单);④用户明确要 SVG/矢量图/用代码画。拿不准要不要真出图时,先用一句话问清("要我直接生成一张吗?"),不要贸然生成——生图较慢,误触发很打扰。',
     '用户消息里的【附件文件:xxx】块就是该文件的完整内容(PDF/Word/Excel/PPT/音频转写等已在本地解析为文本)。直接依据它回答,不要说"无法读取附件"。',
   ]
+  {
+    const lastUser = [...conversation.messages]
+      .reverse()
+      .find((m) => m.role === 'user')
+    const steer = buildInjectionSteerBlock(
+      detectPromptInjectionSignals(lastUser?.content ?? ''),
+    )
+    if (steer) lines.splice(3, 0, steer) // 紧挨行为纪律块之后
+  }
   const loc = S.settings.location?.trim()
   if (loc) {
     lines.push(
@@ -438,14 +633,33 @@ async function buildSystemPrompt(conversation) {
           '- GitHub 操作(PR/issue/仓库)github_cli;更底层的 macOS 自动化 run_applescript',
       )
     }
-    if (isCloudAuthorized()) {
+    if (cloudAuthorized) {
+      const writeHint = writesBlocked
+        ? '- 当前生产写关闭:不要调用 planner_add_task,也不要假装已写入。用户要加待办/记事时,引导打开 Plan Space 手动添加,并说明助手此刻只读'
+        : '- 用户明确要记一件事/加待办/提醒自己 → planner_add_task(投递到 Planner 收件箱);仅意图明确时调,调用后复述加了什么'
       lines.push(
         'Life OS 数据(用户自己的真实数据,涉及时必须用工具读、不要猜也不要说"看不到"):\n' +
           '- 花销/收入/结余/某分类或商家花多少 → finance_summary(可传 period 或 from/to、category、merchant)\n' +
           '- 待办/今天要做什么/有没有逾期/今天完成了什么 → planner_tasks(scope: today/overdue/open/completed_today)\n' +
-          '- "今天怎么样/我的近况" 这类综合近况 → life_os_today(一次拿到待办·财务·健身·音乐今日概览)\n' +
-          '- 用户明确要记一件事/加待办/提醒自己 → planner_add_task(投递到 Planner 收件箱);仅意图明确时调,调用后复述加了什么',
+          '- "今天怎么样/我的近况" 这类综合近况 → life_os_today(一次拿到待办·财务·健身·音乐·Health 准备度摘要)\n' +
+          writeHint +
+          '\n- 开始/结束 Focus(计划会话) → start_focus / end_focus;状态 → focus_status\n' +
+          '- 打开 Space → open_space;写 Library 笔记 → compose_library_note(用户明确要求时)',
       )
+    }
+    // Health readiness may be present on-device without cloud login (HealthKit inject).
+    try {
+      const { healthReadinessAssistantBlock } =
+        await import('$lib/kenos/healthReadiness.host.js')
+      const block = healthReadinessAssistantBlock({ locale: 'zh' })
+      if (block) {
+        lines.push(
+          '当前设备已提供 Health 准备度摘要(无 HRV/睡眠小时/步数等明细)。回答身体/训练/精力相关问题时以此为准;不要编造生理数字;用户要明细时引导打开 Health Space。\n' +
+            block,
+        )
+      }
+    } catch {
+      /* ignore */
     }
     if (S.settings.memory) {
       // 刻意精简:小模型(尤其思考模式)会逐句反刍长指令,曾因此陷入复读循环;细节纪律在工具描述里
@@ -475,17 +689,34 @@ async function buildSystemPrompt(conversation) {
   try {
     const { FOCUS } = await import('./kenos/focusStore.svelte.js')
     const focus = FOCUS.focus
-    if (focus && ['active', 'paused', 'temporarily_left', 'ending'].includes(focus.status)) {
-      const domains = focus.assistantScope?.allowedDomains?.join('、') || focus.activeSpace
+    if (
+      focus &&
+      ['active', 'paused', 'temporarily_left', 'ending'].includes(focus.status)
+    ) {
+      const domains =
+        focus.assistantScope?.allowedDomains?.join('、') || focus.activeSpace
       lines.push(
         `当前 Focus Session：「${focus.title}」(mode=${focus.mode}, status=${focus.status})。` +
           `默认只处理这些域：${domains}。禁止主动提起被隐藏域的待办/角标/审批数量。` +
-          `若用户明确问跨域问题：可以回答，并清楚标明“暂时跨出当前 Focus”，不要自动结束或切换 Focus，回答后提醒可返回当前 Session。` +
+          `若用户明确问跨域问题：可以回答，并清楚标明“暂时跨出当前 Focus”；仅当用户明确要求结束/切换时才调用 end_focus / start_focus。` +
           `不要把 raw FocusContext JSON 或凭证写进回复。主动建议必须可解释（为什么现在、信号、影响、是否写入、可否忽略）。`,
       )
     }
   } catch {
     /* Focus store optional during early boot */
+  }
+
+  try {
+    const { ASSISTANT_CTX } = await import('./kenos/assistantContext.svelte.js')
+    if (ASSISTANT_CTX.work) {
+      const title = ASSISTANT_CTX.work.title?.trim()
+      lines.push(
+        `当前 Assistant 上下文:Work${title ? `「${title}」` : ''}。` +
+          `优先围绕该工作主题作答;需要跨域生活数据时仍可用 Life OS 工具,但要标明暂时离开 Work 语境。`,
+      )
+    }
+  } catch {
+    /* assistant context optional */
   }
 
   // 长对话压缩:更早的消息已由小模型摘要,注入摘要保住"长期剧情"
@@ -500,7 +731,9 @@ async function buildSystemPrompt(conversation) {
       lines.push(`用户画像(长期资料):\n${profile}`)
     }
     // 情景记忆 = 语义召回:只注入与本轮相关的,控制小模型的上下文负担
-    const lastUser = [...conversation.messages].reverse().find((m) => m.role === 'user')
+    const lastUser = [...conversation.messages]
+      .reverse()
+      .find((m) => m.role === 'user')
     if (lastUser?.content) {
       const query = lastUser.content.slice(0, 300)
       const key = `${MEM.items.length}:${query}`
@@ -527,9 +760,97 @@ function conversationHasImages(conversation) {
 
 function resolveModel(conversation) {
   if (conversationHasImages(conversation)) {
-    return S.settings.model === 'llm-quality' ? VISION_MODELS.quality : VISION_MODELS.fast
+    return S.settings.model === 'llm-quality'
+      ? VISION_MODELS.quality
+      : VISION_MODELS.fast
+  }
+  const lastUser = [...conversation.messages]
+    .reverse()
+    .find((m) => m.role === 'user')
+  // 刁钻多约束轮次:静默升 llm-quality(prompt 是最弱层;升模补指令遵循)
+  if (
+    conversation.model === 'llm-fast' &&
+    lastUser?.content &&
+    shouldPreferQualityModel(lastUser.content)
+  ) {
+    return 'llm-quality'
   }
   return conversation.model
+}
+
+/**
+ * 输出侧一刀重写:先别写代码泄漏 / 无依据百分比等硬约束被违反时,
+ * 用同一模型(无工具)重写正文。最多一次,失败则保留原稿。
+ */
+async function maybeRewriteGuardedReply(
+  conversation,
+  { model, signal, temperature, backend },
+) {
+  const lastUser = [...conversation.messages]
+    .reverse()
+    .find((m) => m.role === 'user')
+  const lastAsst = conversation.messages.at(-1)
+  if (!lastUser?.content || lastAsst?.role !== 'assistant' || !lastAsst.content)
+    return
+  if (lastAsst.toolCalls?.length) return
+  if (signal?.aborted) return
+
+  const violations = detectReplyGuardViolations(
+    lastUser.content,
+    lastAsst.content,
+  )
+  if (!violations.length) return
+
+  const draft = lastAsst.content
+  let working = draft
+  const startedAt = Date.now()
+  try {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
+      const roundViolations = detectReplyGuardViolations(
+        lastUser.content,
+        working,
+      )
+      if (!roundViolations.length) break
+      const rewritePrompt = buildReplyGuardRewritePrompt(
+        roundViolations,
+        lastUser.content,
+        working,
+      )
+      // Stream into a temp buffer — never blank the visible reply during rewrite.
+      const temp = { content: '', reasoning: '' }
+      const reveal = createStreamReveal(temp, startedAt)
+      const res = await streamChat({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content:
+              '你是严格的修订器。只输出修订后的完整正文,遵守用户硬约束。',
+          },
+          { role: 'user', content: rewritePrompt },
+        ],
+        signal,
+        temperature: Math.min(temperature ?? 0.4, 0.5),
+        maxTokens: 4096,
+        tools: undefined,
+        thinking: false,
+        backend,
+        onDelta: (chunk) => reveal.push(chunk),
+      }).finally(() => reveal.finish())
+      if (!temp.content?.trim()) break
+      working = temp.content
+      lastAsst.content = working
+      lastAsst.finishReason = res.finishReason
+    }
+    if (!working?.trim()) lastAsst.content = draft
+    else lastAsst.content = finalizeGuardedReply(lastUser.content, working)
+    lastAsst.durationMs = (lastAsst.durationMs ?? 0) + (Date.now() - startedAt)
+  } catch (err) {
+    // Always restore the pre-rewrite draft (esp. user Stop mid-rewrite).
+    lastAsst.content = draft
+    if (err?.name === 'AbortError') throw err
+  }
 }
 
 /* —— 发送 / 重生成 —— */
@@ -623,7 +944,9 @@ export async function regenerate() {
   const user = messages[u]
 
   const tail = messages.slice(u + 1)
-  const tailHasContent = tail.some((m) => m.role === 'assistant' && m.content && !m.error)
+  const tailHasContent = tail.some(
+    (m) => m.role === 'assistant' && m.content && !m.error,
+  )
   if (tailHasContent) {
     if (!user.branches) {
       user.branches = [snapshotTail(tail)]
@@ -653,7 +976,9 @@ export function switchBranch(userIndex, dir) {
   const next = (user.branch ?? 0) + dir
   if (next < 0 || next >= user.branches.length) return
   // 先把当前尾巴回存(可能被续写改过),再换上目标版本
-  user.branches[user.branch ?? 0] = snapshotTail(conversation.messages.slice(userIndex + 1))
+  user.branches[user.branch ?? 0] = snapshotTail(
+    conversation.messages.slice(userIndex + 1),
+  )
   conversation.messages.splice(userIndex + 1)
   conversation.messages.push(...snapshotTail(user.branches[next]))
   user.branch = next
@@ -675,9 +1000,15 @@ export async function continueGenerating() {
   const model = resolveModel(conversation)
   last.finishReason = undefined
 
+  const backend = await resolveChatBackend()
+  C.gatewayOk = backend.gatewayOk
+  C.chatBackend = backend.kind
+
   let systemPrompt
   try {
-    systemPrompt = await buildSystemPrompt(conversation)
+    systemPrompt = await buildSystemPrompt(conversation, {
+      backend: backend.kind,
+    })
   } catch {
     systemPrompt = '你是 AI.OS,本地私人 AI 助手。'
   }
@@ -698,6 +1029,7 @@ export async function continueGenerating() {
       signal,
       temperature: S.settings.temperature,
       maxTokens: 4096,
+      backend,
       thinking: false,
       onDelta: (chunk) => {
         if (chunk.content) reveal.push({ content: chunk.content }) // 续写只接正文
@@ -707,8 +1039,8 @@ export async function continueGenerating() {
     last.durationMs = (last.durationMs ?? 0) + (Date.now() - startedAt)
   } catch (err) {
     if (err?.name !== 'AbortError') {
-      last.error = String(err?.message ?? err)
-      C.gatewayOk = await pingGateway()
+      last.error = normalizeChatError(err)
+      await refreshGateway()
     }
   } finally {
     if (controller?.signal === signal) {
@@ -726,21 +1058,46 @@ async function streamAssistantReply(conversation) {
   controller = new AbortController()
   const signal = controller.signal
 
+  const backend = await resolveChatBackend()
+  C.gatewayOk = backend.gatewayOk
+  C.chatBackend = backend.kind
+
   const useVision = conversationHasImages(conversation)
   const lastUserText =
-    [...conversation.messages].reverse().find((m) => m.role === 'user')?.content ?? ''
+    [...conversation.messages].reverse().find((m) => m.role === 'user')
+      ?.content ?? ''
   const model = resolveModel(conversation)
-  const useTools = S.settings.tools && !useVision
-  const tools = useTools ? toolDefinitions({ webAccess: S.settings.webAccess }) : undefined
+  const useTools = S.settings.tools
+  const rawTools = useTools
+    ? toolDefinitionsForBackend(backend.kind, {
+        webAccess: S.settings.webAccess,
+      })
+    : undefined
+  const tools = filterToolsForVision(rawTools, useVision)
 
   // 先挂占位消息再组装 prompt:记忆召回(嵌入模型冷启动)可能耗时几十秒,
   // 这段时间界面必须有等待反馈,不能空白
-  const firstAssistant = $state({ role: 'assistant', content: '', reasoning: '' })
+  const firstAssistant = $state({
+    role: 'assistant',
+    content: '',
+    reasoning: '',
+  })
   conversation.messages.push(firstAssistant)
+
+  if (backend.kind === 'kimi' && useVision) {
+    firstAssistant.error = 'kimi_vision_unsupported'
+    C.streaming = false
+    controller = null
+    touch(conversation)
+    persist()
+    return
+  }
 
   let systemPrompt
   try {
-    systemPrompt = await buildSystemPrompt(conversation)
+    systemPrompt = await buildSystemPrompt(conversation, {
+      backend: backend.kind,
+    })
   } catch {
     systemPrompt = '你是 AI.OS,本地私人 AI 助手。'
   }
@@ -772,6 +1129,7 @@ async function streamAssistantReply(conversation) {
           maxTokens: useThinking ? 8192 : 4096, // 思考通道占大头,给足预算避免正文被截断
           tools: lastRound ? undefined : tools,
           thinking: useThinking,
+          backend,
           onDelta: (chunk) => reveal.push(chunk),
         }).finally(() => reveal.finish()) // 结束/中断都补齐,保证 assistant.content 完整
       }
@@ -788,7 +1146,11 @@ async function streamAssistantReply(conversation) {
         stub.length > 0 &&
         stub.length < 40 &&
         /[:：,，、]$/.test(stub)
-      if ((res.finishReason === 'loop' || isStubbedStop) && !signal.aborted && !res.toolCalls.length) {
+      if (
+        (res.finishReason === 'loop' || isStubbedStop) &&
+        !signal.aborted &&
+        !res.toolCalls.length
+      ) {
         const looped = res.finishReason === 'loop'
         assistant.reasoning = ''
         assistant.content = ''
@@ -831,29 +1193,62 @@ async function streamAssistantReply(conversation) {
       // 无副作用、不经网关模型也不碰浏览器共享标签页的工具并发执行;其余保持串行——
       // 网关(llama-swap)按 model 换出换入,并发不同档会抖动;浏览器工具共享 agentTab、
       // GUI 工具抢焦点,并发会互相踩踏。多数轮只有一个工具,此分区对常见情况零影响。
-      const pending = assistant.toolCalls.filter((tc) => tc.result === undefined)
+      const pending = assistant.toolCalls.filter(
+        (tc) => tc.result === undefined,
+      )
       const runOne = async (tc) => {
-        tc.result = await executeTool(tc.name, tc.arguments)
+        if (signal.aborted) {
+          settleAbortedToolCalls([tc])
+          return
+        }
+        let raw = await executeTool(tc.name, tc.arguments, { callId: tc.id })
+        let result = normalizeToolResult(tc.name, raw)
+        // 幂等只读工具：瞬时失败自动再试一次（写工具绝不重试）
+        if (!signal.aborted && shouldAutoRetryTool(tc.name, result, 0)) {
+          raw = await executeTool(tc.name, tc.arguments, { callId: tc.id })
+          result = normalizeToolResult(tc.name, raw)
+        }
+        if (signal.aborted) {
+          settleAbortedToolCalls([tc])
+          // Drop orphan images from this call — do not attach to a stopped turn.
+          consumePendingImages(tc.id)
+          return
+        }
+        tc.result = result
         // 生图类工具的产出图片挂到调用记录上,由 Message 直接渲染(不进模型上下文)
-        const images = consumePendingImages()
+        const images = consumePendingImages(tc.id)
         if (images.length) tc.images = images
         tc.running = false
       }
-      const concurrent = pending.filter((tc) => PARALLEL_SAFE_TOOLS.has(tc.name))
-      if (concurrent.length && !signal.aborted) await Promise.all(concurrent.map(runOne))
+      const concurrent = pending.filter((tc) =>
+        PARALLEL_SAFE_TOOLS.has(tc.name),
+      )
+      if (concurrent.length && !signal.aborted)
+        await Promise.all(concurrent.map(runOne))
       for (const tc of pending) {
         if (PARALLEL_SAFE_TOOLS.has(tc.name)) continue
-        if (signal.aborted) break
+        if (signal.aborted) {
+          settleAbortedToolCalls(pending.filter((t) => t.result === undefined))
+          break
+        }
         await runOne(tc)
       }
       persist()
-      if (signal.aborted) break
+      if (signal.aborted) {
+        settleAbortedToolCalls(assistant.toolCalls)
+        break
+      }
     }
 
     // 轮次耗尽仍停在工具调用、没产出正文(模型一路检索没收尾,常见于笔记 RAG 打满 10 轮):
     // 撤掉工具强制再作答一次,基于已积累的工具结果综合出答案,避免"检索一大堆却零回答"。
     const stuck = conversation.messages.at(-1)
-    if (!signal.aborted && stuck?.role === 'assistant' && !stuck.content && stuck.toolCalls?.length) {
+    if (
+      !signal.aborted &&
+      stuck?.role === 'assistant' &&
+      !stuck.content &&
+      stuck.toolCalls?.length
+    ) {
       const wrap = $state({ role: 'assistant', content: '', reasoning: '' })
       conversation.messages.push(wrap)
       const startedAt = Date.now()
@@ -866,6 +1261,7 @@ async function streamAssistantReply(conversation) {
         maxTokens: 4096,
         tools: undefined, // 强制收尾:不再给工具,逼模型基于已有结果作答
         thinking: false,
+        backend,
         onDelta: (chunk) => reveal.push(chunk),
       }).finally(() => reveal.finish())
       wrap.durationMs = Date.now() - startedAt
@@ -876,13 +1272,30 @@ async function streamAssistantReply(conversation) {
         if (!stuck.error) stuck.error = '模型检索后没能综合出回答,可点重试'
       }
     }
+
+    // 硬约束输出守卫(先别写代码 / 无依据百分比):一刀重写
+    if (!signal.aborted) {
+      await maybeRewriteGuardedReply(conversation, {
+        model,
+        signal,
+        temperature: sampleTemp,
+        backend,
+      })
+    }
   } catch (err) {
     if (err?.name !== 'AbortError') {
       const last = conversation.messages.at(-1)
-      if (last?.role === 'assistant') last.error = String(err?.message ?? err)
-      C.gatewayOk = await pingGateway()
+      if (last?.role === 'assistant') last.error = normalizeChatError(err)
+      await refreshGateway()
     }
   } finally {
+    if (signal.aborted) {
+      for (const m of conversation.messages) {
+        if (m?.role === 'assistant' && m.toolCalls?.length) {
+          settleAbortedToolCalls(m.toolCalls)
+        }
+      }
+    }
     if (controller?.signal === signal) {
       controller = null
       C.streaming = false
@@ -897,7 +1310,7 @@ async function streamAssistantReply(conversation) {
       !last.error
     ) {
       if (signal.aborted) {
-        // 用户主动中断:静默清掉空壳
+        // 用户主动中断:静默清掉空壳（有正文的 draft 绝不应走到这里）
         conversation.messages.pop()
       } else {
         // 模型静默返回空(如 VLM 壳在长对话/复杂上下文下会返回空 content):
@@ -909,7 +1322,10 @@ async function streamAssistantReply(conversation) {
             : '模型没有返回内容(图片或上下文可能过大;可试试开新对话再发),可点重试'
       }
     } else if (last?.role === 'assistant' && last.content && !last.error) {
-      C.freshAssistant = { id: conversation.id, index: conversation.messages.length - 1 }
+      C.freshAssistant = {
+        id: conversation.id,
+        index: conversation.messages.length - 1,
+      }
     }
     touch(conversation)
     persist()
@@ -924,12 +1340,16 @@ async function streamAssistantReply(conversation) {
 
 /** 回复完成后被动萃取用户稳定事实(补模型忘了 save_memory 的情况) */
 function maybeExtractMemories(conversation) {
-  const lastUser = [...conversation.messages].reverse().find((m) => m.role === 'user')
+  const lastUser = [...conversation.messages]
+    .reverse()
+    .find((m) => m.role === 'user')
   const lastAssistant = [...conversation.messages]
     .reverse()
     .find((m) => m.role === 'assistant' && m.content && !m.error)
   if (!lastUser?.content) return
-  const answer = (lastAssistant?.content ?? '').replace(/^<think>[\s\S]*?<\/think>/, '').trim()
+  const answer = (lastAssistant?.content ?? '')
+    .replace(/^<think>[\s\S]*?<\/think>/, '')
+    .trim()
   autoExtractMemories(lastUser.content, answer)
 }
 
@@ -942,7 +1362,11 @@ async function maybeTitle(conversation) {
     .find((m) => m.role === 'assistant' && m.content && !m.error)
   if (!user || !assistant) return
   conversation.titled = true
-  const title = await generateTitle(user.content, assistant.content, S.settings.locale)
+  const title = await generateTitle(
+    user.content,
+    assistant.content,
+    S.settings.locale,
+  )
   if (title) {
     conversation.title = title
     persist()
@@ -955,7 +1379,9 @@ async function maybeTitle(conversation) {
 async function maybeSuggest(conversation) {
   const last = conversation.messages.at(-1)
   if (!last || last.role !== 'assistant' || !last.content || last.error) return
-  const lastUser = [...conversation.messages].reverse().find((m) => m.role === 'user')
+  const lastUser = [...conversation.messages]
+    .reverse()
+    .find((m) => m.role === 'user')
   if (!lastUser?.content) return
   const answer = last.content.replace(/^<think>[\s\S]*?<\/think>/, '').trim()
   if (!answer) return

@@ -65,7 +65,7 @@ export function buildCapabilityRegistry(options = {}) {
           surface: 'unauthorized',
           sourceOfTruth: legacySource,
           userSafeLabel: '需要登录',
-          userSafeDetail: '登录后才能读取你的数据。',
+          userSafeDetail: '登录后才能读取你的数据。可在设置中登录。',
         })
       }
       if (state?.status === 'loading') {
@@ -130,6 +130,7 @@ export function buildCapabilityRegistry(options = {}) {
         surface: 'unauthorized',
         sourceOfTruth: kenosSource,
         userSafeLabel: '需要登录',
+        userSafeDetail: '登录后才能读取你的数据。可在设置中登录。',
       })
     }
     if (state?.status === 'unsupported') {
@@ -399,7 +400,11 @@ export function capabilityEmptyCopy(capability) {
     }
   }
   if (capability.surface === 'unauthorized') {
-    return { kind: 'unauthorized', title: '需要登录', body: capability.userSafeDetail || '登录或权限失效后才能继续读取。' }
+    return {
+      kind: 'unauthorized',
+      title: '需要登录',
+      body: capability.userSafeDetail || '登录后才能读取你的数据。可在设置中登录。',
+    }
   }
   if (capability.surface === 'error') {
     return {

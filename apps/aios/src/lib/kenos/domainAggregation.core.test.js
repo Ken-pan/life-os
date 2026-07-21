@@ -37,5 +37,6 @@ describe('domainAggregation.core', () => {
   it('lists single Inbox + Assistant handoffs from providers', () => {
     assert.ok(listInboxSources().some((s) => s.domainId === 'work'))
     assert.ok(listAssistantHandoffs().some((h) => h.domainId === 'work'))
+    assert.ok(listAssistantHandoffs().some((h) => h.domainId === 'health'))
   })
 })

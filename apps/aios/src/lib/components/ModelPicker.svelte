@@ -24,7 +24,10 @@
   }
 </script>
 
-<svelte:window onpointerdown={onWindowPointerDown} onkeydown={onWindowKeydown} />
+<svelte:window
+  onpointerdown={onWindowPointerDown}
+  onkeydown={onWindowKeydown}
+/>
 
 <div class="picker" bind:this={root}>
   <button
@@ -91,21 +94,25 @@
   .trigger {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 3px;
     border: none;
     background: transparent;
     color: var(--t1);
-    padding: 6px 10px;
-    border-radius: 10px;
+    padding: 6px 8px;
+    border-radius: 999px;
     cursor: pointer;
-    font-size: var(--text-base, 15px);
+    font-size: 12px;
   }
   .trigger:hover {
-    background: var(--card);
+    background: color-mix(in srgb, var(--t1) 6%, transparent);
   }
   .trigger-model {
-    color: var(--t3);
+    color: var(--t2);
     font-weight: 500;
+    max-width: 7.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .trigger :global(svg) {
     color: var(--t3);
@@ -178,7 +185,7 @@
     border-radius: 999px;
     background: var(--card-h);
     position: relative;
-    transition: background var(--dur-fast, 120ms) var(--ease, ease);
+    transition: background var(--dur-fast) var(--ease, ease);
   }
   .switch::after {
     content: '';
@@ -190,7 +197,7 @@
     border-radius: 50%;
     background: var(--bg);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    transition: transform var(--dur-fast, 120ms) var(--ease, ease);
+    transition: transform var(--dur-fast) var(--ease, ease);
   }
   .switch.on {
     background: var(--accent);

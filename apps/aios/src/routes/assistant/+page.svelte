@@ -38,6 +38,16 @@
     }),
   )
 
+  const chatHint = $derived(
+    !CLOUD_BUILD
+      ? t('chat.hintLocal')
+      : C.chatBackend === 'kimi'
+        ? t('chat.hintCloudKimi')
+        : C.chatBackend === 'local' && C.gatewayOk
+          ? t('chat.hintCloudLocal')
+          : t('chat.hintCloud'),
+  )
+
   $effect(() => {
     if (page.url.searchParams.get('scope') !== 'work') return
     enterWorkAssistantContext({
@@ -68,9 +78,13 @@
       .catch(() => {})
   })
   const suggestions = $derived(
-    dynamicSuggestions
-      ? dynamicSuggestions.map((text, i) => ({ icon: DYN_ICONS[i % DYN_ICONS.length], text }))
-      : STATIC_SUGGESTIONS,
+    (dynamicSuggestions
+      ? dynamicSuggestions.map((text, i) => ({
+          icon: DYN_ICONS[i % DYN_ICONS.length],
+          text,
+        }))
+      : STATIC_SUGGESTIONS
+    ).slice(0, 4),
   )
 
   // 追问建议(小模型生成,挂在最后一条助手消息上,空闲时展示)
@@ -214,7 +228,11 @@
     if (!message) return
     const match = message.content.match(/```(html|svg)\s*\n([\s\S]*?)```/)
     if (match && match[2].length > 300) {
-      openArtifact({ lang: match[1], code: match[2], title: conversation.title })
+      openArtifact({
+        lang: match[1],
+        code: match[2],
+        title: conversation.title,
+      })
     }
   })
 </script>
@@ -223,98 +241,130 @@
 
 <div class="chat">
   <div class="chat-main">
-  {#if AG.active}
-    <AgentThread />
-  {:else}
-  <div class="chat-top">
-    <div class="chat-top-left">
-      <span
-        class="scope-chip"
-        data-testid="assistant-scope-chip"
-        data-scope-kind={scopeUi.kind}
-        title={scopeUi.label}
-      >
-        {scopeUi.label}
-      </span>
-    </div>
-    <div class="chat-top-right">
-      <ModelPicker />
-      <div class="chat-top-actions">
-        {#if !isEmpty}
-          <button
-            type="button"
-            class="top-btn"
-            title={exported ? t('chat.exported') : t('chat.export')}
-            aria-label={exported ? t('chat.exported') : t('chat.export')}
-            onclick={exportConversation}
+    {#if AG.active}
+      <AgentThread />
+    {:else}
+      <div class="chat-top">
+        <div class="chat-top-left">
+          <span
+            class="scope-chip"
+            data-testid="assistant-scope-chip"
+            data-scope-kind={scopeUi.kind}
+            title={scopeUi.label}
+            aria-label={scopeUi.label}
           >
-            <Icon name={exported ? 'check' : 'download'} size={18} strokeWidth={1.75} />
-          </button>
-        {/if}
-        <button
-          type="button"
-          class="top-btn"
-          title={t('chat.newChat')}
-          aria-label={t('chat.newChat')}
-          onclick={startNewChat}
-        >
-          <Icon name="compose" size={19} strokeWidth={1.75} />
-        </button>
+            {scopeUi.entity
+              ? `${scopeUi.space} · ${scopeUi.entity}`
+              : scopeUi.space}
+          </span>
+        </div>
+        <div class="chat-top-right">
+          <ModelPicker />
+          <div
+            class="chat-top-actions"
+            role="toolbar"
+            aria-label={t('chat.title')}
+          >
+            {#if !isEmpty}
+              <button
+                type="button"
+                class="top-btn"
+                title={exported ? t('chat.exported') : t('chat.export')}
+                aria-label={exported ? t('chat.exported') : t('chat.export')}
+                onclick={exportConversation}
+              >
+                <Icon
+                  name={exported ? 'check' : 'download'}
+                  size={16}
+                  strokeWidth={1.75}
+                />
+              </button>
+            {/if}
+            <button
+              type="button"
+              class="top-btn"
+              title={t('chat.newChat')}
+              aria-label={t('chat.newChat')}
+              onclick={startNewChat}
+            >
+              <Icon name="compose" size={16} strokeWidth={1.75} />
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  {#if isEmpty}
-    <div class="hero">
-      <h1>{t('chat.greeting')}</h1>
-      <Composer autofocus />
-      <div class="suggestions">
-        {#each suggestions as item (item.text)}
-          <button type="button" class="assistant-chip" onclick={() => sendMessage(item.text)}>
-            <Icon name={item.icon} size={14} strokeWidth={1.75} />
-            {item.text}
-          </button>
-        {/each}
-      </div>
-      <p class="hint">{CLOUD_BUILD ? t('chat.hintCloud') : t('chat.hintLocal')}</p>
-    </div>
-  {:else}
-    <div class="thread aios-scroll" bind:this={scroller} onscroll={onScroll}>
-      <div class="thread-col">
-        {#each conversation.messages as message, i (i)}
-          <Message {message} index={i} isLast={i === conversation.messages.length - 1} />
-        {/each}
-        {#if followUps.length}
-          <div class="follow-ups" aria-label={t('chat.followUps')}>
-            {#each followUps as text (text)}
-              <button type="button" class="follow-chip" onclick={() => sendMessage(text)}>
-                {text}
+      {#if isEmpty}
+        <div class="hero">
+          <p class="hero-kicker">{t('chat.tagline')}</p>
+          <Composer autofocus />
+          <div class="suggestions">
+            {#each suggestions as item (item.text)}
+              <button
+                type="button"
+                class="assistant-chip"
+                onclick={() => sendMessage(item.text)}
+              >
+                <Icon name={item.icon} size={15} strokeWidth={1.75} />
+                <span>{item.text}</span>
+                <Icon name="chevron-right" size={14} strokeWidth={1.75} />
               </button>
             {/each}
           </div>
-        {/if}
-        <div class="thread-spacer" aria-hidden="true" style:height="{spacerH}px"></div>
-      </div>
-    </div>
-    <div class="dock">
-      <div class="dock-col">
-        {#if !nearBottom}
-          <button
-            type="button"
-            class="to-bottom"
-            title={t('chat.scrollToBottom')}
-            aria-label={t('chat.scrollToBottom')}
-            onclick={scrollToBottom}
-          >
-            <Icon name="arrow-down" size={16} strokeWidth={2} />
-          </button>
-        {/if}
-        <Composer />
-        <p class="hint">{CLOUD_BUILD ? t('chat.hintCloud') : t('chat.hintLocal')}</p>
-      </div>
-    </div>
-  {/if}
-  {/if}
+          <p class="hint hint--empty">{chatHint}</p>
+        </div>
+      {:else}
+        <div
+          class="thread aios-scroll"
+          bind:this={scroller}
+          onscroll={onScroll}
+        >
+          <div class="thread-col">
+            {#each conversation.messages as message, i (i)}
+              <Message
+                {message}
+                index={i}
+                isLast={i === conversation.messages.length - 1}
+              />
+            {/each}
+            {#if followUps.length}
+              <div class="follow-ups" aria-label={t('chat.followUps')}>
+                {#each followUps as text (text)}
+                  <button
+                    type="button"
+                    class="follow-chip"
+                    onclick={() => sendMessage(text)}
+                  >
+                    <span>{text}</span>
+                    <Icon name="chevron-right" size={13} strokeWidth={1.75} />
+                  </button>
+                {/each}
+              </div>
+            {/if}
+            <div
+              class="thread-spacer"
+              aria-hidden="true"
+              style:height="{spacerH}px"
+            ></div>
+          </div>
+        </div>
+        <div class="dock">
+          <div class="dock-col">
+            {#if !nearBottom}
+              <button
+                type="button"
+                class="to-bottom"
+                title={t('chat.scrollToBottom')}
+                aria-label={t('chat.scrollToBottom')}
+                onclick={scrollToBottom}
+              >
+                <Icon name="arrow-down" size={16} strokeWidth={2} />
+              </button>
+            {/if}
+            <Composer />
+          </div>
+        </div>
+      {/if}
+    {/if}
   </div>
 
   <SidePanel />
@@ -337,9 +387,7 @@
     min-height: 0;
   }
 
-  /* —— 顶部控件:浮层化,不再占据独立页眉带 ——
-     模型选择器 + 操作按钮悬浮在消息流之上,内容满高滚动到其下方;
-     一层从 --bg 渐隐到透明的薄幕遮住上滑内容,读起来"没有页眉"。 */
+  /* Floating chrome — veil only; controls stay light like Claude/ChatGPT. */
   .chat-top {
     position: absolute;
     inset: 0 0 auto 0;
@@ -347,12 +395,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: calc(var(--safe-top-effective, 0px) + 8px) 12px 10px;
+    gap: 10px;
+    padding: calc(var(--safe-top-effective, 0px) + 10px) 14px 12px;
     pointer-events: none;
     background: linear-gradient(
       to bottom,
-      var(--bg) 32%,
-      color-mix(in srgb, var(--bg) 55%, transparent) 68%,
+      var(--bg) 28%,
+      color-mix(in srgb, var(--bg) 48%, transparent) 72%,
       transparent
     );
   }
@@ -367,117 +416,209 @@
   .chat-top-right {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     margin-left: auto;
   }
   .scope-chip {
     pointer-events: auto;
     display: inline-flex;
     align-items: center;
-    max-width: min(52vw, 280px);
+    max-width: min(42vw, 200px);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    border: 1px solid var(--border);
+    border: 0;
     border-radius: 999px;
-    padding: 4px 10px;
-    color: var(--t2);
-    font-size: var(--text-sm, 13px);
-    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    padding: 3px 8px;
+    color: color-mix(in srgb, var(--t3) 95%, transparent);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    background: color-mix(in srgb, var(--t1) 4%, transparent);
   }
   .chat-top-actions {
-    display: flex;
-    gap: 2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    padding: 1px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    border: 1px solid color-mix(in srgb, var(--t1) 8%, transparent);
+    backdrop-filter: blur(18px) saturate(1.3);
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    box-shadow: 0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset;
   }
   .top-btn {
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border: none;
-    border-radius: 10px;
+    border-radius: 999px;
     background: transparent;
     color: var(--t2);
     cursor: pointer;
+    transition:
+      background 160ms ease,
+      color 160ms ease;
   }
   .top-btn:hover {
-    background: var(--card);
+    background: color-mix(in srgb, var(--t1) 8%, transparent);
     color: var(--t1);
   }
 
-  /* —— 空态建议 —— */
+  /* Starter prompts — single-column quiet rows (Claude/ChatGPT) */
   .suggestions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    width: 100%;
+    border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   }
   .assistant-chip {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 6px;
-    border: 1px solid var(--border-l);
-    border-radius: 999px;
-    background: var(--bg);
+    gap: 10px;
+    min-height: 44px;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+    border-radius: 0;
+    background: transparent;
     color: var(--t2);
-    padding: 8px 14px;
-    font-size: var(--text-sm, 13px);
+    padding: 11px 2px;
+    font-size: 14px;
+    line-height: 1.35;
+    text-align: start;
     cursor: pointer;
-    transition: all var(--dur-fast, 120ms) var(--ease, ease);
+    transition:
+      background 160ms ease,
+      color 160ms ease;
+  }
+  .assistant-chip :global(svg:first-child) {
+    flex: 0 0 auto;
+    color: var(--t3);
+  }
+  .assistant-chip :global(svg:last-child) {
+    flex: 0 0 auto;
+    margin-left: auto;
+    color: color-mix(in srgb, var(--t3) 70%, transparent);
+  }
+  .assistant-chip span {
+    min-width: 0;
+    flex: 1;
   }
   .assistant-chip:hover {
-    background: var(--card);
+    background: color-mix(in srgb, var(--t1) 4%, transparent);
     color: var(--t1);
-    border-color: var(--border-l);
+  }
+  .assistant-chip:active {
+    background: color-mix(in srgb, var(--t1) 6%, transparent);
   }
 
-  /* —— 回到底部 —— */
   .to-bottom {
     position: absolute;
-    top: -46px;
+    top: -44px;
     left: 50%;
     transform: translateX(-50%);
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
-    border: 1px solid var(--border-l);
+    width: 32px;
+    height: 32px;
+    border: 1px solid color-mix(in srgb, var(--t1) 10%, transparent);
     border-radius: 50%;
-    background: var(--bg);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
     color: var(--t1);
     cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px color-mix(in srgb, #000 10%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     z-index: 5;
   }
   .to-bottom:hover {
     background: var(--card);
   }
 
-  /* —— 空态:居中问候 + 输入框 —— */
+  /* Empty state — composer-first: kicker → input → quiet rows */
   .hero {
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-5, 20px);
-    width: min(100% - 32px, 704px);
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 14px;
+    width: min(100% - 32px, 680px);
     margin-inline: auto;
-    padding-bottom: 12vh;
+    padding: calc(var(--safe-top-effective, 0px) + 52px) 0 6vh;
   }
-  .hero h1 {
+  .hero-kicker {
     margin: 0;
-    font-size: clamp(22px, 3.2vw, 30px);
-    font-weight: 600;
-    color: var(--t1);
-    text-align: center;
+    color: color-mix(in srgb, var(--t1) 55%, transparent);
+    font-size: 13px;
+    font-weight: 550;
     letter-spacing: -0.01em;
+    line-height: 1.3;
   }
   .hero :global(.composer) {
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #fff 65%, transparent) inset,
+      0 4px 18px color-mix(in srgb, #000 5%, transparent);
   }
 
-  /* —— 消息流 —— */
+  :global(html[data-ios-native-shell='true'] .hero) {
+    gap: 12px;
+    padding: 44px 0 2vh;
+    justify-content: flex-start;
+  }
+  :global(html[data-ios-native-shell='true'] .hero-kicker) {
+    font-size: 12px;
+    color: color-mix(in srgb, var(--t1) 48%, transparent);
+  }
+  :global(html[data-ios-native-shell='true'] .hero) :global(.composer) {
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #fff 40%, transparent) inset,
+      0 2px 10px color-mix(in srgb, #000 7%, transparent);
+  }
+  :global(html[data-ios-native-shell='true'] .chat-top) {
+    padding: 6px 16px 8px;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--bg) 92%, transparent) 20%,
+      color-mix(in srgb, var(--bg) 28%, transparent) 80%,
+      transparent
+    );
+  }
+  :global(html[data-ios-native-shell='true'] .chat-top-actions) {
+    background: color-mix(in srgb, #fff 12%, transparent);
+    border-color: color-mix(in srgb, #fff 16%, transparent);
+    box-shadow:
+      0 0 0 0.5px color-mix(in srgb, #000 24%, transparent),
+      0 1px 0 color-mix(in srgb, #fff 8%, transparent) inset;
+  }
+  :global(html[data-ios-native-shell='true'] .scope-chip) {
+    background: color-mix(in srgb, #fff 8%, transparent);
+    color: color-mix(in srgb, #fff 62%, transparent);
+  }
+  :global(
+      html[data-ios-native-shell='true'][data-theme='light'] .chat-top-actions
+    ),
+  :global(
+      html[data-ios-native-shell='true']:not([data-theme='dark'])
+        .chat-top-actions
+    ) {
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
+    border-color: color-mix(in srgb, var(--t1) 10%, transparent);
+    box-shadow:
+      0 0 0 0.5px color-mix(in srgb, var(--t1) 6%, transparent),
+      0 1px 0 color-mix(in srgb, #fff 75%, transparent) inset;
+  }
+  :global(html[data-ios-native-shell='true'][data-theme='light'] .scope-chip),
+  :global(
+      html[data-ios-native-shell='true']:not([data-theme='dark']) .scope-chip
+    ) {
+    background: color-mix(in srgb, var(--bg) 70%, transparent);
+    color: color-mix(in srgb, var(--t1) 52%, transparent);
+  }
+
   .thread {
     flex: 1;
     min-height: 0;
@@ -486,50 +627,60 @@
     scrollbar-gutter: stable;
   }
   .thread-col {
-    width: min(100% - 32px, 704px);
+    width: min(100% - 32px, 680px);
     margin-inline: auto;
     display: flex;
     flex-direction: column;
-    gap: var(--space-6, 24px);
-    /* 顶部留出浮动控件的高度,首条消息不被遮住 */
-    padding-block: calc(var(--safe-top-effective, 0px) + 56px) var(--space-4, 16px);
+    gap: 22px;
+    padding-block: calc(var(--safe-top-effective, 0px) + 52px) 10px;
   }
-
-  /* 新回合顶部锚定用的尾部占位(高度由 JS 计算);
-     负 margin 抵消 flex gap,占位为 0 时不产生多余留白 */
   .thread-spacer {
     flex: 0 0 auto;
-    margin-top: calc(-1 * var(--space-6, 24px));
+    margin-top: -28px;
   }
 
-  /* —— 追问建议(回复下方,ChatGPT 式)—— */
   .follow-ups {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: -8px;
+    display: grid;
+    gap: 0;
+    margin-top: -2px;
+    border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   }
   .follow-chip {
-    border: 1px solid var(--border);
-    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    border-radius: 0;
     background: transparent;
     color: var(--t2);
-    padding: 7px 14px;
-    font-size: var(--text-sm, 13px);
+    padding: 9px 2px;
+    font-size: 13px;
+    line-height: 1.35;
     text-align: start;
     cursor: pointer;
-    transition: all var(--dur-fast, 120ms) var(--ease, ease);
-    animation: follow-in 240ms var(--ease, ease) both;
+    transition:
+      background 160ms ease,
+      color 160ms ease;
+    animation: follow-in 220ms ease both;
+  }
+  .follow-chip span {
+    flex: 1;
+    min-width: 0;
+  }
+  .follow-chip :global(svg) {
+    flex: 0 0 auto;
+    color: color-mix(in srgb, var(--t3) 70%, transparent);
   }
   .follow-chip:hover {
-    background: var(--card);
+    background: color-mix(in srgb, var(--t1) 4%, transparent);
     color: var(--t1);
-    border-color: var(--border-l);
   }
   @keyframes follow-in {
     from {
       opacity: 0;
-      transform: translateY(4px);
+      transform: translateY(3px);
     }
     to {
       opacity: 1;
@@ -537,27 +688,64 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .follow-chip {
+    .follow-chip,
+    .assistant-chip:active {
       animation: none;
+      transform: none;
     }
   }
 
-  /* —— 底部输入区 —— */
   .dock {
     flex: 0 0 auto;
-    background: linear-gradient(to top, var(--bg) 70%, transparent);
+    background: linear-gradient(
+      to top,
+      var(--bg) 70%,
+      color-mix(in srgb, var(--bg) 42%, transparent) 92%,
+      transparent
+    );
   }
   .dock-col {
     position: relative;
-    width: min(100% - 32px, 704px);
+    width: min(100% - 32px, 680px);
     margin-inline: auto;
-    padding-bottom: max(var(--space-2, 8px), var(--safe-bottom, 0px));
+    /* keyboard-open: ios-safari.css lifts this by --keyboard-inset */
+    padding-bottom: max(8px, var(--safe-bottom, 0px));
+    transition: padding-bottom 160ms ease;
+  }
+  .dock-col :global(.composer) {
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
+      0 3px 14px color-mix(in srgb, #000 5%, transparent);
   }
 
   .hint {
-    margin: 8px 0 0;
-    text-align: center;
-    font-size: var(--text-xs, 11px);
-    color: var(--t3);
+    margin: 4px 0 0;
+    text-align: start;
+    font-size: 11px;
+    letter-spacing: 0.01em;
+    color: color-mix(in srgb, var(--t3) 80%, transparent);
+  }
+  .hint--empty {
+    margin-top: 2px;
+    opacity: 0.85;
+  }
+
+  :global(html[data-ios-native-shell='true'] .thread-col) {
+    gap: 16px;
+    padding-block: 44px 6px;
+  }
+  :global(html[data-ios-native-shell='true'] .dock) {
+    background: linear-gradient(
+      to top,
+      var(--bg) 82%,
+      color-mix(in srgb, var(--bg) 22%, transparent) 100%
+    );
+  }
+  :global(html[data-ios-native-shell='true'] .hint--empty) {
+    font-size: 10px;
+    opacity: 0.65;
+  }
+  :global(html[data-ios-native-shell='true'] .chat-top-right) {
+    gap: 4px;
   }
 </style>

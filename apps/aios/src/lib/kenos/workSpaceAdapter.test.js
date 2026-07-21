@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   WORK_SPACE_ID,
+  buildWorkNavManifest,
   readWorkResumeQuery,
   suspendWorkSpace,
 } from './workSpaceAdapter.js'
@@ -15,7 +16,9 @@ describe('workSpaceAdapter', () => {
   })
 
   it('reads resume query params', () => {
-    const q = readWorkResumeQuery('https://aios.kenos.space/work?kenosProject=p1&kenosFocus=1')
+    const q = readWorkResumeQuery(
+      'https://aios.kenos.space/work?kenosProject=p1&kenosFocus=1',
+    )
     assert.equal(q.projectId, 'p1')
     assert.equal(q.focus, true)
   })
@@ -31,5 +34,12 @@ describe('workSpaceAdapter', () => {
     assert.equal(d.entityId, 'proj-1')
     assert.match(d.displaySubtitle, /Kenos IA/)
     assert.ok(!/\b(token|password|secret)\b/i.test(JSON.stringify(d)))
+  })
+
+  it('builds work nav manifest for Continuity chrome', () => {
+    const m = buildWorkNavManifest()
+    assert.equal(m.domainId, 'work')
+    assert.equal(m.title, 'Work')
+    assert.ok(typeof m.activeTab === 'string')
   })
 })

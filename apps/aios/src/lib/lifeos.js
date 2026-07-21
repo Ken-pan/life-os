@@ -13,6 +13,7 @@ import {
   resolvePeriod as resolvePeriodCore,
   ymd,
 } from '$lib/lifeos.core.js'
+import { healthReadinessAssistantBlock } from '$lib/kenos/healthReadiness.host.js'
 
 /**
  * Life OS 跨 app 数据读取。
@@ -74,11 +75,21 @@ export async function lifeOsTodayRaw() {
 
 /** 跨 app「今日」聚合:planner + finance + fitness + music + home。走现成 RPC。 */
 export async function lifeOsToday() {
-  if (!isCloudAuthorized()) return NEED_LOGIN
+  const healthBlock = healthReadinessAssistantBlock({ locale: 'zh' })
+  if (!isCloudAuthorized()) {
+    if (healthBlock) {
+      return `${NEED_LOGIN}\n\n${healthBlock}`
+    }
+    return NEED_LOGIN
+  }
   const sb = schemaClient('public')
   const { data, error } = await sb.rpc('portal_today_summary')
-  if (error) return `读取今日快照失败:${error.message}`
-  return formatLifeOsToday(data)
+  if (error) {
+    const base = `读取今日快照失败:${error.message}`
+    return healthBlock ? `${base}\n\n${healthBlock}` : base
+  }
+  const body = formatLifeOsToday(data)
+  return healthBlock ? `${body}\n\n${healthBlock}` : body
 }
 
 /* —————————————————————— 财务汇总 —————————————————————— */
@@ -134,7 +145,9 @@ export async function financeSummary(args = {}) {
     `· 支出 ¥${r2(expense)}、收入 ¥${r2(income)}、结余 ¥${r2(income - expense)}`,
     `· 交易 ${rows.length} 笔`,
   ]
-  const topCat = [...byCategory.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
+  const topCat = [...byCategory.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
   if (topCat.length > 1 && !args.category) {
     out.push('\n支出分类 TOP:')
     for (const [cat, amt] of topCat) {
@@ -142,8 +155,13 @@ export async function financeSummary(args = {}) {
       out.push(`  - ${cat}:¥${r2(amt)}(${pct}%)`)
     }
   }
-  const topMer = [...byMerchant.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
-  if (topMer.length > 1 && (args.category || args.merchant || topCat.length <= 1)) {
+  const topMer = [...byMerchant.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+  if (
+    topMer.length > 1 &&
+    (args.category || args.merchant || topCat.length <= 1)
+  ) {
     out.push('\n支出商家 TOP:')
     for (const [mer, amt] of topMer) out.push(`  - ${mer}:¥${r2(amt)}`)
   }
@@ -174,11 +192,17 @@ export async function plannerTasks(args = {}) {
     .filter((t) => {
       switch (scope) {
         case 'today':
-          return !t.completed && (t.dueDate === today || t.scheduledDate === today)
+          return (
+            !t.completed && (t.dueDate === today || t.scheduledDate === today)
+          )
         case 'overdue':
           return !t.completed && t.dueDate && t.dueDate < today
         case 'completed_today':
-          return t.completed && t.completedAt && ymd(new Date(t.completedAt)) === today
+          return (
+            t.completed &&
+            t.completedAt &&
+            ymd(new Date(t.completedAt)) === today
+          )
         case 'all':
           return true
         case 'open':
@@ -215,19 +239,27 @@ export async function plannerTasks(args = {}) {
     all: '全部',
     open: '未完成',
   }[scope]
-  const lines = [`Planner ${scopeLabel}任务(${tasks.length} 项${tasks.length > shown.length ? `,列前 ${shown.length}` : ''}):`]
+  const lines = [
+    `Planner ${scopeLabel}任务(${tasks.length} 项${tasks.length > shown.length ? `,列前 ${shown.length}` : ''}):`,
+  ]
   for (const t of shown) {
     const bits = []
     if (t.dueDate) {
       const overdue = !t.completed && t.dueDate < today
-      bits.push(`到期 ${t.dueDate}${t.dueTime ? ' ' + t.dueTime : ''}${overdue ? ' ⚠逾期' : ''}`)
+      bits.push(
+        `到期 ${t.dueDate}${t.dueTime ? ' ' + t.dueTime : ''}${overdue ? ' ⚠逾期' : ''}`,
+      )
     } else if (t.scheduledDate) {
-      bits.push(`计划 ${t.scheduledDate}${t.scheduledStart ? ' ' + t.scheduledStart : ''}`)
+      bits.push(
+        `计划 ${t.scheduledDate}${t.scheduledStart ? ' ' + t.scheduledStart : ''}`,
+      )
     }
     if (t.area && t.area !== 'planner') bits.push(t.area)
     if (t.priority && t.priority !== 'normal') bits.push(t.priority)
     const meta = bits.length ? `(${bits.join(' · ')})` : ''
-    lines.push(`${t.completed ? '☑' : '☐'} ${t.title || '(无标题)'}${meta ? ' ' + meta : ''}`)
+    lines.push(
+      `${t.completed ? '☑' : '☐'} ${t.title || '(无标题)'}${meta ? ' ' + meta : ''}`,
+    )
   }
   return lines.join('\n')
 }
@@ -241,7 +273,10 @@ export async function plannerTasks(args = {}) {
  * @param {{title?:string, notes?:string, dueDate?:string}} args
  */
 export async function plannerAddTask(args = {}) {
-  const blocked = assertDispatcherWriteAllowed('plannerAddTask', import.meta.env)
+  const blocked = assertDispatcherWriteAllowed(
+    'plannerAddTask',
+    import.meta.env,
+  )
   if (!blocked.ok) return blocked.error
   if (!isCloudAuthorized()) return NEED_LOGIN
   const built = buildTaskCapturePayload(args)

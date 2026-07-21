@@ -4,8 +4,14 @@
  */
 import {
   buildResumeDescriptor,
-  domainContinueStorageKey,
+  clearDomainContinue,
+  writeDomainContinue,
 } from '@life-os/platform-web/kenos-space-continuity'
+import {
+  installNavManifestPublisher,
+  publishNavManifest,
+} from '@life-os/platform-web/kenos-native-bridge'
+import { sensory } from '@life-os/platform-web/kenos-sensory'
 import { getDomainDefinition } from './domainIntegration.core.js'
 
 export const WORK_SPACE_ID = 'work'
@@ -19,9 +25,14 @@ function isBrowser() {
 /**
  * @param {URL | Location | string} [url]
  */
-export function readWorkResumeQuery(url = isBrowser() ? window.location.href : '/') {
+export function readWorkResumeQuery(
+  url = isBrowser() ? window.location.href : '/',
+) {
   try {
-    const u = typeof url === 'string' ? new URL(url, 'https://local.invalid') : new URL(url.href)
+    const u =
+      typeof url === 'string'
+        ? new URL(url, 'https://local.invalid')
+        : new URL(url.href)
     return {
       projectId: u.searchParams.get('kenosProject') || null,
       focus: u.searchParams.get('kenosFocus') === '1',
@@ -48,7 +59,8 @@ export function suspendWorkSpace(opts = {}) {
     opts.pathname ?? (isBrowser() ? window.location.pathname : '/work')
   const search = opts.search ?? (isBrowser() ? window.location.search : '')
   const route = `${pathname}${search}`
-  const onFocus = pathname.startsWith('/spaces/work') || pathname.startsWith('/focus')
+  const onFocus =
+    pathname.startsWith('/spaces/work') || pathname.startsWith('/focus')
   const displaySubtitle = [
     opts.focusActive || onFocus ? 'Deep Work' : null,
     opts.projectTitle || null,
@@ -75,7 +87,10 @@ export function suspendWorkSpace(opts = {}) {
  * @param {ReturnType<typeof buildResumeDescriptor> | null} [descriptor]
  * @param {{ replaceUrl?: boolean }} [opts]
  */
-export async function resumeWorkSpace(descriptor = null, { replaceUrl = true } = {}) {
+export async function resumeWorkSpace(
+  descriptor = null,
+  { replaceUrl = true } = {},
+) {
   if (!isBrowser()) return { ok: false, reason: 'ssr' }
   const { goto } = await import('$app/navigation')
   const fromQuery = readWorkResumeQuery()
@@ -106,6 +121,39 @@ export async function applyWorkResumeFromLocation() {
   await resumeWorkSpace(null, { replaceUrl: false })
 }
 
+/** @returns {{ domainId: string, path: string, title: string, activeTab: string, canGoBack: boolean, currentEntity: string, liveState: string, unsavedDraft: boolean, summary: string }} */
+export function buildWorkNavManifest() {
+  const path = isBrowser()
+    ? `${window.location.pathname}${window.location.search}`
+    : '/work'
+  const pathname = isBrowser() ? window.location.pathname : '/work'
+  const d = suspendWorkSpace()
+  const onFocus =
+    pathname.startsWith('/spaces/work') ||
+    pathname.startsWith('/focus') ||
+    Boolean(/** @type {any} */ (d.substate)?.focusActive)
+  let activeTab = 'today'
+  if (onFocus) activeTab = 'focus'
+  else if (pathname.includes('inbox')) activeTab = 'inbox'
+  else if (pathname.includes('assistant')) activeTab = 'assistant'
+  else if (pathname.includes('settings')) activeTab = 'settings'
+  return {
+    domainId: WORK_SPACE_ID,
+    path,
+    title: 'Work',
+    activeTab,
+    canGoBack: isBrowser() ? window.history.length > 1 : false,
+    currentEntity: d.entityId ? String(d.entityId) : '',
+    liveState: onFocus ? 'focus' : 'idle',
+    unsavedDraft: false,
+    summary: d.displaySubtitle || 'Work',
+  }
+}
+
+export function publishWorkNavManifest() {
+  return publishNavManifest(buildWorkNavManifest())
+}
+
 /** Leave-guard / compose hooks for KenosDomainWebBridge. */
 export function installWorkLeaveGuard() {
   if (!isBrowser()) return
@@ -115,6 +163,7 @@ export function installWorkLeaveGuard() {
     },
     discard() {},
     compose() {
+      void sensory('soft')
       void resumeWorkSpace({
         version: 1,
         userId: 'anonymous',
@@ -123,10 +172,18 @@ export function installWorkLeaveGuard() {
         displayTitle: 'Work',
         updatedAt: new Date().toISOString(),
       })
+      void publishWorkNavManifest()
     },
   }
   window.__KENOS_DOMAIN_COMPOSE__ = () => {
     window.__KENOS_LEAVE_GUARD__?.compose?.()
+  }
+  void publishWorkNavManifest()
+  if (!window.__KENOS_WORK_NAV_PUBLISHER__) {
+    window.__KENOS_WORK_NAV_PUBLISHER__ = installNavManifestPublisher(
+      () => buildWorkNavManifest(),
+      { intervalMs: 700 },
+    )
   }
 }
 
@@ -138,8 +195,7 @@ export function installWorkLeaveGuard() {
 export function persistWorkContinue(descriptor, userId = null) {
   const d = descriptor || suspendWorkSpace({ userId })
   try {
-    const key = domainContinueStorageKey('work', userId)
-    localStorage.setItem(key, JSON.stringify(d))
+    writeDomainContinue(WORK_SPACE_ID, userId, d)
   } catch {
     /* ignore */
   }
@@ -173,7 +229,7 @@ export const workSpaceAdapter = {
   },
   async clearUserState(userId) {
     try {
-      localStorage.removeItem(domainContinueStorageKey('work', userId))
+      clearDomainContinue(WORK_SPACE_ID, userId)
     } catch {
       /* ignore */
     }

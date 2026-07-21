@@ -1,3 +1,8 @@
+import {
+  healthReadinessToTodayPriority,
+  healthReadinessToTodaySignal,
+  isSafeHealthReadiness,
+} from '@life-os/platform-web/kenos-health-readiness'
 import { DOMAIN_ORIGINS } from './domainResume.core.js'
 import { HOSTED_SPACES } from './spacesList.core.js'
 import { freshnessState } from './readProjections.core.js'
@@ -9,6 +14,7 @@ const SPACE_URLS = Object.freeze({
   music: DOMAIN_ORIGINS.music,
   home: DOMAIN_ORIGINS.home,
   knowledge: DOMAIN_ORIGINS.knowledge,
+  health: DOMAIN_ORIGINS.health,
 })
 
 /**
@@ -44,9 +50,24 @@ function formatCurrency(value) {
 /**
  * Portal today RPC -> Assistant Today read model.
  * This stays read-only: every action points back to its domain owner.
+ * @param {object|null} summary
+ * @param {{ now?: number, healthReadiness?: object|null }} [opts]
  */
-export function buildTodayReadModel(summary, { now = Date.now() } = {}) {
+export function buildTodayReadModel(
+  summary,
+  { now = Date.now(), healthReadiness = null } = {},
+) {
+  const safeHealth = isSafeHealthReadiness(healthReadiness)
+    ? healthReadiness
+    : null
+
   if (!summary || summary.ok === false) {
+    if (safeHealth) {
+      return buildTodayReadModel(
+        { ok: true, asOf: safeHealth.asOf || new Date(now).toISOString() },
+        { now, healthReadiness: safeHealth },
+      )
+    }
     return {
       asOf: null,
       priorities: [],
@@ -96,6 +117,17 @@ export function buildTodayReadModel(summary, { now = Date.now() } = {}) {
       actionLabel: '查看今天',
       ...projectionMeta('plan', 'portal_today_summary.planner'),
     })
+  }
+
+  if (safeHealth) {
+    const priority = healthReadinessToTodayPriority(safeHealth, {
+      href: SPACE_URLS.health,
+    })
+    if (priority) priorities.push(priority)
+    const signal = healthReadinessToTodaySignal(safeHealth, {
+      href: SPACE_URLS.health,
+    })
+    if (signal) signals.push(signal)
   }
 
   if (summary.fitness) {
@@ -169,9 +201,7 @@ export function buildTodayReadModel(summary, { now = Date.now() } = {}) {
     asOf: typeof summary.asOf === 'string' ? summary.asOf : null,
     priorities,
     signals,
-    emptyReason: priorities.length
-      ? null
-      : '今天没有需要立即处理的事',
+    emptyReason: priorities.length ? null : '今天没有需要立即处理的事',
     source: 'public.portal_today_summary',
     status: freshness.stale ? 'stale' : 'ready',
   }
