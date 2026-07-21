@@ -1,0 +1,25 @@
+{
+  "ts": "2026-07-21T06:14:22.006Z",
+  "origin": "http://127.0.0.1:5219",
+  "scope": "LAN_WEB",
+  "checks": {
+    "systemBar": true,
+    "continueBtn": true,
+    "quickSwitchBtn": true,
+    "continueTitle": true,
+    "continueMode": "continueRecent",
+    "continueHasAllDomains": false,
+    "continueHasSearch": false,
+    "continueEmptyOrRecent": true,
+    "continueSpacesCta": true,
+    "quickTitle": true,
+    "quickMode": "quickSwitch",
+    "quickHasSearch": true,
+    "quickListsSpaces": true,
+    "switchSpaceTitle": true,
+    "switchMode": "switchSpace",
+    "switchHasAllDomains": true,
+    "switchHasSearch": true
+  },
+  "pass": true
+}

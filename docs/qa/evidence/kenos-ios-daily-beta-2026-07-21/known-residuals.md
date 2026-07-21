@@ -22,6 +22,7 @@ See `docs/qa/kenos-ios-ia-model-2026-07-21.md`:
 - Continue vs Switch Space vs Quick Switch **modes** (native)
 - Live Accessory bar above Tab Bar for mid-Training Continuity
 - ~~Web AIOS Switcher Recent-only parity~~ → **SHIPPED** (`continueRecent` / `switchSpace` / `quickSwitch`; tests 19/19)
+- ~~LAN Web IA chrome verify~~ → **PASS** (`ia-web-parity-verify.mjs`; Continue Recent-only + Quick Switch + Switch Space)
 
 ## Soft residuals
 
