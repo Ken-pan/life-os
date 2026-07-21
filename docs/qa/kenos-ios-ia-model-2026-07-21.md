@@ -114,5 +114,17 @@ Evidence / residuals: `docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/`.
 
 - ActivityKit / Dynamic Island production Live Activities (Phase 4 / APNs adjacent — still EXIT_OPEN)  
 - User-customizable Tab Bar  
-- Domain BottomNav inside Continuity covers  
+- Domain BottomNav inside Continuity covers (**known temporary debt** under Daily Beta)  
 - Claiming Phase 4 complete  
+
+## Next IA (approved, not active)
+
+After **iOS Daily Beta Stabilization**, Owner-approved evolution:
+
+```text
+Kenos Mode · Domain Mode (dock replace) · Focus Mode
++ Space Shelf (Back-first left-edge at domain root)
+```
+
+Canonical: [`kenos-shell-navigation-v2-2026-07-21.md`](./kenos-shell-navigation-v2-2026-07-21.md) (`APPROVED_DIRECTION`).  
+Do **not** implement during dogfood; do **not** treat as Daily Beta lock replacement until that slice is scheduled.
