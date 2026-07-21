@@ -11,6 +11,9 @@
 import {
   knownDomainOrigins,
   rewriteDomainHrefForLocalDailyBeta,
+  isPrivateOrLoopbackHost,
+  listKeyForDomainHref,
+  rewriteLoopbackToPageHost,
 } from './domainResume.core.js'
 import { buildSpacesList, spaceListKey } from './spacesList.core.js'
 import {
@@ -339,7 +342,11 @@ export function isKnownDomainResume(
 ) {
   try {
     const next = new URL(String(lastRoute || '').trim())
-    return allowedOrigins.some((origin) => next.origin === origin)
+    if (allowedOrigins.some((origin) => next.origin === origin)) return true
+    // Phone Daily Beta: accept private LAN + known domain app ports
+    return Boolean(
+      isPrivateOrLoopbackHost(next.hostname) && listKeyForDomainHref(next.href),
+    )
   } catch {
     return false
   }
@@ -397,9 +404,9 @@ export function resolveSpaceOpenHref(space, state, { now = Date.now() } = {}) {
     })
     if (openUrl.startsWith('/') && !space.external) return openUrl
     if (space.external && isAllowedExternalResume(space.href, openUrl))
-      return rewriteDomainHrefForLocalDailyBeta(openUrl)
+      return rewriteLoopbackToPageHost(rewriteDomainHrefForLocalDailyBeta(openUrl))
     if (!space.external && isKnownDomainResume(openUrl))
-      return rewriteDomainHrefForLocalDailyBeta(openUrl)
+      return rewriteLoopbackToPageHost(rewriteDomainHrefForLocalDailyBeta(openUrl))
     if (route.startsWith('/') && !space.external) return route
     if (space.external && isAllowedExternalResume(space.href, route))
       return rewriteDomainHrefForLocalDailyBeta(route)

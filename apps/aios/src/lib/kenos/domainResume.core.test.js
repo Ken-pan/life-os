@@ -23,6 +23,27 @@ describe('domainResume local daily beta', () => {
     )
   })
 
+  it('maps LAN daily-beta ports to hosted listKey', async () => {
+    const { listKeyForDomainHref } = await import('./domainResume.core.js')
+    assert.equal(
+      listKeyForDomainHref('http://10.20.202.15:5188/upcoming'),
+      'hosted:plan',
+    )
+    assert.equal(
+      listKeyForDomainHref('http://10.20.202.15:5190/day/chest/focus'),
+      'hosted:training',
+    )
+  })
+
+  it('rewrites loopback resume to page host on phone', async () => {
+    const { rewriteLoopbackToPageHost } = await import('./domainResume.core.js')
+    // jsdom-less node: no window → identity
+    assert.equal(
+      rewriteLoopbackToPageHost('http://127.0.0.1:5188/upcoming'),
+      'http://127.0.0.1:5188/upcoming',
+    )
+  })
+
   it('rewrites production fitness URLs to local daily beta', () => {
     const env = { VITE_KENOS_LOCAL_DAILY_BETA: '1' }
     const href =

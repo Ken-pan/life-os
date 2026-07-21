@@ -38,6 +38,38 @@ targets:
       - path: Shared
     info:
       path: iOS/Info.plist
+      properties:
+        CFBundleDisplayName: Kenos
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "20260721"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        CFBundleURLTypes:
+          - CFBundleURLName: space.kenos.app.ios
+            CFBundleURLSchemes:
+              - kenos
+        KENOS_DAILY_BETA_ORIGIN: "$(KENOS_DAILY_BETA_ORIGIN)"
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+          NSAllowsArbitraryLoadsInWebContent: true
+          NSExceptionDomains:
+            "127.0.0.1":
+              NSExceptionAllowsInsecureHTTPLoads: true
+            localhost:
+              NSExceptionAllowsInsecureHTTPLoads: true
+              NSIncludesSubdomains: true
+            "10.0.0.0/8":
+              NSExceptionAllowsInsecureHTTPLoads: true
+            "192.168.0.0/16":
+              NSExceptionAllowsInsecureHTTPLoads: true
+            "172.16.0.0/12":
+              NSExceptionAllowsInsecureHTTPLoads: true
+        NSLocalNetworkUsageDescription: >-
+          Kenos connects to your Mac Daily Beta on the private LAN when the
+          cloud shell is unavailable.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios
@@ -45,6 +77,7 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: NO
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+        KENOS_DAILY_BETA_ORIGIN: "http://10.20.202.15:5219"
     dependencies:
       - package: KenosContracts
       - package: KenosClient

@@ -8,7 +8,7 @@ public final class KenosSpaceSwitcherStore: ObservableObject {
     public static let defaultOwnerId = UUID(uuidString: "20000000-0000-4000-8000-000000000001")!
     public static let storageFileName = "kenos.spaceSwitcher.v1.json"
     public static let maxRecent = 6
-    public static let resumeDescriptorVersion = 1
+    nonisolated public static let resumeDescriptorVersion = 1
 
     public struct ResumeDescriptor: Codable, Equatable, Sendable {
         public var version: Int
@@ -23,7 +23,7 @@ public final class KenosSpaceSwitcherStore: ObservableObject {
         public var expiresAt: String?
 
         public init(
-            version: Int = KenosSpaceSwitcherStore.resumeDescriptorVersion,
+            version: Int = 1,
             userId: String,
             spaceId: String,
             route: String,

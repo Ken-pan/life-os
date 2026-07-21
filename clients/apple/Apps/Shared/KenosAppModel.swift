@@ -46,6 +46,8 @@ final class KenosAppModel: ObservableObject {
     @Published var showCaptureSheet = false
     /// Temporary Space Switcher layer (not a 5th tab).
     @Published var showSpaceSwitcher = false
+    /// Native settings (origin / auth) — used when Inbox is a Web surface.
+    @Published var showSettingsSheet = false
     let focusStore: KenosFocusStore
     let spaceSwitcherStore: KenosSpaceSwitcherStore
 
@@ -74,15 +76,29 @@ final class KenosAppModel: ObservableObject {
         }
     }
 
-    static let spaceCatalog: [SpaceCatalogEntry] = [
-        .init(id: "work", title: "Work", subtitle: "Projects and decisions", kind: .hosted(.work)),
-        .init(id: "plan", title: "Plan", subtitle: "Tasks and schedule", kind: .external(URL(string: "https://planner.kenos.space")!)),
-        .init(id: "training", title: "Training", subtitle: "Fitness workouts", kind: .external(URL(string: "https://fitness.kenos.space")!)),
-        .init(id: "money", title: "Money", subtitle: "Finance decisions", kind: .external(URL(string: "https://finance.kenos.space")!)),
-        .init(id: "music", title: "Music", subtitle: "Library and playback", kind: .external(URL(string: "https://music.kenos.space")!)),
-        .init(id: "home", title: "Home", subtitle: "Spaces and items", kind: .external(URL(string: "https://home.kenos.space")!)),
-        .init(id: "library", title: "Library", subtitle: "Documents and references", kind: .comingSoon),
-    ]
+    /// Seven-domain catalog. Daily Beta uses phone-reachable LAN origins for Plan/Training.
+    static var spaceCatalog: [SpaceCatalogEntry] {
+        let planURL: URL
+        let trainingURL: URL
+        if KenosDailyBetaConfig.isEnabled {
+            planURL = KenosDailyBetaConfig.plannerOrigin
+            trainingURL = KenosDailyBetaConfig.fitnessOrigin
+        } else {
+            planURL = URL(string: "https://planner.kenos.space")!
+            trainingURL = URL(string: "https://fitness.kenos.space")!
+        }
+        return [
+            .init(id: "work", title: "Work", subtitle: "Projects and decisions", kind: .hosted(.work)),
+            .init(id: "plan", title: "Plan", subtitle: "Tasks and schedule", kind: .external(planURL)),
+            .init(id: "training", title: "Training", subtitle: "Fitness workouts", kind: .external(trainingURL)),
+            .init(id: "money", title: "Money", subtitle: "Finance decisions", kind: .external(URL(string: "https://finance.kenos.space")!)),
+            .init(id: "music", title: "Music", subtitle: "Library and playback", kind: .external(URL(string: "https://music.kenos.space")!)),
+            .init(id: "home", title: "Home", subtitle: "Spaces and items", kind: .external(URL(string: "https://home.kenos.space")!)),
+            .init(id: "library", title: "Library", subtitle: "Knowledge vault", kind: .external(KenosDailyBetaConfig.isEnabled
+                ? KenosDailyBetaConfig.pathURL("/spaces/knowledge")
+                : URL(string: "https://portal.kenos.space")!)),
+        ]
+    }
 
     /// Compatibility alias for older call sites / handoff reviews.
     typealias MoreDestination = InboxDestination
@@ -115,9 +131,16 @@ final class KenosAppModel: ObservableObject {
     ) {
         let session = MockSessionProvider(owner: ownerId)
         self.session = session
-        let secure = InMemorySecureStore()
+        #if os(iOS)
+        let secure: any KenosSecureStore = SecItemSecureStore()
+        #else
+        let secure: any KenosSecureStore = InMemorySecureStore()
+        #endif
         self.sessionStore = KenosKeychainSessionStore(secureStore: secure)
-        try? sessionStore.save(token: "mock-session-token", ownerId: ownerId)
+        // Persist mock owner only when Keychain has no prior session (Daily Beta auth shell).
+        if (try? sessionStore.loadToken()) == nil {
+            try? sessionStore.save(token: "mock-session-token", ownerId: ownerId)
+        }
         self.repository = KenosReadRepository(
             client: client,
             store: FileProjectionStore(directory: cacheDirectory.appendingPathComponent("projections")),
@@ -137,15 +160,15 @@ final class KenosAppModel: ObservableObject {
             directory: cacheDirectory.appendingPathComponent("focus")
         )
         self.focusStore = focusStore
-        focusStore.objectWillChange
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
         let spaceSwitcherStore = KenosSpaceSwitcherStore(
             ownerId: ownerId,
             directory: cacheDirectory.appendingPathComponent("spaceSwitcher")
         )
         self.spaceSwitcherStore = spaceSwitcherStore
+        focusStore.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
         spaceSwitcherStore.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
@@ -229,7 +252,44 @@ final class KenosAppModel: ObservableObject {
     }
 
     func open(urlString: String) {
+        let trimmed = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let url = URL(string: trimmed),
+           let scheme = url.scheme?.lowercased(),
+           scheme == "http" || scheme == "https"
+        {
+            handleHTTPOpen(url)
+            return
+        }
         open(KenosDeepLinkRouter.parse(urlString))
+    }
+
+    private func handleHTTPOpen(_ url: URL) {
+        let path = url.path.isEmpty ? "/" : url.path
+        let port = url.port
+        if port == 5188 || path.hasPrefix("/plan") {
+            openExternalURL(url)
+            return
+        }
+        if port == 5190 || path.hasPrefix("/day") || path.hasPrefix("/training") {
+            openExternalURL(url)
+            return
+        }
+        switch path {
+        case "/", "/today":
+            selectedTab = .today
+        case "/assistant", "/chat":
+            selectedTab = .assistant
+        case "/spaces":
+            selectedTab = .spaces
+        case "/inbox":
+            selectedTab = .inbox
+        default:
+            if path.hasPrefix("/spaces/") {
+                selectedTab = .spaces
+            } else {
+                selectedTab = .today
+            }
+        }
     }
 
     func openNotification(_ record: KenosNotificationRecord) {
@@ -266,14 +326,48 @@ final class KenosAppModel: ObservableObject {
         case .hosted(let destination):
             presentSpacesDestination(destination)
         case .external(let url):
-            #if os(iOS)
-            UIApplication.shared.open(url)
-            #elseif os(macOS)
-            NSWorkspace.shared.open(url)
-            #endif
+            openExternalContinuity(spaceId: entry.id, homeURL: url)
         case .comingSoon:
             selectedTab = .spaces
         }
+    }
+
+    /// Continue / domain launch — single open, resume route when present & not expired.
+    func continueSpace(listKey: String) {
+        showSpaceSwitcher = false
+        let home: URL = {
+            switch listKey {
+            case "plan", "hosted:plan": return KenosDailyBetaConfig.isEnabled
+                ? KenosDailyBetaConfig.plannerOrigin
+                : URL(string: "https://planner.kenos.space")!
+            case "training", "hosted:training": return KenosDailyBetaConfig.isEnabled
+                ? KenosDailyBetaConfig.fitnessOrigin
+                : URL(string: "https://fitness.kenos.space")!
+            default:
+                if let entry = Self.spaceCatalog.first(where: { $0.id == listKey || "hosted:\($0.id)" == listKey }) {
+                    if case .external(let url) = entry.kind { return url }
+                }
+                return KenosDailyBetaConfig.kenOsOrigin
+            }
+        }()
+        let url = spaceSwitcherStore.resolveOpenURL(listKey: listKey, homeURL: home)
+        spaceSwitcherStore.touchRecentSpace(id: listKey)
+        openExternalURL(url)
+    }
+
+    func openExternalContinuity(spaceId: String, homeURL: URL) {
+        let hosted = "hosted:\(spaceId)"
+        let listKey = spaceSwitcherStore.resumeByListKey[hosted] != nil ? hosted : spaceId
+        let url = spaceSwitcherStore.resolveOpenURL(listKey: listKey, homeURL: homeURL)
+        openExternalURL(url)
+    }
+
+    private func openExternalURL(_ url: URL) {
+        #if os(iOS)
+        UIApplication.shared.open(url)
+        #elseif os(macOS)
+        NSWorkspace.shared.open(url)
+        #endif
     }
 
     func returnToSystem(_ tab: Tab) {

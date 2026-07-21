@@ -49,6 +49,16 @@ struct KenosRootView: View {
         .sheet(isPresented: $model.showSpaceSwitcher) {
             SpaceSwitcherSheet(model: model)
         }
+        .sheet(isPresented: $model.showSettingsSheet) {
+            NavigationStack {
+                DailyBetaSettingsView(model: model)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Close") { model.showSettingsSheet = false }
+                        }
+                    }
+            }
+        }
         .task { await model.bootstrap() }
         .onOpenURL { url in
             model.open(urlString: url.absoluteString)
@@ -59,29 +69,60 @@ struct KenosRootView: View {
     private var iPhoneTabs: some View {
         TabView(selection: $model.selectedTab) {
             NavigationStack {
-                TodayView(model: model)
-                    .toolbar { spaceSwitcherToolbar }
+                Group {
+                    if KenosDailyBetaConfig.isEnabled {
+                        KenosDailyBetaSurface(path: "/")
+                    } else {
+                        TodayView(model: model)
+                    }
+                }
+                .toolbar { spaceSwitcherToolbar }
             }
             .tabItem { Label("Today", systemImage: "sun.max") }
             .tag(KenosAppModel.Tab.today)
 
             NavigationStack {
-                AssistantView(model: model)
-                    .toolbar { spaceSwitcherToolbar }
+                Group {
+                    if KenosDailyBetaConfig.isEnabled {
+                        KenosDailyBetaSurface(path: "/assistant")
+                    } else {
+                        AssistantView(model: model)
+                    }
+                }
+                .toolbar { spaceSwitcherToolbar }
             }
             .tabItem { Label("Assistant", systemImage: "bubble.left.and.bubble.right") }
             .tag(KenosAppModel.Tab.assistant)
 
             NavigationStack {
-                SpacesHubView(model: model)
-                    .toolbar { spaceSwitcherToolbar }
+                Group {
+                    if KenosDailyBetaConfig.isEnabled {
+                        KenosDailyBetaSurface(path: "/spaces")
+                    } else {
+                        SpacesHubView(model: model)
+                    }
+                }
+                .toolbar { spaceSwitcherToolbar }
             }
             .tabItem { Label("Spaces", systemImage: "square.grid.2x2") }
             .tag(KenosAppModel.Tab.spaces)
 
             NavigationStack {
-                InboxView(model: model)
-                    .toolbar { spaceSwitcherToolbar }
+                Group {
+                    if KenosDailyBetaConfig.isEnabled {
+                        KenosDailyBetaSurface(path: "/inbox")
+                    } else {
+                        InboxView(model: model)
+                    }
+                }
+                .toolbar {
+                    spaceSwitcherToolbar
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("Settings", systemImage: "gearshape") {
+                            model.presentSettings()
+                        }
+                    }
+                }
             }
             .tabItem { Label("Inbox", systemImage: "tray") }
             .tag(KenosAppModel.Tab.inbox)
@@ -90,7 +131,13 @@ struct KenosRootView: View {
     }
 
     private var spaceSwitcherToolbar: some ToolbarContent {
-        ToolbarItem(placement: .automatic) {
+        ToolbarItemGroup(placement: .automatic) {
+            Button("Continue", systemImage: "arrow.uturn.forward") {
+                model.openSpaceSwitcher()
+            }
+            .accessibilityLabel("Continue")
+            .accessibilityHint("Opens recent Spaces and resume targets")
+            .accessibilityIdentifier("kenos.continue.trigger")
             Button("Switch Space", systemImage: "arrow.left.arrow.right") {
                 model.openSpaceSwitcher()
             }
@@ -498,6 +545,23 @@ struct SpaceSwitcherSheet: View {
                     Button("Assistant") { model.returnToSystem(.assistant) }
                     Button("Inbox") { model.returnToSystem(.inbox) }
                 }
+                if !continueEntries.isEmpty {
+                    Section("Continue") {
+                        ForEach(continueEntries, id: \.key) { item in
+                            Button {
+                                model.continueSpace(listKey: item.key)
+                            } label: {
+                                KenosRow(
+                                    title: item.descriptor.displayTitle,
+                                    subtitle: item.descriptor.displaySubtitle
+                                        ?? item.descriptor.spaceId,
+                                    meta: item.descriptor.isExpired ? "expired → home" : "resume"
+                                )
+                            }
+                            .accessibilityIdentifier("kenos.continue.\(item.descriptor.spaceId)")
+                        }
+                    }
+                }
                 if !model.recentSpaceIds.isEmpty {
                     Section("Recent") {
                         ForEach(recentEntries) { entry in
@@ -557,6 +621,12 @@ struct SpaceSwitcherSheet: View {
         #if os(iOS)
         .presentationDetents([.medium, .large])
         #endif
+    }
+
+    private var continueEntries: [(key: String, descriptor: KenosSpaceSwitcherStore.ResumeDescriptor)] {
+        model.spaceSwitcherStore.resumeByListKey
+            .map { (key: $0.key, descriptor: $0.value) }
+            .sorted { $0.descriptor.updatedAt > $1.descriptor.updatedAt }
     }
 
     private var recentEntries: [KenosAppModel.SpaceCatalogEntry] {
@@ -671,6 +741,15 @@ struct InboxView: View {
             .navigationTitle("Library")
         case .settings:
             Form {
+                Section("Daily Beta origin") {
+                    Text(KenosDailyBetaConfig.kenOsOrigin.absoluteString)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                    Text("Must be a phone-reachable LAN or private origin — never 127.0.0.1 on iPhone.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 Text("Sign-in uses the local secure store on this device.")
                 Text("Approvals actions: \(model.approvalsActionsEnabled ? "ON" : "OFF")")
                 Button("Sign out") {
@@ -886,15 +965,57 @@ struct SystemStatusView: View {
     }
 }
 
+struct DailyBetaSettingsView: View {
+    @ObservedObject var model: KenosAppModel
+    @State private var originDraft = KenosDailyBetaConfig.kenOsOrigin.absoluteString
+
+    var body: some View {
+        Form {
+            Section("Kenos shell origin") {
+                TextField("http://10.x.x.x:5219", text: $originDraft)
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never)
+                    .keyboardType(.URL)
+                    #endif
+                    .autocorrectionDisabled()
+                    .accessibilityIdentifier("kenos.settings.origin")
+                Button("Save origin") {
+                    if let url = URL(string: originDraft.trimmingCharacters(in: .whitespacesAndNewlines)),
+                       url.host != "127.0.0.1",
+                       url.host != "localhost"
+                    {
+                        KenosDailyBetaConfig.setUserOrigin(url)
+                    }
+                }
+                .accessibilityIdentifier("kenos.settings.origin.save")
+                Text("Current: \(KenosDailyBetaConfig.kenOsOrigin.absoluteString)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Section("Safety") {
+                Text("Session tokens stay in Keychain (SecItem). Never paste tokens into this field or URLs.")
+                    .font(.caption)
+            }
+            Section {
+                Button("Sign out", role: .destructive) {
+                    Task { await model.logout() }
+                }
+                .accessibilityIdentifier("kenos.settings.logout")
+            }
+        }
+        .navigationTitle("Settings")
+        .accessibilityIdentifier("kenos.settings")
+    }
+}
+
 extension KenosAppModel {
     func presentSettings() {
-        inboxDestination = nil
-        selectedTab = .inbox
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 350_000_000)
-            inboxDestination = .settings
-        }
+        showSettingsSheet = true
     }
+}
+
+#Preview {
+    KenosRootView(model: KenosAppModel())
 }
 
 #if os(iOS)

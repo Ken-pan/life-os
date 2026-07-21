@@ -48,6 +48,10 @@
     shouldReconnectAfterOnline,
   } from '$lib/kenos/networkStatus.core.js'
   import { AUTH_WALL_DOCUMENT_TITLE } from '$lib/kenos/clientSessionCleanup.core.js'
+  import {
+    isIosNativeShell,
+    markIosNativeShellDom,
+  } from '$lib/kenos/iosNativeShell.js'
 
   let { children } = $props()
 
@@ -98,7 +102,9 @@
       '/uiux-states',
     ].includes(page.url.pathname) || !knownRoutes.has(page.url.pathname),
   )
-  const hideGlobalNav = $derived(focusFlags().hideGlobalNav && page.url.pathname === '/focus')
+  const hideGlobalNav = $derived(
+    (focusFlags().hideGlobalNav && page.url.pathname === '/focus') || isIosNativeShell(),
+  )
   const showReturnBanner = $derived(focusFlags().showReturnBanner)
 
   let captureOpen = $state(false)
@@ -203,6 +209,7 @@
   }
 
   onMount(() => {
+    markIosNativeShellDom()
     hydrateFocusStore()
     hydrateSpaceSwitcher()
     applyTheme()
@@ -388,5 +395,9 @@
     :global(.desktop-only-continue) {
       display: none !important;
     }
+  }
+  /* iOS KenosIOS WKWebView — native TabView owns bottom IA */
+  :global(html[data-ios-native-shell='true'] .bottom-nav-host) {
+    display: none !important;
   }
 </style>

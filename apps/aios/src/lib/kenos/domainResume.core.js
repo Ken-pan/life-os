@@ -36,6 +36,42 @@ export const DOMAIN_ORIGINS = Object.freeze({
 export const LOCAL_DAILY_BETA_AIOS_ORIGIN = 'http://127.0.0.1:5219'
 
 /**
+ * Host for local daily-beta deep links.
+ * On iPhone WKWebView, window.location.hostname is the Mac LAN IP — never hardcode
+ * 127.0.0.1 (unreachable on device).
+ * @returns {string}
+ */
+export function localDailyBetaHost() {
+  if (typeof window !== 'undefined') {
+    const host = String(window.location?.hostname || '').trim()
+    if (host && host !== 'localhost') return host
+    if (host === 'localhost') return '127.0.0.1'
+  }
+  return '127.0.0.1'
+}
+
+/**
+ * Rewrite loopback / localhost origin to the current page host (LAN-safe on phone).
+ * @param {string} href
+ * @returns {string}
+ */
+export function rewriteLoopbackToPageHost(href) {
+  const raw = String(href || '').trim()
+  if (!raw) return raw
+  try {
+    const url = new URL(raw)
+    if (url.hostname !== '127.0.0.1' && url.hostname !== 'localhost') return raw
+    if (typeof window === 'undefined') return raw
+    const host = localDailyBetaHost()
+    if (!host || host === '127.0.0.1') return raw
+    url.hostname = host
+    return url.toString()
+  } catch {
+    return raw
+  }
+}
+
+/**
  * Build-time Personal Daily Beta: deep links target local Planner/Fitness ports
  * instead of production. Does not change descriptor schema.
  * @param {{ VITE_KENOS_LOCAL_DAILY_BETA?: string }} [env]
@@ -53,7 +89,7 @@ export function resolveDomainOrigin(domainId, env = import.meta.env) {
   const appId = DOMAIN_APP_IDS[id]
   const cfg = appId ? LIFE_OS_APP_ORIGINS[appId] : null
   if (isLocalDailyBeta(env) && cfg?.devPort) {
-    return `http://127.0.0.1:${cfg.devPort}`
+    return `http://${localDailyBetaHost()}:${cfg.devPort}`
   }
   return DOMAIN_ORIGINS[id] || null
 }
@@ -73,18 +109,32 @@ export function rewriteDomainHrefForLocalDailyBeta(href, env = import.meta.env) 
       const prod = new URL(cfg.production).origin
       if (url.origin === prod) {
         url.protocol = 'http:'
-        url.host = `127.0.0.1:${cfg.devPort}`
+        url.host = `${localDailyBetaHost()}:${cfg.devPort}`
         return url.toString()
       }
     }
   } catch {
     /* ignore */
   }
-  return href
+  return rewriteLoopbackToPageHost(href)
+}
+
+/**
+ * True when host is loopback or private LAN (phone Daily Beta).
+ * @param {string} hostname
+ */
+export function isPrivateOrLoopbackHost(hostname) {
+  const h = String(hostname || '')
+  if (h === '127.0.0.1' || h === 'localhost') return true
+  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true
+  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true
+  if (/^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h)) return true
+  return false
 }
 
 /**
  * Origins allowed for Continue resume (production + local Vite / daily-beta ports).
+ * LAN hosts are accepted via port match in listKeyForDomainHref / isKnownDomainResume.
  * @returns {string[]}
  */
 export function knownDomainOrigins() {
@@ -98,6 +148,32 @@ export function knownDomainOrigins() {
     origins.push(`http://localhost:${cfg.devPort}`)
   }
   return origins
+}
+
+/**
+ * Map a production (or local / LAN) domain URL to hosted listKey for resume.
+ * @param {string} href
+ * @returns {string | null}
+ */
+export function listKeyForDomainHref(href) {
+  try {
+    const url = new URL(String(href || '').trim())
+    for (const [domainId, appId] of Object.entries(DOMAIN_APP_IDS)) {
+      const cfg = LIFE_OS_APP_ORIGINS[appId]
+      if (!cfg) continue
+      const prodOrigin = new URL(cfg.production).origin
+      if (url.origin === prodOrigin) return `hosted:${domainId}`
+      if (
+        isPrivateOrLoopbackHost(url.hostname) &&
+        Number(url.port || (url.protocol === 'http:' ? 80 : 0)) === Number(cfg.devPort)
+      ) {
+        return `hosted:${domainId}`
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return null
 }
 
 /** Demo / default resume paths keyed by hosted listKeys. */
@@ -142,10 +218,6 @@ export const FITNESS_ACTIVE_RESUME = Object.freeze({
 /**
  * @param {DomainId | string} domainId
  * @param {string} [path] absolute path or full URL
- */
-/**
- * @param {DomainId | string} domainId
- * @param {string} [path] absolute path or full URL
  * @param {{ VITE_KENOS_LOCAL_DAILY_BETA?: string }} [env]
  */
 export function domainDeepLink(domainId, path = '/', env = import.meta.env) {
@@ -156,28 +228,4 @@ export function domainDeepLink(domainId, path = '/', env = import.meta.env) {
   }
   const normalized = path.startsWith('/') ? path : `/${path}`
   return `${origin}${normalized === '/' ? '' : normalized}`
-}
-
-/**
- * Map a production (or local) domain URL to hosted listKey for resume.
- * @param {string} href
- * @returns {string | null}
- */
-export function listKeyForDomainHref(href) {
-  try {
-    const url = new URL(String(href || '').trim())
-    for (const [domainId, appId] of Object.entries(DOMAIN_APP_IDS)) {
-      const cfg = LIFE_OS_APP_ORIGINS[appId]
-      if (!cfg) continue
-      const allowed = [
-        new URL(cfg.production).origin,
-        `http://127.0.0.1:${cfg.devPort}`,
-        `http://localhost:${cfg.devPort}`,
-      ]
-      if (allowed.includes(url.origin)) return `hosted:${domainId}`
-    }
-  } catch {
-    /* ignore */
-  }
-  return null
 }

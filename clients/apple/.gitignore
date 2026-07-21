@@ -3,3 +3,8 @@
 **/DerivedData/
 **/*.xcuserstate
 **/xcuserdata/
+
+# Local Xcode derived data for device/sim beta
+Apps/build-device/
+Apps/build-device-*/
+Apps/build-sim/
