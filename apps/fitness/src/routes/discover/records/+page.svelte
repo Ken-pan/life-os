@@ -33,7 +33,9 @@
         pct: dd.pct,
         done: dd.done,
         total: dd.total,
-        minLabel: actualMin ? `${actualMin} min` : `≈${estMinutes(day)} min`
+        minLabel: actualMin
+          ? t('records.minutes', { n: actualMin })
+          : t('records.estMinutes', { n: estMinutes(day) }),
       });
     };
 

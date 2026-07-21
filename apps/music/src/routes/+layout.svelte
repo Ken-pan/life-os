@@ -35,6 +35,7 @@
     resolvePageTitle,
     resolvePageBack,
     isNavChromeHidden,
+    isMiniPlayerHidden,
     isWideContentRoute,
   } from '$lib/nav.js'
   import { pageChrome, resetPageChrome } from '$lib/pageChrome.svelte.js'
@@ -61,6 +62,8 @@
   import { bindNetworkResume } from '@life-os/platform-web/network-resume'
   import { setAppBadgeCount } from '@life-os/platform-web/app-badge'
   import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
+  import { installKenosAppLogs } from '@life-os/platform-web/kenos-app-logs'
+  import { supabase } from '$lib/supabase.js'
   import { backgroundActivity } from '$lib/backgroundActivity.svelte.js'
   import { bindPrecacheActivityAck } from '$lib/audioPrecache.js'
   import { refreshExpiringSignedUrls } from '$lib/cloudAudio.js'
@@ -74,6 +77,7 @@
     initRecDebug,
     installRecDebugConsole,
     initUtilityPaneWidth,
+    nowPlaying,
   } from '$lib/ui.svelte.js'
 
   let { children } = $props()
@@ -94,7 +98,11 @@
   )
   const appBarBackLabel = $derived(pageChrome.backLabel ?? undefined)
   const playerChrome = $derived(
-    (player.queue[player.index] ?? null) ? 'mini' : 'none',
+    (player.queue[player.index] ?? null) &&
+      !isMiniPlayerHidden(page.url.pathname) &&
+      !nowPlaying.open
+      ? 'mini'
+      : 'none',
   )
   const pageRoute = $derived(
     page.url.pathname.startsWith('/now-playing') ? 'now-playing' : undefined,
@@ -109,6 +117,27 @@
   const nativeShell = $derived(
     page.url.searchParams.get('iosNativeShell') === '1' || isIosNativeShell(),
   )
+  /** Compose → Import; hide on import itself, settings, auth, now-playing, search. */
+  const domainComposeVisible = $derived.by(() => {
+    const p = page.url.pathname
+    if (appBarHidden) return false
+    if (
+      p.startsWith('/import') ||
+      p.startsWith('/settings') ||
+      p.startsWith('/auth') ||
+      p.startsWith('/search') ||
+      p.startsWith('/now-playing')
+    ) {
+      return false
+    }
+    return (
+      p === '/' ||
+      p.startsWith('/library') ||
+      p.startsWith('/playlists') ||
+      p.startsWith('/browse') ||
+      p.startsWith('/liked')
+    )
+  })
 
   const shellDataset = $derived({
     'page-route': pageRoute,
@@ -144,7 +173,21 @@
 
   onMount(() => {
     markIosNativeShellDom()
-    if (isIosNativeShell()) {
+    const continuity = isIosNativeShell()
+    /** @type {{ kind: 'ric' | 'timeout'; id: number }[]} */
+    const idleHandles = []
+    /** @param {() => void} fn */
+    const runIdle = (fn) => {
+      if (typeof requestIdleCallback === 'function') {
+        idleHandles.push({
+          kind: 'ric',
+          id: requestIdleCallback(() => fn(), { timeout: 2500 }),
+        })
+      } else {
+        idleHandles.push({ kind: 'timeout', id: setTimeout(fn, 1200) })
+      }
+    }
+    if (continuity) {
       installMusicLeaveGuard()
       persistMusicContinue(suspendMusicSpace())
     }
@@ -155,10 +198,15 @@
     applyLocale()
     ensureBuiltinPlaylists()
     ensureAlbumArtCache()
-      .then(() => scheduleLibraryMaintenance({ lyrics: false }))
+      .then(() => {
+        if (continuity)
+          runIdle(() => scheduleLibraryMaintenance({ lyrics: false }))
+        else scheduleLibraryMaintenance({ lyrics: false })
+      })
       .catch(() => {})
     // 后台自动补全歌词（幂等、限量、在线才跑）——取代设置里的手动按钮
-    scheduleAutoLyricsBackfill()
+    if (continuity) runIdle(() => scheduleAutoLyricsBackfill())
+    else scheduleAutoLyricsBackfill()
     registerShortcutHandlers({
       searchInput,
       focusSearch: () => {
@@ -190,10 +238,19 @@
       void refreshExpiringSignedUrls()
     }, 10 * 60_000)
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') void refreshExpiringSignedUrls()
+      if (document.visibilityState === 'visible')
+        void refreshExpiringSignedUrls()
     }
     document.addEventListener('visibilitychange', onVisibility)
+    const disposeAppLogs = installKenosAppLogs({
+      app: 'music',
+      getSupabase: () => supabase,
+    })
     return () => {
+      for (const handle of idleHandles) {
+        if (handle.kind === 'ric') cancelIdleCallback(handle.id)
+        else clearTimeout(handle.id)
+      }
       cleanupShortcuts()
       cleanupTheme()
       cleanupAuth()
@@ -203,6 +260,7 @@
       cleanupBackground()
       cleanupForeground()
       cleanupPrecacheAck()
+      disposeAppLogs()
       clearInterval(refreshTimer)
       document.removeEventListener('visibilitychange', onVisibility)
     }
@@ -313,7 +371,13 @@
 
   {#snippet main()}
     {#if nativeShell && !appBarHidden}
-      <DomainMusicHeader title={pageTitle || 'Music'} domainLabel="Music" />
+      <DomainMusicHeader
+        title={pageTitle || 'Music'}
+        domainLabel="Music"
+        showCompose={domainComposeVisible}
+        backHref={appBarBackHref || ''}
+        backLabel={appBarBackLabel || t('common.back')}
+      />
     {/if}
     {@render children()}
   {/snippet}
@@ -354,16 +418,37 @@
     --bottom-chrome-h: 0px;
     --mobile-content-inset-tabbar: 0px;
     --safe-top-effective: 0px;
+    /* Continuity: dock + mini clearance (room for 2-line status hint) */
+    --kenos-domain-dock-h: 80px;
+    --kenos-mini-player-clearance: 96px;
   }
   :global(html[data-ios-native-shell='true'] .life-os-app-shell__main),
   :global(html[data-ios-native-shell='true'] #main-content) {
     padding-top: 54px !important;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(
+      var(--kenos-domain-dock-h) + env(safe-area-inset-bottom, 0px)
+    ) !important;
     box-sizing: border-box !important;
   }
+  /* MiniPlayer sits above Domain Dock — clear both when playing */
+  :global(
+      html[data-ios-native-shell='true']
+        .life-os-app-shell[data-player-chrome='mini']
+        .life-os-app-shell__main
+    ),
+  :global(
+      html[data-ios-native-shell='true']
+        .life-os-app-shell[data-player-chrome='mini']
+        #main-content
+    ) {
+    padding-bottom: calc(
+      var(--kenos-domain-dock-h) + var(--kenos-mini-player-clearance) +
+        env(safe-area-inset-bottom, 0px)
+    ) !important;
+  }
   :global(html[data-ios-native-shell='true'] .domain-music-header) {
-    padding-top: 2px;
-    padding-bottom: 12px;
+    padding-top: 0;
+    padding-bottom: 8px;
     padding-inline: 16px;
   }
   :global(html[data-ios-native-shell='true'] .page-header),
@@ -373,6 +458,8 @@
   }
   /* MiniPlayer sits above Domain Dock (not a second tab bar) */
   :global(html[data-ios-native-shell='true'] .mini-player) {
-    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(
+      var(--kenos-domain-dock-h) + env(safe-area-inset-bottom, 0px)
+    ) !important;
   }
 </style>

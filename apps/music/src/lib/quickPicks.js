@@ -9,7 +9,7 @@ export async function getQuickPicks(excludeTrackIds = [], limit = 6) {
   const exclude = new Set(excludeTrackIds)
   const [recent, liked, stats] = await Promise.all([
     getRecentTracks(20),
-    getLikedTracks(),
+    getLikedTracks(40),
     getEntityPlaybackStats(7),
   ])
   const bucket = getTimeContextBucket()

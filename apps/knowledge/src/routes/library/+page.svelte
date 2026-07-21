@@ -9,7 +9,16 @@
   import Plus from '@lucide/svelte/icons/plus'
   import ArrowLeft from '@lucide/svelte/icons/arrow-left'
   import {
-    S, allTags, allFolders, searchItems, itemById, updateItem, deleteItem, togglePin, resolveWikilink,
+    S,
+    allTags,
+    allFolders,
+    searchItems,
+    itemById,
+    createNote,
+    updateItem,
+    deleteItem,
+    togglePin,
+    resolveWikilink,
   } from '$lib/state.svelte.js'
   import { groupNotes } from '$lib/analytics.js'
   import { startNote } from '$lib/compose.svelte.js'
@@ -24,7 +33,9 @@
 
   const folders = $derived(allFolders())
   const contextItems = $derived(
-    activeFolder ? S.items.filter((i) => i.id.startsWith(activeFolder + '/')) : S.items,
+    activeFolder
+      ? S.items.filter((i) => i.id.startsWith(activeFolder + '/'))
+      : S.items,
   )
   const tags = $derived(allTags(contextItems))
   // 行内只放「近期」少量标签（已选优先，保证激活的过滤始终可见），其余进「更多」popover
@@ -42,25 +53,43 @@
   const showTagSearch = $derived(tags.length > TAG_SEARCH_THRESHOLD)
   const q = $derived(tagPanelQuery.trim().toLowerCase())
   // 搜索时走扁平过滤；否则分三组：已选 / 最近 / 全部
-  const panelMatch = $derived(q ? tags.filter((tg) => tg.toLowerCase().includes(q)) : tags)
-  const panelSelected = $derived([...activeTags].filter((tg) => tags.includes(tg)))
+  const panelMatch = $derived(
+    q ? tags.filter((tg) => tg.toLowerCase().includes(q)) : tags,
+  )
+  const panelSelected = $derived(
+    [...activeTags].filter((tg) => tags.includes(tg)),
+  )
   const panelUnselected = $derived(tags.filter((tg) => !activeTags.has(tg)))
   const panelRecent = $derived(panelUnselected.slice(0, 4))
   const panelRest = $derived(panelUnselected.slice(4))
   function openTagPanel(e) {
     const r = e.currentTarget.getBoundingClientRect()
-    tagPanelPos = { x: Math.min(r.left, window.innerWidth - 320), y: r.bottom + 6 }
+    tagPanelPos = {
+      x: Math.min(r.left, window.innerWidth - 320),
+      y: r.bottom + 6,
+    }
     tagPanelQuery = ''
     tagPanelOpen = true
   }
-  function portal(node) { document.body.appendChild(node); return { destroy() { node.remove() } } }
-  function autofocus(node) { requestAnimationFrame(() => node.focus()) }
+  function portal(node) {
+    document.body.appendChild(node)
+    return {
+      destroy() {
+        node.remove()
+      },
+    }
+  }
+  function autofocus(node) {
+    requestAnimationFrame(() => node.focus())
+  }
   const results = $derived.by(() => {
     S.items.length // 触响应式
     let matched = searchItems(query, activeTags)
-    if (activeFolder) matched = matched.filter((i) => i.id.startsWith(activeFolder + '/'))
+    if (activeFolder)
+      matched = matched.filter((i) => i.id.startsWith(activeFolder + '/'))
     return [...matched].sort(
-      (a, b) => Number(b.pinned) - Number(a.pinned) || b.updatedAt - a.updatedAt,
+      (a, b) =>
+        Number(b.pinned) - Number(a.pinned) || b.updatedAt - a.updatedAt,
     )
   })
 
@@ -72,21 +101,59 @@
   // Apple Notes 式分组：置顶 / 今天 / 昨天 / 本周 / 更早
   const groups = $derived(groupNotes(results, { now: Date.now() }))
   const GROUP_LABEL = {
-    pinned: 'group.pinned', today: 'group.today', yesterday: 'group.yesterday',
-    week: 'group.week', older: 'group.older',
+    pinned: 'group.pinned',
+    today: 'group.today',
+    yesterday: 'group.yesterday',
+    week: 'group.week',
+    older: 'group.older',
   }
 
   /* ——— 选中：URL ↔ 对象引用 ——— */
   let selected = $state(null)
+  // Assistant / Kenos compose 深链：?compose=1&title=&body= → 建一条笔记并改写成 ?note=<id>
+  // （清掉 compose 参数，避免刷新重复创建）。与下方 ?title= wikilink resolve 互斥。
+  let composeConsumed = false
+  $effect(() => {
+    const compose = page.url.searchParams.get('compose')
+    if (compose !== '1' && compose !== 'true') {
+      composeConsumed = false
+      return
+    }
+    if (composeConsumed) return
+    composeConsumed = true
+    const title = String(page.url.searchParams.get('title') || '')
+      .trim()
+      .slice(0, 200)
+    const body = String(page.url.searchParams.get('body') || '')
+      .trim()
+      .slice(0, 8000)
+    const item = createNote()
+    if (title || body) {
+      updateItem(item.id, {
+        ...(title ? { title } : {}),
+        ...(body ? { body } : {}),
+      })
+    }
+    goto(`/library?note=${encodeURIComponent(item.id)}`, {
+      replaceState: true,
+      keepFocus: true,
+      noScroll: true,
+    })
+  })
   // 跨 OS 深链：?title=<标题>（如 Planner 任务备注的 [[wikilink]]）→ 按标题 resolve 后
   // 改写成规范的 ?note=<id>（前进后退/漂移逻辑仍走 id 那套）。resolve 不到就留在列表。
+  // compose=1 时 title/body 是起草预填，不是 wikilink —— 交给上面的 compose 效果。
   $effect(() => {
     S.items.length
     const titleParam = page.url.searchParams.get('title')
     if (!titleParam || page.url.searchParams.get('note')) return
+    const compose = page.url.searchParams.get('compose')
+    if (compose === '1' || compose === 'true') return
     const hit = resolveWikilink(titleParam)
     goto(hit ? `/library?note=${encodeURIComponent(hit.id)}` : '/library', {
-      replaceState: true, keepFocus: true, noScroll: true,
+      replaceState: true,
+      keepFocus: true,
+      noScroll: true,
     })
   })
   // URL → selected（外部导航 / 前进后退 / 首次进入 / Vault watcher 重载后换对象）
@@ -112,23 +179,34 @@
     const id = selected?.id
     const urlId = page.url.searchParams.get('note')
     if (id && urlId && id !== urlId)
-      goto(`/library?note=${encodeURIComponent(id)}`, { replaceState: true, keepFocus: true, noScroll: true })
+      goto(`/library?note=${encodeURIComponent(id)}`, {
+        replaceState: true,
+        keepFocus: true,
+        noScroll: true,
+      })
   })
 
   function selectNote(item) {
-    goto(`/library?note=${encodeURIComponent(item.id)}`, { keepFocus: true, noScroll: true })
+    goto(`/library?note=${encodeURIComponent(item.id)}`, {
+      keepFocus: true,
+      noScroll: true,
+    })
   }
   function backToList() {
     goto('/library', { keepFocus: true, noScroll: true })
   }
-  function saveNote(patch, it) { if (it) updateItem(it.id, patch) }
+  function saveNote(patch, it) {
+    if (it) updateItem(it.id, patch)
+  }
   function deleteNote(it) {
     if (!it) return
     const wasSel = it.id === selected?.id
     deleteItem(it.id)
     if (wasSel) backToList()
   }
-  function pinNote(it) { if (it) togglePin(it.id) }
+  function pinNote(it) {
+    if (it) togglePin(it.id)
+  }
 
   const folderLabel = (path) => path.replace(/^\d+[_-]?/, '')
   function toggleTag(tag) {
@@ -145,8 +223,15 @@
   const LIST_W_MAX = 480
   let listW = $state(LIST_W_DEFAULT)
   let resizing = $state(false)
-  const clampW = (w) => Math.round(Math.max(LIST_W_MIN, Math.min(LIST_W_MAX, w)))
-  const persistW = () => { try { localStorage.setItem(LIST_W_KEY, String(listW)) } catch { /* 无痕/隐私模式 */ } }
+  const clampW = (w) =>
+    Math.round(Math.max(LIST_W_MIN, Math.min(LIST_W_MAX, w)))
+  const persistW = () => {
+    try {
+      localStorage.setItem(LIST_W_KEY, String(listW))
+    } catch {
+      /* 无痕/隐私模式 */
+    }
+  }
   onMount(() => {
     const saved = Number(localStorage.getItem(LIST_W_KEY))
     if (saved >= LIST_W_MIN && saved <= LIST_W_MAX) listW = saved
@@ -156,7 +241,9 @@
     const nwEl = e.currentTarget.parentElement
     const left = nwEl.getBoundingClientRect().left
     resizing = true
-    const move = (ev) => { listW = clampW(ev.clientX - left) }
+    const move = (ev) => {
+      listW = clampW(ev.clientX - left)
+    }
     const stop = () => {
       resizing = false
       window.removeEventListener('pointermove', move)
@@ -166,143 +253,225 @@
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', stop)
   }
-  function resetResize() { listW = LIST_W_DEFAULT; persistW() }
+  function resetResize() {
+    listW = LIST_W_DEFAULT
+    persistW()
+  }
   function keyResize(e) {
-    if (e.key === 'ArrowLeft') { listW = clampW(listW - 16); persistW(); e.preventDefault() }
-    else if (e.key === 'ArrowRight') { listW = clampW(listW + 16); persistW(); e.preventDefault() }
+    if (e.key === 'ArrowLeft') {
+      listW = clampW(listW - 16)
+      persistW()
+      e.preventDefault()
+    } else if (e.key === 'ArrowRight') {
+      listW = clampW(listW + 16)
+      persistW()
+      e.preventDefault()
+    }
   }
 </script>
 
 <!-- 方案A：始终保留列表外壳（空库也显示搜索/新建/列表框架），避免创建首篇后布局跳变 -->
 <div class="nw" class:is-resizing={resizing} style="--nw-list-w:{listW}px">
-    <!-- 列表列 -->
-    <aside class="nw-list" class:is-hidden={selected}>
-      <div class="nw-list__head">
-        <SearchField
-          value={query}
-          onChange={(v) => (query = v)}
-          placeholder={t('library.searchShort')}
-          clearLabel={t('library.clearSearch')}
-        />
-        <button type="button" class="nw-new" onclick={startNote} title={t('common.newNote')}>
-          <Plus size={16} strokeWidth={2.4} /><span>{t('library.newShort')}</span>
-        </button>
-      </div>
+  <!-- 列表列 -->
+  <aside class="nw-list" class:is-hidden={selected}>
+    <div class="nw-list__head">
+      <SearchField
+        value={query}
+        onChange={(v) => (query = v)}
+        placeholder={t('library.searchShort')}
+        clearLabel={t('library.clearSearch')}
+      />
+      <button
+        type="button"
+        class="nw-new"
+        onclick={startNote}
+        title={t('common.newNote')}
+      >
+        <Plus size={16} strokeWidth={2.4} /><span>{t('library.newShort')}</span>
+      </button>
+    </div>
 
-      {#if folders.length > 0}
-        <div class="chip-row nw-chips" role="group" aria-label={t('library.folderAria')}>
-          <button type="button" class="chip" aria-pressed={activeFolder === ''} onclick={() => (activeFolder = '')}>
-            {t('library.allFolders')}
-          </button>
-          {#each folders as folder (folder.path)}
-            <button type="button" class="chip" aria-pressed={activeFolder === folder.path}
-              onclick={() => (activeFolder = activeFolder === folder.path ? '' : folder.path)}>
-              {folderLabel(folder.path)} · {folder.count}
-            </button>
-          {/each}
-        </div>
-      {/if}
-      {#if tags.length > 0}
-        <div class="chip-row nw-chips" role="group" aria-label={t('library.filterAria')}>
-          <span class="nw-filter-label">{t('library.filterLabel')}</span>
-          {#each inlineTags as tag (tag)}
-            <button type="button" class="chip" aria-pressed={activeTags.has(tag)} onclick={() => toggleTag(tag)}>
-              {tag}
-            </button>
-          {/each}
-          {#if tags.length > inlineTags.length}
-            <button type="button" class="chip nw-tagmore" onclick={openTagPanel} aria-haspopup="dialog" aria-expanded={tagPanelOpen}>
-              {t('library.filterMore')} ({tags.length}) ▾
-            </button>
-          {/if}
-          {#if activeTags.size > 0}
-            <button type="button" class="chip nw-filter-clear" onclick={() => (activeTags = new Set())}>
-              {t('library.filterClear')}
-            </button>
-          {/if}
-        </div>
-      {/if}
-
-      <div class="nw-list__body">
-        {#if S.items.length === 0}
-          <div class="nw-list-empty">
-            <p class="nw-list-empty__title">{t('library.welcomeTitle')}</p>
-            <p class="nw-list-empty__desc">{t('library.welcomeDesc')}</p>
-            <button type="button" class="btn-primary" onclick={startNote}>{t('library.welcomeCta')}</button>
-          </div>
-        {:else if results.length === 0}
-          <div class="settings-block">
-            <EmptyState title={t('library.emptyTitle')} description={t('library.emptyDesc')} />
-          </div>
-        {:else}
-          {#each groups as g (g.key)}
-            <div class="nw-group">
-              <div class="nw-group__label">{t(GROUP_LABEL[g.key])}</div>
-              <NoteCards items={g.items} onOpen={selectNote} activeId={selected?.id} />
-            </div>
-          {/each}
-        {/if}
-      </div>
-    </aside>
-
-    <!-- 文档列 -->
-    <section class="nw-doc" class:is-hidden={!selected}>
-      {#if selected}
-        <button type="button" class="nw-back" onclick={backToList}>
-          <ArrowLeft size={16} strokeWidth={2.2} /><span>{t('nav.allNotes')}</span>
-        </button>
-        {#if selectedFilteredOut}
-          <div class="nw-filter-note" role="status">{t('library.notInFilter')}</div>
-        {/if}
-        <NoteEditor
-          inline
-          item={selected}
-          {titles}
-          onSave={saveNote}
-          onDelete={deleteNote}
-          onTogglePin={pinNote}
-          onOpenNote={selectNote}
+    {#if folders.length > 0}
+      <div
+        class="chip-row nw-chips"
+        role="group"
+        aria-label={t('library.folderAria')}
+      >
+        <button
+          type="button"
+          class="chip"
+          aria-pressed={activeFolder === ''}
+          onclick={() => (activeFolder = '')}
         >
-          {#snippet footer()}
-            <NoteConnections item={selected} onOpen={selectNote} />
-          {/snippet}
-        </NoteEditor>
+          {t('library.allFolders')}
+        </button>
+        {#each folders as folder (folder.path)}
+          <button
+            type="button"
+            class="chip"
+            aria-pressed={activeFolder === folder.path}
+            onclick={() =>
+              (activeFolder = activeFolder === folder.path ? '' : folder.path)}
+          >
+            {folderLabel(folder.path)} · {folder.count}
+          </button>
+        {/each}
+      </div>
+    {/if}
+    {#if tags.length > 0}
+      <div
+        class="chip-row nw-chips"
+        role="group"
+        aria-label={t('library.filterAria')}
+      >
+        <span class="nw-filter-label">{t('library.filterLabel')}</span>
+        {#each inlineTags as tag (tag)}
+          <button
+            type="button"
+            class="chip"
+            aria-pressed={activeTags.has(tag)}
+            onclick={() => toggleTag(tag)}
+          >
+            {tag}
+          </button>
+        {/each}
+        {#if tags.length > inlineTags.length}
+          <button
+            type="button"
+            class="chip nw-tagmore"
+            onclick={openTagPanel}
+            aria-haspopup="dialog"
+            aria-expanded={tagPanelOpen}
+          >
+            {t('library.filterMore')} ({tags.length}) ▾
+          </button>
+        {/if}
+        {#if activeTags.size > 0}
+          <button
+            type="button"
+            class="chip nw-filter-clear"
+            onclick={() => (activeTags = new Set())}
+          >
+            {t('library.filterClear')}
+          </button>
+        {/if}
+      </div>
+    {/if}
+
+    <div class="nw-list__body">
+      {#if S.items.length === 0}
+        <div class="nw-list-empty">
+          <p class="nw-list-empty__title">{t('library.welcomeTitle')}</p>
+          <p class="nw-list-empty__desc">{t('library.welcomeDesc')}</p>
+          <button type="button" class="btn-primary" onclick={startNote}
+            >{t('library.welcomeCta')}</button
+          >
+        </div>
+      {:else if results.length === 0}
+        <div class="settings-block">
+          <EmptyState
+            title={t('library.emptyTitle')}
+            description={t('library.emptyDesc')}
+          />
+        </div>
       {:else}
-        <div class="nw-empty">
-          {#if S.items.length === 0}
-            <!-- 空库：正文区只解释用途，创建入口交给顶栏「＋新建」与列表 onboarding，不做第三个主按钮 -->
-            <EmptyState title={t('workspace.emptyDocFirstTitle')} description={t('workspace.emptyDocFirstDesc')} />
-          {:else}
-            <EmptyState title={t('workspace.emptyDocTitle')} description={t('workspace.emptyDocDesc')} />
-            <button type="button" class="btn-primary" onclick={startNote}>{t('common.newNote')}</button>
-          {/if}
+        {#each groups as g (g.key)}
+          <div class="nw-group">
+            <div class="nw-group__label">{t(GROUP_LABEL[g.key])}</div>
+            <NoteCards
+              items={g.items}
+              onOpen={selectNote}
+              activeId={selected?.id}
+            />
+          </div>
+        {/each}
+      {/if}
+    </div>
+  </aside>
+
+  <!-- 文档列 -->
+  <section class="nw-doc" class:is-hidden={!selected}>
+    {#if selected}
+      <button type="button" class="nw-back" onclick={backToList}>
+        <ArrowLeft size={16} strokeWidth={2.2} /><span>{t('nav.allNotes')}</span
+        >
+      </button>
+      {#if selectedFilteredOut}
+        <div class="nw-filter-note" role="status">
+          {t('library.notInFilter')}
         </div>
       {/if}
-    </section>
+      <NoteEditor
+        inline
+        item={selected}
+        {titles}
+        onSave={saveNote}
+        onDelete={deleteNote}
+        onTogglePin={pinNote}
+        onOpenNote={selectNote}
+      >
+        {#snippet footer()}
+          <NoteConnections item={selected} onOpen={selectNote} />
+        {/snippet}
+      </NoteEditor>
+    {:else}
+      <div class="nw-empty">
+        {#if S.items.length === 0}
+          <!-- 空库：正文区只解释用途，创建入口交给顶栏「＋新建」与列表 onboarding，不做第三个主按钮 -->
+          <EmptyState
+            title={t('workspace.emptyDocFirstTitle')}
+            description={t('workspace.emptyDocFirstDesc')}
+          />
+        {:else}
+          <EmptyState
+            title={t('workspace.emptyDocTitle')}
+            description={t('workspace.emptyDocDesc')}
+          />
+          <button type="button" class="btn-primary" onclick={startNote}
+            >{t('common.newNote')}</button
+          >
+        {/if}
+      </div>
+    {/if}
+  </section>
 
-    <!-- 列宽拖拽手柄（仅桌面双列显示；双击复位、方向键微调） -->
-    <!-- svelte-ignore a11y_no_noninteractive_element_interactions, a11y_no_noninteractive_tabindex -->
-    <div
-      class="nw-resizer"
-      role="separator"
-      aria-orientation="vertical"
-      aria-label={t('library.resizeAria')}
-      aria-valuenow={listW}
-      aria-valuemin={LIST_W_MIN}
-      aria-valuemax={LIST_W_MAX}
-      tabindex="0"
-      onpointerdown={startResize}
-      ondblclick={resetResize}
-      onkeydown={keyResize}
-    ></div>
-  </div>
+  <!-- 列宽拖拽手柄（仅桌面双列显示；双击复位、方向键微调） -->
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions, a11y_no_noninteractive_tabindex -->
+  <div
+    class="nw-resizer"
+    role="separator"
+    aria-orientation="vertical"
+    aria-label={t('library.resizeAria')}
+    aria-valuenow={listW}
+    aria-valuemin={LIST_W_MIN}
+    aria-valuemax={LIST_W_MAX}
+    tabindex="0"
+    onpointerdown={startResize}
+    ondblclick={resetResize}
+    onkeydown={keyResize}
+  ></div>
+</div>
 
-<svelte:window onkeydown={(e) => { if (e.key === 'Escape' && tagPanelOpen) tagPanelOpen = false }} />
+<svelte:window
+  onkeydown={(e) => {
+    if (e.key === 'Escape' && tagPanelOpen) tagPanelOpen = false
+  }}
+/>
 
 {#if tagPanelOpen}
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-  <div class="nw-tagpop__backdrop" use:portal onclick={() => (tagPanelOpen = false)}></div>
-  <div class="nw-tagpop" use:portal style="left:{tagPanelPos.x}px; top:{tagPanelPos.y}px" role="dialog" aria-label={t('library.filterAria')}>
+  <div
+    class="nw-tagpop__backdrop"
+    use:portal
+    onclick={() => (tagPanelOpen = false)}
+  ></div>
+  <div
+    class="nw-tagpop"
+    use:portal
+    style="left:{tagPanelPos.x}px; top:{tagPanelPos.y}px"
+    role="dialog"
+    aria-label={t('library.filterAria')}
+  >
     {#if showTagSearch}
       <input
         class="nw-tagpop__search"
@@ -317,16 +486,28 @@
         <!-- 搜索态：扁平结果 -->
         <div class="nw-tagpop__list">
           {#each panelMatch as tag (tag)}
-            <button type="button" class="chip" aria-pressed={activeTags.has(tag)} onclick={() => toggleTag(tag)}>{tag}</button>
+            <button
+              type="button"
+              class="chip"
+              aria-pressed={activeTags.has(tag)}
+              onclick={() => toggleTag(tag)}>{tag}</button
+            >
           {/each}
-          {#if panelMatch.length === 0}<p class="nw-tagpop__empty">{t('library.noTagMatch')}</p>{/if}
+          {#if panelMatch.length === 0}<p class="nw-tagpop__empty">
+              {t('library.noTagMatch')}
+            </p>{/if}
         </div>
       {:else}
         {#if panelSelected.length > 0}
           <p class="nw-tagpop__grp">{t('library.tagGroupSelected')}</p>
           <div class="nw-tagpop__list">
             {#each panelSelected as tag (tag)}
-              <button type="button" class="chip" aria-pressed="true" onclick={() => toggleTag(tag)}>{tag} ✕</button>
+              <button
+                type="button"
+                class="chip"
+                aria-pressed="true"
+                onclick={() => toggleTag(tag)}>{tag} ✕</button
+              >
             {/each}
           </div>
         {/if}
@@ -334,7 +515,9 @@
           <p class="nw-tagpop__grp">{t('library.tagGroupRecent')}</p>
           <div class="nw-tagpop__list">
             {#each panelRecent as tag (tag)}
-              <button type="button" class="chip" onclick={() => toggleTag(tag)}>{tag}</button>
+              <button type="button" class="chip" onclick={() => toggleTag(tag)}
+                >{tag}</button
+              >
             {/each}
           </div>
         {/if}
@@ -342,14 +525,21 @@
           <p class="nw-tagpop__grp">{t('library.tagGroupAll')}</p>
           <div class="nw-tagpop__list">
             {#each panelRest as tag (tag)}
-              <button type="button" class="chip" onclick={() => toggleTag(tag)}>{tag}</button>
+              <button type="button" class="chip" onclick={() => toggleTag(tag)}
+                >{tag}</button
+              >
             {/each}
           </div>
         {/if}
       {/if}
     </div>
     {#if activeTags.size > 0}
-      <button type="button" class="nw-tagpop__clear" onclick={() => (activeTags = new Set())}>{t('library.filterClear')}</button>
+      <button
+        type="button"
+        class="nw-tagpop__clear"
+        onclick={() => (activeTags = new Set())}
+        >{t('library.filterClear')}</button
+      >
     {/if}
   </div>
 {/if}
@@ -391,15 +581,22 @@
       grid-template-columns: var(--nw-list-w, 400px) minmax(0, 1fr);
     }
   }
-  .nw.is-resizing { cursor: col-resize; user-select: none; }
+  .nw.is-resizing {
+    cursor: col-resize;
+    user-select: none;
+  }
   /* 窄宽（单列）：按选中态只显一列 */
   @container life-os-main (max-width: 839px) {
     .nw-list.is-hidden,
-    .nw-doc.is-hidden { display: none; }
+    .nw-doc.is-hidden {
+      display: none;
+    }
   }
 
   /* 列宽拖拽手柄——仅桌面双列出现，坐落在两列边界上 */
-  .nw-resizer { display: none; }
+  .nw-resizer {
+    display: none;
+  }
   @container life-os-main (min-width: 840px) {
     .nw-resizer {
       display: block;
@@ -424,9 +621,13 @@
     }
     .nw-resizer:hover::after,
     .nw-resizer:focus-visible::after,
-    .nw.is-resizing .nw-resizer::after { background: var(--accent); }
+    .nw.is-resizing .nw-resizer::after {
+      background: var(--accent);
+    }
   }
-  .nw-resizer:focus-visible { outline: none; }
+  .nw-resizer:focus-visible {
+    outline: none;
+  }
 
   /* 列表列 —— 自带滚动 */
   .nw-list {
@@ -438,9 +639,11 @@
     overflow-y: auto;
     /* 列表列比正文列微沉一档（secondary surface），配合分隔线让两列层级更清晰 */
     background: color-mix(in srgb, var(--t1, var(--text)) 2.5%, transparent);
-    border-inline-end: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    border-inline-end: 1px solid
+      color-mix(in srgb, var(--border) 70%, transparent);
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--t1, var(--text)) 18%, transparent) transparent;
+    scrollbar-color: color-mix(in srgb, var(--t1, var(--text)) 18%, transparent)
+      transparent;
   }
   .nw-list__head {
     display: flex;
@@ -449,7 +652,10 @@
     padding-inline: var(--space-1, 4px);
   }
   .nw-list__head :global(.field),
-  .nw-list__head :global([role='search']) { flex: 1; min-width: 0; }
+  .nw-list__head :global([role='search']) {
+    flex: 1;
+    min-width: 0;
+  }
   .nw-new {
     flex: 0 0 auto;
     display: inline-flex;
@@ -466,7 +672,9 @@
     cursor: pointer;
     transition: filter var(--motion-fast) var(--ease);
   }
-  .nw-new:hover { filter: brightness(1.08); }
+  .nw-new:hover {
+    filter: brightness(1.08);
+  }
   /* 标签行单行水平滚动，别让它把工具区撑高 */
   .nw-chips {
     flex-wrap: nowrap;
@@ -474,14 +682,20 @@
     padding-inline: var(--space-1, 4px);
     scrollbar-width: none;
   }
-  .nw-chips::-webkit-scrollbar { display: none; }
-  .nw-chips .chip { flex: 0 0 auto; }
+  .nw-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .nw-chips .chip {
+    flex: 0 0 auto;
+  }
   .nw-list__body {
     flex: 1;
     min-height: 0;
     padding-bottom: var(--space-4, 16px);
   }
-  .nw-group + .nw-group { margin-top: var(--space-4, 16px); }
+  .nw-group + .nw-group {
+    margin-top: var(--space-4, 16px);
+  }
   .nw-group__label {
     font-size: var(--kn-meta, 12px);
     font-weight: 650;
@@ -492,7 +706,9 @@
     padding-inline: var(--space-1, 4px);
   }
   /* 列表列窄 —— 卡片单列堆叠 */
-  .nw-list :global(.note-grid) { grid-template-columns: 1fr; }
+  .nw-list :global(.note-grid) {
+    grid-template-columns: 1fr;
+  }
   .nw-tagmore {
     color: var(--t2, var(--text-secondary));
     font-weight: 600;
@@ -529,7 +745,9 @@
     font-size: var(--text-sm, 12px);
     outline: none;
   }
-  :global(.nw-tagpop__search:focus) { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+  :global(.nw-tagpop__search:focus) {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  }
   :global(.nw-tagpop__scroll) {
     display: flex;
     flex-direction: column;
@@ -546,7 +764,9 @@
     text-transform: uppercase;
     color: var(--t3, var(--text-muted));
   }
-  :global(.nw-tagpop__grp:first-child) { margin-top: 0; }
+  :global(.nw-tagpop__grp:first-child) {
+    margin-top: 0;
+  }
   :global(.nw-tagpop__list) {
     display: flex;
     flex-wrap: wrap;
@@ -601,7 +821,10 @@
     flex-direction: column;
     overflow: hidden;
   }
-  .nw-doc :global(.ed-pane) { flex: 1; min-height: 0; }
+  .nw-doc :global(.ed-pane) {
+    flex: 1;
+    min-height: 0;
+  }
   .nw-back {
     display: inline-flex;
     align-items: center;
@@ -616,10 +839,19 @@
     font-size: var(--text-sm, 12px);
     cursor: pointer;
   }
-  .nw-back:hover { background: color-mix(in srgb, var(--t1, var(--text)) 6%, transparent); color: var(--t1, var(--text)); }
+  .nw-back:hover {
+    background: color-mix(in srgb, var(--t1, var(--text)) 6%, transparent);
+    color: var(--t1, var(--text));
+  }
+  /* Native detail: reserve trailing space for overlay Quick Switch bubble. */
+  :global(html[data-ios-native-shell='true']) .nw-back {
+    max-width: calc(100% - 56px);
+  }
   /* 桌面双列不需要返回键（放在基样式之后覆盖） */
   @container life-os-main (min-width: 840px) {
-    .nw-back { display: none; }
+    .nw-back {
+      display: none;
+    }
   }
   .nw-empty {
     flex: 1;

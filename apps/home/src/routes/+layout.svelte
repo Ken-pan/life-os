@@ -35,6 +35,8 @@
   import { initAuth, auth } from '$lib/auth.svelte.js'
   import { registerServiceWorker } from '$lib/serviceWorker.js'
   import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
+  import { installKenosAppLogs } from '@life-os/platform-web/kenos-app-logs'
+  import { supabase } from '$lib/supabase.js'
   import {
     bindLifeOsPresence,
     touchLifeOsPresence,
@@ -72,8 +74,10 @@
     if (p === '/' || p === '/plan') {
       const custom = getPlanSubtitle()
       return {
-        title: '顶视平面',
-        subtitle: planImmersive ? '' : custom || project.meta.nameZh || '储藏区可点击',
+        title: '平面',
+        subtitle: planImmersive
+          ? ''
+          : custom || project.meta.nameZh || '储藏区可点击',
       }
     }
     // 「储藏审计」→「东西放哪」。没有人想审计自己的家 —— 审计是这个系统内部的说法
@@ -104,9 +108,7 @@
     const search = page.url.search
     void path
     void search
-    persistHomeContinue(
-      suspendHomeSpace({ pathname: path, search }),
-    )
+    persistHomeContinue(suspendHomeSpace({ pathname: path, search }))
   })
 
   onMount(() => {
@@ -120,7 +122,9 @@
     // 开发免登录同步:未登录的 localhost 窗口自动跟进云端优化副本
     // (生产构建 DEV=false,动态 import 连 chunk 都不会打进去)
     if (import.meta.env.DEV) {
-      void import('$lib/dev-canonical.js').then((m) => m.maybeDevSyncCanonical())
+      void import('$lib/dev-canonical.js').then((m) =>
+        m.maybeDevSyncCanonical(),
+      )
     }
     const cleanupViewport = bindViewportHeight()
     const cleanupTheme = bindAppThemeSystemChange()
@@ -135,6 +139,10 @@
         }
       },
     })
+    const disposeAppLogs = installKenosAppLogs({
+      app: 'home',
+      getSupabase: () => supabase,
+    })
     return () => {
       cleanupAuth()
       cleanupViewport()
@@ -142,6 +150,7 @@
       cleanupSw()
       cleanupPresence()
       cleanupForeground()
+      disposeAppLogs()
     }
   })
 
@@ -229,8 +238,8 @@
     box-sizing: border-box !important;
   }
   :global(html[data-ios-native-shell='true'] .domain-music-header) {
-    padding-top: 2px;
-    padding-bottom: 12px;
+    padding-top: 0;
+    padding-bottom: 8px;
     padding-inline: 16px;
   }
   :global(html[data-ios-native-shell='true'] .page-header),

@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte'
   import { Eye, EyeOff } from '@lucide/svelte'
   import { goto } from '$app/navigation'
   import { buildAppPath } from '@life-os/finance-core/routing/app-route'
@@ -37,6 +38,7 @@
   import SettingsSection from '@life-os/platform-web/svelte/settings/section'
   import SettingsRow from '@life-os/platform-web/svelte/settings/row'
   import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group'
+  import { scrollToSettingsHash } from '@life-os/platform-web/settings-hash'
   import SettingsAppearanceSection from './settings/SettingsAppearanceSection.svelte'
   import HelpCenterView from './HelpCenterView.svelte'
   import AnalyticsPanel from './settings/AnalyticsPanel.svelte'
@@ -97,7 +99,9 @@
   const backupNote = $derived(getBackupFormatNote())
   const accessible = $derived(accessibleLabel())
   const product = $derived(productName())
-  const legacyPreview = $derived(legacyBlobPresent ? readLegacyLocalFinance() : null)
+  const legacyPreview = $derived(
+    legacyBlobPresent ? readLegacyLocalFinance() : null,
+  )
 
   const sections = $derived([
     { id: 'assumptions', label: t('settings.sectionAssumptions') },
@@ -112,9 +116,24 @@
     void goto(buildAppPath({ tab: 'settings', section: next }))
   }
 
+  onMount(() => {
+    // `#cloud` lives on DeviceManager in the App tab — switch there before scrolling.
+    // scrollToSettingsHash retries until the App tab mounts DeviceManager.
+    if (typeof window !== 'undefined' && window.location.hash === '#cloud') {
+      if (activeSection !== 'app') handleSectionChange('app')
+    }
+    return scrollToSettingsHash('cloud', {
+      delayMs: 80,
+      retries: 16,
+      retryMs: 100,
+    })
+  })
+
   function downloadLegacyBlob() {
     if (!legacyPreview) return
-    const blob = new Blob([JSON.stringify(legacyPreview, null, 2)], { type: 'application/json' })
+    const blob = new Blob([JSON.stringify(legacyPreview, null, 2)], {
+      type: 'application/json',
+    })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
@@ -168,7 +187,9 @@
     dataActionResult = null
     try {
       const backup = await exportFinancialBackup()
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+      const blob = new Blob([JSON.stringify(backup, null, 2)], {
+        type: 'application/json',
+      })
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
@@ -271,7 +292,8 @@
     class="settings-tabs"
     tablistWrapperClass="settings-intro"
     ariaLabel={t('settings.sectionAria')}
-    onChange={(next) => handleSectionChange(/** @type {SettingsSectionId} */ (next))}
+    onChange={(next) =>
+      handleSectionChange(/** @type {SettingsSectionId} */ (next))}
   >
     <TabPanel tabId="assumptions" active={activeSection === 'assumptions'}>
       <div class="card">
@@ -287,7 +309,9 @@
         </div>
         <p class="muted-note">{t('settings.assumptionsIntro')}</p>
 
-        <h3 class="mb-2" style="margin-top: var(--space-4)">{t('settings.assumptionsBasic')}</h3>
+        <h3 class="mb-2" style="margin-top: var(--space-4)">
+          {t('settings.assumptionsBasic')}
+        </h3>
         <div class="row">
           <PercentField
             label={t('settings.salaryGrowth')}
@@ -297,7 +321,8 @@
           <NumberField
             label={t('settings.emergencyReserveTarget')}
             value={a.emergencyReserveTarget}
-            onChange={(v) => store.setAssumptions({ emergencyReserveTarget: v })}
+            onChange={(v) =>
+              store.setAssumptions({ emergencyReserveTarget: v })}
             step={1000}
           />
           <NumberField
@@ -345,7 +370,10 @@
           </div>
         </div>
 
-        <button class="group-toggle mt-3" onclick={() => (openAdvanced = !openAdvanced)}>
+        <button
+          class="group-toggle mt-3"
+          onclick={() => (openAdvanced = !openAdvanced)}
+        >
           <span class="chev{openAdvanced ? ' open' : ''}">⌄</span>
           {t('settings.advancedAssumptions')}
         </button>
@@ -360,7 +388,8 @@
               <PercentField
                 label={t('settings.conservativeReturn')}
                 value={a.conservativeReturn}
-                onChange={(v) => store.setAssumptions({ conservativeReturn: v })}
+                onChange={(v) =>
+                  store.setAssumptions({ conservativeReturn: v })}
               />
               <PercentField
                 label={t('settings.aggressiveReturn')}
@@ -391,7 +420,10 @@
           </div>
         {/if}
 
-        <button class="group-toggle mt-2" onclick={() => (openExpert = !openExpert)}>
+        <button
+          class="group-toggle mt-2"
+          onclick={() => (openExpert = !openExpert)}
+        >
           <span class="chev{openExpert ? ' open' : ''}">⌄</span>
           {t('settings.expertNotes')}
         </button>
@@ -399,26 +431,37 @@
           <div class="list mt-1">
             <div class="kv">
               <span class="k">{t('settings.expertDisplayMode')}</span>
-              <span class="text-secondary">{t('settings.expertDisplayModeSub')}</span>
+              <span class="text-secondary"
+                >{t('settings.expertDisplayModeSub')}</span
+              >
             </div>
             <div class="kv">
               <span class="k">{t('settings.expertBasicFirst')}</span>
-              <span class="text-secondary">{t('settings.expertBasicFirstSub')}</span>
+              <span class="text-secondary"
+                >{t('settings.expertBasicFirstSub')}</span
+              >
             </div>
             <div class="kv">
               <span class="k">{t('settings.expertAdvanced')}</span>
-              <span class="text-secondary">{t('settings.expertAdvancedSub')}</span>
+              <span class="text-secondary"
+                >{t('settings.expertAdvancedSub')}</span
+              >
             </div>
           </div>
         {/if}
       </div>
     </TabPanel>
 
-    <TabPanel tabId="app" active={activeSection === 'app'} class="settings-section">
+    <TabPanel
+      tabId="app"
+      active={activeSection === 'app'}
+      class="settings-section"
+    >
       <div class="settings-section-head">
         <h3>{t('settings.appHead')}</h3>
         <p class="muted-note">{t('settings.appNote')}</p>
       </div>
+      <DeviceManager />
       <SettingsAppearanceSection
         title={t('settings.appearance')}
         {themePreference}
@@ -427,38 +470,58 @@
         {onLockPortraitOnPhoneChange}
       />
       <SettingsSection title={t('settings.uiPrefs')}>
-        <SettingsRow label={t('settings.amountDisplay')} desc={t('settings.amountDisplayDesc')}>
+        <SettingsRow
+          label={t('settings.amountDisplay')}
+          desc={t('settings.amountDisplayDesc')}
+        >
           <button
             class="icon-btn"
             onclick={() => store.setPrivacy(!store.data.privacy)}
-            title={store.data.privacy ? t('settings.showAmountsTitle') : t('settings.hideAmountsTitle')}
-            aria-label={store.data.privacy ? t('settings.showAmountsTitle') : t('settings.hideAmountsTitle')}
+            title={store.data.privacy
+              ? t('settings.showAmountsTitle')
+              : t('settings.hideAmountsTitle')}
+            aria-label={store.data.privacy
+              ? t('settings.showAmountsTitle')
+              : t('settings.hideAmountsTitle')}
           >
             {#if store.data.privacy}
               <Eye size={16} strokeWidth={1.8} />
             {:else}
               <EyeOff size={16} strokeWidth={1.8} />
             {/if}
-            {store.data.privacy ? t('settings.showAmounts') : t('settings.hideAmounts')}
+            {store.data.privacy
+              ? t('settings.showAmounts')
+              : t('settings.hideAmounts')}
           </button>
         </SettingsRow>
       </SettingsSection>
       <SettingsSection title={t('settings.dataTitle')} testId="settings-backup">
         <p class="block-desc">{t('settings.dataIntro', { product })}</p>
         <p class="block-desc">{t('settings.dataBackupWarning')}</p>
-        <p class="block-desc">{t('settings.dataBackupScope', { backupNote })}</p>
+        <p class="block-desc">
+          {t('settings.dataBackupScope', { backupNote })}
+        </p>
         {#if store.data.privacy}
           <p class="block-desc">{t('settings.dataPrivacyBackupNote')}</p>
         {/if}
         {#if lastBackupAt}
           <p class="block-desc">
-            {t('settings.lastBackup', { date: formatDateTimeForIntl(lastBackupAt) })}
+            {t('settings.lastBackup', {
+              date: formatDateTimeForIntl(lastBackupAt),
+            })}
           </p>
         {/if}
 
-        <SettingsRow label={t('settings.exportBackup')} desc={t('settings.exportJsonHint')}>
+        <SettingsRow
+          label={t('settings.exportBackup')}
+          desc={t('settings.exportJsonHint')}
+        >
           <SettingsButtonGroup>
-            <button class="btn ghost" onclick={() => void downloadBackup()} disabled={dataActionBusy}>
+            <button
+              class="btn ghost"
+              onclick={() => void downloadBackup()}
+              disabled={dataActionBusy}
+            >
               {t('settings.exportJson')}
             </button>
           </SettingsButtonGroup>
@@ -470,22 +533,30 @@
               class="input"
               type="file"
               accept="application/json"
-              onchange={(e) => void selectRestoreFile(e.currentTarget.files?.[0])}
+              onchange={(e) =>
+                void selectRestoreFile(e.currentTarget.files?.[0])}
               disabled={dataActionBusy}
             />
             {#if restoreCandidate}
-              <span class="text-secondary" style="text-align: right; max-width: 380px">
+              <span
+                class="text-secondary"
+                style="text-align: right; max-width: 380px"
+              >
                 {t('settings.restoreSummary', {
                   accounts: summarizeBackupPayload(restoreCandidate).accounts,
                   cashFlows: summarizeBackupPayload(restoreCandidate).cashFlows,
                   events: summarizeBackupPayload(restoreCandidate).events,
                   goals: summarizeBackupPayload(restoreCandidate).goals,
-                  transactions: summarizeBackupPayload(restoreCandidate).transactions,
+                  transactions:
+                    summarizeBackupPayload(restoreCandidate).transactions,
                   extra:
                     restoreCandidate.schemaVersion >= 2
                       ? t('settings.restoreSummaryExtra', {
-                          scenarios: summarizeBackupPayload(restoreCandidate).scenarios,
-                          holdings: summarizeBackupPayload(restoreCandidate).holdingsSnapshots,
+                          scenarios:
+                            summarizeBackupPayload(restoreCandidate).scenarios,
+                          holdings:
+                            summarizeBackupPayload(restoreCandidate)
+                              .holdingsSnapshots,
                         })
                       : '',
                 })}
@@ -497,7 +568,11 @@
                 placeholder={t('settings.restoreConfirmPlaceholder')}
                 disabled={dataActionBusy}
               />
-              <button class="btn danger" onclick={() => void confirmRestore()} disabled={dataActionBusy}>
+              <button
+                class="btn danger"
+                onclick={() => void confirmRestore()}
+                disabled={dataActionBusy}
+              >
                 {t('settings.restoreConfirm')}
               </button>
             {/if}
@@ -512,7 +587,11 @@
               placeholder={t('settings.deleteConfirmPlaceholder')}
               disabled={dataActionBusy}
             />
-            <button class="btn danger" onclick={() => void confirmDeleteAll()} disabled={dataActionBusy}>
+            <button
+              class="btn danger"
+              onclick={() => void confirmDeleteAll()}
+              disabled={dataActionBusy}
+            >
               {t('settings.deleteAll')}
             </button>
           </div>
@@ -535,11 +614,17 @@
               cashFlows: summarizeLegacyLocalFinance(legacyPreview).cashFlows,
               events: summarizeLegacyLocalFinance(legacyPreview).events,
               goals: summarizeLegacyLocalFinance(legacyPreview).goals,
-              holdings: summarizeLegacyLocalFinance(legacyPreview).holdingsSnapshots,
+              holdings:
+                summarizeLegacyLocalFinance(legacyPreview).holdingsSnapshots,
             })}
           </p>
           <SettingsRow label={t('settings.legacyExport')}>
-            <button class="btn ghost" type="button" onclick={downloadLegacyBlob} disabled={dataActionBusy}>
+            <button
+              class="btn ghost"
+              type="button"
+              onclick={downloadLegacyBlob}
+              disabled={dataActionBusy}
+            >
               {t('settings.legacyDownload')}
             </button>
           </SettingsRow>
@@ -562,7 +647,12 @@
                 placeholder={t('settings.legacyConfirmPlaceholder')}
                 disabled={dataActionBusy}
               />
-              <button class="btn danger" type="button" onclick={clearLegacyBlob} disabled={dataActionBusy}>
+              <button
+                class="btn danger"
+                type="button"
+                onclick={clearLegacyBlob}
+                disabled={dataActionBusy}
+              >
                 {t('settings.legacyClearConfirm')}
               </button>
             </div>
@@ -570,7 +660,6 @@
         </SettingsSection>
       {/if}
       <AnalyticsPanel />
-      <DeviceManager />
     </TabPanel>
 
     <TabPanel tabId="help" active={activeSection === 'help'}>

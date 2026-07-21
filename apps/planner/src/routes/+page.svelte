@@ -22,6 +22,7 @@
   import { completeTask, editTask } from '$lib/taskUi.js'
   import { t, localeTag } from '$lib/i18n/index.js'
   import { S, todayKey } from '$lib/state.svelte.js'
+  import { isIosNativeShell } from '@life-os/platform-web/ios-native-shell'
 
   const index = $derived(taskIndex())
   const groups = $derived(selectTodayGroups(index))
@@ -74,7 +75,9 @@
 >
   {#snippet main()}
       <div class="wrap">
-        <QuickAddBar dueDate={todayKey()} />
+        {#if !isIosNativeShell()}
+          <QuickAddBar dueDate={todayKey()} />
+        {/if}
 
         {#if showProgress && !showClosed}
           <TodayProgressCard

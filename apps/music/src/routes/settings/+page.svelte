@@ -1,5 +1,7 @@
 <script>
+  import { onMount } from 'svelte'
   import { t } from '$lib/i18n/index.js'
+  import { scrollToSettingsHash } from '@life-os/platform-web/settings-hash'
   import {
     S,
     applyTheme,
@@ -23,19 +25,15 @@
   } from '$lib/import.js'
   import { trackCount, countTracksWithoutLyrics } from '$lib/db.js'
   import { auth, signOut } from '$lib/auth.svelte.js'
+  import { isSupabaseConfigured } from '$lib/supabase.js'
   import { syncBidirectionalSafe } from '$lib/sync.js'
   import {
     cloudAudioStats,
     formatBytes,
     uploadPendingAudio,
   } from '$lib/cloudAudio.js'
-  import {
-    getAudioBlobCacheStats,
-  } from '$lib/audioBlobStore.js'
-  import {
-    summarizePlayMetrics,
-    clearPlayMetrics,
-  } from '$lib/playMetrics.js'
+  import { getAudioBlobCacheStats } from '$lib/audioBlobStore.js'
+  import { summarizePlayMetrics, clearPlayMetrics } from '$lib/playMetrics.js'
   import {
     fetchPendingTagReviews,
     fetchRecommendationHealth,
@@ -46,6 +44,8 @@
   import SettingsRow from '@life-os/platform-web/svelte/settings/row'
   import SettingsSegment from '@life-os/platform-web/svelte/settings/segment'
   import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group'
+  import SettingsSyncBlock from '@life-os/platform-web/svelte/settings/sync-block'
+  import SettingsAppearanceBlock from '@life-os/platform-web/svelte/settings/appearance-block'
 
   let count = $state(0)
   let missingLyrics = $state(0)
@@ -66,6 +66,8 @@
   let offlineCacheCount = $state(0)
   let offlineCacheBytes = $state(0)
   let playMetricsSummary = $state(summarizePlayMetrics())
+
+  onMount(() => scrollToSettingsHash('cloud'))
 
   /** @param {unknown} proposed */
   function formatProposedTags(proposed) {
@@ -197,17 +199,6 @@
 
   const crossfadeSteps = [0, 500, 1000, 2000, 3000, 5000, 8000, 12000]
 
-  const localeOptions = $derived([
-    { value: 'zh', label: t('settings.languageZh') },
-    { value: 'en', label: t('settings.languageEn') },
-  ])
-
-  const themeOptions = $derived([
-    { value: 'auto', label: t('settings.themeAuto') },
-    { value: 'light', label: t('settings.themeLight') },
-    { value: 'dark', label: t('settings.themeDark') },
-  ])
-
   const gaplessOptions = $derived([
     { value: 'on', label: t('settings.gaplessOn') },
     { value: 'off', label: t('settings.gaplessOff') },
@@ -262,11 +253,6 @@
   /** @param {boolean} enabled */
   function setAutoContinueSimilar(enabled) {
     patchCloudSettings({ autoContinueSimilar: enabled })
-  }
-
-  /** @param {string} locale */
-  function setLanguage(locale) {
-    if (locale === 'zh' || locale === 'en') setLocale(locale)
   }
 
   async function exportMeta() {
@@ -337,7 +323,6 @@
     }
   }
 
-
   async function onRescan() {
     if (rescanning) return
     rescanning = true
@@ -366,38 +351,30 @@
 </script>
 
 <div class="wrap settings-page">
-  <section class="settings-block set-group" style="margin-top:0">
-    <h3 class="block-title sg-title">{t('settings.account')}</h3>
-    {#if auth.user}
-      <div class="set-row settings-row">
-        <div class="pref-copy">
-          <div class="pref-label">{auth.user.email}</div>
-          <div class="pref-desc">{t('auth.signedInDesc')}</div>
-        </div>
-      </div>
-      <SettingsButtonGroup>
-        <button
-          class="btn-primary"
-          type="button"
-          disabled={syncing}
-          onclick={onSync}
-          >{syncing ? t('auth.pleaseWait') : t('sync.now')}</button
-        >
-        <button class="btn-secondary" type="button" onclick={onSignOut}
-          >{t('settings.signOut')}</button
-        >
-      </SettingsButtonGroup>
-    {:else}
-      <div class="settings-stack-block settings-stack-block--pad-x">
-        <p class="pref-desc" style="margin-bottom:12px">
-          {t('sync.signInFirst')}
-        </p>
-        <a class="btn-primary" href="/auth" style="display:inline-flex"
-          >{t('settings.signIn')}</a
-        >
-      </div>
-    {/if}
-  </section>
+  <SettingsSyncBlock
+    title={t('settings.account')}
+    unavailableDesc={t('sync.signInFirst')}
+    signedOutDesc={t('sync.signInFirst')}
+    ssoHint={t('auth.footnote')}
+    signedInDesc={t('auth.signedInDesc')}
+    email={auth.user?.email}
+    configured={isSupabaseConfigured}
+    signedIn={!!auth.user}
+    signInLabel={t('settings.signIn')}
+  >
+    {#snippet actions()}
+      <button
+        class="btn-primary"
+        type="button"
+        disabled={syncing}
+        onclick={onSync}
+        >{syncing ? t('auth.pleaseWait') : t('sync.now')}</button
+      >
+      <button class="btn-secondary" type="button" onclick={onSignOut}
+        >{t('settings.signOut')}</button
+      >
+    {/snippet}
+  </SettingsSyncBlock>
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('sync.title')}</h3>
@@ -520,29 +497,26 @@
     </section>
   {/if}
 
-  <section class="settings-block set-group">
-    <h3 class="block-title sg-title">{t('settings.language')}</h3>
-    <SettingsRow label={t('settings.languageLabel')} desc={t('settings.languageDesc')}>
-      <SettingsSegment
-        options={localeOptions}
-        value={S.settings.locale}
-        onchange={setLanguage}
-        ariaLabel={t('settings.languageLabel')}
-      />
-    </SettingsRow>
-  </section>
-
-  <section class="settings-block set-group">
-    <h3 class="block-title sg-title">{t('settings.theme')}</h3>
-    <SettingsRow label={t('settings.appearance')}>
-      <SettingsSegment
-        options={themeOptions}
-        value={S.settings.theme}
-        onchange={setTheme}
-        ariaLabel={t('settings.appearance')}
-      />
-    </SettingsRow>
-  </section>
+  <SettingsAppearanceBlock
+    title={t('settings.appearance')}
+    theme={S.settings.theme || 'auto'}
+    onThemeChange={setTheme}
+    themeOptions={[
+      { value: 'auto', label: t('settings.themeAuto') },
+      { value: 'light', label: t('settings.themeLight') },
+      { value: 'dark', label: t('settings.themeDark') },
+    ]}
+    themeLabel={t('settings.theme')}
+    locale={S.settings.locale}
+    onLocaleChange={(locale) => {
+      if (locale === 'zh' || locale === 'en') setLocale(locale)
+    }}
+    localeOptions={[
+      { value: 'zh', label: t('settings.languageZh') },
+      { value: 'en', label: t('settings.languageEn') },
+    ]}
+    languageLabel={t('settings.languageLabel')}
+  />
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.playback')}</h3>
@@ -557,7 +531,10 @@
         ariaLabel={t('settings.gapless')}
       />
     </SettingsRow>
-    <SettingsRow label={t('settings.crossfade')} desc={t('settings.crossfadeDesc')}>
+    <SettingsRow
+      label={t('settings.crossfade')}
+      desc={t('settings.crossfadeDesc')}
+    >
       <div
         class="seg seg--wrap"
         class:seg--disabled={S.settings.gapless === false}
@@ -657,7 +634,9 @@
         {/if}
         {#if playMetricsSummary.failCount}
           <div class="pref-desc" style="color:var(--danger, #e85d6a)">
-            {t('settings.playLoadFails', { count: playMetricsSummary.failCount })}
+            {t('settings.playLoadFails', {
+              count: playMetricsSummary.failCount,
+            })}
           </div>
         {/if}
       </div>
@@ -721,7 +700,9 @@
           {t('settings.lyricsAutoPending', { count: missingLyrics })}
         </p>
       {:else}
-        <p class="pref-desc settings-action-hint">{t('settings.lyricsAutoDone')}</p>
+        <p class="pref-desc settings-action-hint">
+          {t('settings.lyricsAutoDone')}
+        </p>
       {/if}
 
       <!-- 高级手动工具：重扫本地文件 / 导出（后者是下载，天然手动） -->

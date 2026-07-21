@@ -1,5 +1,5 @@
 <script>
-  // 移动端底栏：4 主入口 +「更多」（时间线 / 概览 / 设置）；无模式切换。
+  // 移动端底栏：Inbox · Library · Recall +「更多」（项目 / 时间线 / 概览 / 设置）。
   import { page } from '$app/state'
   import LifeOsBottomNav from '@life-os/platform-web/svelte/navigation/bottom-nav'
   import MobileMoreSheet from '@life-os/platform-web/svelte/navigation/MobileMoreSheet'

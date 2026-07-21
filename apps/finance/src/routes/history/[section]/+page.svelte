@@ -21,16 +21,35 @@
   let focusEventId = $state(undefined)
   let txnDrawer = $state(false)
 
+  function clearSearchParam(key) {
+    const url = new URL(page.url)
+    url.searchParams.delete(key)
+    goto(`${url.pathname}${url.search}`, {
+      replaceState: true,
+      keepFocus: true,
+      noScroll: true,
+    })
+  }
+
   $effect(() => {
     const q = page.url.searchParams.get('q')
     const focus = page.url.searchParams.get('focus')
+    const compose = page.url.searchParams.get('compose')
     if (q) ledgerSearch = q
     if (focus) focusEventId = focus
+    // Kenos Capture / Domain compose → open 记一笔 drawer.
+    if (compose === '1' || compose === 'true') {
+      txnDrawer = true
+      queueMicrotask(() => clearSearchParam('compose'))
+    }
   })
 
   /** @param {'insights' | 'fixed' | 'oneoff'} nextSection */
   function onChange(nextSection) {
-    goto(buildAppPath({ tab: 'history', section: nextSection }), { keepFocus: true, noScroll: true })
+    goto(buildAppPath({ tab: 'history', section: nextSection }), {
+      keepFocus: true,
+      noScroll: true,
+    })
   }
 
   /** @param {string} tab @param {string} [sec] @param {{ ledgerSearch?: string, focusEventId?: string }} [opts] */
@@ -41,12 +60,6 @@
     if (opts?.focusEventId) params.set('focus', opts.focusEventId)
     const qs = params.toString()
     goto(qs ? `${path}?${qs}` : path)
-  }
-
-  function clearSearchParam(key) {
-    const url = new URL(page.url)
-    url.searchParams.delete(key)
-    goto(`${url.pathname}${url.search}`, { replaceState: true, keepFocus: true, noScroll: true })
   }
 </script>
 

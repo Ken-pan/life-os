@@ -32,12 +32,12 @@
       type="button"
       class="appbar-continue"
       data-testid="fitness-kenos-continue"
-      aria-label="Continue"
-      title="Continue"
+      aria-label={t('nav.continue')}
+      title={t('nav.continue')}
       onclick={onContinue}
     >
       <Icon name="history" size={18} strokeWidth={1.75} />
-      <span>Continue</span>
+      <span>{t('nav.continue')}</span>
     </button>
     <ReportBugButton app="fitness" {supabase} user={auth.user} {toast} />
     {#if meta}

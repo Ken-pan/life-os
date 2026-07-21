@@ -4,40 +4,54 @@ import {
   resolvePrimaryNavTab,
   resolveFabMode,
   isTaskModuleRoute,
+  isDomainComposeVisible,
   buildBrowseNavItems,
+  buildPrimaryNavItems,
 } from './nav.js'
 
 const tr = (key) => key
 
 describe('nav', () => {
-  it('treats smart lists and user lists as task module', () => {
+  it('treats today/triage as task module; inbox is its own tab', () => {
     expect(isTaskModuleRoute('/')).toBe(true)
-    expect(isTaskModuleRoute('/inbox')).toBe(true)
-    expect(isTaskModuleRoute('/upcoming')).toBe(true)
-    expect(isTaskModuleRoute('/completed')).toBe(true)
-    expect(isTaskModuleRoute('/lists/work')).toBe(true)
+    expect(isTaskModuleRoute('/triage')).toBe(true)
+    expect(isTaskModuleRoute('/inbox')).toBe(false)
+    expect(isTaskModuleRoute('/upcoming')).toBe(false)
+    expect(isTaskModuleRoute('/completed')).toBe(false)
+    expect(isTaskModuleRoute('/lists/work')).toBe(false)
     expect(isTaskModuleRoute('/calendar')).toBe(false)
     expect(isTaskModuleRoute('/search')).toBe(false)
   })
 
-  it('highlights tasks tab for all task-module routes', () => {
+  it('primary tabs are tasks · calendar · inbox', () => {
+    expect(buildPrimaryNavItems(tr).map((i) => i.tab)).toEqual([
+      'tasks',
+      'calendar',
+      'inbox',
+    ])
     expect(resolvePrimaryNavTab('/')).toBe('tasks')
-    expect(resolvePrimaryNavTab('/inbox')).toBe('tasks')
-    expect(resolvePrimaryNavTab('/lists/abc')).toBe('tasks')
+    expect(resolvePrimaryNavTab('/inbox')).toBe('inbox')
+    expect(resolvePrimaryNavTab('/calendar')).toBe('calendar')
   })
 
   it('browse group has projects, insights, calendar and search', () => {
     const items = buildBrowseNavItems(tr)
-    expect(items.map((i) => i.tab)).toEqual(['projects', 'insights', 'calendar', 'search'])
+    expect(items.map((i) => i.tab)).toEqual([
+      'projects',
+      'insights',
+      'calendar',
+      'search',
+    ])
   })
 
-  it('highlights calendar and search as primary; more only for settings', () => {
-    expect(resolvePrimaryNavTab('/calendar')).toBe('calendar')
-    expect(resolvePrimaryNavTab('/search')).toBe('search')
+  it('puts search / lists / secondary destinations under More', () => {
+    expect(resolvePrimaryNavTab('/search')).toBe('')
     expect(isMoreNavActive('/calendar')).toBe(false)
-    expect(isMoreNavActive('/search')).toBe(false)
-    expect(isMoreNavActive('/lists/work')).toBe(false)
+    expect(isMoreNavActive('/inbox')).toBe(false)
+    expect(isMoreNavActive('/search')).toBe(true)
+    expect(isMoreNavActive('/lists/work')).toBe(true)
     expect(isMoreNavActive('/projects')).toBe(true)
+    expect(isMoreNavActive('/upcoming')).toBe(true)
     expect(isMoreNavActive('/settings')).toBe(true)
   })
 
@@ -50,5 +64,17 @@ describe('nav', () => {
     expect(resolveFabMode('/completed')).toBe('none')
     expect(resolveFabMode('/search')).toBe('none')
     expect(resolveFabMode('/settings')).toBe('none')
+  })
+
+  it('domain compose is broader than FAB (inbox / projects)', () => {
+    expect(isDomainComposeVisible('/')).toBe(true)
+    expect(isDomainComposeVisible('/inbox')).toBe(true)
+    expect(isDomainComposeVisible('/projects')).toBe(true)
+    expect(isDomainComposeVisible('/projects/abc')).toBe(true)
+    expect(isDomainComposeVisible('/calendar')).toBe(true)
+    expect(isDomainComposeVisible('/settings')).toBe(false)
+    expect(isDomainComposeVisible('/search')).toBe(false)
+    expect(isDomainComposeVisible('/triage')).toBe(false)
+    expect(isDomainComposeVisible('/insights')).toBe(false)
   })
 })

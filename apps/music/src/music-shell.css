@@ -221,12 +221,9 @@
   height: var(--mini-player-track-h);
   width: 100%;
   border-radius: var(--radius-pill) var(--radius-pill) 0 0;
-  background: linear-gradient(
-    to right,
-    var(--track-accent, var(--accent)) var(--progress-pct, 0%),
-    color-mix(in srgb, var(--t1, var(--text)) 12%, transparent)
-      var(--progress-pct, 0%)
-  );
+  background: linear-gradient(to right,
+      var(--track-accent, var(--accent)) var(--progress-pct, 0%),
+      color-mix(in srgb, var(--t1, var(--text)) 12%, transparent) var(--progress-pct, 0%));
   transition: none;
 }
 
@@ -244,9 +241,7 @@
   :root {
     /* Compact docked bar — no floating lift; reserve just the bar height. */
     --mini-player-body-h: 54px;
-    --mini-player-h: calc(
-      var(--mini-player-body-h) + var(--mini-player-track-h)
-    );
+    --mini-player-h: calc(var(--mini-player-body-h) + var(--mini-player-track-h));
   }
 
   .bottom-shell .nav,
@@ -331,6 +326,33 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.mini-player-import-cta {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin-left: 0.35em;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent, #6ea8ff);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (--life-os-mobile) {
+  .mini-player-status-hint {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .mini-player-art {
@@ -430,6 +452,7 @@
 
 /* 每行播放键默认中性，仅桌面 hover/聚焦时填充品牌色（触屏保持中性，减少满屏粉圈） */
 @media (hover: hover) and (pointer: fine) {
+
   .track-row:hover .track-action-btn.play,
   .track-action-btn.play:hover,
   .track-action-btn.play:focus-visible {
@@ -2683,7 +2706,7 @@ html:has(.np-ambient-back) .bottom-shell {
   background: linear-gradient(to right,
       var(--progress-fill) var(--progress-pct, 0%),
       var(--progress-bg) var(--progress-pct, 0%));
-  transition: height 160ms var(--ease-standard, ease);
+  transition: height var(--kenos-motion-reduce) var(--ease-standard, ease);
 }
 
 .player-progress--quiet:focus-within input[type='range'],
@@ -4141,7 +4164,7 @@ body.search-typeahead-open .music-appbar {
   transform: translateX(-50%);
   border-radius: var(--radius-pill);
   background: transparent;
-  transition: background 160ms var(--ease-standard, ease);
+  transition: background var(--kenos-motion-reduce) var(--ease-standard, ease);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -4733,7 +4756,7 @@ html.utility-pane-resizing {
   }
 }
 
-.set-group > .set-row.settings-row--segment {
+.set-group>.set-row.settings-row--segment {
   justify-content: flex-end;
 }
 
@@ -5388,7 +5411,7 @@ html.utility-pane-resizing {
     width: var(--progress-pct, 0%);
     background: rgba(255, 255, 255, 0.72);
     border-radius: inherit;
-    transition: width 120ms linear;
+    transition: width var(--dur-fast) linear;
   }
 
   .music-app[data-page-route='now-playing'] .now-playing--immersive.now-playing--desktop .now-playing-hero--compact {

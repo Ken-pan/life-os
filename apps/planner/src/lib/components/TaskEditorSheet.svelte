@@ -1,76 +1,106 @@
 <script>
-  import { S, uid } from '$lib/state.svelte.js';
-  import { createTaskAsync, updateTask, updateTaskTitleAsync, updateTaskDueDateAsync, updateTaskScheduleAsync, updateTaskProjectAsync, deleteTaskAsync, restoreTask, addSubtask } from '$lib/domain/tasks.js';
-  import { isPlanUpdateTaskTitleWriterEnabled } from '$lib/kenos/planUpdateTaskTitleWriter.core.js';
-  import { isPlanUpdateTaskDueDateWriterEnabled } from '$lib/kenos/planUpdateTaskDueDateWriter.core.js';
-  import { isPlanUpdateTaskScheduleWriterEnabled } from '$lib/kenos/planUpdateTaskScheduleWriter.core.js';
-  import { isPlanUpdateTaskProjectWriterEnabled } from '$lib/kenos/planUpdateTaskProjectWriter.core.js';
-  import { taskEditor, closeTaskEditor, toast } from '$lib/ui.svelte.js';
-  import { fetchTaskBreakdown, isAiDisabled } from '$lib/services/aiClient.js';
-  import { t, listLabel } from '$lib/i18n/index.js';
-  import { SYSTEM_LIST_INBOX, RECURRENCE_RULES, REMINDER_PRESETS } from '$lib/types.js';
-  import { TASK_KINDS, normalizeTaskKind } from '$lib/domain/taskKind.js';
-  import { selectableProjects } from '$lib/domain/projects.js';
+  import { S, uid } from '$lib/state.svelte.js'
+  import {
+    createTaskAsync,
+    updateTask,
+    updateTaskTitleAsync,
+    updateTaskDueDateAsync,
+    updateTaskScheduleAsync,
+    updateTaskProjectAsync,
+    deleteTaskAsync,
+    restoreTask,
+    addSubtask,
+  } from '$lib/domain/tasks.js'
+  import { isPlanUpdateTaskTitleWriterEnabled } from '$lib/kenos/planUpdateTaskTitleWriter.core.js'
+  import { isPlanUpdateTaskDueDateWriterEnabled } from '$lib/kenos/planUpdateTaskDueDateWriter.core.js'
+  import { isPlanUpdateTaskScheduleWriterEnabled } from '$lib/kenos/planUpdateTaskScheduleWriter.core.js'
+  import { isPlanUpdateTaskProjectWriterEnabled } from '$lib/kenos/planUpdateTaskProjectWriter.core.js'
+  import { taskEditor, closeTaskEditor, toast } from '$lib/ui.svelte.js'
+  import { sensory } from '@life-os/platform-web/kenos-sensory'
+  import { fetchTaskBreakdown, isAiDisabled } from '$lib/services/aiClient.js'
+  import { t, listLabel } from '$lib/i18n/index.js'
+  import {
+    SYSTEM_LIST_INBOX,
+    RECURRENCE_RULES,
+    REMINDER_PRESETS,
+  } from '$lib/types.js'
+  import { TASK_KINDS, normalizeTaskKind } from '$lib/domain/taskKind.js'
+  import { selectableProjects } from '$lib/domain/projects.js'
   import {
     filterCaptureProjects,
     projectQueryFromTitle,
     titleWithoutProjectQuery,
-  } from '$lib/domain/taskCapture.js';
-  import { SCHEDULE_DURATIONS, formatDurationLabel } from '$lib/domain/schedule.js';
-  import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
-  import { activateFocusTrap, createImeGuard, LIFE_OS_APP_ORIGINS } from '@life-os/theme';
-  import { parseWikilinks, knowledgeNoteUrl, knowledgeNativeNoteUrl } from '@life-os/platform-web/wikilinks';
-  import { paperLinksForTask } from '$lib/paperLinks.js';
-  import DateField from './DateField.svelte';
-  import TimeField from './TimeField.svelte';
-  import ProjectPicker from './ProjectPicker.svelte';
-  import Icon from '@life-os/platform-web/svelte/icon';
-  import AttachmentList from './attachments/AttachmentList.svelte';
-  import AttachmentUploader from './attachments/AttachmentUploader.svelte';
+  } from '$lib/domain/taskCapture.js'
+  import {
+    SCHEDULE_DURATIONS,
+    formatDurationLabel,
+  } from '$lib/domain/schedule.js'
+  import { lockScroll, unlockScroll } from '$lib/scrollLock.js'
+  import {
+    activateFocusTrap,
+    createImeGuard,
+    LIFE_OS_APP_ORIGINS,
+  } from '@life-os/theme'
+  import { useSheetEnterShown } from '@life-os/platform-web/svelte/overlay'
+  import {
+    parseWikilinks,
+    knowledgeNoteUrl,
+    knowledgeNativeNoteUrl,
+  } from '@life-os/platform-web/wikilinks'
+  import { paperLinksForTask } from '$lib/paperLinks.js'
+  import DateField from './DateField.svelte'
+  import TimeField from './TimeField.svelte'
+  import ProjectPicker from './ProjectPicker.svelte'
+  import Icon from '@life-os/platform-web/svelte/icon'
+  import AttachmentList from './attachments/AttachmentList.svelte'
+  import AttachmentUploader from './attachments/AttachmentUploader.svelte'
 
-  const ime = createImeGuard();
+  const ime = createImeGuard()
 
-  let subtaskDraft = $state('');
-  let aiBusy = $state(false);
-  let saving = $state(false);
-  let showAdvanced = $state(false);
-  let showDiscardConfirm = $state(false);
-  let showDeleteConfirm = $state(false);
-  let showTitleError = $state(false);
-  let titleComposing = $state(false);
-  let titleSuggestionDismissed = $state(false);
-  let titleSuggestionIndex = $state(0);
+  let subtaskDraft = $state('')
+  let aiBusy = $state(false)
+  let saving = $state(false)
+  let showAdvanced = $state(false)
+  let showDiscardConfirm = $state(false)
+  let showDeleteConfirm = $state(false)
+  let showTitleError = $state(false)
+  let titleComposing = $state(false)
+  let titleSuggestionDismissed = $state(false)
+  let titleSuggestionIndex = $state(0)
   /** @type {HTMLInputElement | null} */
-  let titleInput = $state(null);
+  let titleInput = $state(null)
   /** @type {HTMLElement | null} */
-  let sheetEl = $state(null);
+  let sheetEl = $state(null)
+  const sheetEnter = useSheetEnterShown(() =>
+    Boolean(taskEditor.open && taskEditor.draft),
+  )
 
-  const draft = $derived(taskEditor.draft);
-  const isNew = $derived(!taskEditor.taskId);
-  const recurrenceRule = $derived(draft?.recurrence?.rule || 'none');
-  const projects = $derived(selectableProjects());
-  const canSave = $derived(Boolean(draft?.title?.trim()));
-  const paperLinks = $derived(paperLinksForTask(draft));
+  const draft = $derived(taskEditor.draft)
+  const isNew = $derived(!taskEditor.taskId)
+  const recurrenceRule = $derived(draft?.recurrence?.rule || 'none')
+  const projects = $derived(selectableProjects())
+  const canSave = $derived(Boolean(draft?.title?.trim()))
+  const paperLinks = $derived(paperLinksForTask(draft))
   // 跨 OS 引用：备注里的 [[wikilink]] → KnowledgeOS 笔记（一处写、多处引用同一条笔记）。
-  const noteLinks = $derived(parseWikilinks(draft?.notes));
-  const knowledgeOrigin = LIFE_OS_APP_ORIGINS.knowledge.production;
+  const noteLinks = $derived(parseWikilinks(draft?.notes))
+  const knowledgeOrigin = LIFE_OS_APP_ORIGINS.knowledge.production
   const isDirty = $derived(
     Boolean(draft && taskEditor.initialDraft) &&
-      JSON.stringify(draft) !== JSON.stringify(taskEditor.initialDraft)
-  );
+      JSON.stringify(draft) !== JSON.stringify(taskEditor.initialDraft),
+  )
   const titleProjectQuery = $derived(
     titleComposing || titleSuggestionDismissed || !draft
       ? null
-      : projectQueryFromTitle(draft.title)
-  );
+      : projectQueryFromTitle(draft.title),
+  )
   const titleProjectSuggestions = $derived(
     titleProjectQuery == null
       ? []
-      : filterCaptureProjects(projects, titleProjectQuery, 5)
-  );
+      : filterCaptureProjects(projects, titleProjectQuery, 5),
+  )
 
   const advancedCount = $derived.by(() => {
-    if (!draft) return 0;
+    if (!draft) return 0
     return [
       Boolean(draft.notes?.trim()),
       draft.reminderMinutes != null,
@@ -79,57 +109,59 @@
       draft.tags.length > 0,
       draft.subtasks.length > 0,
       normalizeTaskKind(draft.meta?.kind) !== 'standard',
-      Boolean(draft.scheduledDate || draft.scheduledStart || draft.durationMinutes),
+      Boolean(
+        draft.scheduledDate || draft.scheduledStart || draft.durationMinutes,
+      ),
       draft.urgency !== 'normal',
       draft.size !== 'medium',
       draft.area !== 'other',
       draft.effortMin != null,
       Boolean(draft.nextAction?.trim()),
       Boolean(draft.aiContext?.trim()),
-    ].filter(Boolean).length;
-  });
+    ].filter(Boolean).length
+  })
 
-  const needsAdvancedOpen = $derived(!isNew && advancedCount > 0);
+  const needsAdvancedOpen = $derived(!isNew && advancedCount > 0)
 
   $effect(() => {
     if (taskEditor.open) {
-      showAdvanced = needsAdvancedOpen;
-      showDiscardConfirm = false;
-      showDeleteConfirm = false;
-      showTitleError = false;
-      titleSuggestionDismissed = false;
-      lockScroll();
+      showAdvanced = needsAdvancedOpen
+      showDiscardConfirm = false
+      showDeleteConfirm = false
+      showTitleError = false
+      titleSuggestionDismissed = false
+      lockScroll()
       const releaseFocus = sheetEl
         ? activateFocusTrap(sheetEl, { initialFocusSelector: '#task-title' })
-        : () => {};
+        : () => {}
       return () => {
-        releaseFocus();
-        unlockScroll();
-      };
+        releaseFocus()
+        unlockScroll()
+      }
     }
-    showAdvanced = false;
-  });
+    showAdvanced = false
+  })
 
   function setRecurrenceRule(rule) {
-    if (!draft) return;
+    if (!draft) return
     if (rule === 'none') {
-      draft.recurrence = null;
-      return;
+      draft.recurrence = null
+      return
     }
     draft.recurrence = {
       rule,
       interval: draft.recurrence?.interval || 1,
       until: draft.recurrence?.until || null,
-      seriesId: draft.recurrence?.seriesId || null
-    };
+      seriesId: draft.recurrence?.seriesId || null,
+    }
   }
 
   async function save() {
-    if (saving) return;
+    if (saving) return
     if (!draft?.title?.trim()) {
-      showTitleError = true;
-      titleInput?.focus();
-      return;
+      showTitleError = true
+      titleInput?.focus()
+      return
     }
     const payload = {
       title: draft.title,
@@ -156,46 +188,50 @@
         ...(draft.meta || {}),
         kind: normalizeTaskKind(draft.meta?.kind),
       },
-    };
-    saving = true;
+    }
+    saving = true
     try {
       if (isNew) {
         const created = await createTaskAsync({
           ...payload,
-          listId: payload.listId || S.settings.defaultListId || SYSTEM_LIST_INBOX
-        });
+          listId:
+            payload.listId || S.settings.defaultListId || SYSTEM_LIST_INBOX,
+        })
+        void sensory('success')
         toast(t('toast.taskCreated'), {
           actionLabel: t('common.undo'),
-          onAction: () => { void deleteTaskAsync(created.id) },
+          onAction: () => {
+            void deleteTaskAsync(created.id)
+          },
           key: `task-created:${created.id}`,
           dedupeMs: 0,
-        });
+        })
       } else {
-        const rest = { ...payload };
-        const original = S.tasks.find((t) => t.id === taskEditor.taskId);
+        const rest = { ...payload }
+        const original = S.tasks.find((t) => t.id === taskEditor.taskId)
         if (isPlanUpdateTaskTitleWriterEnabled()) {
-          const nextTitle = String(payload.title).trim();
-          const prevTitle = String(original?.title || '').trim();
+          const nextTitle = String(payload.title).trim()
+          const prevTitle = String(original?.title || '').trim()
           if (nextTitle !== prevTitle) {
-            await updateTaskTitleAsync(taskEditor.taskId, payload.title);
+            await updateTaskTitleAsync(taskEditor.taskId, payload.title)
           }
-          delete rest.title;
+          delete rest.title
         }
         if (isPlanUpdateTaskDueDateWriterEnabled()) {
-          const nextDue = payload.dueDate || null;
-          const prevDue = original?.dueDate || null;
+          const nextDue = payload.dueDate || null
+          const prevDue = original?.dueDate || null
           if (nextDue !== prevDue) {
-            await updateTaskDueDateAsync(taskEditor.taskId, payload.dueDate);
+            await updateTaskDueDateAsync(taskEditor.taskId, payload.dueDate)
           }
-          delete rest.dueDate;
+          delete rest.dueDate
         }
         if (isPlanUpdateTaskScheduleWriterEnabled()) {
-          const nextScheduledDate = payload.scheduledDate || null;
-          const prevScheduledDate = original?.scheduledDate || null;
-          const nextScheduledStart = payload.scheduledStart || null;
-          const prevScheduledStart = original?.scheduledStart || null;
-          const nextDuration = payload.durationMinutes ?? null;
-          const prevDuration = original?.durationMinutes ?? null;
+          const nextScheduledDate = payload.scheduledDate || null
+          const prevScheduledDate = original?.scheduledDate || null
+          const nextScheduledStart = payload.scheduledStart || null
+          const prevScheduledStart = original?.scheduledStart || null
+          const nextDuration = payload.durationMinutes ?? null
+          const prevDuration = original?.durationMinutes ?? null
           if (
             nextScheduledDate !== prevScheduledDate ||
             nextScheduledStart !== prevScheduledStart ||
@@ -205,159 +241,169 @@
               scheduledDate: payload.scheduledDate ?? null,
               scheduledStart: payload.scheduledStart ?? null,
               durationMinutes: payload.durationMinutes ?? null,
-            });
+            })
           }
-          delete rest.scheduledDate;
-          delete rest.scheduledStart;
-          delete rest.durationMinutes;
+          delete rest.scheduledDate
+          delete rest.scheduledStart
+          delete rest.durationMinutes
         }
         if (isPlanUpdateTaskProjectWriterEnabled()) {
-          const nextProjectId = payload.projectId || null;
-          const prevProjectId = original?.projectId || null;
+          const nextProjectId = payload.projectId || null
+          const prevProjectId = original?.projectId || null
           if (nextProjectId !== prevProjectId) {
-            await updateTaskProjectAsync(taskEditor.taskId, payload.projectId || null);
+            await updateTaskProjectAsync(
+              taskEditor.taskId,
+              payload.projectId || null,
+            )
           }
-          delete rest.projectId;
+          delete rest.projectId
         }
-        updateTask(taskEditor.taskId, rest);
-        toast(t('toast.saved'));
+        updateTask(taskEditor.taskId, rest)
+        void sensory('commit')
+        toast(t('toast.saved'))
       }
-      closeTaskEditor();
+      closeTaskEditor()
     } catch (error) {
-      toast(error?.message || t('toast.schedulePersistFailed'), 'warn');
+      void sensory('error')
+      toast(error?.message || t('toast.schedulePersistFailed'), 'warn')
     } finally {
-      saving = false;
+      saving = false
     }
   }
 
   function requestClose() {
-    titleSuggestionDismissed = true;
+    titleSuggestionDismissed = true
     if (isDirty) {
-      showDiscardConfirm = true;
-      return;
+      showDiscardConfirm = true
+      return
     }
-    closeTaskEditor();
+    closeTaskEditor()
   }
 
   function discardAndClose() {
-    showDiscardConfirm = false;
-    closeTaskEditor();
+    showDiscardConfirm = false
+    closeTaskEditor()
   }
 
   /** @param {import('$lib/types.js').PlannerProject} project */
   function selectTitleProject(project) {
-    if (!draft) return;
-    draft.projectId = project.id;
-    draft.title = titleWithoutProjectQuery(draft.title);
-    titleSuggestionDismissed = true;
-    titleSuggestionIndex = 0;
-    requestAnimationFrame(() => titleInput?.focus());
+    if (!draft) return
+    draft.projectId = project.id
+    draft.title = titleWithoutProjectQuery(draft.title)
+    titleSuggestionDismissed = true
+    titleSuggestionIndex = 0
+    requestAnimationFrame(() => titleInput?.focus())
   }
 
   /** @param {KeyboardEvent} event */
   function handleTitleKeydown(event) {
-    if (ime.isComposing(event)) return;
+    if (ime.isComposing(event)) return
     if (titleProjectSuggestions.length && !titleSuggestionDismissed) {
       if (event.key === 'ArrowDown') {
-        event.preventDefault();
+        event.preventDefault()
         titleSuggestionIndex = Math.min(
           titleSuggestionIndex + 1,
           titleProjectSuggestions.length - 1,
-        );
-        return;
+        )
+        return
       }
       if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        titleSuggestionIndex = Math.max(titleSuggestionIndex - 1, 0);
-        return;
+        event.preventDefault()
+        titleSuggestionIndex = Math.max(titleSuggestionIndex - 1, 0)
+        return
       }
       if (event.key === 'Enter') {
-        event.preventDefault();
-        selectTitleProject(titleProjectSuggestions[titleSuggestionIndex]);
-        return;
+        event.preventDefault()
+        selectTitleProject(titleProjectSuggestions[titleSuggestionIndex])
+        return
       }
       if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        titleSuggestionDismissed = true;
-        return;
+        event.preventDefault()
+        event.stopPropagation()
+        titleSuggestionDismissed = true
+        return
       }
     }
     if (event.key === 'Enter') {
-      event.preventDefault();
-      save();
+      event.preventDefault()
+      save()
     }
   }
 
   /** @param {KeyboardEvent} event */
   function handleDialogKeydown(event) {
-    if (event.key !== 'Escape' || event.defaultPrevented) return;
-    event.preventDefault();
+    if (event.key !== 'Escape' || event.defaultPrevented) return
+    event.preventDefault()
     if (showDiscardConfirm) {
-      showDiscardConfirm = false;
-      return;
+      showDiscardConfirm = false
+      return
     }
     if (showDeleteConfirm) {
-      showDeleteConfirm = false;
-      return;
+      showDeleteConfirm = false
+      return
     }
-    requestClose();
+    requestClose()
   }
 
   async function remove() {
-    if (!taskEditor.taskId) return;
-    const taskId = taskEditor.taskId;
+    if (!taskEditor.taskId) return
+    const taskId = taskEditor.taskId
     try {
-      await deleteTaskAsync(taskId);
+      await deleteTaskAsync(taskId)
       toast(t('toast.deleted'), {
         actionLabel: t('common.undo'),
         onAction: () => restoreTask(taskId),
         key: `task-deleted:${taskId}`,
         dedupeMs: 0,
-      });
-      closeTaskEditor();
+      })
+      closeTaskEditor()
     } catch (error) {
-      toast(error?.message || t('toast.schedulePersistFailed'), 'warn');
+      toast(error?.message || t('toast.schedulePersistFailed'), 'warn')
     }
   }
 
   function addSub() {
-    if (!subtaskDraft.trim() || !draft) return;
+    if (!subtaskDraft.trim() || !draft) return
     if (isNew) {
       draft.subtasks = [
         ...draft.subtasks,
-        { id: uid(), title: subtaskDraft.trim(), done: false }
-      ];
+        { id: uid(), title: subtaskDraft.trim(), done: false },
+      ]
     } else {
-      addSubtask(taskEditor.taskId, subtaskDraft);
-      const live = S.tasks.find((t) => t.id === taskEditor.taskId);
-      if (live) draft.subtasks = JSON.parse(JSON.stringify(live.subtasks));
+      addSubtask(taskEditor.taskId, subtaskDraft)
+      const live = S.tasks.find((t) => t.id === taskEditor.taskId)
+      if (live) draft.subtasks = JSON.parse(JSON.stringify(live.subtasks))
     }
-    subtaskDraft = '';
+    subtaskDraft = ''
   }
 
   async function aiSplit() {
-    if (!draft?.title?.trim() || aiBusy || isAiDisabled()) return;
-    aiBusy = true;
+    if (!draft?.title?.trim() || aiBusy || isAiDisabled()) return
+    aiBusy = true
     try {
-      const lines = await fetchTaskBreakdown(draft.title.trim());
+      const lines = await fetchTaskBreakdown(draft.title.trim())
       if (!lines.length) {
-        toast(t('toast.aiUnavailable'), 'warn');
-        return;
+        toast(t('toast.aiUnavailable'), 'warn')
+        return
       }
       if (isNew) {
-        draft.subtasks = lines.map((title) => ({ id: crypto.randomUUID(), title, done: false }));
+        draft.subtasks = lines.map((title) => ({
+          id: crypto.randomUUID(),
+          title,
+          done: false,
+        }))
       } else {
-        for (const title of lines) addSubtask(taskEditor.taskId, title);
-        const live = S.tasks.find((t) => t.id === taskEditor.taskId);
-        if (live && draft) draft.subtasks = JSON.parse(JSON.stringify(live.subtasks));
+        for (const title of lines) addSubtask(taskEditor.taskId, title)
+        const live = S.tasks.find((t) => t.id === taskEditor.taskId)
+        if (live && draft)
+          draft.subtasks = JSON.parse(JSON.stringify(live.subtasks))
       }
-      showAdvanced = true;
-      toast(t('toast.aiSplitDone'));
+      showAdvanced = true
+      toast(t('toast.aiSplitDone'))
     } catch {
-      toast(t('toast.aiUnavailable'), 'warn');
+      toast(t('toast.aiUnavailable'), 'warn')
     } finally {
-      aiBusy = false;
+      aiBusy = false
     }
   }
 
@@ -365,31 +411,31 @@
     { v: 'P0', label: t('task.priority_P0') },
     { v: 'P1', label: t('task.priority_P1') },
     { v: 'P2', label: t('task.priority_P2') },
-    { v: 'P3', label: t('task.priority_P3') }
-  ];
+    { v: 'P3', label: t('task.priority_P3') },
+  ]
 
   function toggleDraftSubtask(subId) {
-    if (!draft) return;
+    if (!draft) return
     draft.subtasks = draft.subtasks.map((s) =>
-      s.id === subId ? { ...s, done: !s.done } : s
-    );
+      s.id === subId ? { ...s, done: !s.done } : s,
+    )
   }
 
   function reminderLabel(minutes) {
-    if (minutes === 0) return t('reminder.atTime');
-    if (minutes === 1440) return t('reminder.beforeDay');
-    return t('reminder.before', { min: minutes });
+    if (minutes === 0) return t('reminder.atTime')
+    if (minutes === 1440) return t('reminder.beforeDay')
+    return t('reminder.before', { min: minutes })
   }
 
   const reminderOptions = $derived([
     { v: null, label: t('reminder.off') },
     ...REMINDER_PRESETS.map((m) => ({
       v: m,
-      label: reminderLabel(m)
-    }))
-  ]);
+      label: reminderLabel(m),
+    })),
+  ])
 
-  const canRemind = $derived(Boolean(draft?.dueDate));
+  const canRemind = $derived(Boolean(draft?.dueDate))
   function handleGlobalPaste(e) {
     if (!draft || isNew) return
     const items = e.clipboardData?.items
@@ -400,11 +446,18 @@
         const file = item.getAsFile()
         if (file) {
           e.preventDefault()
-          import('$lib/services/attachmentService.js').then(({ uploadAttachment, namePastedImageFile }) => {
-            uploadAttachment('task', draft.id, namePastedImageFile(file), 'paste').catch((err) => {
-              toast(err.message, 'error')
-            })
-          })
+          import('$lib/services/attachmentService.js').then(
+            ({ uploadAttachment, namePastedImageFile }) => {
+              uploadAttachment(
+                'task',
+                draft.id,
+                namePastedImageFile(file),
+                'paste',
+              ).catch((err) => {
+                toast(err.message, 'error')
+              })
+            },
+          )
           return
         }
       }
@@ -412,19 +465,24 @@
   }
 
   async function copyPaperReference(link) {
-    const value = `paperos://notebook/${encodeURIComponent(link.noteId)}?pageId=${encodeURIComponent(link.pageId)}&page=${link.pageIndex}`;
+    const value = `paperos://notebook/${encodeURIComponent(link.noteId)}?pageId=${encodeURIComponent(link.pageId)}&page=${link.pageIndex}`
     try {
-      await navigator.clipboard.writeText(value);
-      toast(t('task.paperLinkCopied'));
+      await navigator.clipboard.writeText(value)
+      toast(t('task.paperLinkCopied'))
     } catch {
-      toast(t('task.paperLinkCopyFailed'), 'warn');
+      toast(t('task.paperLinkCopyFailed'), 'warn')
     }
   }
 </script>
 
 {#if taskEditor.open && draft}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="sheet-bg" role="presentation" onclick={(e) => e.target === e.currentTarget && closeTaskEditor()}>
+  <div
+    class="sheet-bg kenos-sheet-motion"
+    class:show={sheetEnter.shown}
+    role="presentation"
+    onclick={(e) => e.target === e.currentTarget && closeTaskEditor()}
+  >
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div
       class="sheet task-editor-sheet"
@@ -436,12 +494,19 @@
       <div class="sheet-handle"></div>
       <div class="sheet-header">
         <div>
-          <h2 id="task-editor-title" class="sheet-title">{isNew ? t('task.createTitle') : t('task.editTitle')}</h2>
+          <h2 id="task-editor-title" class="sheet-title">
+            {isNew ? t('task.createTitle') : t('task.editTitle')}
+          </h2>
           <p id="task-editor-description" class="sheet-description">
             {isNew ? t('task.createDescription') : t('task.editDescription')}
           </p>
         </div>
-        <button type="button" class="sheet-close" onclick={requestClose} aria-label={t('common.close')}>
+        <button
+          type="button"
+          class="sheet-close"
+          onclick={requestClose}
+          aria-label={t('common.close')}
+        >
           <Icon name="x" size={20} strokeWidth={1.75} />
         </button>
       </div>
@@ -457,29 +522,35 @@
           aria-invalid={showTitleError}
           aria-describedby={showTitleError ? 'task-title-error' : undefined}
           oninput={() => {
-            showTitleError = false;
-            titleSuggestionDismissed = false;
-            titleSuggestionIndex = 0;
+            showTitleError = false
+            titleSuggestionDismissed = false
+            titleSuggestionIndex = 0
           }}
           oncompositionstart={() => {
-            titleComposing = true;
-            ime.compositionstart();
+            titleComposing = true
+            ime.compositionstart()
           }}
           oncompositionend={(e) => {
-            ime.compositionend(e);
-            setTimeout(() => (titleComposing = false), 0);
+            ime.compositionend(e)
+            setTimeout(() => (titleComposing = false), 0)
           }}
           oncompositioncancel={() => {
-            titleComposing = false;
-            ime.compositioncancel();
+            titleComposing = false
+            ime.compositioncancel()
           }}
           onkeydown={handleTitleKeydown}
         />
         {#if showTitleError}
-          <p id="task-title-error" class="field-error">{t('task.titleRequired')}</p>
+          <p id="task-title-error" class="field-error">
+            {t('task.titleRequired')}
+          </p>
         {/if}
         {#if titleProjectSuggestions.length && !titleSuggestionDismissed}
-          <div class="title-project-menu" role="listbox" aria-label={t('task.projectSuggestions')}>
+          <div
+            class="title-project-menu"
+            role="listbox"
+            aria-label={t('task.projectSuggestions')}
+          >
             {#each titleProjectSuggestions as project, index (project.id)}
               <button
                 type="button"
@@ -504,8 +575,8 @@
             compact
             value={draft.dueDate}
             onchange={(next) => {
-              draft.dueDate = next;
-              if (!draft.dueDate) draft.reminderMinutes = null;
+              draft.dueDate = next
+              if (!draft.dueDate) draft.reminderMinutes = null
             }}
           />
         </div>
@@ -515,7 +586,7 @@
             id="task-time"
             value={draft.dueTime}
             onchange={(next) => {
-              draft.dueTime = next;
+              draft.dueTime = next
             }}
           />
         </div>
@@ -525,7 +596,7 @@
         <ProjectPicker
           value={draft.projectId}
           onchange={(projectId) => {
-            draft.projectId = projectId;
+            draft.projectId = projectId
           }}
         />
       </div>
@@ -562,14 +633,19 @@
             ? t('task.detailsSummary', { count: advancedCount })
             : t('task.moreOptions')}
         </span>
-        <Icon name={showAdvanced ? 'chevron-up' : 'chevron-down'} size={18} strokeWidth={2} />
+        <Icon
+          name={showAdvanced ? 'chevron-up' : 'chevron-down'}
+          size={18}
+          strokeWidth={2}
+        />
       </button>
 
       {#if showAdvanced}
         <div class="sheet-advanced">
           <div class="field">
             <label for="task-notes">{t('task.notes')}</label>
-            <textarea id="task-notes" bind:value={draft.notes} rows="3"></textarea>
+            <textarea id="task-notes" bind:value={draft.notes} rows="3"
+            ></textarea>
             {#if noteLinks.length}
               <div class="note-links" aria-label={t('task.noteLinks')}>
                 {#each noteLinks as link (link.target)}
@@ -577,7 +653,9 @@
                     <a
                       class="note-link"
                       href={knowledgeNativeNoteUrl(link.target)}
-                      title={t('task.openInKnowledgeNative', { title: link.target })}
+                      title={t('task.openInKnowledgeNative', {
+                        title: link.target,
+                      })}
                     >
                       <Icon name="link" size={13} strokeWidth={1.8} />
                       <span>{link.label}</span>
@@ -587,7 +665,9 @@
                       href={knowledgeNoteUrl(link.target, knowledgeOrigin)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title={t('task.openInKnowledgeWeb', { title: link.target })}
+                      title={t('task.openInKnowledgeWeb', {
+                        title: link.target,
+                      })}
                     >
                       {t('task.knowledgeWeb')}
                     </a>
@@ -623,18 +703,24 @@
             <span class="field-label">{t('task.recurrence')}</span>
             <div class="seg seg-scroll">
               {#each RECURRENCE_RULES as rule}
-                <button type="button" class:on={recurrenceRule === rule} onclick={() => setRecurrenceRule(rule)}>
+                <button
+                  type="button"
+                  class:on={recurrenceRule === rule}
+                  onclick={() => setRecurrenceRule(rule)}
+                >
                   {t(`recurrence.${rule}`)}
                 </button>
               {/each}
             </div>
             {#if draft.recurrence && recurrenceRule !== 'none'}
-              <label for="recurrence-until" class="field-label">{t('recurrence.until')}</label>
+              <label for="recurrence-until" class="field-label"
+                >{t('recurrence.until')}</label
+              >
               <DateField
                 id="recurrence-until"
                 value={draft.recurrence.until}
                 onchange={(next) => {
-                  if (draft.recurrence) draft.recurrence.until = next;
+                  if (draft.recurrence) draft.recurrence.until = next
                 }}
               />
               {#if !draft.recurrence.until}
@@ -646,26 +732,30 @@
           <div class="field">
             <span class="field-label">{t('schedule.sectionTitle')}</span>
             <p class="field-hint">{t('schedule.sectionHint')}</p>
-            <label for="task-scheduled-date" class="field-label">{t('schedule.planDate')}</label>
+            <label for="task-scheduled-date" class="field-label"
+              >{t('schedule.planDate')}</label
+            >
             <DateField
               id="task-scheduled-date"
               value={draft.scheduledDate}
               onchange={(next) => {
-                draft.scheduledDate = next;
+                draft.scheduledDate = next
                 if (!next) {
-                  draft.scheduledStart = null;
-                  draft.durationMinutes = null;
+                  draft.scheduledStart = null
+                  draft.durationMinutes = null
                 }
               }}
             />
-            <label for="task-scheduled-start" class="field-label">{t('schedule.startTime')}</label>
+            <label for="task-scheduled-start" class="field-label"
+              >{t('schedule.startTime')}</label
+            >
             <input
               id="task-scheduled-start"
               type="time"
               value={draft.scheduledStart || ''}
               disabled={!draft.scheduledDate}
               oninput={(e) => {
-                draft.scheduledStart = e.currentTarget.value || null;
+                draft.scheduledStart = e.currentTarget.value || null
               }}
             />
             <span class="field-label">{t('schedule.duration')}</span>
@@ -691,7 +781,7 @@
                   type="button"
                   class:on={normalizeTaskKind(draft.meta?.kind) === kind}
                   onclick={() => {
-                    draft.meta = { ...(draft.meta || {}), kind };
+                    draft.meta = { ...(draft.meta || {}), kind }
                   }}
                 >
                   {t(`task.kind${kind[0].toUpperCase()}${kind.slice(1)}`)}
@@ -788,7 +878,10 @@
               id="task-tags"
               value={draft.tags.join(', ')}
               oninput={(e) => {
-                draft.tags = e.currentTarget.value.split(',').map((s) => s.trim()).filter(Boolean);
+                draft.tags = e.currentTarget.value
+                  .split(',')
+                  .map((s) => s.trim())
+                  .filter(Boolean)
               }}
               placeholder="work, personal"
             />
@@ -799,24 +892,41 @@
               <span class="field-label">{t('task.subtasks')}</span>
               {#each draft.subtasks as sub (sub.id)}
                 <div class="subtask-row">
-                  <input class="checkbox" type="checkbox" checked={sub.done} onchange={() => toggleDraftSubtask(sub.id)} />
+                  <input
+                    class="checkbox"
+                    type="checkbox"
+                    checked={sub.done}
+                    onchange={() => toggleDraftSubtask(sub.id)}
+                  />
                   <span class:done-text={sub.done}>{sub.title}</span>
                 </div>
               {/each}
               <div class="quick-add quick-add--mobile" style="margin-top:8px">
-                <input bind:value={subtaskDraft} placeholder={t('task.addSubtask')} />
-                <button type="button" class="btn-secondary" onclick={addSub}>{t('common.add')}</button>
+                <input
+                  bind:value={subtaskDraft}
+                  placeholder={t('task.addSubtask')}
+                />
+                <button type="button" class="btn-secondary" onclick={addSub}
+                  >{t('common.add')}</button
+                >
               </div>
             </div>
           {/if}
 
-          <button type="button" class="btn-secondary ai-split-btn" disabled={aiBusy || !draft.title?.trim()} onclick={aiSplit}>
+          <button
+            type="button"
+            class="btn-secondary ai-split-btn"
+            disabled={aiBusy || !draft.title?.trim()}
+            onclick={aiSplit}
+          >
             {aiBusy ? t('task.aiSplitting') : t('task.aiSplit')}
           </button>
 
           {#if !isNew}
             <div class="field">
-              <span class="field-label">{t('attachments.title', 'Attachments')}</span>
+              <span class="field-label"
+                >{t('attachments.title', 'Attachments')}</span
+              >
               <AttachmentList ownerType="task" ownerId={draft.id} />
               <AttachmentUploader ownerType="task" ownerId={draft.id} />
             </div>
@@ -825,7 +935,11 @@
       {/if}
 
       {#if !isNew}
-        <button type="button" class="sheet-delete-action" onclick={() => (showDeleteConfirm = true)}>
+        <button
+          type="button"
+          class="sheet-delete-action"
+          onclick={() => (showDeleteConfirm = true)}
+        >
           <Icon name="trash" size={17} strokeWidth={1.8} />
           {t('task.deleteTask')}
         </button>
@@ -838,7 +952,11 @@
             <span>{t('task.deleteDescription')}</span>
           </div>
           <div class="discard-confirm-actions">
-            <button type="button" class="btn-secondary" onclick={() => (showDeleteConfirm = false)}>
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick={() => (showDeleteConfirm = false)}
+            >
               {t('common.cancel')}
             </button>
             <button type="button" class="btn-danger" onclick={remove}>
@@ -855,7 +973,11 @@
             <span>{t('task.discardDescription')}</span>
           </div>
           <div class="discard-confirm-actions">
-            <button type="button" class="btn-secondary" onclick={() => (showDiscardConfirm = false)}>
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick={() => (showDiscardConfirm = false)}
+            >
               {t('task.keepEditing')}
             </button>
             <button type="button" class="btn-danger" onclick={discardAndClose}>
@@ -866,8 +988,15 @@
       {/if}
 
       <div class="sheet-actions">
-        <button type="button" class="btn-secondary" onclick={requestClose}>{t('common.cancel')}</button>
-        <button type="button" class="btn-primary" disabled={!canSave} onclick={save}>
+        <button type="button" class="btn-secondary" onclick={requestClose}
+          >{t('common.cancel')}</button
+        >
+        <button
+          type="button"
+          class="btn-primary"
+          disabled={!canSave}
+          onclick={save}
+        >
           {isNew ? t('task.createAction') : t('task.saveChanges')}
         </button>
       </div>
@@ -881,7 +1010,7 @@
     font-family: var(--mono);
     font-size: var(--text-xs);
     color: var(--t3);
-    letter-spacing: .06em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     margin-bottom: 8px;
   }
@@ -916,7 +1045,7 @@
     color: var(--t3);
     font-family: var(--mono);
     font-size: var(--text-xs);
-    letter-spacing: .06em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
   }
   .paper-link-row {
@@ -936,8 +1065,14 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .paper-link-row strong { color: var(--t1); font-size: var(--text-sm); }
-  .paper-link-row span { color: var(--t3); font-size: var(--text-xs); }
+  .paper-link-row strong {
+    color: var(--t1);
+    font-size: var(--text-sm);
+  }
+  .paper-link-row span {
+    color: var(--t3);
+    font-size: var(--text-xs);
+  }
   .paper-link-row button {
     min-height: 40px;
     padding: 0 8px;
@@ -972,7 +1107,9 @@
     text-decoration: none;
     transition: background var(--motion-fast) var(--ease);
   }
-  .note-link:hover { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+  .note-link:hover {
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+  }
   .note-link span {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1085,16 +1222,25 @@
     font-size: var(--text-sm);
   }
   .sheet-delete-action:hover {
-    background: color-mix(in srgb, var(--feedback-error, #b42318) 7%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--feedback-error, #b42318) 7%,
+      transparent
+    );
   }
   .discard-confirm {
     display: grid;
     gap: 12px;
     margin: 6px 0;
     padding: 14px;
-    border: 1px solid color-mix(in srgb, var(--feedback-warning, #b54708) 24%, var(--border));
+    border: 1px solid
+      color-mix(in srgb, var(--feedback-warning, #b54708) 24%, var(--border));
     border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--feedback-warning, #b54708) 6%, var(--card));
+    background: color-mix(
+      in srgb,
+      var(--feedback-warning, #b54708) 6%,
+      var(--card)
+    );
     animation: task-details-in 150ms ease-out;
   }
   .discard-confirm > div:first-child {
@@ -1102,8 +1248,16 @@
     gap: 3px;
   }
   .discard-confirm--danger {
-    border-color: color-mix(in srgb, var(--feedback-error, #b42318) 24%, var(--border));
-    background: color-mix(in srgb, var(--feedback-error, #b42318) 6%, var(--card));
+    border-color: color-mix(
+      in srgb,
+      var(--feedback-error, #b42318) 24%,
+      var(--border)
+    );
+    background: color-mix(
+      in srgb,
+      var(--feedback-error, #b42318) 6%,
+      var(--card)
+    );
   }
   .discard-confirm strong {
     color: var(--t1);
@@ -1121,8 +1275,14 @@
     flex: 1;
   }
   @keyframes task-details-in {
-    from { opacity: 0; transform: translateY(-4px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @media (min-width: 840px) {
@@ -1137,7 +1297,13 @@
       padding: 12px 24px calc(16px + env(safe-area-inset-bottom));
       max-height: min(88dvh, calc(var(--app-vh, 100dvh) - 8px));
       scroll-padding-bottom: calc(72px + env(safe-area-inset-bottom));
-      animation: task-sheet-in 180ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    /* Native Continuity: dock hides while editing — reclaim bottom chrome. */
+    :global(html[data-ios-native-shell='true'] .task-editor-sheet) {
+      max-height: min(92dvh, calc(var(--app-vh, 100dvh) - 8px));
+      scroll-padding-bottom: calc(24px + env(safe-area-inset-bottom));
+      padding-bottom: calc(20px + env(safe-area-inset-bottom));
     }
 
     :global(.task-editor-sheet) .sheet-handle {
@@ -1190,7 +1356,11 @@
       padding: 0 12px;
       border-radius: var(--radius-control);
       border: 1px solid var(--border);
-      background: color-mix(in srgb, var(--surface-2, var(--bg-2)) 70%, var(--card));
+      background: color-mix(
+        in srgb,
+        var(--surface-2, var(--bg-2)) 70%,
+        var(--card)
+      );
     }
 
     :global(.task-editor-sheet) .sheet-actions {
@@ -1211,15 +1381,9 @@
     }
   }
 
-  @keyframes task-sheet-in {
-    from { transform: translateY(18px); opacity: .75; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .sheet-advanced,
-    .discard-confirm,
-    :global(.task-editor-sheet) {
+    .discard-confirm {
       animation: none;
     }
   }

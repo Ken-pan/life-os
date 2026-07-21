@@ -1,10 +1,20 @@
 <script>
   // Port of PositionDrawer from src/components/stocks/PositionDrawer.tsx.
+  import { onMount } from 'svelte'
   import { t } from '$lib/i18n.svelte.js'
   import { money, signedMoney, depositDeltaClass, pct } from '$lib/format.js'
   import { pricePathPoints } from '../../../engine/sparkline'
   import SparklinePath from './SparklinePath.svelte'
   import DayReturnBar from './DayReturnBar.svelte'
+  import {
+    clearMoneyOverlay,
+    setMoneyOverlay,
+  } from '$lib/kenos/financeSpaceAdapter.js'
+
+  onMount(() => {
+    setMoneyOverlay('drawer')
+    return () => clearMoneyOverlay()
+  })
 
   /** @typedef {import('../../engine/holdingsPortfolio.js').PositionRowView} PositionRowView */
 
@@ -15,8 +25,8 @@
   const pathValues = $derived(pricePathPoints(row))
 </script>
 
-<div class="drawer-backdrop" onclick={onClose} role="presentation"></div>
-<aside class="drawer" role="dialog" aria-label={t('stocks.position.ariaLabel', { ticker: p.ticker })}>
+<div class="drawer-backdrop kenos-drawer-backdrop" onclick={onClose} role="presentation"></div>
+<aside class="drawer kenos-drawer-panel" role="dialog" aria-label={t('stocks.position.ariaLabel', { ticker: p.ticker })}>
   <div class="drawer-head">
     <h3 class="flush">{p.ticker} · {p.securityName}</h3>
     <button class="icon-btn" onclick={onClose}>{t('stocks.position.close')}</button>

@@ -38,7 +38,14 @@
   import { bindNetworkResume } from '@life-os/platform-web/network-resume'
   import { setAppBadgeCount } from '@life-os/platform-web/app-badge'
   import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
-  import { syncRemindersToServiceWorker, ensurePushSubscription } from '$lib/services/reminders.js'
+  import {
+    markIosNativeShellDom,
+    isIosNativeShell,
+  } from '@life-os/platform-web/ios-native-shell'
+  import {
+    syncRemindersToServiceWorker,
+    ensurePushSubscription,
+  } from '$lib/services/reminders.js'
   import { consumePendingLifeEvents } from '$lib/services/lifeEventsInbox.js'
   import { selectTodayGroups } from '$lib/domain/selectors.js'
   import { taskIndex } from '$lib/taskIndex.svelte.js'
@@ -47,9 +54,29 @@
     readCache,
     CACHE_SCOPES,
   } from '$lib/localCache.js'
-  import { openTaskEditor } from '$lib/ui.svelte.js'
-  import { resolveMobileChromeInset, isFabVisible } from '$lib/nav.js'
-  import { applyPlannerResumeFromLocation } from '$lib/kenos/plannerSpaceAdapter.js'
+  import { browser } from '$app/environment'
+  import {
+    openTaskEditor,
+    taskEditor,
+    taskDrawer,
+    schedulePopover,
+    scheduleSlot,
+  } from '$lib/ui.svelte.js'
+  import {
+    resolveMobileChromeInset,
+    isFabVisible,
+    isDomainComposeVisible,
+    isTaskModuleRoute,
+  } from '$lib/nav.js'
+  import DomainMusicHeader from '$lib/components/DomainMusicHeader.svelte'
+  import {
+    applyPlannerResumeFromLocation,
+    installKenosLeaveGuard,
+    publishPlannerNavManifest,
+    resolvePlannerLiveState,
+  } from '$lib/kenos/plannerSpaceAdapter.js'
+  import { installKenosAppLogs } from '@life-os/platform-web/kenos-app-logs'
+  import { supabase } from '$lib/supabase.js'
 
   let { children } = $props()
 
@@ -64,7 +91,10 @@
     if (p === '/search') return t('search.title')
     if (p === '/completed') return t('completed.title')
     if (p === '/settings') return t('settings.title')
+    if (p === '/triage') return t('nav.triage')
     if (p === '/auth') return t('auth.title')
+    if (p.startsWith('/projects')) return t('projects.title')
+    if (p.startsWith('/insights')) return t('insights.title')
 
     const listMatch = p.match(/^\/lists\/([^/]+)$/)
     if (listMatch) {
@@ -81,8 +111,38 @@
     resolveMobileChromeInset(page.url.pathname, page.url.search),
   )
   const fabVisible = $derived(isFabVisible(page.url.pathname, page.url.search))
+  const domainComposeVisible = $derived(
+    isDomainComposeVisible(page.url.pathname, page.url.search),
+  )
+  const showListsMenu = $derived(
+    isTaskModuleRoute(page.url.pathname) ||
+      page.url.pathname.startsWith('/lists/'),
+  )
+  const showDomainBack = $derived(
+    page.url.pathname.startsWith('/settings') ||
+      page.url.pathname.startsWith('/auth') ||
+      page.url.pathname.startsWith('/projects/'),
+  )
+  /** Native Continuity header on all domain routes (Settings/Auth/Triage included). */
+  const showDomainHeader = $derived(isIosNativeShell())
+
+  /** Drive CSS pad + native dock hide; keep dataset in sync with overlay chrome. */
+  $effect(() => {
+    if (!browser || !isIosNativeShell()) return
+    // Touch overlay stores so liveState stays reactive.
+    void taskEditor.open
+    void taskDrawer.open
+    void schedulePopover.open
+    void scheduleSlot.open
+    const live = resolvePlannerLiveState()
+    document.documentElement.dataset.kenosLiveState = live
+    return () => {
+      delete document.documentElement.dataset.kenosLiveState
+    }
+  })
 
   onMount(() => {
+    markIosNativeShellDom()
     const cachedUserId = peekSessionUserId()
     if (cachedUserId) {
       const cached = readCache(CACHE_SCOPES.state, cachedUserId)
@@ -111,6 +171,7 @@
       }
     }
     void applyPlannerResumeFromLocation()
+    installKenosLeaveGuard()
 
     const onHide = () => flushSave()
     window.addEventListener('pagehide', onHide)
@@ -120,10 +181,15 @@
     const cleanupForeground = bindPwaForegroundResume({
       onForeground: () => syncRemindersToServiceWorker(),
     })
+    const disposeAppLogs = installKenosAppLogs({
+      app: 'planner',
+      getSupabase: () => supabase,
+    })
     return () => {
       cleanupTheme()
       cleanupViewport()
       cleanupForeground()
+      disposeAppLogs()
       window.removeEventListener('pagehide', onHide)
       cleanupAuth()
     }
@@ -168,6 +234,7 @@
 
   afterNavigate(() => {
     resetScrollLock()
+    if (isIosNativeShell()) void publishPlannerNavManifest()
   })
 </script>
 
@@ -193,13 +260,26 @@
     data-mobile-chrome={mobileChromeInset}
     data-fab-visible={fabVisible ? 'true' : 'false'}
   >
+    {#if showDomainHeader}
+      <DomainMusicHeader
+        title={pageTitle}
+        domainLabel="Plan"
+        showCompose={domainComposeVisible}
+        showBack={showDomainBack}
+        {showListsMenu}
+      />
+    {/if}
     {@render children()}
-    <Fab />
+    {#if !showDomainHeader}
+      <Fab />
+    {/if}
   </div>
 
-  <div class="bottom-shell">
-    <BottomNav />
-  </div>
+  {#if !showDomainHeader}
+    <div class="bottom-shell">
+      <BottomNav />
+    </div>
+  {/if}
 </div>
 
 <Toast />
@@ -207,3 +287,72 @@
 <TaskEditorSheet />
 <QuickSchedulePopover />
 <ScheduleSlotSheet />
+
+<style>
+  /* Kenos Domain Mode — native dock is the only bottom bar */
+  :global(html[data-ios-native-shell='true'] .bottom-shell),
+  :global(html[data-ios-native-shell='true'] nav.bottom-nav) {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+  :global(html[data-ios-native-shell='true']) {
+    --mobile-tabbar-total-h: 0px;
+    --bottom-chrome-h: 0px;
+    --mobile-content-inset-tabbar: 0px;
+  }
+  /*
+    ONE scroll-root pad only (.main-col) — match KenosWebChrome topPad/bottomPad.
+    Nested .app-shell / .life-os-page-workspace must stay 0 (avoid 54+54 stacking).
+  */
+  :global(html[data-ios-native-shell='true'] .main-col) {
+    padding-top: 54px !important;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
+  }
+  /* Overlays hide Domain dock — reclaim the 80px capsule reserve. */
+  :global(
+      html[data-ios-native-shell='true'][data-kenos-live-state='editing']
+        .main-col
+    ),
+  :global(
+      html[data-ios-native-shell='true'][data-kenos-live-state='sheet']
+        .main-col
+    ),
+  :global(
+      html[data-ios-native-shell='true'][data-kenos-live-state='drawer']
+        .main-col
+    ) {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  /* iPad desktop breakpoint would otherwise resurface the web sidebar under Continuity. */
+  :global(html[data-ios-native-shell='true'] .sidebar) {
+    display: none !important;
+  }
+  :global(html[data-ios-native-shell='true'] .app-shell),
+  :global(html[data-ios-native-shell='true'] .life-os-page-workspace) {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  :global(html[data-ios-native-shell='true'] .domain-music-header) {
+    padding-top: 0;
+    padding-bottom: 8px;
+    padding-inline: 16px;
+  }
+  /* Domain dock owns bottom; compose is DomainMusicHeader + — hide Material FAB. */
+  :global(html[data-ios-native-shell='true'] .fab) {
+    display: none !important;
+  }
+  /* DomainMusicHeader owns top chrome — hide web AppBar on settings/triage/etc. */
+  :global(html[data-ios-native-shell='true'] .appbar),
+  :global(html[data-ios-native-shell='true'] .life-os-app-bar),
+  :global(html[data-ios-native-shell='true'] header.appbar) {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+</style>

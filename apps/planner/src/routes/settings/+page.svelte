@@ -1,18 +1,19 @@
 <script>
+  import { onMount } from 'svelte'
   import AppBar from '$lib/components/AppBar.svelte'
-  import { S, updateSettings } from '$lib/state.svelte.js'
+  import { S, updateSettings, applyTheme } from '$lib/state.svelte.js'
   import { createList } from '$lib/domain/lists.js'
   import { exportBackup, importBackup } from '$lib/backup.js'
-  import { t } from '$lib/i18n/index.js'
+  import { t, setLocale, listLabel } from '$lib/i18n/index.js'
   import SettingsSection from '@life-os/platform-web/svelte/settings/section'
-  import SettingsAppearanceRows from '$lib/components/settings/SettingsAppearanceRows.svelte'
+  import SettingsAppearanceBlock from '@life-os/platform-web/svelte/settings/appearance-block'
   import SettingsRhythmRows from '$lib/components/settings/SettingsRhythmRows.svelte'
   import SettingsNotificationsBlock from '$lib/components/settings/SettingsNotificationsBlock.svelte'
   import SettingsSyncBlock from '@life-os/platform-web/svelte/settings/sync-block'
   import SettingsBackupBlock from '$lib/components/settings/SettingsBackupBlock.svelte'
+  import { scrollToSettingsHash } from '@life-os/platform-web/settings-hash'
   import { toast } from '$lib/ui.svelte.js'
   import { userLists } from '$lib/state.svelte.js'
-  import { listLabel } from '$lib/i18n/index.js'
   import { auth, signOut } from '$lib/auth.svelte.js'
   import { isSupabaseConfigured } from '$lib/supabase.js'
   import {
@@ -30,6 +31,8 @@
     ensurePushSubscription,
   } from '$lib/services/reminders.js'
   import { unsubscribePlannerPushNotifications } from '$lib/pushSubscription.js'
+
+  onMount(() => scrollToSettingsHash('cloud'))
 
   let listName = $state('')
   let syncBusy = $state(false)
@@ -144,26 +147,16 @@
 
 <div class="life-os-page-workspace">
   <div class="wrap settings-page settings-page--planner">
-    <SettingsSection
-      title={t('settings.appearance')}
-      testId="settings-appearance"
-    >
-      <SettingsAppearanceRows />
-    </SettingsSection>
-
-    <SettingsSection title={t('rhythm.settingsTitle')} testId="settings-rhythm">
-      <SettingsRhythmRows />
-    </SettingsSection>
-
     <SettingsSyncBlock
       title={t('settings.sync')}
       unavailableDesc={t('settings.syncUnavailable')}
       signedOutDesc={t('settings.syncDesc')}
+      ssoHint={t('settings.cloudSsoHint')}
+      signedOutLabel={t('settings.notSignedIn')}
       email={auth.user?.email}
       signedInDesc={syncDesc}
       configured={isSupabaseConfigured}
       signedIn={!!auth.user}
-      busy={syncBusy}
       autoSync={S.settings.syncAuto}
       autoSyncLabel={t('settings.syncAuto')}
       signInLabel={t('auth.signIn')}
@@ -195,6 +188,39 @@
         >
       {/snippet}
     </SettingsSyncBlock>
+
+    <SettingsAppearanceBlock
+      title={t('settings.appearance')}
+      theme={S.settings.theme || 'auto'}
+      onThemeChange={(theme) => {
+        updateSettings({ theme })
+        applyTheme()
+      }}
+      themeOptions={[
+        { value: 'light', label: t('settings.themeLight') },
+        { value: 'dark', label: t('settings.themeDark') },
+        { value: 'auto', label: t('settings.themeAuto') },
+      ]}
+      themeLabel={t('settings.theme')}
+      themeDesc={t('settings.themeDesc')}
+      locale={S.settings.locale}
+      onLocaleChange={setLocale}
+      localeOptions={[
+        { value: 'zh', label: t('settings.langZh') },
+        { value: 'en', label: t('settings.langEn') },
+      ]}
+      languageLabel={t('settings.language')}
+      languageDesc={t('settings.languageDesc')}
+      lockPortraitOnPhone={S.settings.lockPortraitOnPhone !== false}
+      onLockPortraitOnPhoneChange={(checked) =>
+        updateSettings({ lockPortraitOnPhone: checked })}
+      lockPortraitLabel={t('settings.lockPortraitOnPhone')}
+      lockPortraitDesc={t('settings.lockPortraitOnPhoneDesc')}
+    />
+
+    <SettingsSection title={t('rhythm.settingsTitle')} testId="settings-rhythm">
+      <SettingsRhythmRows />
+    </SettingsSection>
 
     <SettingsNotificationsBlock
       title={t('settings.notifications')}

@@ -126,7 +126,7 @@ body {
 }
 
 .swipe-content.settling {
-  transition: transform 0.22s var(--ease, ease);
+  transition: transform var(--kenos-motion-press) var(--kenos-ease-press, var(--ease, ease));
 }
 
 .swipe-content.dragging .task-row:hover {
@@ -150,7 +150,9 @@ body {
   background: color-mix(in srgb, var(--done) 30%, var(--card));
   color: var(--done);
   opacity: 0.75;
-  transition: background 0.15s var(--ease, ease), opacity 0.15s var(--ease, ease);
+  transition:
+    background var(--dur-fast) var(--ease-standard, var(--ease, ease)),
+    opacity var(--dur-fast) var(--ease-standard, var(--ease, ease));
 }
 
 .swipe-bg--complete.armed {
@@ -188,7 +190,9 @@ body {
 .swipe-action--delete {
   background: color-mix(in srgb, var(--critical) 16%, var(--card));
   color: var(--critical);
-  transition: background 0.15s var(--ease, ease), color 0.15s var(--ease, ease);
+  transition:
+    background var(--dur-fast) var(--ease-standard, var(--ease, ease)),
+    color var(--dur-fast) var(--ease-standard, var(--ease, ease));
 }
 
 /* 长左滑：删除区吞掉整条并变实色，提示松手即删 */
@@ -257,7 +261,7 @@ body {
 }
 
 .task-check.completing {
-  animation: check-pop 200ms var(--ease, ease) forwards;
+  animation: check-pop var(--kenos-motion-press) var(--kenos-ease-press, var(--ease, ease)) forwards;
 }
 
 .task-check.completing::before {
@@ -268,7 +272,7 @@ body {
   background: radial-gradient(circle,
       color-mix(in srgb, var(--accent) 50%, transparent),
       transparent 68%);
-  animation: check-glow 300ms ease-out forwards;
+  animation: check-glow var(--kenos-motion-chrome) var(--kenos-ease-chrome, ease-out) forwards;
   pointer-events: none;
   z-index: -1;
 }
@@ -301,28 +305,28 @@ body {
 
 .task-row.completing {
   transition:
-    opacity 280ms var(--ease, ease),
-    transform 280ms var(--ease, ease);
+    opacity var(--kenos-motion-sheet) var(--kenos-ease-page, var(--ease, ease)),
+    transform var(--kenos-motion-sheet) var(--kenos-ease-page, var(--ease, ease));
 }
 
 .swipe-item.is-completing {
   overflow: hidden;
   transition:
-    max-height 320ms var(--ease, ease),
-    opacity 300ms var(--ease, ease),
-    margin 320ms var(--ease, ease);
+    max-height var(--kenos-motion-sheet) var(--kenos-ease-page, var(--ease, ease)),
+    opacity var(--kenos-motion-chrome) var(--kenos-ease-chrome, var(--ease, ease)),
+    margin var(--kenos-motion-sheet) var(--kenos-ease-page, var(--ease, ease));
 }
 
 .swipe-item.is-completing .swipe-content {
   opacity: 0;
   transform: translateY(-4px);
   transition:
-    opacity 280ms var(--ease, ease),
-    transform 280ms var(--ease, ease);
+    opacity var(--kenos-motion-sheet) var(--kenos-ease-page, var(--ease, ease)),
+    transform var(--kenos-motion-sheet) var(--kenos-ease-page, var(--ease, ease));
 }
 
 .task-row.completing .task-title {
-  animation: title-complete 360ms var(--ease, ease) 80ms forwards;
+  animation: title-complete var(--kenos-motion-page) var(--kenos-ease-page, var(--ease, ease)) var(--kenos-motion-press-reduce) forwards;
 }
 
 @keyframes title-complete {
@@ -1450,6 +1454,7 @@ body {
    否则宽手机/平板(640–840)会裂两栏,而侧栏此时是 display:none,
    右侧留下一条幽灵空列(今天/已完成/日历同病)。 */
 @media (--life-os-mobile) {
+
   .today-layout.life-os-grid--split,
   .desktop-split-layout.life-os-grid--split {
     grid-template-columns: minmax(0, 1fr);
@@ -2637,7 +2642,7 @@ html.planner-schedule-modal-open .schedule-popover {
   color: var(--accent);
 }
 
-.schedule-popover-task > span:last-child {
+.schedule-popover-task>span:last-child {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2785,7 +2790,7 @@ html.planner-schedule-modal-open .schedule-popover {
   font-weight: 600;
 }
 
-.schedule-popover-quick-actions button + button {
+.schedule-popover-quick-actions button+button {
   border-left: 1px solid var(--border);
 }
 
@@ -3151,6 +3156,13 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     display: none;
   }
 
+  /* Kenos native: scroll-root already pads status (54) + dock (80+safe).
+     Avoid stacking timeline safe-area on top of .main-col bottom pad. */
+  :global(html[data-ios-native-shell='true']) .calendar-page .day-timeline-scroll {
+    max-height: calc(var(--app-vh, 100dvh) - 14rem);
+    padding-bottom: var(--space-6);
+  }
+
   /* 时间轴成开放画布后，底部「回到当前时间」也去掉卡片外框保持一致。 */
   .calendar-page .day-timeline-foot {
     border: none;
@@ -3231,6 +3243,12 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     padding-top: max(var(--space-3), env(safe-area-inset-top));
     padding-bottom: max(var(--space-3), var(--safe-bottom-effective));
     animation: planner-task-drawer-in var(--dur-base) var(--ease-standard);
+  }
+
+  /* Kenos Continuity: match status pad (54) even if env(safe-area) is muted. */
+  :global(html[data-ios-native-shell='true']) .task-drawer-panel {
+    padding-top: 54px;
+    padding-bottom: max(var(--space-3), env(safe-area-inset-bottom, 0px));
   }
 
   @keyframes planner-task-drawer-in {
@@ -3396,4 +3414,10 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
   background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.overdue-action-btn--more {
+  color: var(--t3, var(--t2));
+  border-style: dashed;
+  font-weight: 500;
 }

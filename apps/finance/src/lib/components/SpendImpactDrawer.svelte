@@ -1,6 +1,16 @@
 <script>
   // Port of src/components/SpendImpactDrawer.tsx.
+  import { onMount } from 'svelte'
+  import {
+    clearMoneyOverlay,
+    setMoneyOverlay,
+  } from '$lib/kenos/financeSpaceAdapter.js'
   import { projectMonthly } from '../../engine/monthly.js'
+
+  onMount(() => {
+    setMoneyOverlay('drawer')
+    return () => clearMoneyOverlay()
+  })
   import { buildAugmentedDailyOutlook } from '../../engine/outlook.js'
   import {
     computeSpendImpact,
@@ -173,8 +183,8 @@
   let breakdownOpen = $state(false)
 </script>
 
-<div class="drawer-backdrop" onclick={onClose} role="presentation"></div>
-<aside class="drawer">
+<div class="drawer-backdrop kenos-drawer-backdrop" onclick={onClose} role="presentation"></div>
+<aside class="drawer kenos-drawer-panel">
   <div class="drawer-head">
     <h2>{t('spendImpact.title')}</h2>
     <button type="button" class="icon-btn" onclick={onClose}>{t('common.close')}</button>

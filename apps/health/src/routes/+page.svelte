@@ -1,8 +1,20 @@
 <script>
   import { onMount } from 'svelte'
   import { t } from '$lib/i18n/index.js'
-  import { A, act, pushPolicy, pollState, refreshDetails } from '$lib/agent.svelte.js'
-  import { deriveState, recommendPolicy, DIMENSION_ORDER } from '$lib/stateEngine.core.js'
+  import {
+    A,
+    act,
+    pushPolicy,
+    pollState,
+    refreshDetails,
+  } from '$lib/agent.svelte.js'
+  import {
+    deriveState,
+    recommendPolicy,
+    todayTrainingLedger,
+    trainingRecommendation,
+    DIMENSION_ORDER,
+  } from '$lib/stateEngine.core.js'
 
   let nowMs = $state(Date.now())
 
@@ -20,7 +32,8 @@
   })
 
   /** i18n 模板插值:'{x} 分钟' + {x: 5} */
-  const fmt = (key, p) => t(key).replace(/\{(\w+)\}/g, (_, k) => String(p?.[k] ?? ''))
+  const fmt = (key, p) =>
+    t(key).replace(/\{(\w+)\}/g, (_, k) => String(p?.[k] ?? ''))
   const reason = (r) => fmt(r.k, r.p)
 
   const greeting = $derived.by(() => {
@@ -41,7 +54,9 @@
     const doneNet = A.sessions
       .filter((r) => r.start >= t0)
       .reduce((sum, r) => sum + (r.peakNetSeconds ?? 0), 0)
-    const warnsToday = A.events.filter((e) => e.type === 'warn_shown' && e.ts >= t0).length
+    const warnsToday = A.events.filter(
+      (e) => e.type === 'warn_shown' && e.ts >= t0,
+    ).length
     return {
       online: A.online,
       phase: s?.phase ?? 'normal',
@@ -55,19 +70,47 @@
   })
 
   // Understand:全部从测量数据(A.health)+ 代理负荷推导,零手动输入
-  const engine = $derived(deriveState({ now: nowMs, health: A.health, agent: agentInput }))
-  // 是否已有任何测量数据(睡眠/HRV/心率/步数),没有则显示连表引导而非状态网格
+  const engine = $derived(
+    deriveState({ now: nowMs, health: A.health, agent: agentInput }),
+  )
+  // 是否已有任何测量数据(睡眠/HRV/心率/步数/活动),没有则显示连表引导而非状态网格
   const hasMeasured = $derived(A.health.length > 0)
+  const trainLedger = $derived(todayTrainingLedger(A.health, nowMs))
+  const trainRec = $derived(trainingRecommendation(engine.dims, trainLedger))
+  const trainFacts = $derived(
+    fmt('now.trainFacts', {
+      steps: trainLedger.steps != null ? Math.round(trainLedger.steps) : '—',
+      kcal:
+        trainLedger.activeEnergyKcal != null
+          ? Math.round(trainLedger.activeEnergyKcal)
+          : '—',
+      ex:
+        trainLedger.exerciseMinutes != null
+          ? Math.round(trainLedger.exerciseMinutes)
+          : '—',
+      wc: trainLedger.workoutCount || 0,
+      wm:
+        trainLedger.workoutMinutes != null
+          ? Math.round(trainLedger.workoutMinutes)
+          : '—',
+    }),
+  )
 
   // HLT-3:按当日状态推荐专注窗口,变化时推给代理(driver 决定收紧或回到基准)
-  const baseMinutes = $derived(Math.max(1, Math.round((s?.baseLimitSeconds ?? 1200) / 60)))
+  const baseMinutes = $derived(
+    Math.max(1, Math.round((s?.baseLimitSeconds ?? 1200) / 60)),
+  )
   const policy = $derived(recommendPolicy(engine.dims, baseMinutes))
   let lastPushed = $state(null)
 
   $effect(() => {
     if (!A.online || paused) return
-    const desiredReason = policy.driver ? t(`now.policyReason_${policy.driver}`) : null
-    const key = policy.driver ? `${policy.limitMinutes}:${policy.driver}` : 'base'
+    const desiredReason = policy.driver
+      ? t(`now.policyReason_${policy.driver}`)
+      : null
+    const key = policy.driver
+      ? `${policy.limitMinutes}:${policy.driver}`
+      : 'base'
     // 只在推荐变化、且与代理当前生效状态不一致时推送,避免每帧打接口
     const agentEffMin = Math.round((s?.limitSeconds ?? 1200) / 60)
     const agentHasPolicy = Boolean(s?.policyReason)
@@ -82,14 +125,19 @@
 
   const headline = $derived.by(() => {
     if (!A.online && !hasMeasured) return t('now.stateOffline')
-    if (paused && engine.headline.k === 'state.h_allGood') return t('now.statePaused')
+    if (paused && engine.headline.k === 'state.h_allGood')
+      return t('now.statePaused')
     return fmt(engine.headline.k, engine.headline.p)
   })
 
   // —— Focus 负荷条(沿用 HLT-1)——
   const netMinutes = $derived(Math.floor((s?.score ?? 0) / 60))
-  const limitMinutes = $derived(Math.max(1, Math.floor((s?.limitSeconds ?? 1200) / 60)))
-  const frac = $derived(Math.min(1, (s?.score ?? 0) / (s?.limitSeconds || 1200)))
+  const limitMinutes = $derived(
+    Math.max(1, Math.floor((s?.limitSeconds ?? 1200) / 60)),
+  )
+  const frac = $derived(
+    Math.min(1, (s?.score ?? 0) / (s?.limitSeconds || 1200)),
+  )
   const meterTone = $derived.by(() => {
     if (!A.online || paused) return 'idle'
     if (s?.phase === 'breaking') return 'break'
@@ -110,7 +158,9 @@
       <h3>{t('now.dims')}</h3>
       {#if hasMeasured}
         <span class="health-chip" title={t('now.healthConnected')}>
-          <i class="chip-dot"></i>{fmt('now.healthConnected', { n: A.health.length })}
+          <i class="chip-dot"></i>{fmt('now.healthConnected', {
+            n: A.health.length,
+          })}
         </span>
       {/if}
     </div>
@@ -120,7 +170,9 @@
         <article class="dim" data-level={dim.level}>
           <header class="dim-head">
             <span class="dim-name">{t(`state.dim_${key}`)}</span>
-            <span class="dim-level"><i class="dot"></i>{t(`state.level_${dim.level}`)}</span>
+            <span class="dim-level"
+              ><i class="dot"></i>{t(`state.level_${dim.level}`)}</span
+            >
           </header>
           <ul class="dim-reasons">
             {#each dim.reasons.slice(0, 2) as r, i (`${r.k}-${i}`)}
@@ -132,7 +184,16 @@
     </div>
   </section>
 
-  <!-- 无测量数据:引导连 Watch,绝不给手动表单 -->
+  <!-- 今日训练对账:活动/Workout → 是否宜练(不泄跨 OS 明细) -->
+  {#if hasMeasured}
+    <section class="card train" data-code={trainRec.code}>
+      <h3>{t('now.trainTitle')}</h3>
+      <p class="train-rec">{t(trainRec.k)}</p>
+      <p class="muted train-facts">{trainFacts}</p>
+    </section>
+  {/if}
+
+  <!-- 无测量数据:引导连 Apple Health,绝不给手动表单 -->
   {#if !hasMeasured}
     <section class="card connect">
       <h3>{t('now.connectWatch')}</h3>
@@ -147,10 +208,18 @@
       <div class="meter-head">
         <h3>{t('now.focusMeter')}</h3>
         <span class="meter-num">
-          <strong>{netMinutes}</strong> / {limitMinutes} {t('now.minutesUnit')}
+          <strong>{netMinutes}</strong> / {limitMinutes}
+          {t('now.minutesUnit')}
         </span>
       </div>
-      <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax={limitMinutes} aria-valuenow={netMinutes} aria-label={t('now.focusMeter')}>
+      <div
+        class="meter"
+        role="progressbar"
+        aria-valuemin="0"
+        aria-valuemax={limitMinutes}
+        aria-valuenow={netMinutes}
+        aria-label={t('now.focusMeter')}
+      >
         <div class="meter-fill" style:width={`${frac * 100}%`}></div>
       </div>
       <dl class="facts">
@@ -158,7 +227,10 @@
           <dt>{t('now.adaptiveWindow')}</dt>
           <dd>
             {#if s?.policyReason}
-              {fmt('now.adaptiveTightened', { min: limitMinutes, reason: s.policyReason })}
+              {fmt('now.adaptiveTightened', {
+                min: limitMinutes,
+                reason: s.policyReason,
+              })}
             {:else}
               {fmt('now.adaptiveBase', { min: limitMinutes })}
             {/if}
@@ -179,11 +251,19 @@
       <h3>{t('now.actions')}</h3>
       <div class="actions">
         {#if paused}
-          <button class="btn primary" onclick={() => act('resume')}>{t('now.actResume')}</button>
+          <button class="btn primary" onclick={() => act('resume')}
+            >{t('now.actResume')}</button
+          >
         {:else}
-          <button class="btn primary" onclick={() => act('break')}>{t('now.actBreak')}</button>
-          <button class="btn" onclick={() => act('pause30')}>{t('now.actPause30')}</button>
-          <button class="btn" onclick={() => act('pauseToday')}>{t('now.actPauseToday')}</button>
+          <button class="btn primary" onclick={() => act('break')}
+            >{t('now.actBreak')}</button
+          >
+          <button class="btn" onclick={() => act('pause30')}
+            >{t('now.actPause30')}</button
+          >
+          <button class="btn" onclick={() => act('pauseToday')}
+            >{t('now.actPauseToday')}</button
+          >
         {/if}
       </div>
     </section>
@@ -243,6 +323,23 @@
     width: fit-content;
   }
 
+  .train-rec {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--t1);
+    line-height: 1.4;
+  }
+  .train-facts {
+    font-size: 0.8125rem;
+  }
+  .train[data-code='recover'],
+  .train[data-code='already_trained'] {
+    border-color: color-mix(in srgb, var(--warn, #c9a227) 45%, var(--border));
+  }
+  .train[data-code='ok_to_train'] {
+    border-color: color-mix(in srgb, var(--ok, #3d9a6a) 40%, var(--border));
+  }
+
   /* —— 六维状态 —— */
   .dims-head {
     display: flex;
@@ -289,13 +386,27 @@
     border-radius: 50%;
     background: var(--t4);
   }
-  .dim[data-level='good'] .dot { background: var(--positive); }
-  .dim[data-level='ok'] .dot { background: var(--accent); }
-  .dim[data-level='watch'] .dot { background: var(--warning); }
-  .dim[data-level='bad'] .dot { background: var(--critical); }
-  .dim[data-level='good'] .dim-level { color: var(--positive); }
-  .dim[data-level='watch'] .dim-level { color: var(--warning); }
-  .dim[data-level='bad'] .dim-level { color: var(--critical); }
+  .dim[data-level='good'] .dot {
+    background: var(--positive);
+  }
+  .dim[data-level='ok'] .dot {
+    background: var(--accent);
+  }
+  .dim[data-level='watch'] .dot {
+    background: var(--warning);
+  }
+  .dim[data-level='bad'] .dot {
+    background: var(--critical);
+  }
+  .dim[data-level='good'] .dim-level {
+    color: var(--positive);
+  }
+  .dim[data-level='watch'] .dim-level {
+    color: var(--warning);
+  }
+  .dim[data-level='bad'] .dim-level {
+    color: var(--critical);
+  }
   .dim-reasons {
     display: grid;
     gap: 2px;
@@ -353,8 +464,12 @@
     background: var(--accent);
     transition: width 0.6s ease;
   }
-  .meter-card[data-tone='hot'] .meter-fill { background: var(--warning); }
-  .meter-card[data-tone='break'] .meter-fill { background: var(--t4); }
+  .meter-card[data-tone='hot'] .meter-fill {
+    background: var(--warning);
+  }
+  .meter-card[data-tone='break'] .meter-fill {
+    background: var(--t4);
+  }
 
   .facts {
     display: grid;

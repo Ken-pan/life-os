@@ -6,8 +6,13 @@
  */
 import {
   buildResumeDescriptor,
-  domainContinueStorageKey,
+  writeDomainContinue,
 } from '@life-os/platform-web/kenos-space-continuity'
+import {
+  installNavManifestPublisher,
+  publishNavManifest,
+} from '@life-os/platform-web/kenos-native-bridge'
+import { sensory } from '@life-os/platform-web/kenos-sensory'
 
 export const HOME_SPACE_ID = 'home'
 
@@ -23,7 +28,9 @@ export function homeResumeSubtitle(pathname, search = '') {
   const path = String(pathname || '/')
   let params
   try {
-    params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search)
+    params = new URLSearchParams(
+      search.startsWith('?') ? search.slice(1) : search,
+    )
   } catch {
     params = new URLSearchParams()
   }
@@ -52,7 +59,9 @@ export function homeResumeEntityId(pathname, search = '') {
     const params = new URLSearchParams(
       search.startsWith('?') ? search.slice(1) : search,
     )
-    return params.get('item') || params.get('zone') || params.get('room') || null
+    return (
+      params.get('item') || params.get('zone') || params.get('room') || null
+    )
   } catch {
     return null
   }
@@ -107,6 +116,31 @@ export async function resumeHomeSpace(descriptor = null) {
   return { ok: true, route }
 }
 
+/** @returns {{ domainId: string, path: string, title: string, activeTab: string, canGoBack: boolean, currentEntity: string, liveState: string, unsavedDraft: boolean, summary: string }} */
+export function buildHomeNavManifest() {
+  const pathname = isBrowser() ? window.location.pathname : '/plan'
+  const search = isBrowser() ? window.location.search : ''
+  const path = `${pathname}${search}`
+  const d = suspendHomeSpace({ pathname, search })
+  const surface = /** @type {any} */ (d.substate)?.surface || 'rooms'
+  const onFocus = pathname.startsWith('/tidy/go')
+  return {
+    domainId: HOME_SPACE_ID,
+    path,
+    title: 'Home',
+    activeTab: surface,
+    canGoBack: isBrowser() ? window.history.length > 1 : false,
+    currentEntity: d.entityId ? String(d.entityId) : '',
+    liveState: onFocus ? 'active' : 'idle',
+    unsavedDraft: false,
+    summary: d.displaySubtitle || 'Home',
+  }
+}
+
+export function publishHomeNavManifest() {
+  return publishNavManifest(buildHomeNavManifest())
+}
+
 export function installHomeLeaveGuard() {
   if (!isBrowser()) return
   window.__KENOS_LEAVE_GUARD__ = {
@@ -114,14 +148,36 @@ export function installHomeLeaveGuard() {
       return { dirty: false, summary: '' }
     },
     discard() {},
-    compose() {},
+    compose() {
+      void sensory('soft')
+      void resumeHomeSpace({
+        version: 1,
+        userId: 'anonymous',
+        spaceId: HOME_SPACE_ID,
+        route: '/tidy',
+        displayTitle: 'Home',
+        displaySubtitle: 'Organize',
+        updatedAt: new Date().toISOString(),
+      })
+      void publishHomeNavManifest()
+    },
+  }
+  window.__KENOS_DOMAIN_COMPOSE__ = () => {
+    window.__KENOS_LEAVE_GUARD__?.compose?.()
+  }
+  void publishHomeNavManifest()
+  if (!window.__KENOS_HOME_NAV_PUBLISHER__) {
+    window.__KENOS_HOME_NAV_PUBLISHER__ = installNavManifestPublisher(
+      () => buildHomeNavManifest(),
+      { intervalMs: 700 },
+    )
   }
 }
 
 export function persistHomeContinue(descriptor, userId = null) {
   const d = descriptor || suspendHomeSpace({ userId })
   try {
-    localStorage.setItem(domainContinueStorageKey('home', userId), JSON.stringify(d))
+    writeDomainContinue(HOME_SPACE_ID, userId, d)
   } catch {
     /* ignore */
   }

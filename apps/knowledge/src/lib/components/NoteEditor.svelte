@@ -13,28 +13,83 @@
   import { LifeOsSheet } from '@life-os/platform-web/svelte/overlay'
   import Menu from '@life-os/platform-web/svelte/menu'
   import {
-    Bold, Italic, Code, Strikethrough, Link2, Type, Heading1, Heading2,
-    Heading3, List, ListOrdered, CheckSquare, Quote, Minus, GripVertical,
-    Plus, FileCode, Eye, Pin, Trash2, Check, MoreHorizontal,
-    Info, Lightbulb, TriangleAlert, OctagonAlert, Table, Columns3,
-    Image as ImageIcon, ChevronRight, TextAlignStart, TextAlignCenter, TextAlignEnd,
+    Bold,
+    Italic,
+    Code,
+    Strikethrough,
+    Link2,
+    Type,
+    Heading1,
+    Heading2,
+    Heading3,
+    List,
+    ListOrdered,
+    CheckSquare,
+    Quote,
+    Minus,
+    GripVertical,
+    Plus,
+    FileCode,
+    Eye,
+    Pin,
+    Trash2,
+    Check,
+    MoreHorizontal,
+    Info,
+    Lightbulb,
+    TriangleAlert,
+    OctagonAlert,
+    Table,
+    Columns3,
+    Image as ImageIcon,
+    ChevronRight,
+    TextAlignStart,
+    TextAlignCenter,
+    TextAlignEnd,
   } from '@lucide/svelte'
   import {
-    markdownToBlocks, blocksToMarkdown, makeBlock, newBlockId, firstHeadingMatchesTitle,
+    markdownToBlocks,
+    blocksToMarkdown,
+    makeBlock,
+    newBlockId,
+    firstHeadingMatchesTitle,
   } from '$lib/editor/blocks.js'
   import {
-    mdInlineToHtml, matchInlineRule, inlineToPlainText, escapeHtml,
+    mdInlineToHtml,
+    matchInlineRule,
+    inlineToPlainText,
+    escapeHtml,
   } from '$lib/editor/inline.js'
   import {
-    caretAtStart, caretAtEnd, setCaret, setCaretStart, setCaretEnd,
-    splitMarkdownAtCaret, readBlockMarkdown, textBeforeCaret,
-    replaceBeforeCaret, wrapSelection, insertHtmlAtCaret, selectionRect,
-    caretRect, selectionCollapsed,
+    caretAtStart,
+    caretAtEnd,
+    setCaret,
+    setCaretStart,
+    setCaretEnd,
+    splitMarkdownAtCaret,
+    readBlockMarkdown,
+    textBeforeCaret,
+    replaceBeforeCaret,
+    wrapSelection,
+    insertHtmlAtCaret,
+    selectionRect,
+    caretRect,
+    selectionCollapsed,
   } from '$lib/editor/caret.js'
+  import {
+    KEYBOARD_INSET_FLOOR_PX,
+    clampPopoverPosition,
+    createImeGuard,
+  } from '@life-os/theme'
+  import { isIosNativeShell } from '@life-os/platform-web/ios-native-shell'
   import { S, resolveWikilink } from '$lib/state.svelte.js'
   import { metaWhen } from '$lib/format.js'
   import CategoryChip from '$lib/components/CategoryChip.svelte'
   import { t } from '$lib/i18n/index.js'
+  import {
+    clearLibraryEditorSession,
+    setLibraryEditorSession,
+  } from '$lib/kenos/libraryEditorSession.js'
 
   /**
    * @type {{
@@ -51,7 +106,17 @@
    * onSave/onDelete/onTogglePin 都带 item —— 内联切换笔记时要把「上一条」落到正确对象。
    * onOpenNote：正文内 [[双链]] 点击→解析→跳到目标笔记（工作台切换选中）。
    */
-  let { item, titles = [], inline = false, onClose, onSave, onDelete, onTogglePin, onOpenNote, footer } = $props()
+  let {
+    item,
+    titles = [],
+    inline = false,
+    onClose,
+    onSave,
+    onDelete,
+    onTogglePin,
+    onOpenNote,
+    footer,
+  } = $props()
 
   /** 正文 [[wikilink]] 点击委托（内联工作台用）：resolve 后交给工作台切换选中。 */
   function onBodyClick(e) {
@@ -59,7 +124,9 @@
     const a = e.target.closest('a.wikilink')
     if (!a) return
     e.preventDefault()
-    const found = resolveWikilink(a.dataset.target || a.dataset.wikilink || a.textContent)
+    const found = resolveWikilink(
+      a.dataset.target || a.dataset.wikilink || a.textContent,
+    )
     if (found) onOpenNote(found)
   }
 
@@ -74,7 +141,7 @@
      纯 UI 态：折叠一个标题 → 隐藏其后所有块，直到遇到同级或更高级标题。
      不改 markdown（数据不动、Obsidian 互通不破），换笔记时清空。 */
   let collapsed = $state(new Set()) // 折叠中的标题 block id
-  const headingLevel = (b) => (b?.type === 'heading' ? (b.meta?.level || 1) : 0)
+  const headingLevel = (b) => (b?.type === 'heading' ? b.meta?.level || 1 : 0)
   /** 某标题块下辖的块数（到下一个同级/更高级标题为止）——决定是否显示折叠箭头。 */
   function foldableCount(i) {
     const lv = headingLevel(blocks[i])
@@ -110,6 +177,9 @@
   let mode = $state('wysiwyg') // 'wysiwyg' | 'source'
   let sourceText = $state('')
   let confirmDelete = $state(false)
+  /** visualViewport keyboard open — swaps .ed-scroll bottom pad. */
+  let keyboardOpen = $state(false)
+  const ime = createImeGuard()
 
   /** contenteditable 节点表：块 id → DOM（焦点/光标管理）。 */
   const nodes = new Map()
@@ -122,6 +192,8 @@
   let loadedRef = null
   let loadedTitle = '' // 载入时快照（判脏，避免只看不改也 bump updatedAt）
   let loadedBody = ''
+  /** True only for createNote() stubs that were blank at bind — never for cleared existing notes. */
+  let composeStub = false
   let titleEl = $state(null)
   $effect(() => {
     const cur = item
@@ -134,6 +206,7 @@
     blocks = markdownToBlocks(cur.body || '')
     loadedTitle = title
     loadedBody = blocksToMarkdown(blocks) // 归一化后的基准（往返稳定）
+    composeStub = !title.trim() && !loadedBody.trim()
     mode = 'wysiwyg'
     sourceText = ''
     confirmDelete = false
@@ -141,7 +214,7 @@
     closeMenus()
     // 内联无焦点陷阱：显式聚焦（空笔记→标题；否则→首块）
     if (inline) {
-      const isBlank = !cur.title && !(cur.body || '').trim()
+      const isBlank = composeStub
       // 首块是被隐藏的重复 H1 时，焦点落到下一个可见块
       const skip = firstHeadingMatchesTitle(blocks, title) ? 1 : 0
       const focusTarget = blocks[skip] || blocks[0]
@@ -159,23 +232,141 @@
 
   // 硬刷新 / 关标签 / 切到后台：onDestroy 不触发，防抖窗口内的编辑会丢。
   // 用 pagehide + visibilitychange(hidden) 同步落盘待写内容（只 flush 不弃空）。
+  // 同时绑定 Kenos leave-guard session（Space 切换前 probe / discard）。
+  // visualViewport：键盘顶起时滚入焦点，并刷新 fixed 气泡/菜单坐标。
   onMount(() => {
-    const flush = () => { if (saveState === 'saving') flushSave() }
-    const onVis = () => { if (document.visibilityState === 'hidden') flush() }
+    const flush = () => {
+      if (saveState === 'saving') flushSave()
+    }
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') flush()
+    }
     window.addEventListener('pagehide', flush)
     document.addEventListener('visibilitychange', onVis)
+
+    let vvRaf = 0
+    let lastVvInset = -1
+    const onVvChange = () => {
+      if (vvRaf) return
+      vvRaf = requestAnimationFrame(() => {
+        vvRaf = 0
+        const vv = window.visualViewport
+        const inset = vv
+          ? Math.max(
+              0,
+              Math.round(window.innerHeight - vv.height - vv.offsetTop),
+            )
+          : 0
+        const floor = KEYBOARD_INSET_FLOOR_PX
+        keyboardOpen = inset > floor
+        // Only scroll caret when keyboard inset crosses the open/close threshold
+        // (bindViewportHeight also scrolls; this covers editor-local menus).
+        const crossed =
+          (lastVvInset <= floor && inset > floor) ||
+          (lastVvInset > floor && inset <= floor)
+        lastVvInset = inset
+        if (crossed) {
+          const active = document.activeElement
+          if (
+            active instanceof HTMLElement &&
+            (active.classList.contains('ed-edit') ||
+              active.classList.contains('ed-title') ||
+              active.classList.contains('ed-source') ||
+              active.classList.contains('ed-cell'))
+          ) {
+            try {
+              active.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+            } catch {
+              /* ignore */
+            }
+          }
+        }
+        if (toolbar.open) refreshToolbar()
+        if (slash.open || link.open) {
+          const blockId = slash.open ? slash.blockId : link.blockId
+          const el = nodes.get(blockId)
+          const block = blocks.find((b) => b.id === blockId)
+          if (el && block) updateMenus(block, el)
+        }
+      })
+    }
+    window.visualViewport?.addEventListener('resize', onVvChange)
+    window.visualViewport?.addEventListener('scroll', onVvChange)
+
+    const session = {
+      isDirty() {
+        if (!item) return false
+        // Debounce window is always dirty; otherwise compare to last load/flush snapshot.
+        if (saveState === 'saving') return true
+        return title !== loadedTitle || currentBody() !== loadedBody
+      },
+      title() {
+        return title.trim() || String(item?.title || '').trim()
+      },
+      flush() {
+        if (saveState === 'saving') flushSave()
+      },
+      discard() {
+        if (!loadedRef && !item) return
+        clearTimeout(saveTimer)
+        clearTimeout(savedTimer)
+        closeMenus()
+        collapsed = new Set()
+        title = loadedTitle
+        // Force remount contenteditable (new block ids) so DOM matches snapshot.
+        blocks = markdownToBlocks(loadedBody)
+        mode = 'wysiwyg'
+        sourceText = ''
+        saveState = 'idle'
+      },
+      cleanupIfBlank() {
+        // Only createNote() stubs that stayed empty — never cleared existing notes.
+        if (!item || !composeStub) return
+        if (!title.trim() && !currentBody().trim()) {
+          const target = item
+          clearLibraryEditorSession(session)
+          onDelete(target)
+        }
+      },
+    }
+    setLibraryEditorSession(session)
+
     return () => {
       window.removeEventListener('pagehide', flush)
       document.removeEventListener('visibilitychange', onVis)
+      window.visualViewport?.removeEventListener('resize', onVvChange)
+      window.visualViewport?.removeEventListener('scroll', onVvChange)
+      if (vvRaf) cancelAnimationFrame(vvRaf)
+      clearLibraryEditorSession(session)
     }
   })
+
+  /** Popover bottom clearance: Domain Dock (~80) on native shell, else theme chrome. */
+  function popoverBottomInset() {
+    const kb =
+      typeof document !== 'undefined'
+        ? parseFloat(
+            getComputedStyle(document.documentElement).getPropertyValue(
+              '--keyboard-inset',
+            ),
+          ) || 0
+        : 0
+    if (kb > 0) return kb + 12
+    if (isIosNativeShell()) {
+      return 80 + 12
+    }
+    return 12
+  }
 
   /** 把当前编辑内容提交到 target：全空→弃（onDelete）；无改动→跳过（不 bump updatedAt）；否则保存。 */
   function commitTo(target) {
     if (!target) return
     clearTimeout(saveTimer)
     const body = currentBody()
-    if (!title.trim() && !body.trim()) { onDelete(target); return }
+    if (!title.trim() && !body.trim()) {
+      onDelete(target)
+      return
+    }
     if (title === loadedTitle && body === loadedBody) return // 只看没改，不动
     onSave({ title: title.trim() || t('library.typeNote'), body }, target)
   }
@@ -183,7 +374,10 @@
   /** 保存失败后点「重试」：立即把当前内容重推一次（持久层会重置 S.saveError）。 */
   function retrySave() {
     if (!item) return
-    onSave({ title: title.trim() || t('library.typeNote'), body: currentBody() }, item)
+    onSave(
+      { title: title.trim() || t('library.typeNote'), body: currentBody() },
+      item,
+    )
   }
 
   /* ============ 保存（防抖）+ 状态指示 ============ */
@@ -194,6 +388,9 @@
     return mode === 'source' ? sourceText : blocksToMarkdown(blocks)
   }
   function scheduleSave() {
+    // First real keystroke graduates a compose stub — leave discard must not delete it.
+    if (composeStub && (title.trim() || currentBody().trim()))
+      composeStub = false
     clearTimeout(saveTimer)
     saveState = 'saving'
     saveTimer = setTimeout(flushSave, 600)
@@ -201,17 +398,29 @@
   function flushSave() {
     clearTimeout(saveTimer)
     if (!item) return
-    onSave({ title: title.trim() || t('library.typeNote'), body: currentBody() }, item)
+    const body = currentBody()
+    const nextTitle = title.trim() || t('library.typeNote')
+    onSave({ title: nextTitle, body }, item)
+    // Snapshot for dirty probe only — do not rewrite the live title input
+    // (empty → default label would fight the user mid-keystroke).
+    loadedTitle = title
+    loadedBody = body
     saveState = 'saved'
     clearTimeout(savedTimer)
-    savedTimer = setTimeout(() => { if (saveState === 'saved') saveState = 'idle' }, 2200)
+    savedTimer = setTimeout(() => {
+      if (saveState === 'saved') saveState = 'idle'
+    }, 2200)
   }
 
   /* ============ 编辑区动作 ============ */
   function editable(node, block) {
     node.innerHTML = mdInlineToHtml(block.text) || ''
     nodes.set(block.id, node)
-    return { destroy() { nodes.delete(block.id) } }
+    return {
+      destroy() {
+        nodes.delete(block.id)
+      },
+    }
   }
 
   function focusBlock(id, at = 'end') {
@@ -253,7 +462,11 @@
       cellNodes.set(key, node)
     }
     apply(params)
-    return { destroy() { cellNodes.delete(key) } }
+    return {
+      destroy() {
+        cellNodes.delete(key)
+      },
+    }
   }
   function focusCell(blockId, r, c) {
     const node = cellNodes.get(`${blockId}:${r}:${c}`)
@@ -275,9 +488,18 @@
       e.preventDefault()
       let nr = r
       let nc = c + (e.shiftKey ? -1 : 1)
-      if (nc >= C) { nc = 0; nr = r + 1 }
-      if (nc < 0) { nc = C - 1; nr = r - 1 }
-      if (nr >= R) { addTableRow(block, R); return } // 末格 Tab → 追加一行
+      if (nc >= C) {
+        nc = 0
+        nr = r + 1
+      }
+      if (nc < 0) {
+        nc = C - 1
+        nr = r - 1
+      }
+      if (nr >= R) {
+        addTableRow(block, R)
+        return
+      } // 末格 Tab → 追加一行
       if (nr < 0) return
       focusCell(block.id, nr, nc)
     } else if (e.key === 'Enter') {
@@ -301,12 +523,17 @@
   function addTableRow(block, at) {
     const cols = block.meta.rows[0].length
     const idx = at ?? block.meta.rows.length
-    const nb = tableUpdate(block, (rows) => rows.splice(idx, 0, Array(cols).fill('')))
+    const nb = tableUpdate(block, (rows) =>
+      rows.splice(idx, 0, Array(cols).fill('')),
+    )
     if (nb) tick().then(() => focusCell(nb.id, idx, 0))
   }
   function addTableCol(block) {
     const newC = block.meta.rows[0].length
-    const nb = tableUpdate(block, (rows, align) => { rows.forEach((r) => r.push('')); align.push(null) })
+    const nb = tableUpdate(block, (rows, align) => {
+      rows.forEach((r) => r.push(''))
+      align.push(null)
+    })
     if (nb) tick().then(() => focusCell(nb.id, 0, newC))
   }
   function delTableRow(block, r) {
@@ -315,7 +542,10 @@
   }
   function delTableCol(block, c) {
     if (block.meta.rows[0].length <= 1) return
-    tableUpdate(block, (rows, align) => { rows.forEach((row) => row.splice(c, 1)); align.splice(c, 1) })
+    tableUpdate(block, (rows, align) => {
+      rows.forEach((row) => row.splice(c, 1))
+      align.splice(c, 1)
+    })
   }
   const ALIGN_CYCLE = ['left', 'center', 'right']
   /** 循环某列对齐（left→center→right→left）。就地改 align、不重挂载（保光标）。 */
@@ -324,19 +554,29 @@
     if (i < 0) return
     if (!Array.isArray(blocks[i].meta.align)) blocks[i].meta.align = []
     const cur = blocks[i].meta.align[c]
-    blocks[i].meta.align[c] = ALIGN_CYCLE[(ALIGN_CYCLE.indexOf(cur ?? 'left') + 1) % ALIGN_CYCLE.length]
+    blocks[i].meta.align[c] =
+      ALIGN_CYCLE[(ALIGN_CYCLE.indexOf(cur ?? 'left') + 1) % ALIGN_CYCLE.length]
     blocks = blocks
     scheduleSave()
   }
   /** 对齐值 → CSS text-align（GFM 对齐是物理方向；null 视作 left）。 */
-  const alignCss = (a) => (a === 'center' ? 'center' : a === 'right' ? 'right' : 'left')
-  const ALIGN_ICON = { left: TextAlignStart, center: TextAlignCenter, right: TextAlignEnd }
+  const alignCss = (a) =>
+    a === 'center' ? 'center' : a === 'right' ? 'right' : 'left'
+  const ALIGN_ICON = {
+    left: TextAlignStart,
+    center: TextAlignCenter,
+    right: TextAlignEnd,
+  }
 
   /** 表格模板：按 key 返回 { rows, align }（首行为表头）。空白表头不塞占位文字。 */
   function buildTable(key) {
     if (key === 'table-compare') {
       const rows = [
-        [t('editor.tplCompareDim'), t('editor.tplCompareA'), t('editor.tplCompareB')],
+        [
+          t('editor.tplCompareDim'),
+          t('editor.tplCompareA'),
+          t('editor.tplCompareB'),
+        ],
         ['', '', ''],
         ['', '', ''],
       ]
@@ -344,14 +584,25 @@
     }
     if (key === 'table-check') {
       const rows = [
-        [t('editor.tplCheckTask'), t('editor.tplCheckOwner'), t('editor.tplCheckStatus')],
+        [
+          t('editor.tplCheckTask'),
+          t('editor.tplCheckOwner'),
+          t('editor.tplCheckStatus'),
+        ],
         ['', '', ''],
         ['', '', ''],
       ]
       return { rows, align: [null, null, null] }
     }
     // 空白 3×3
-    return { rows: [['', '', ''], ['', '', ''], ['', '', '']], align: [null, null, null] }
+    return {
+      rows: [
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', ''],
+      ],
+      align: [null, null, null],
+    }
   }
 
   /* ============ 图片块 ============ */
@@ -379,7 +630,11 @@
       blocks.splice(i + 1, 0, p)
       pendingFocus = { id: p.id, at: 'start' }
       scheduleSave()
-    } else if (e.key === 'Backspace' && (el.textContent || '') === '' && selectionCollapsed()) {
+    } else if (
+      e.key === 'Backspace' &&
+      (el.textContent || '') === '' &&
+      selectionCollapsed()
+    ) {
       e.preventDefault()
       const i = indexOfBlock(block.id)
       replaceBlock(i, 'paragraph', '')
@@ -390,18 +645,38 @@
 
   /* ——— 块级 input-rule：段首前缀 → 块类型 ——— */
   const BLOCK_PREFIX = [
-    { re: /^(#{1,6})\s$/, make: (m) => ({ type: 'heading', meta: { level: m[1].length } }) },
-    { re: /^[-*+]\s\[[ xX]?\]\s$/, make: () => ({ type: 'todo', meta: { checked: false } }) },
-    { re: /^\[[ xX]?\]\s$/, make: () => ({ type: 'todo', meta: { checked: false } }) },
+    {
+      re: /^(#{1,6})\s$/,
+      make: (m) => ({ type: 'heading', meta: { level: m[1].length } }),
+    },
+    {
+      re: /^[-*+]\s\[[ xX]?\]\s$/,
+      make: () => ({ type: 'todo', meta: { checked: false } }),
+    },
+    {
+      re: /^\[[ xX]?\]\s$/,
+      make: () => ({ type: 'todo', meta: { checked: false } }),
+    },
     { re: /^[-*+]\s$/, make: () => ({ type: 'bullet' }) },
-    { re: /^(\d+)[.)]\s$/, make: (m) => ({ type: 'numbered', meta: { start: Number(m[1]) } }) },
+    {
+      re: /^(\d+)[.)]\s$/,
+      make: (m) => ({ type: 'numbered', meta: { start: Number(m[1]) } }),
+    },
     { re: /^>\s$/, make: () => ({ type: 'quote' }) },
-    { re: /^```(\S*)\s?$/, make: (m) => ({ type: 'code', meta: { lang: m[1] || '' } }) },
+    {
+      re: /^```(\S*)\s?$/,
+      make: (m) => ({ type: 'code', meta: { lang: m[1] || '' } }),
+    },
     { re: /^(-{3,}|\*{3,}|_{3,})$/, make: () => ({ type: 'divider' }) },
   ]
 
   function maybeBlockRule(block, el) {
-    if (block.type !== 'paragraph' && block.type !== 'bullet' && block.type !== 'numbered') return false
+    if (
+      block.type !== 'paragraph' &&
+      block.type !== 'bullet' &&
+      block.type !== 'numbered'
+    )
+      return false
     const raw = el.textContent || ''
     for (const rule of BLOCK_PREFIX) {
       const m = raw.match(rule.re)
@@ -447,14 +722,23 @@
 
   /* ——— 键盘：Enter / Backspace / Tab / 箭头 ——— */
   function onKeydown(block, el, e) {
-    if (slash.open) { if (slashKey(e)) return }
-    if (link.open) { if (linkKey(e)) return }
+    if (slash.open) {
+      if (slashKey(e)) return
+    }
+    if (link.open) {
+      if (linkKey(e)) return
+    }
 
-    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      if (ime.isComposing(e)) return
       e.preventDefault()
       e.stopPropagation()
       handleEnter(block, el)
-    } else if (e.key === 'Backspace' && caretAtStart(el) && selectionCollapsed()) {
+    } else if (
+      e.key === 'Backspace' &&
+      caretAtStart(el) &&
+      selectionCollapsed()
+    ) {
       handleBackspaceStart(block, el, e)
     } else if (e.key === 'Tab') {
       e.preventDefault()
@@ -470,10 +754,16 @@
   function handleEnter(block, el) {
     const i = indexOfBlock(block.id)
     if (i < 0) return
-    const isList = block.type === 'bullet' || block.type === 'numbered' || block.type === 'todo'
+    const isList =
+      block.type === 'bullet' ||
+      block.type === 'numbered' ||
+      block.type === 'todo'
     // 空列表项回车 → 退成段落（或先降层）
     if (isList && (el.textContent || '').trim() === '') {
-      if (block.depth > 0) { handleTab(block, true); return }
+      if (block.depth > 0) {
+        handleTab(block, true)
+        return
+      }
       replaceBlock(i, 'paragraph', '')
       pendingFocus = { id: blocks[i].id, at: 'start' }
       scheduleSave()
@@ -481,7 +771,10 @@
     }
     const [left, right] = splitMarkdownAtCaret(el)
     // 左半留在原块（换 id 让 DOM 重渲为 left）
-    replaceBlock(i, block.type, left, { depth: block.depth, meta: { ...block.meta } })
+    replaceBlock(i, block.type, left, {
+      depth: block.depth,
+      meta: { ...block.meta },
+    })
     // 新块类型：标题/引用回车 → 段落；列表/待办延续同类
     let nextType = 'paragraph'
     let nextMeta = {}
@@ -489,7 +782,8 @@
     if (isList) {
       nextType = block.type
       nextDepth = block.depth
-      if (block.type === 'numbered') nextMeta = { start: (block.meta?.start ?? 1) + 1 }
+      if (block.type === 'numbered')
+        nextMeta = { start: (block.meta?.start ?? 1) + 1 }
       if (block.type === 'todo') nextMeta = { checked: false }
     }
     const nb = makeBlock(nextType, right, { depth: nextDepth, meta: nextMeta })
@@ -504,7 +798,12 @@
     if (block.type !== 'paragraph') {
       e.preventDefault()
       e.stopPropagation()
-      if ((block.type === 'bullet' || block.type === 'numbered' || block.type === 'todo') && block.depth > 0) {
+      if (
+        (block.type === 'bullet' ||
+          block.type === 'numbered' ||
+          block.type === 'todo') &&
+        block.depth > 0
+      ) {
         handleTab(block, true)
         return
       }
@@ -531,18 +830,30 @@
     const curMd = readBlockMarkdown(el)
     const merged = prevMd + curMd
     const caretAt = inlineToPlainText(prevMd).length
-    replaceBlock(i - 1, prev.type, merged, { depth: prev.depth, meta: { ...prev.meta } })
+    replaceBlock(i - 1, prev.type, merged, {
+      depth: prev.depth,
+      meta: { ...prev.meta },
+    })
     blocks.splice(i, 1)
     pendingFocus = { id: blocks[i - 1].id, at: caretAt }
     scheduleSave()
   }
 
   function handleTab(block, outdent) {
-    if (!(block.type === 'bullet' || block.type === 'numbered' || block.type === 'todo')) return
+    if (
+      !(
+        block.type === 'bullet' ||
+        block.type === 'numbered' ||
+        block.type === 'todo'
+      )
+    )
+      return
     const i = indexOfBlock(block.id)
     const el = nodes.get(block.id)
     const cur = el ? readBlockMarkdown(el) : block.text
-    const depth = outdent ? Math.max(0, block.depth - 1) : Math.min(8, block.depth + 1)
+    const depth = outdent
+      ? Math.max(0, block.depth - 1)
+      : Math.min(8, block.depth + 1)
     replaceBlock(i, block.type, cur, { depth, meta: { ...block.meta } })
     pendingFocus = { id: blocks[i].id, at: 'end' }
     scheduleSave()
@@ -561,15 +872,26 @@
   // 浮层（工具条/斜杠/双链）传送到 body：否则被 .sheet-bg(z-index:100) 盖住。
   function portal(node) {
     document.body.appendChild(node)
-    return { destroy() { node.remove() } }
+    return {
+      destroy() {
+        node.remove()
+      },
+    }
   }
 
   /* ——— 代码块（用 textarea，Enter 天然换行）——— */
   function autoGrowInit(node) {
-    const grow = () => { node.style.height = 'auto'; node.style.height = node.scrollHeight + 'px' }
+    const grow = () => {
+      node.style.height = 'auto'
+      node.style.height = node.scrollHeight + 'px'
+    }
     requestAnimationFrame(grow)
     node.addEventListener('input', grow)
-    return { destroy() { node.removeEventListener('input', grow) } }
+    return {
+      destroy() {
+        node.removeEventListener('input', grow)
+      },
+    }
   }
   function onCodeInput(block, e) {
     block.text = e.target.value
@@ -595,17 +917,37 @@
     const i = indexOfBlock(block.id)
     const el = nodes.get(block.id)
     const cur = el ? readBlockMarkdown(el) : block.text
-    replaceBlock(i, 'todo', cur, { depth: block.depth, meta: { checked: !block.meta?.checked } })
+    replaceBlock(i, 'todo', cur, {
+      depth: block.depth,
+      meta: { checked: !block.meta?.checked },
+    })
     scheduleSave()
   }
 
   /* ============ 选区格式工具条 ============ */
   let toolbar = $state({ open: false, x: 0, y: 0, active: {} })
   function refreshToolbar() {
-    if (!inEditor()) { toolbar.open = false; return }
+    if (!inEditor()) {
+      toolbar.open = false
+      return
+    }
     const rect = selectionRect()
-    if (!rect) { toolbar.open = false; return }
-    toolbar = { open: true, x: rect.left + rect.width / 2, y: rect.top, active: activeFormats() }
+    if (!rect) {
+      toolbar.open = false
+      return
+    }
+    // Bubble anchors above selection via CSS translateY(-100%); keep anchor in VV.
+    const rawX = rect.left + rect.width / 2
+    const pos = clampPopoverPosition(rawX, rect.top, 220, 8, {
+      padding: 8,
+      bottomInset: popoverBottomInset(),
+    })
+    toolbar = {
+      open: true,
+      x: pos.left,
+      y: Math.max(pos.top, 48),
+      active: activeFormats(),
+    }
   }
   /** 选区祖先里已有哪些行内格式（工具条按钮高亮用）。 */
   function activeFormats() {
@@ -659,38 +1001,175 @@
 
   /* ============ 斜杠菜单 ============ */
   const SLASH_ITEMS = [
-    { key: 'paragraph', icon: Type, label: () => t('editor.slPara'), desc: () => t('editor.slParaD') },
-    { key: 'h1', icon: Heading1, label: () => t('editor.slH1'), desc: () => t('editor.slH1D'), type: 'heading', meta: { level: 1 } },
-    { key: 'h2', icon: Heading2, label: () => t('editor.slH2'), desc: () => t('editor.slH2D'), type: 'heading', meta: { level: 2 } },
-    { key: 'h3', icon: Heading3, label: () => t('editor.slH3'), desc: () => t('editor.slH3D'), type: 'heading', meta: { level: 3 } },
-    { key: 'todo', icon: CheckSquare, label: () => t('editor.slTodo'), desc: () => t('editor.slTodoD'), type: 'todo', meta: { checked: false } },
-    { key: 'bullet', icon: List, label: () => t('editor.slBullet'), desc: () => t('editor.slBulletD'), type: 'bullet' },
-    { key: 'numbered', icon: ListOrdered, label: () => t('editor.slNumbered'), desc: () => t('editor.slNumberedD'), type: 'numbered', meta: { start: 1 } },
-    { key: 'quote', icon: Quote, label: () => t('editor.slQuote'), desc: () => t('editor.slQuoteD'), type: 'quote' },
-    { key: 'code', icon: FileCode, label: () => t('editor.slCode'), desc: () => t('editor.slCodeD'), type: 'code', meta: { lang: '' } },
-    { key: 'image', icon: ImageIcon, label: () => t('editor.slImage'), desc: () => t('editor.slImageD'), type: 'image' },
-    { key: 'table', icon: Table, label: () => t('editor.slTable'), desc: () => t('editor.slTableD'), type: 'table' },
-    { key: 'table-compare', icon: Columns3, label: () => t('editor.slTableCompare'), desc: () => t('editor.slTableCompareD'), type: 'table' },
-    { key: 'table-check', icon: Table, label: () => t('editor.slTableCheck'), desc: () => t('editor.slTableCheckD'), type: 'table' },
-    { key: 'c-note', icon: Info, label: () => t('editor.slCalloutNote'), desc: () => t('editor.slCalloutNoteD'), type: 'callout', meta: { callout: 'note' } },
-    { key: 'c-tip', icon: Lightbulb, label: () => t('editor.slCalloutTip'), desc: () => t('editor.slCalloutTipD'), type: 'callout', meta: { callout: 'tip' } },
-    { key: 'c-warning', icon: TriangleAlert, label: () => t('editor.slCalloutWarn'), desc: () => t('editor.slCalloutWarnD'), type: 'callout', meta: { callout: 'warning' } },
-    { key: 'c-danger', icon: OctagonAlert, label: () => t('editor.slCalloutDanger'), desc: () => t('editor.slCalloutDangerD'), type: 'callout', meta: { callout: 'danger' } },
-    { key: 'divider', icon: Minus, label: () => t('editor.slDivider'), desc: () => t('editor.slDividerD'), type: 'divider' },
+    {
+      key: 'paragraph',
+      icon: Type,
+      label: () => t('editor.slPara'),
+      desc: () => t('editor.slParaD'),
+    },
+    {
+      key: 'h1',
+      icon: Heading1,
+      label: () => t('editor.slH1'),
+      desc: () => t('editor.slH1D'),
+      type: 'heading',
+      meta: { level: 1 },
+    },
+    {
+      key: 'h2',
+      icon: Heading2,
+      label: () => t('editor.slH2'),
+      desc: () => t('editor.slH2D'),
+      type: 'heading',
+      meta: { level: 2 },
+    },
+    {
+      key: 'h3',
+      icon: Heading3,
+      label: () => t('editor.slH3'),
+      desc: () => t('editor.slH3D'),
+      type: 'heading',
+      meta: { level: 3 },
+    },
+    {
+      key: 'todo',
+      icon: CheckSquare,
+      label: () => t('editor.slTodo'),
+      desc: () => t('editor.slTodoD'),
+      type: 'todo',
+      meta: { checked: false },
+    },
+    {
+      key: 'bullet',
+      icon: List,
+      label: () => t('editor.slBullet'),
+      desc: () => t('editor.slBulletD'),
+      type: 'bullet',
+    },
+    {
+      key: 'numbered',
+      icon: ListOrdered,
+      label: () => t('editor.slNumbered'),
+      desc: () => t('editor.slNumberedD'),
+      type: 'numbered',
+      meta: { start: 1 },
+    },
+    {
+      key: 'quote',
+      icon: Quote,
+      label: () => t('editor.slQuote'),
+      desc: () => t('editor.slQuoteD'),
+      type: 'quote',
+    },
+    {
+      key: 'code',
+      icon: FileCode,
+      label: () => t('editor.slCode'),
+      desc: () => t('editor.slCodeD'),
+      type: 'code',
+      meta: { lang: '' },
+    },
+    {
+      key: 'image',
+      icon: ImageIcon,
+      label: () => t('editor.slImage'),
+      desc: () => t('editor.slImageD'),
+      type: 'image',
+    },
+    {
+      key: 'table',
+      icon: Table,
+      label: () => t('editor.slTable'),
+      desc: () => t('editor.slTableD'),
+      type: 'table',
+    },
+    {
+      key: 'table-compare',
+      icon: Columns3,
+      label: () => t('editor.slTableCompare'),
+      desc: () => t('editor.slTableCompareD'),
+      type: 'table',
+    },
+    {
+      key: 'table-check',
+      icon: Table,
+      label: () => t('editor.slTableCheck'),
+      desc: () => t('editor.slTableCheckD'),
+      type: 'table',
+    },
+    {
+      key: 'c-note',
+      icon: Info,
+      label: () => t('editor.slCalloutNote'),
+      desc: () => t('editor.slCalloutNoteD'),
+      type: 'callout',
+      meta: { callout: 'note' },
+    },
+    {
+      key: 'c-tip',
+      icon: Lightbulb,
+      label: () => t('editor.slCalloutTip'),
+      desc: () => t('editor.slCalloutTipD'),
+      type: 'callout',
+      meta: { callout: 'tip' },
+    },
+    {
+      key: 'c-warning',
+      icon: TriangleAlert,
+      label: () => t('editor.slCalloutWarn'),
+      desc: () => t('editor.slCalloutWarnD'),
+      type: 'callout',
+      meta: { callout: 'warning' },
+    },
+    {
+      key: 'c-danger',
+      icon: OctagonAlert,
+      label: () => t('editor.slCalloutDanger'),
+      desc: () => t('editor.slCalloutDangerD'),
+      type: 'callout',
+      meta: { callout: 'danger' },
+    },
+    {
+      key: 'divider',
+      icon: Minus,
+      label: () => t('editor.slDivider'),
+      desc: () => t('editor.slDividerD'),
+      type: 'divider',
+    },
   ]
-  let slash = $state({ open: false, x: 0, y: 0, query: '', index: 0, blockId: null })
+  let slash = $state({
+    open: false,
+    x: 0,
+    y: 0,
+    query: '',
+    index: 0,
+    blockId: null,
+  })
   let slashViaPlus = false // 本次斜杠菜单是否由「+」按钮开启（决定放弃时是否清裸「/」）
   const slashFiltered = $derived(
     slash.query
-      ? SLASH_ITEMS.filter((it) => it.label().toLowerCase().includes(slash.query.toLowerCase()))
+      ? SLASH_ITEMS.filter((it) =>
+          it.label().toLowerCase().includes(slash.query.toLowerCase()),
+        )
       : SLASH_ITEMS,
   )
-  let link = $state({ open: false, x: 0, y: 0, query: '', index: 0, blockId: null })
+  let link = $state({
+    open: false,
+    x: 0,
+    y: 0,
+    query: '',
+    index: 0,
+    blockId: null,
+  })
   const linkFiltered = $derived(
     (() => {
       const q = link.query.trim().toLowerCase()
-      const pool = titles.filter((tt) => tt && tt.toLowerCase() !== title.trim().toLowerCase())
-      return (q ? pool.filter((tt) => tt.toLowerCase().includes(q)) : pool).slice(0, 8)
+      const pool = titles.filter(
+        (tt) => tt && tt.toLowerCase() !== title.trim().toLowerCase(),
+      )
+      return (
+        q ? pool.filter((tt) => tt.toLowerCase().includes(q)) : pool
+      ).slice(0, 8)
     })(),
   )
 
@@ -700,7 +1179,21 @@
     const sl = left.match(/(?:^|\s)\/([^\s/]*)$/)
     if (sl && block.type !== 'code') {
       const rect = caretRect()
-      slash = { open: true, x: rect?.left ?? 0, y: (rect?.bottom ?? 0) + 4, query: sl[1], index: 0, blockId: block.id }
+      const pos = clampPopoverPosition(
+        rect?.left ?? 0,
+        (rect?.bottom ?? 0) + 4,
+        300,
+        280,
+        { padding: 8, bottomInset: popoverBottomInset() },
+      )
+      slash = {
+        open: true,
+        x: pos.left,
+        y: pos.top,
+        query: sl[1],
+        index: 0,
+        blockId: block.id,
+      }
     } else if (slash.open) {
       slash = { ...slash, open: false }
     }
@@ -708,17 +1201,51 @@
     const lk = left.match(/\[\[([^\]]*)$/)
     if (lk && block.type !== 'code') {
       const rect = caretRect()
-      link = { open: true, x: rect?.left ?? 0, y: (rect?.bottom ?? 0) + 4, query: lk[1], index: 0, blockId: block.id }
+      const pos = clampPopoverPosition(
+        rect?.left ?? 0,
+        (rect?.bottom ?? 0) + 4,
+        280,
+        280,
+        { padding: 8, bottomInset: popoverBottomInset() },
+      )
+      link = {
+        open: true,
+        x: pos.left,
+        y: pos.top,
+        query: lk[1],
+        index: 0,
+        blockId: block.id,
+      }
     } else if (link.open) {
       link = { ...link, open: false }
     }
   }
 
   function slashKey(e) {
-    if (e.key === 'ArrowDown') { e.preventDefault(); slash.index = (slash.index + 1) % Math.max(1, slashFiltered.length); return true }
-    if (e.key === 'ArrowUp') { e.preventDefault(); slash.index = (slash.index - 1 + slashFiltered.length) % Math.max(1, slashFiltered.length); return true }
-    if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); pickSlash(slashFiltered[slash.index]); return true }
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeSlash(); return true }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      slash.index = (slash.index + 1) % Math.max(1, slashFiltered.length)
+      return true
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      slash.index =
+        (slash.index - 1 + slashFiltered.length) %
+        Math.max(1, slashFiltered.length)
+      return true
+    }
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault()
+      e.stopPropagation()
+      pickSlash(slashFiltered[slash.index])
+      return true
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      closeSlash()
+      return true
+    }
     return false
   }
   function pickSlash(sel) {
@@ -729,7 +1256,9 @@
     slash = { ...slash, open: false }
     if (i < 0 || !el) return
     // 去掉「/query」
-    const raw = readBlockMarkdown(el).replace(/\/[^\s/]*\s*$/, '').replace(/\/$/, '')
+    const raw = readBlockMarkdown(el)
+      .replace(/\/[^\s/]*\s*$/, '')
+      .replace(/\/$/, '')
     if (sel.key === 'divider') {
       replaceBlock(i, 'divider', '')
       const p = makeBlock('paragraph', raw)
@@ -738,15 +1267,20 @@
     } else if (sel.type === 'image') {
       // 图片：弹窗要地址（禁止把凭据/文件系统交给自动流程；纯 URL）
       const url = (prompt(t('editor.imagePrompt')) || '').trim()
-      if (url) insertImage(i, url, raw) // 已输入的文字留作图注，不丢
-      else { pendingFocus = { id: blocks[i].id, at: 'end' } }
+      if (url)
+        insertImage(i, url, raw) // 已输入的文字留作图注，不丢
+      else {
+        pendingFocus = { id: blocks[i].id, at: 'end' }
+      }
     } else if (sel.type === 'table') {
       // 起手表格（空白 3×3 或模板）；空白表头靠 th 加粗+底纹提示，焦点落首格
       const { rows, align } = buildTable(sel.key)
       const nb = replaceBlock(i, 'table', '', { meta: { rows, align } })
       tick().then(() => focusCell(nb.id, 0, 0))
     } else {
-      replaceBlock(i, sel.type || 'paragraph', raw, { meta: sel.meta ? { ...sel.meta } : {} })
+      replaceBlock(i, sel.type || 'paragraph', raw, {
+        meta: sel.meta ? { ...sel.meta } : {},
+      })
       pendingFocus = { id: blocks[i].id, at: 'end' }
     }
     scheduleSave()
@@ -754,10 +1288,28 @@
 
   function linkKey(e) {
     const list = linkFiltered
-    if (e.key === 'ArrowDown') { e.preventDefault(); link.index = (link.index + 1) % Math.max(1, list.length); return true }
-    if (e.key === 'ArrowUp') { e.preventDefault(); link.index = (link.index - 1 + list.length) % Math.max(1, list.length); return true }
-    if ((e.key === 'Enter' || e.key === 'Tab') && list.length) { e.preventDefault(); e.stopPropagation(); pickLink(list[link.index]); return true }
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); link = { ...link, open: false }; return true }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      link.index = (link.index + 1) % Math.max(1, list.length)
+      return true
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      link.index = (link.index - 1 + list.length) % Math.max(1, list.length)
+      return true
+    }
+    if ((e.key === 'Enter' || e.key === 'Tab') && list.length) {
+      e.preventDefault()
+      e.stopPropagation()
+      pickLink(list[link.index])
+      return true
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      link = { ...link, open: false }
+      return true
+    }
     return false
   }
   function pickLink(targetTitle) {
@@ -767,7 +1319,11 @@
     if (!el) return
     el.focus()
     // 删掉已输入的「[[query」，插入渲染后的 wikilink
-    replaceBeforeCaret(el, q.length + 2, `<a class="wikilink" data-target="${escapeHtml(targetTitle)}">${escapeHtml(targetTitle)}</a>&nbsp;`)
+    replaceBeforeCaret(
+      el,
+      q.length + 2,
+      `<a class="wikilink" data-target="${escapeHtml(targetTitle)}">${escapeHtml(targetTitle)}</a>&nbsp;`,
+    )
     const b = blocks.find((x) => x.id === link.blockId)
     if (b) b.text = readBlockMarkdown(el)
     scheduleSave()
@@ -797,7 +1353,8 @@
     e.preventDefault()
     const from = indexOfBlock(dragId)
     let to = indexOfBlock(block.id)
-    dragId = null; dropId = null
+    dragId = null
+    dropId = null
     if (from < 0 || to < 0 || from === to) return
     const [moved] = blocks.splice(from, 1)
     if (from < to) to -= 1
@@ -815,7 +1372,21 @@
     const r = ev?.currentTarget?.getBoundingClientRect()
     slashViaPlus = true
     tick().then(() => {
-      slash = { open: true, x: r ? r.left : 0, y: r ? r.bottom + 6 : 0, query: '', index: 0, blockId: nb.id }
+      const pos = clampPopoverPosition(
+        r ? r.left : 0,
+        r ? r.bottom + 6 : 0,
+        300,
+        280,
+        { padding: 8, bottomInset: popoverBottomInset() },
+      )
+      slash = {
+        open: true,
+        x: pos.left,
+        y: pos.top,
+        query: '',
+        index: 0,
+        blockId: nb.id,
+      }
     })
   }
   /** 关闭斜杠菜单；若是「+」开启且新块只剩裸「/」，清掉避免残留用户没打过的字符。 */
@@ -861,14 +1432,20 @@
     onClose?.()
   }
   function remove() {
-    if (!confirmDelete) { confirmDelete = true; return }
+    if (!confirmDelete) {
+      confirmDelete = true
+      return
+    }
     clearTimeout(saveTimer)
     onDelete(item)
   }
 
   /* ============ 顶栏「···」菜单 ============ */
   const menuItems = $derived([
-    { id: 'source', label: mode === 'source' ? t('editor.wysiwyg') : t('editor.source') },
+    {
+      id: 'source',
+      label: mode === 'source' ? t('editor.wysiwyg') : t('editor.source'),
+    },
     { id: 'pin', label: item?.pinned ? t('common.unpin') : t('common.pin') },
     { id: 'delete', label: t('common.delete'), danger: true },
   ])
@@ -886,12 +1463,27 @@
     return () => document.removeEventListener('selectionchange', handler)
   })
 
-  const CALLOUT_ICON = { note: Info, info: Info, tip: Lightbulb, warning: TriangleAlert, danger: OctagonAlert }
+  const CALLOUT_ICON = {
+    note: Info,
+    info: Info,
+    tip: Lightbulb,
+    warning: TriangleAlert,
+    danger: OctagonAlert,
+  }
 
-  const HEADING_EM = { 1: '1.875em', 2: '1.5em', 3: '1.25em', 4: '1.1em', 5: '1em', 6: '0.9em' }
+  const HEADING_EM = {
+    1: '1.875em',
+    2: '1.5em',
+    3: '1.25em',
+    4: '1.1em',
+    5: '1em',
+    6: '0.9em',
+  }
   /** 编辑元素样式：标题按级号定字号（列表缩进走 .ed-block 的 --depth）。 */
   function editStyle(block) {
-    return block.type === 'heading' ? `font-size:${HEADING_EM[block.meta?.level] || '1.875em'}` : ''
+    return block.type === 'heading'
+      ? `font-size:${HEADING_EM[block.meta?.level] || '1.875em'}`
+      : ''
   }
 
   const listNumber = (block, i) => {
@@ -899,7 +1491,8 @@
     let n = block.meta?.start ?? 1
     for (let j = i - 1; j >= 0; j -= 1) {
       const p = blocks[j]
-      if (p.type === 'numbered' && p.depth === block.depth) n = (p.meta?.start ?? 1) + (i - j)
+      if (p.type === 'numbered' && p.depth === block.depth)
+        n = (p.meta?.start ?? 1) + (i - j)
       if (p.type !== 'numbered' || p.depth < block.depth) break
     }
     return n
@@ -910,26 +1503,50 @@
   <div class="ed-topbar">
     <div class="ed-topbar__inner">
       {#if S.saveError}
-        <button type="button" class="ed-save is-error" onclick={retrySave} aria-live="polite">
+        <button
+          type="button"
+          class="ed-save is-error"
+          onclick={retrySave}
+          aria-live="polite"
+        >
           <TriangleAlert size={13} strokeWidth={2.2} />
           {t('editor.saveFailed')}
         </button>
       {:else}
-        <span class="ed-save" class:is-saving={saveState === 'saving'} aria-live="polite">
+        <span
+          class="ed-save"
+          class:is-saving={saveState === 'saving'}
+          aria-live="polite"
+        >
           {#if saveState === 'saving'}
             <span class="ed-save-dot"></span>{t('editor.saving')}
           {:else}
-            <Check class="ed-save-ic" size={13} strokeWidth={2.6} />{t('editor.saved')}
+            <Check class="ed-save-ic" size={13} strokeWidth={2.6} />{t(
+              'editor.saved',
+            )}
           {/if}
         </span>
       {/if}
       <div class="ed-spacer"></div>
       {#if item?.pinned}
-        <span class="ed-pinned" title={t('common.unpin')}><Pin size={13} fill="currentColor" /></span>
+        <span class="ed-pinned" title={t('common.unpin')}
+          ><Pin size={13} fill="currentColor" /></span
+        >
       {/if}
-      <Menu items={menuItems} onselect={onMenuSelect} align="end" ariaLabel={t('editor.more')}>
+      <Menu
+        items={menuItems}
+        onselect={onMenuSelect}
+        align="end"
+        ariaLabel={t('editor.more')}
+      >
         {#snippet trigger({ open, toggle })}
-          <button type="button" class="ed-icon" onclick={toggle} aria-expanded={open} title={t('editor.more')}>
+          <button
+            type="button"
+            class="ed-icon"
+            onclick={toggle}
+            aria-expanded={open}
+            title={t('editor.more')}
+          >
             <MoreHorizontal size={18} />
           </button>
         {/snippet}
@@ -939,8 +1556,16 @@
   {#if confirmDelete}
     <div class="ed-confirm" role="alertdialog">
       <span>{t('editor.confirmDeleteQ')}</span>
-      <button type="button" class="ed-confirm__cancel" onclick={() => (confirmDelete = false)}>{t('common.cancel')}</button>
-      <button type="button" class="ed-confirm__go" onclick={() => onDelete(item)}>{t('common.delete')}</button>
+      <button
+        type="button"
+        class="ed-confirm__cancel"
+        onclick={() => (confirmDelete = false)}>{t('common.cancel')}</button
+      >
+      <button
+        type="button"
+        class="ed-confirm__go"
+        onclick={() => onDelete(item)}>{t('common.delete')}</button
+      >
     </div>
   {/if}
 {/snippet}
@@ -953,175 +1578,336 @@
           class="ed-title"
           bind:this={titleEl}
           bind:value={title}
+          enterkeyhint="next"
+          autocomplete="off"
+          autocapitalize="sentences"
+          spellcheck="true"
           oninput={scheduleSave}
+          oncompositionstart={ime.compositionstart}
+          oncompositionend={(e) => ime.compositionend(e)}
+          oncompositioncancel={ime.compositioncancel}
           placeholder={t('editor.titlePlaceholder')}
           aria-label={t('library.fieldTitle')}
         />
         {#if item.updatedAt || item.tags?.length}
           <div class="ed-meta">
-            {#if item.updatedAt}<span class="ed-meta__time">{metaWhen(item.updatedAt)}</span>{/if}
-            {#each (item.tags || []).slice(0, 2) as tag (tag)}<CategoryChip {tag} />{/each}
+            {#if item.updatedAt}<span class="ed-meta__time"
+                >{metaWhen(item.updatedAt)}</span
+              >{/if}
+            {#each (item.tags || []).slice(0, 2) as tag (tag)}<CategoryChip
+                {tag}
+              />{/each}
             {#if (item.tags || []).length > 2}
-              <span class="ed-meta__more">{t('reader.tagsMore', { count: item.tags.length - 2 })}</span>
+              <span class="ed-meta__more"
+                >{t('reader.tagsMore', { count: item.tags.length - 2 })}</span
+              >
             {/if}
           </div>
         {/if}
 
         {#if mode === 'source'}
-          <textarea class="ed-source" value={sourceText} oninput={onSourceInput} spellcheck="false" aria-label={t('editor.source')}></textarea>
+          <textarea
+            class="ed-source"
+            value={sourceText}
+            oninput={onSourceInput}
+            spellcheck="false"
+            aria-label={t('editor.source')}
+          ></textarea>
         {:else}
           <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
           <div class="ed-blocks" onclick={onBodyClick}>
             {#each blocks as block, i (block.id)}
               {#if block.id !== dupHeadingId && !hiddenIds.has(block.id)}
-              <div
-                class="ed-row ed-row--{block.type}"
-                class:is-drop={dropId === block.id}
-                class:is-drag={dragId === block.id}
-                ondragover={(e) => onDragOver(block, e)}
-                ondrop={(e) => onDrop(block, e)}
-                role="listitem"
-              >
-                <div class="ed-gutter">
-                  <button type="button" class="ed-handle" title={t('editor.addBlock')} onclick={(e) => addBlockAfter(block, e)} tabindex="-1"><Plus size={15} /></button>
-                  <button
-                    type="button" class="ed-handle ed-handle--grip" title={t('editor.dragBlock')} tabindex="-1"
-                    draggable="true"
-                    ondragstart={(e) => onDragStart(block, e)}
-                    ondragend={() => { dragId = null; dropId = null }}
-                  ><GripVertical size={15} /></button>
-                </div>
+                <div
+                  class="ed-row ed-row--{block.type}"
+                  class:is-drop={dropId === block.id}
+                  class:is-drag={dragId === block.id}
+                  ondragover={(e) => onDragOver(block, e)}
+                  ondrop={(e) => onDrop(block, e)}
+                  role="listitem"
+                >
+                  <div class="ed-gutter">
+                    <button
+                      type="button"
+                      class="ed-handle"
+                      title={t('editor.addBlock')}
+                      onclick={(e) => addBlockAfter(block, e)}
+                      tabindex="-1"><Plus size={15} /></button
+                    >
+                    <button
+                      type="button"
+                      class="ed-handle ed-handle--grip"
+                      title={t('editor.dragBlock')}
+                      tabindex="-1"
+                      draggable="true"
+                      ondragstart={(e) => onDragStart(block, e)}
+                      ondragend={() => {
+                        dragId = null
+                        dropId = null
+                      }}><GripVertical size={15} /></button
+                    >
+                  </div>
 
-                <div class="ed-block" style={block.depth ? `--depth:${block.depth}` : ''}>
-                  {#if block.type === 'divider'}
-                    <hr class="ed-hr" />
-                  {:else if block.type === 'code'}
-                    <div class="ed-codewrap">
-                      <textarea
-                        class="ed-code" spellcheck="false" value={block.text}
-                        placeholder={t('editor.codePlaceholder')}
-                        oninput={(e) => onCodeInput(block, e)}
-                        onkeydown={(e) => onCodeKeydown(block, e)}
-                        use:autoGrowInit
-                      ></textarea>
-                    </div>
-                  {:else if block.type === 'callout'}
-                    {@const CalloutIcon = CALLOUT_ICON[block.meta?.callout || 'note']}
-                    <div class="ed-callout ed-callout--{block.meta?.callout || 'note'}">
-                      <span class="ed-callout__icon" aria-hidden="true"><CalloutIcon size={17} /></span>
+                  <div
+                    class="ed-block"
+                    style={block.depth ? `--depth:${block.depth}` : ''}
+                  >
+                    {#if block.type === 'divider'}
+                      <hr class="ed-hr" />
+                    {:else if block.type === 'code'}
+                      <div class="ed-codewrap">
+                        <textarea
+                          class="ed-code"
+                          spellcheck="false"
+                          value={block.text}
+                          placeholder={t('editor.codePlaceholder')}
+                          oninput={(e) => onCodeInput(block, e)}
+                          onkeydown={(e) => onCodeKeydown(block, e)}
+                          use:autoGrowInit
+                        ></textarea>
+                      </div>
+                    {:else if block.type === 'callout'}
+                      {@const CalloutIcon =
+                        CALLOUT_ICON[block.meta?.callout || 'note']}
                       <div
-                        class="ed-edit ed-edit--callout"
+                        class="ed-callout ed-callout--{block.meta?.callout ||
+                          'note'}"
+                      >
+                        <span class="ed-callout__icon" aria-hidden="true"
+                          ><CalloutIcon size={17} /></span
+                        >
+                        <div
+                          class="ed-edit ed-edit--callout"
+                          contenteditable="true"
+                          role="textbox"
+                          tabindex="0"
+                          aria-multiline="false"
+                          data-ph={t('editor.blockPlaceholder')}
+                          use:editable={block}
+                          oninput={(e) => onInput(block, e.currentTarget, e)}
+                          onkeydown={(e) =>
+                            onKeydown(block, e.currentTarget, e)}
+                          oncompositionstart={ime.compositionstart}
+                          oncompositionend={(e) => ime.compositionend(e)}
+                          oncompositioncancel={ime.compositioncancel}
+                        ></div>
+                      </div>
+                    {:else if block.type === 'image'}
+                      <figure class="ed-figure">
+                        {#if block.meta?.src}
+                          <img
+                            class="ed-img"
+                            src={block.meta.src}
+                            alt={block.text}
+                            draggable="false"
+                          />
+                        {:else}
+                          <span class="ed-img-missing"
+                            >{t('editor.imageMissing')}</span
+                          >
+                        {/if}
+                        <figcaption
+                          class="ed-edit ed-figcap"
+                          contenteditable="true"
+                          role="textbox"
+                          tabindex="0"
+                          aria-multiline="false"
+                          data-ph={t('editor.imageCaption')}
+                          use:editable={block}
+                          oninput={(e) =>
+                            onImageCaptionInput(block, e.currentTarget)}
+                          onkeydown={(e) =>
+                            onImageCaptionKeydown(block, e.currentTarget, e)}
+                        ></figcaption>
+                      </figure>
+                    {:else if block.type === 'table'}
+                      {@const rows = block.meta?.rows || []}
+                      {@const cols = rows[0]?.length || 0}
+                      <div class="ed-tablewrap">
+                        <div class="ed-tablescroll">
+                          <table class="ed-table">
+                            <tbody>
+                              {#each rows as row, r (r)}
+                                <tr class="ed-tr">
+                                  {#each row as _cell, c (c)}
+                                    {@const colAlign =
+                                      block.meta?.align?.[c] ?? 'left'}
+                                    <svelte:element
+                                      this={r === 0 ? 'th' : 'td'}
+                                      class="ed-td"
+                                    >
+                                      <div
+                                        class="ed-cell"
+                                        contenteditable="true"
+                                        role="textbox"
+                                        tabindex="0"
+                                        aria-multiline="false"
+                                        style="text-align:{alignCss(colAlign)}"
+                                        use:tableCell={{
+                                          blockId: block.id,
+                                          r,
+                                          c,
+                                        }}
+                                        oninput={(e) =>
+                                          onCellInput(
+                                            block,
+                                            r,
+                                            c,
+                                            e.currentTarget,
+                                          )}
+                                        onkeydown={(e) =>
+                                          onCellKeydown(block, r, c, e)}
+                                      ></div>
+                                      {#if r === 0}
+                                        {@const AlignIcon =
+                                          ALIGN_ICON[colAlign]}
+                                        <button
+                                          type="button"
+                                          class="ed-talign"
+                                          tabindex="-1"
+                                          title={t('editor.tableAlign')}
+                                          onmousedown={(e) => {
+                                            e.preventDefault()
+                                            cycleColAlign(block, c)
+                                          }}
+                                          aria-label={t('editor.tableAlign')}
+                                          ><AlignIcon size={12} /></button
+                                        >
+                                        <button
+                                          type="button"
+                                          class="ed-tdel ed-tdel--col"
+                                          tabindex="-1"
+                                          title={t('editor.tableDelCol')}
+                                          onmousedown={(e) => {
+                                            e.preventDefault()
+                                            delTableCol(block, c)
+                                          }}
+                                          aria-label={t('editor.tableDelCol')}
+                                          ><Trash2 size={11} /></button
+                                        >
+                                      {/if}
+                                      {#if c === 0 && r > 0}
+                                        <button
+                                          type="button"
+                                          class="ed-tdel ed-tdel--row"
+                                          tabindex="-1"
+                                          title={t('editor.tableDelRow')}
+                                          onmousedown={(e) => {
+                                            e.preventDefault()
+                                            delTableRow(block, r)
+                                          }}
+                                          aria-label={t('editor.tableDelRow')}
+                                          ><Trash2 size={11} /></button
+                                        >
+                                      {/if}
+                                    </svelte:element>
+                                  {/each}
+                                </tr>
+                              {/each}
+                            </tbody>
+                          </table>
+                        </div>
+                        <button
+                          type="button"
+                          class="ed-tadd ed-tadd--col"
+                          tabindex="-1"
+                          title={t('editor.tableAddCol')}
+                          onmousedown={(e) => {
+                            e.preventDefault()
+                            addTableCol(block)
+                          }}
+                          aria-label={t('editor.tableAddCol')}
+                          ><Plus size={13} /></button
+                        >
+                        <button
+                          type="button"
+                          class="ed-tadd ed-tadd--row"
+                          tabindex="-1"
+                          title={t('editor.tableAddRow')}
+                          onmousedown={(e) => {
+                            e.preventDefault()
+                            addTableRow(block)
+                          }}
+                          aria-label={t('editor.tableAddRow')}
+                          ><Plus size={13} /></button
+                        >
+                      </div>
+                    {:else}
+                      {#if block.type === 'heading' && foldableCount(i) > 0}
+                        <button
+                          type="button"
+                          class="ed-fold"
+                          class:is-collapsed={collapsed.has(block.id)}
+                          onclick={() => toggleCollapse(block.id)}
+                          tabindex="-1"
+                          aria-expanded={!collapsed.has(block.id)}
+                          title={collapsed.has(block.id)
+                            ? t('editor.headingExpand')
+                            : t('editor.headingCollapse')}
+                          aria-label={collapsed.has(block.id)
+                            ? t('editor.headingExpand')
+                            : t('editor.headingCollapse')}
+                          ><ChevronRight size={16} /></button
+                        >
+                      {/if}
+                      {#if block.type === 'todo'}
+                        <button
+                          type="button"
+                          class="ed-check"
+                          class:is-done={block.meta?.checked}
+                          onclick={() => toggleTodo(block)}
+                          aria-label={t('editor.slTodo')}
+                          tabindex="-1"
+                        >
+                          {#if block.meta?.checked}<Check
+                              size={13}
+                              strokeWidth={3}
+                            />{/if}
+                        </button>
+                      {:else if block.type === 'bullet'}
+                        <span
+                          class="ed-bullet ed-bullet--{(block.depth || 0) % 3}"
+                          aria-hidden="true"
+                        ></span>
+                      {:else if block.type === 'numbered'}
+                        <span class="ed-num" aria-hidden="true"
+                          >{listNumber(block, i)}.</span
+                        >
+                      {/if}
+                      <div
+                        class="ed-edit ed-edit--{block.type}"
+                        class:is-done={block.type === 'todo' &&
+                          block.meta?.checked}
+                        style={editStyle(block)}
                         contenteditable="true"
-                        role="textbox" tabindex="0" aria-multiline="false"
-                        data-ph={t('editor.blockPlaceholder')}
+                        role="textbox"
+                        tabindex="0"
+                        aria-multiline="false"
+                        data-ph={block.type === 'heading'
+                          ? t('editor.headingPlaceholder')
+                          : t('editor.blockPlaceholder')}
                         use:editable={block}
                         oninput={(e) => onInput(block, e.currentTarget, e)}
                         onkeydown={(e) => onKeydown(block, e.currentTarget, e)}
+                        oncompositionstart={ime.compositionstart}
+                        oncompositionend={(e) => ime.compositionend(e)}
+                        oncompositioncancel={ime.compositioncancel}
                       ></div>
-                    </div>
-                  {:else if block.type === 'image'}
-                    <figure class="ed-figure">
-                      {#if block.meta?.src}
-                        <img class="ed-img" src={block.meta.src} alt={block.text} draggable="false" />
-                      {:else}
-                        <span class="ed-img-missing">{t('editor.imageMissing')}</span>
+                      {#if block.type === 'heading' && collapsed.has(block.id)}
+                        <button
+                          type="button"
+                          class="ed-fold-count"
+                          onclick={() => toggleCollapse(block.id)}
+                          tabindex="-1"
+                          title={t('editor.headingExpand')}
+                          >{t('editor.foldedCount', {
+                            n: foldableCount(i),
+                          })}</button
+                        >
                       {/if}
-                      <figcaption
-                        class="ed-edit ed-figcap"
-                        contenteditable="true" role="textbox" tabindex="0" aria-multiline="false"
-                        data-ph={t('editor.imageCaption')}
-                        use:editable={block}
-                        oninput={(e) => onImageCaptionInput(block, e.currentTarget)}
-                        onkeydown={(e) => onImageCaptionKeydown(block, e.currentTarget, e)}
-                      ></figcaption>
-                    </figure>
-                  {:else if block.type === 'table'}
-                    {@const rows = block.meta?.rows || []}
-                    {@const cols = rows[0]?.length || 0}
-                    <div class="ed-tablewrap">
-                      <div class="ed-tablescroll">
-                        <table class="ed-table">
-                          <tbody>
-                            {#each rows as row, r (r)}
-                              <tr class="ed-tr">
-                                {#each row as _cell, c (c)}
-                                  {@const colAlign = block.meta?.align?.[c] ?? 'left'}
-                                  <svelte:element this={r === 0 ? 'th' : 'td'} class="ed-td">
-                                    <div
-                                      class="ed-cell"
-                                      contenteditable="true"
-                                      role="textbox" tabindex="0" aria-multiline="false"
-                                      style="text-align:{alignCss(colAlign)}"
-                                      use:tableCell={{ blockId: block.id, r, c }}
-                                      oninput={(e) => onCellInput(block, r, c, e.currentTarget)}
-                                      onkeydown={(e) => onCellKeydown(block, r, c, e)}
-                                    ></div>
-                                    {#if r === 0}
-                                      {@const AlignIcon = ALIGN_ICON[colAlign]}
-                                      <button type="button" class="ed-talign" tabindex="-1"
-                                        title={t('editor.tableAlign')} onmousedown={(e) => { e.preventDefault(); cycleColAlign(block, c) }}
-                                        aria-label={t('editor.tableAlign')}><AlignIcon size={12} /></button>
-                                      <button type="button" class="ed-tdel ed-tdel--col" tabindex="-1"
-                                        title={t('editor.tableDelCol')} onmousedown={(e) => { e.preventDefault(); delTableCol(block, c) }}
-                                        aria-label={t('editor.tableDelCol')}><Trash2 size={11} /></button>
-                                    {/if}
-                                    {#if c === 0 && r > 0}
-                                      <button type="button" class="ed-tdel ed-tdel--row" tabindex="-1"
-                                        title={t('editor.tableDelRow')} onmousedown={(e) => { e.preventDefault(); delTableRow(block, r) }}
-                                        aria-label={t('editor.tableDelRow')}><Trash2 size={11} /></button>
-                                    {/if}
-                                  </svelte:element>
-                                {/each}
-                              </tr>
-                            {/each}
-                          </tbody>
-                        </table>
-                      </div>
-                      <button type="button" class="ed-tadd ed-tadd--col" tabindex="-1"
-                        title={t('editor.tableAddCol')} onmousedown={(e) => { e.preventDefault(); addTableCol(block) }}
-                        aria-label={t('editor.tableAddCol')}><Plus size={13} /></button>
-                      <button type="button" class="ed-tadd ed-tadd--row" tabindex="-1"
-                        title={t('editor.tableAddRow')} onmousedown={(e) => { e.preventDefault(); addTableRow(block) }}
-                        aria-label={t('editor.tableAddRow')}><Plus size={13} /></button>
-                    </div>
-                  {:else}
-                    {#if block.type === 'heading' && foldableCount(i) > 0}
-                      <button
-                        type="button" class="ed-fold" class:is-collapsed={collapsed.has(block.id)}
-                        onclick={() => toggleCollapse(block.id)} tabindex="-1"
-                        aria-expanded={!collapsed.has(block.id)}
-                        title={collapsed.has(block.id) ? t('editor.headingExpand') : t('editor.headingCollapse')}
-                        aria-label={collapsed.has(block.id) ? t('editor.headingExpand') : t('editor.headingCollapse')}
-                      ><ChevronRight size={16} /></button>
                     {/if}
-                    {#if block.type === 'todo'}
-                      <button type="button" class="ed-check" class:is-done={block.meta?.checked} onclick={() => toggleTodo(block)} aria-label={t('editor.slTodo')} tabindex="-1">
-                        {#if block.meta?.checked}<Check size={13} strokeWidth={3} />{/if}
-                      </button>
-                    {:else if block.type === 'bullet'}
-                      <span class="ed-bullet ed-bullet--{(block.depth || 0) % 3}" aria-hidden="true"></span>
-                    {:else if block.type === 'numbered'}
-                      <span class="ed-num" aria-hidden="true">{listNumber(block, i)}.</span>
-                    {/if}
-                    <div
-                      class="ed-edit ed-edit--{block.type}"
-                      class:is-done={block.type === 'todo' && block.meta?.checked}
-                      style={editStyle(block)}
-                      contenteditable="true"
-                      role="textbox" tabindex="0"
-                      aria-multiline="false"
-                      data-ph={block.type === 'heading' ? t('editor.headingPlaceholder') : t('editor.blockPlaceholder')}
-                      use:editable={block}
-                      oninput={(e) => onInput(block, e.currentTarget, e)}
-                      onkeydown={(e) => onKeydown(block, e.currentTarget, e)}
-                    ></div>
-                    {#if block.type === 'heading' && collapsed.has(block.id)}
-                      <button type="button" class="ed-fold-count" onclick={() => toggleCollapse(block.id)} tabindex="-1"
-                        title={t('editor.headingExpand')}>{t('editor.foldedCount', { n: foldableCount(i) })}</button>
-                    {/if}
-                  {/if}
+                  </div>
                 </div>
-              </div>
               {/if}
             {/each}
           </div>
@@ -1133,7 +1919,7 @@
 {/snippet}
 
 {#if inline}
-  <div class="ed-pane">
+  <div class="ed-pane" class:has-keyboard={keyboardOpen}>
     {@render topbarUi()}
     {@render bodyUi()}
   </div>
@@ -1148,30 +1934,77 @@
     {#snippet header()}{@render topbarUi()}{/snippet}
     {@render bodyUi()}
     {#snippet actions()}
-      <button type="button" class="btn-primary" onclick={close}>{t('common.save')}</button>
+      <button type="button" class="btn-primary" onclick={close}
+        >{t('common.save')}</button
+      >
     {/snippet}
   </LifeOsSheet>
 {/if}
 
 <!-- 选区格式工具条（气泡菜单） -->
 {#if toolbar.open}
-  <div class="ed-bubble" use:portal style="left:{toolbar.x}px; top:{toolbar.y}px">
-    <button type="button" class:is-on={toolbar.active.bold} onmousedown={(e) => e.preventDefault()} onclick={() => applyFormat('bold')} title={t('editor.bold')}><Bold size={15} /></button>
-    <button type="button" class:is-on={toolbar.active.italic} onmousedown={(e) => e.preventDefault()} onclick={() => applyFormat('italic')} title={t('editor.italic')}><Italic size={15} /></button>
-    <button type="button" class:is-on={toolbar.active.strike} onmousedown={(e) => e.preventDefault()} onclick={() => applyFormat('strike')} title={t('editor.strike')}><Strikethrough size={15} /></button>
-    <button type="button" class:is-on={toolbar.active.code} onmousedown={(e) => e.preventDefault()} onclick={() => applyFormat('code')} title={t('editor.inlineCode')}><Code size={15} /></button>
+  <div
+    class="ed-bubble"
+    use:portal
+    style="left:{toolbar.x}px; top:{toolbar.y}px"
+  >
+    <button
+      type="button"
+      class:is-on={toolbar.active.bold}
+      onmousedown={(e) => e.preventDefault()}
+      onclick={() => applyFormat('bold')}
+      title={t('editor.bold')}><Bold size={15} /></button
+    >
+    <button
+      type="button"
+      class:is-on={toolbar.active.italic}
+      onmousedown={(e) => e.preventDefault()}
+      onclick={() => applyFormat('italic')}
+      title={t('editor.italic')}><Italic size={15} /></button
+    >
+    <button
+      type="button"
+      class:is-on={toolbar.active.strike}
+      onmousedown={(e) => e.preventDefault()}
+      onclick={() => applyFormat('strike')}
+      title={t('editor.strike')}><Strikethrough size={15} /></button
+    >
+    <button
+      type="button"
+      class:is-on={toolbar.active.code}
+      onmousedown={(e) => e.preventDefault()}
+      onclick={() => applyFormat('code')}
+      title={t('editor.inlineCode')}><Code size={15} /></button
+    >
     <span class="ed-bubble-div" aria-hidden="true"></span>
-    <button type="button" class:is-on={toolbar.active.link} onmousedown={(e) => e.preventDefault()} onclick={() => applyFormat('link')} title={t('editor.link')}><Link2 size={15} /></button>
+    <button
+      type="button"
+      class:is-on={toolbar.active.link}
+      onmousedown={(e) => e.preventDefault()}
+      onclick={() => applyFormat('link')}
+      title={t('editor.link')}><Link2 size={15} /></button
+    >
   </div>
 {/if}
 
 <!-- 斜杠菜单 -->
 {#if slash.open && slashFiltered.length}
-  <div class="ed-menu ed-slashmenu" use:portal style="left:{slash.x}px; top:{slash.y}px">
+  <div
+    class="ed-menu ed-slashmenu"
+    use:portal
+    style="left:{slash.x}px; top:{slash.y}px"
+  >
     <div class="ed-menu-section">{t('editor.slSection')}</div>
     {#each slashFiltered as it, idx (it.key)}
-      <button type="button" class="ed-menu-item" class:is-active={idx === slash.index}
-        onmousedown={(e) => { e.preventDefault(); pickSlash(it) }}>
+      <button
+        type="button"
+        class="ed-menu-item"
+        class:is-active={idx === slash.index}
+        onmousedown={(e) => {
+          e.preventDefault()
+          pickSlash(it)
+        }}
+      >
         <span class="ed-menu-ic"><it.icon size={17} /></span>
         <span class="ed-menu-text">
           <span class="ed-menu-title">{it.label()}</span>
@@ -1187,8 +2020,15 @@
   <div class="ed-menu" use:portal style="left:{link.x}px; top:{link.y}px">
     <div class="ed-menu-section">{t('editor.linkSection')}</div>
     {#each linkFiltered as tt, idx (tt)}
-      <button type="button" class="ed-menu-item ed-menu-item--link" class:is-active={idx === link.index}
-        onmousedown={(e) => { e.preventDefault(); pickLink(tt) }}>
+      <button
+        type="button"
+        class="ed-menu-item ed-menu-item--link"
+        class:is-active={idx === link.index}
+        onmousedown={(e) => {
+          e.preventDefault()
+          pickLink(tt)
+        }}
+      >
         <span class="ed-menu-ic"><Link2 size={15} /></span>
         <span class="ed-menu-title">{tt}</span>
       </button>
@@ -1206,7 +2046,8 @@
     flex-direction: column;
     --wash: color-mix(in srgb, var(--t1, var(--text)) 6%, transparent);
     --wash-strong: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
-    --pop-shadow: 0 0 0 1px color-mix(in srgb, var(--t1, var(--text)) 6%, transparent),
+    --pop-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--t1, var(--text)) 6%, transparent),
       0 4px 12px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.18);
   }
 
@@ -1218,7 +2059,8 @@
     min-height: 0;
     --wash: color-mix(in srgb, var(--t1, var(--text)) 6%, transparent);
     --wash-strong: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
-    --pop-shadow: 0 0 0 1px color-mix(in srgb, var(--t1, var(--text)) 6%, transparent),
+    --pop-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--t1, var(--text)) 6%, transparent),
       0 4px 12px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.18);
   }
   /* 内联顶栏：左右 padding 与写作画布同源（64px），内容再收进 720 测量列 →
@@ -1249,7 +2091,9 @@
     margin-inline-start: var(--space-1-5, 6px);
     color: color-mix(in srgb, var(--t3, var(--text-muted)) 60%, transparent);
   }
-  .ed-meta__time:only-child::after { content: none; }
+  .ed-meta__time:only-child::after {
+    content: none;
+  }
   .ed-meta__more {
     font-size: var(--kn-meta, 12px);
     color: var(--t3);
@@ -1266,28 +2110,53 @@
     gap: var(--space-1);
     width: 100%;
   }
-  .ed-spacer { flex: 1; }
-  .ed-icon {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 30px; height: 30px;
-    border: none; background: transparent;
-    color: var(--t3, var(--text-muted)); border-radius: var(--radius-control, 8px);
-    cursor: pointer; transition: background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+  .ed-spacer {
+    flex: 1;
   }
-  .ed-icon:hover { background: var(--wash); color: var(--t1, var(--text)); }
+  .ed-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    color: var(--t3, var(--text-muted));
+    border-radius: var(--radius-control, 8px);
+    cursor: pointer;
+    transition:
+      background var(--motion-fast) var(--ease),
+      color var(--motion-fast) var(--ease);
+  }
+  .ed-icon:hover {
+    background: var(--wash);
+    color: var(--t1, var(--text));
+  }
   /* 保存状态：常显（✓已保存 / 正在保存… / 保存失败·重试），左侧指示这是编辑器 */
   .ed-save {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: var(--text-xs); font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: var(--text-xs);
+    font-weight: 500;
     color: var(--t2, var(--text-secondary));
-    border: none; background: transparent; padding: 0; font-family: inherit;
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-family: inherit;
   }
-  .ed-save :global(.ed-save-ic) { color: var(--feedback-success); }
+  .ed-save :global(.ed-save-ic) {
+    color: var(--feedback-success);
+  }
   .ed-save-dot {
-    width: 6px; height: 6px; border-radius: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
     background: var(--accent);
   }
-  .ed-save.is-saving { color: var(--t2, var(--text-secondary)); }
+  .ed-save.is-saving {
+    color: var(--t2, var(--text-secondary));
+  }
   .ed-save.is-saving .ed-save-dot {
     animation: ed-pulse 1s ease-in-out infinite;
   }
@@ -1297,35 +2166,67 @@
     text-decoration: underline;
     text-underline-offset: 2px;
   }
-  .ed-save.is-error:hover { filter: brightness(1.1); }
-  .ed-save.is-error:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-control); }
-  .ed-pinned { display: inline-flex; align-items: center; color: var(--accent); padding-inline: 2px; }
+  .ed-save.is-error:hover {
+    filter: brightness(1.1);
+  }
+  .ed-save.is-error:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: var(--radius-control);
+  }
+  .ed-pinned {
+    display: inline-flex;
+    align-items: center;
+    color: var(--accent);
+    padding-inline: 2px;
+  }
 
   /* 删除确认条 */
   .ed-confirm {
-    display: flex; align-items: center; gap: var(--space-2);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     margin: var(--space-2) var(--space-5) 0;
     padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-control, 8px);
     background: var(--feedback-danger-bg);
-    color: var(--t1, var(--text)); font-size: var(--text-sm);
+    color: var(--t1, var(--text));
+    font-size: var(--text-sm);
   }
-  .ed-confirm span { flex: 1; }
+  .ed-confirm span {
+    flex: 1;
+  }
   .ed-confirm button {
-    border: none; border-radius: var(--radius-control, 8px);
-    padding: 4px 12px; font-size: var(--text-sm); cursor: pointer;
+    border: none;
+    border-radius: var(--radius-control, 8px);
+    padding: 4px 12px;
+    font-size: var(--text-sm);
+    cursor: pointer;
   }
-  .ed-confirm__cancel { background: transparent; color: var(--t2, var(--text-secondary)); }
-  .ed-confirm__go { background: var(--feedback-danger); color: white; font-weight: 600; }
+  .ed-confirm__cancel {
+    background: transparent;
+    color: var(--t2, var(--text-secondary));
+  }
+  .ed-confirm__go {
+    background: var(--feedback-danger);
+    color: white;
+    font-weight: 600;
+  }
 
   /* ——— 滚动区 + 居中测量列（写作画布）——— */
   .ed-scroll {
     flex: 1;
     overflow-y: auto;
     overflow-x: clip;
-    padding: var(--space-5, 20px) 64px 34vh;
+    /* Comfort pad when keyboard closed (native shell already pads Dock on main). */
+    padding: var(--space-5, 20px) 64px 28vh;
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--t1, var(--text)) 16%, transparent) transparent;
+    scrollbar-color: color-mix(in srgb, var(--t1, var(--text)) 16%, transparent)
+      transparent;
+  }
+  /* Keyboard open: replace comfort pad — do not max() with 28vh (stacks with Dock). */
+  .ed-pane.has-keyboard .ed-scroll {
+    padding-bottom: calc(var(--keyboard-inset, 0px) + 48px);
   }
   .ed-canvas {
     max-width: 720px;
@@ -1334,21 +2235,34 @@
 
   .ed-title {
     width: 100%;
-    border: none; background: transparent; outline: none;
+    border: none;
+    background: transparent;
+    outline: none;
     font-family: inherit;
-    font-size: 2.15rem; font-weight: 750; line-height: 1.25;
+    font-size: 2.15rem;
+    font-weight: 750;
+    line-height: 1.25;
     letter-spacing: -0.01em;
     color: var(--t1, var(--text));
     padding: 0 0 var(--space-3, 12px);
   }
-  .ed-title::placeholder { color: var(--t3, var(--text-muted)); }
+  .ed-title::placeholder {
+    color: var(--t3, var(--text-muted));
+  }
 
   .ed-source {
-    display: block; width: 100%; min-height: 60vh;
-    border: none; background: transparent; resize: none; outline: none;
+    display: block;
+    width: 100%;
+    min-height: 60vh;
+    border: none;
+    background: transparent;
+    resize: none;
+    outline: none;
     font-family: var(--mono);
-    font-size: var(--text-base); line-height: 1.7;
-    color: var(--t1, var(--text)); tab-size: 2;
+    font-size: var(--text-base);
+    line-height: 1.7;
+    color: var(--t1, var(--text));
+    tab-size: 2;
   }
 
   /* ——— 块列表 ——— */
@@ -1357,57 +2271,106 @@
     line-height: var(--kn-body-leading, 1.65);
     caret-color: var(--accent);
   }
-  .ed-blocks :global(::selection) { background: color-mix(in srgb, var(--accent) 26%, transparent); }
+  .ed-blocks :global(::selection) {
+    background: color-mix(in srgb, var(--accent) 26%, transparent);
+  }
 
-  .ed-row { position: relative; }
-  .ed-row.is-drag { opacity: 0.35; }
+  .ed-row {
+    position: relative;
+  }
+  .ed-row.is-drag {
+    opacity: 0.35;
+  }
   .ed-row.is-drop::before {
-    content: ''; position: absolute; left: 0; right: 0; top: -1px; height: 2px;
-    background: var(--accent); border-radius: 2px;
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
   }
 
   .ed-gutter {
-    position: absolute; left: -46px; top: 0;
-    display: flex; align-items: center; gap: 1px;
-    height: 1.5em; padding-top: 0.1em;
-    opacity: 0; transition: opacity var(--motion-fast) var(--ease);
+    position: absolute;
+    left: -46px;
+    top: 0;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    height: 1.5em;
+    padding-top: 0.1em;
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--ease);
   }
   .ed-row:hover .ed-gutter,
-  .ed-gutter:focus-within { opacity: 1; }
-  .ed-row--heading .ed-gutter { height: auto; align-items: flex-start; padding-top: 0.4em; }
-  .ed-handle {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 20px; height: 22px;
-    border: none; background: transparent;
-    color: var(--t3, var(--text-muted));
-    border-radius: 5px; cursor: pointer;
-    transition: background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+  .ed-gutter:focus-within {
+    opacity: 1;
   }
-  .ed-handle:hover { background: var(--wash-strong); color: var(--t1, var(--text)); }
-  .ed-handle--grip { cursor: grab; }
-  .ed-handle--grip:active { cursor: grabbing; }
+  .ed-row--heading .ed-gutter {
+    height: auto;
+    align-items: flex-start;
+    padding-top: 0.4em;
+  }
+  .ed-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    color: var(--t3, var(--text-muted));
+    border-radius: 5px;
+    cursor: pointer;
+    transition:
+      background var(--motion-fast) var(--ease),
+      color var(--motion-fast) var(--ease);
+  }
+  .ed-handle:hover {
+    background: var(--wash-strong);
+    color: var(--t1, var(--text));
+  }
+  .ed-handle--grip {
+    cursor: grab;
+  }
+  .ed-handle--grip:active {
+    cursor: grabbing;
+  }
 
   .ed-block {
-    display: flex; align-items: flex-start; gap: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
     min-width: 0;
     padding: 3px 6px;
     margin-inline: calc(var(--depth, 0) * 26px - 6px) -6px;
     border-radius: 5px;
     transition: background var(--motion-fast) var(--ease);
   }
-  .ed-row:hover > .ed-block { background: var(--wash); }
+  .ed-row:hover > .ed-block {
+    background: var(--wash);
+  }
   .ed-row--divider:hover > .ed-block,
   .ed-row--code:hover > .ed-block,
   .ed-row--image:hover > .ed-block,
-  .ed-row--table:hover > .ed-block { background: transparent; }
+  .ed-row--table:hover > .ed-block {
+    background: transparent;
+  }
 
   .ed-edit {
-    flex: 1; min-width: 0; outline: none;
+    flex: 1;
+    min-width: 0;
+    outline: none;
     color: var(--t1, var(--text));
-    white-space: pre-wrap; word-break: break-word;
+    white-space: pre-wrap;
+    word-break: break-word;
     cursor: text; /* 始终可编辑：文本光标 + 悬浮块底纹（.ed-block）明示「点即改」 */
   }
-  .ed-edit:empty::before { content: ''; }
+  .ed-edit:empty::before {
+    content: '';
+  }
   .ed-edit--heading:empty::before,
   .ed-edit:focus:empty::before {
     content: attr(data-ph);
@@ -1415,65 +2378,130 @@
     pointer-events: none;
   }
 
-  .ed-edit--heading { font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; }
-  .ed-row--heading { margin-top: 1.3em; }
-  .ed-row--heading:first-child { margin-top: 0.2em; }
+  .ed-edit--heading {
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+  .ed-row--heading {
+    margin-top: 1.3em;
+  }
+  .ed-row--heading:first-child {
+    margin-top: 0.2em;
+  }
   .ed-edit--quote {
-    border-inline-start: 3px solid color-mix(in srgb, var(--t1, var(--text)) 30%, transparent);
+    border-inline-start: 3px solid
+      color-mix(in srgb, var(--t1, var(--text)) 30%, transparent);
     padding-inline-start: 14px;
     color: color-mix(in srgb, var(--t1, var(--text)) 82%, transparent);
   }
-  .ed-edit.is-done { color: var(--t3, var(--text-muted)); text-decoration: line-through; }
+  .ed-edit.is-done {
+    color: var(--t3, var(--text-muted));
+    text-decoration: line-through;
+  }
 
   /* 列表标记 */
   .ed-bullet {
-    flex: 0 0 auto; width: 1.5em; height: 1.5em;
-    display: inline-flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+    width: 1.5em;
+    height: 1.5em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   .ed-bullet::before {
-    content: ''; width: 6px; height: 6px;
+    content: '';
+    width: 6px;
+    height: 6px;
     background: color-mix(in srgb, var(--t1, var(--text)) 72%, transparent);
   }
-  .ed-bullet--0::before { border-radius: 50%; }
-  .ed-bullet--1::before { border-radius: 50%; background: transparent; box-shadow: inset 0 0 0 1.4px color-mix(in srgb, var(--t1, var(--text)) 60%, transparent); }
-  .ed-bullet--2::before { border-radius: 1px; }
+  .ed-bullet--0::before {
+    border-radius: 50%;
+  }
+  .ed-bullet--1::before {
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: inset 0 0 0 1.4px
+      color-mix(in srgb, var(--t1, var(--text)) 60%, transparent);
+  }
+  .ed-bullet--2::before {
+    border-radius: 1px;
+  }
   .ed-num {
-    flex: 0 0 auto; min-width: 1.5em; height: 1.5em;
-    display: inline-flex; align-items: center; justify-content: flex-end;
+    flex: 0 0 auto;
+    min-width: 1.5em;
+    height: 1.5em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
     padding-inline-end: 3px;
     color: color-mix(in srgb, var(--t1, var(--text)) 62%, transparent);
-    font-variant-numeric: tabular-nums; font-size: 0.95em;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.95em;
   }
 
   /* 待办勾选框 */
   .ed-check {
-    flex: 0 0 auto; margin-top: 0.2em;
-    width: 18px; height: 18px; padding: 0;
-    display: inline-flex; align-items: center; justify-content: center;
-    border: 1.5px solid color-mix(in srgb, var(--t1, var(--text)) 34%, transparent);
-    border-radius: 4px; background: transparent;
-    color: white; cursor: pointer;
-    transition: background var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease), transform var(--motion-fast) var(--ease);
+    flex: 0 0 auto;
+    margin-top: 0.2em;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid
+      color-mix(in srgb, var(--t1, var(--text)) 34%, transparent);
+    border-radius: 4px;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    transition:
+      background var(--motion-fast) var(--ease),
+      border-color var(--motion-fast) var(--ease),
+      transform var(--motion-fast) var(--ease);
   }
-  .ed-check:hover { border-color: color-mix(in srgb, var(--t1, var(--text)) 55%, transparent); }
+  .ed-check:hover {
+    border-color: color-mix(in srgb, var(--t1, var(--text)) 55%, transparent);
+  }
   .ed-check.is-done {
-    background: var(--accent); border-color: var(--accent);
+    background: var(--accent);
+    border-color: var(--accent);
   }
-  .ed-check.is-done:active { transform: scale(0.9); }
+  .ed-check.is-done:active {
+    transform: scale(0.9);
+  }
 
-  .ed-hr { width: 100%; border: none; border-top: 1px solid var(--border); margin: 6px 0; }
+  .ed-hr {
+    width: 100%;
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 6px 0;
+  }
 
-  .ed-codewrap { flex: 1; min-width: 0; }
+  .ed-codewrap {
+    flex: 1;
+    min-width: 0;
+  }
   .ed-code {
-    display: block; width: 100%;
-    border: 1px solid var(--border); border-radius: var(--radius-control, 8px);
+    display: block;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control, 8px);
     background: color-mix(in srgb, var(--t1, var(--text)) 4%, transparent);
     padding: 12px 16px;
-    font-family: var(--mono); font-size: var(--text-base); line-height: 1.55;
-    color: var(--t1, var(--text)); resize: none; outline: none; overflow: hidden;
+    font-family: var(--mono);
+    font-size: var(--text-base);
+    line-height: 1.55;
+    color: var(--t1, var(--text));
+    resize: none;
+    outline: none;
+    overflow: hidden;
     tab-size: 2;
   }
-  .ed-code:focus { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+  .ed-code:focus {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  }
 
   /* Callout 高亮块：背景更淡（8%），辨识主要靠左边框 + 图标，避免连续堆叠像 alert 面板 */
   .ed-callout {
@@ -1492,25 +2520,43 @@
     color: var(--cl-line, var(--cl));
     margin-top: 2px;
   }
-  .ed-callout .ed-edit { flex: 1; min-width: 0; }
-  .ed-callout--note, .ed-callout--info { --cl: var(--chart-hue-blue); }
-  .ed-callout--tip { --cl: var(--chart-hue-green); }
+  .ed-callout .ed-edit {
+    flex: 1;
+    min-width: 0;
+  }
+  .ed-callout--note,
+  .ed-callout--info {
+    --cl: var(--chart-hue-blue);
+  }
+  .ed-callout--tip {
+    --cl: var(--chart-hue-green);
+  }
   /* 黄色在米白底上对比最弱：边框/图标向文字色加深一档（背景仍浅） */
   .ed-callout--warning {
     --cl: var(--chart-hue-yellow);
-    --cl-line: color-mix(in srgb, var(--chart-hue-yellow) 68%, var(--t1, var(--text)));
+    --cl-line: color-mix(
+      in srgb,
+      var(--chart-hue-yellow) 68%,
+      var(--t1, var(--text))
+    );
   }
-  .ed-callout--danger { --cl: var(--chart-hue-red); }
+  .ed-callout--danger {
+    --cl: var(--chart-hue-red);
+  }
 
   /* 表格块（可编辑网格）—— 悬浮才露增删控件，静态干净 */
   .ed-tablewrap {
     position: relative;
     flex: 1;
     min-width: 0;
-    padding-right: 18px;  /* 右侧「加列」留位 */
+    padding-right: 18px; /* 右侧「加列」留位 */
     padding-bottom: 16px; /* 底部「加行」留位 */
   }
-  .ed-tablescroll { overflow-x: auto; scrollbar-width: thin; border-radius: var(--radius-control, 8px); }
+  .ed-tablescroll {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    border-radius: var(--radius-control, 8px);
+  }
   .ed-table {
     border-collapse: collapse;
     width: 100%;
@@ -1537,98 +2583,208 @@
     color: var(--t1, var(--text));
     word-break: break-word;
   }
-  .ed-cell:focus { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 3px; }
+  .ed-cell:focus {
+    box-shadow: inset 0 0 0 2px
+      color-mix(in srgb, var(--accent) 55%, transparent);
+    border-radius: 3px;
+  }
   /* 删除行/列的小按钮：悬浮单元格才显 */
   .ed-tdel {
     position: absolute;
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 18px; height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
     border: 1px solid var(--border);
     border-radius: 5px;
     background: var(--wash-strong, var(--bg));
     color: var(--t3, var(--text-muted));
     cursor: pointer;
     opacity: 0;
-    transition: opacity var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+    transition:
+      opacity var(--motion-fast) var(--ease),
+      color var(--motion-fast) var(--ease);
     z-index: 2;
   }
-  .ed-tdel:hover { color: var(--feedback-danger); border-color: var(--feedback-danger); }
-  .ed-tdel--col { top: -10px; inset-inline-end: 3px; }
-  .ed-tdel--row { top: 50%; inset-inline-start: -10px; transform: translateY(-50%); }
-  .ed-td:hover > .ed-tdel, .ed-cell:focus ~ .ed-tdel { opacity: 1; }
+  .ed-tdel:hover {
+    color: var(--feedback-danger);
+    border-color: var(--feedback-danger);
+  }
+  .ed-tdel--col {
+    top: -10px;
+    inset-inline-end: 3px;
+  }
+  .ed-tdel--row {
+    top: 50%;
+    inset-inline-start: -10px;
+    transform: translateY(-50%);
+  }
+  .ed-td:hover > .ed-tdel,
+  .ed-cell:focus ~ .ed-tdel {
+    opacity: 1;
+  }
   /* 加行/加列 */
   .ed-tadd {
     position: absolute;
-    display: inline-flex; align-items: center; justify-content: center;
-    border: 1px dashed color-mix(in srgb, var(--t1, var(--text)) 22%, transparent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed
+      color-mix(in srgb, var(--t1, var(--text)) 22%, transparent);
     border-radius: var(--radius-control, 8px);
     background: transparent;
     color: var(--t3, var(--text-muted));
     cursor: pointer;
     opacity: 0;
-    transition: opacity var(--motion-fast) var(--ease), background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+    transition:
+      opacity var(--motion-fast) var(--ease),
+      background var(--motion-fast) var(--ease),
+      color var(--motion-fast) var(--ease);
   }
-  .ed-tadd:hover { background: var(--wash); color: var(--t1, var(--text)); }
-  .ed-tadd--col { top: 0; bottom: 16px; inset-inline-end: 0; width: 15px; }
-  .ed-tadd--row { inset-inline: 0 18px; bottom: 0; height: 13px; }
-  .ed-tablewrap:hover .ed-tadd { opacity: 1; }
+  .ed-tadd:hover {
+    background: var(--wash);
+    color: var(--t1, var(--text));
+  }
+  .ed-tadd--col {
+    top: 0;
+    bottom: 16px;
+    inset-inline-end: 0;
+    width: 15px;
+  }
+  .ed-tadd--row {
+    inset-inline: 0 18px;
+    bottom: 0;
+    height: 13px;
+  }
+  .ed-tablewrap:hover .ed-tadd {
+    opacity: 1;
+  }
   /* 列对齐切换：悬浮表头单元格才露，点一下循环 left→center→right */
   .ed-talign {
-    position: absolute; top: -10px; inset-inline-start: 3px;
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 18px; height: 18px;
-    border: 1px solid var(--border); border-radius: 5px;
+    position: absolute;
+    top: -10px;
+    inset-inline-start: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
     background: var(--wash-strong, var(--bg));
     color: var(--t3, var(--text-muted));
-    cursor: pointer; opacity: 0; z-index: 2;
-    transition: opacity var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+    cursor: pointer;
+    opacity: 0;
+    z-index: 2;
+    transition:
+      opacity var(--motion-fast) var(--ease),
+      color var(--motion-fast) var(--ease);
   }
-  .ed-talign:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
-  .ed-td:hover > .ed-talign, .ed-cell:focus ~ .ed-talign { opacity: 1; }
+  .ed-talign:hover {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  }
+  .ed-td:hover > .ed-talign,
+  .ed-cell:focus ~ .ed-talign {
+    opacity: 1;
+  }
 
   /* 标题折叠箭头：悬浮/折叠态才显，折叠时旋到 90° */
   .ed-fold {
-    flex: 0 0 auto; margin-top: 0.15em; margin-inline-start: -22px;
-    width: 18px; height: 18px; padding: 0;
-    display: inline-flex; align-items: center; justify-content: center;
-    border: none; background: transparent; border-radius: 4px;
-    color: var(--t3, var(--text-muted)); cursor: pointer;
+    flex: 0 0 auto;
+    margin-top: 0.15em;
+    margin-inline-start: -22px;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    color: var(--t3, var(--text-muted));
+    cursor: pointer;
     opacity: 0;
-    transition: opacity var(--motion-fast) var(--ease), background var(--motion-fast) var(--ease), transform var(--motion-fast) var(--ease);
+    transition:
+      opacity var(--motion-fast) var(--ease),
+      background var(--motion-fast) var(--ease),
+      transform var(--motion-fast) var(--ease);
   }
-  .ed-row--heading:hover .ed-fold, .ed-fold.is-collapsed { opacity: 1; }
-  .ed-fold:hover { background: var(--wash-strong); color: var(--t1, var(--text)); }
-  .ed-fold.is-collapsed { transform: rotate(90deg); }
+  .ed-row--heading:hover .ed-fold,
+  .ed-fold.is-collapsed {
+    opacity: 1;
+  }
+  .ed-fold:hover {
+    background: var(--wash-strong);
+    color: var(--t1, var(--text));
+  }
+  .ed-fold.is-collapsed {
+    transform: rotate(90deg);
+  }
   .ed-fold-count {
-    align-self: center; margin-inline-start: 8px;
-    padding: 1px 8px; border: none; border-radius: var(--radius-pill, 10px);
-    background: var(--wash); color: var(--t3, var(--text-muted));
-    font-size: var(--text-xs); font-weight: 500; cursor: pointer; white-space: nowrap;
-    transition: background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+    align-self: center;
+    margin-inline-start: 8px;
+    padding: 1px 8px;
+    border: none;
+    border-radius: var(--radius-pill, 10px);
+    background: var(--wash);
+    color: var(--t3, var(--text-muted));
+    font-size: var(--text-xs);
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background var(--motion-fast) var(--ease),
+      color var(--motion-fast) var(--ease);
   }
-  .ed-fold-count:hover { background: var(--wash-strong); color: var(--t1, var(--text)); }
+  .ed-fold-count:hover {
+    background: var(--wash-strong);
+    color: var(--t1, var(--text));
+  }
 
   /* 图片块：图 + 可编辑说明文字 */
-  .ed-figure { flex: 1; min-width: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .ed-figure {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
   .ed-img {
-    max-width: 100%; height: auto; border-radius: var(--radius-lg, 12px);
-    border: 1px solid var(--border); display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--border);
+    display: block;
   }
   .ed-img-missing {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 88px; padding: 20px;
-    border: 1px dashed color-mix(in srgb, var(--t1, var(--text)) 22%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 88px;
+    padding: 20px;
+    border: 1px dashed
+      color-mix(in srgb, var(--t1, var(--text)) 22%, transparent);
     border-radius: var(--radius-lg, 12px);
-    color: var(--t3, var(--text-muted)); font-size: var(--text-sm);
+    color: var(--t3, var(--text-muted));
+    font-size: var(--text-sm);
   }
   .ed-figcap {
-    font-size: var(--text-sm); color: var(--t3, var(--text-muted));
-    text-align: center; line-height: 1.5;
+    font-size: var(--text-sm);
+    color: var(--t3, var(--text-muted));
+    text-align: center;
+    line-height: 1.5;
   }
 
   /* 行内格式 */
-  .ed-edit :global(strong) { font-weight: 700; }
-  .ed-edit :global(mark), .ed-cell :global(mark) {
+  .ed-edit :global(strong) {
+    font-weight: 700;
+  }
+  .ed-edit :global(mark),
+  .ed-cell :global(mark) {
     background: color-mix(in srgb, var(--chart-hue-yellow) 30%, transparent);
     color: inherit;
     border-radius: 3px;
@@ -1637,16 +2793,26 @@
     -webkit-box-decoration-break: clone;
   }
   .ed-edit :global(code) {
-    font-family: var(--mono); font-size: 0.88em;
+    font-family: var(--mono);
+    font-size: 0.88em;
     background: color-mix(in srgb, var(--t1, var(--text)) 9%, transparent);
-    color: color-mix(in srgb, var(--feedback-danger) 88%, var(--t1, var(--text)));
-    padding: 0.14em 0.4em; border-radius: 4px;
+    color: color-mix(
+      in srgb,
+      var(--feedback-danger) 88%,
+      var(--t1, var(--text))
+    );
+    padding: 0.14em 0.4em;
+    border-radius: 4px;
   }
-  .ed-edit :global(a) { color: var(--accent); text-underline-offset: 2px; }
+  .ed-edit :global(a) {
+    color: var(--accent);
+    text-underline-offset: 2px;
+  }
   .ed-edit :global(a.wikilink) {
     text-decoration: none;
     background: var(--accent-bg, var(--accent-subtle));
-    padding: 0 4px; border-radius: var(--radius-control, 6px);
+    padding: 0 4px;
+    border-radius: var(--radius-control, 6px);
     color: color-mix(in srgb, var(--accent) 72%, var(--t1, var(--text)));
     box-decoration-break: clone;
   }
@@ -1655,79 +2821,170 @@
   .ed-bubble {
     position: fixed;
     transform: translate(-50%, calc(-100% - 8px));
-    display: flex; align-items: center; gap: 2px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
     background: var(--surface-1, var(--surface));
     border: 1px solid var(--border);
     border-radius: var(--radius-pill, 10px);
-    box-shadow: var(--pop-shadow); padding: 3px; z-index: 220;
+    box-shadow: var(--pop-shadow);
+    padding: 3px;
+    z-index: 220;
     animation: ed-pop 0.12s ease-out;
   }
   .ed-bubble button {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 30px; height: 30px; border: none; background: transparent;
-    color: var(--t1, var(--text)); border-radius: 7px; cursor: pointer;
-    transition: background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    color: var(--t1, var(--text));
+    border-radius: 7px;
+    cursor: pointer;
+    transition:
+      background var(--motion-fast) var(--ease),
+      color var(--motion-fast) var(--ease);
   }
-  .ed-bubble button:hover { background: var(--wash-strong); }
-  .ed-bubble button.is-on { background: var(--accent-bg, var(--accent-subtle)); color: var(--accent); }
-  .ed-bubble-div { width: 1px; height: 18px; margin: 0 2px; background: var(--border); }
+  .ed-bubble button:hover {
+    background: var(--wash-strong);
+  }
+  .ed-bubble button.is-on {
+    background: var(--accent-bg, var(--accent-subtle));
+    color: var(--accent);
+  }
+  .ed-bubble-div {
+    width: 1px;
+    height: 18px;
+    margin: 0 2px;
+    background: var(--border);
+  }
 
   /* ——— 弹出菜单（斜杠 / 双链）——— */
   .ed-menu {
     position: fixed;
-    min-width: 260px; max-height: 336px; overflow-y: auto;
+    min-width: 260px;
+    max-height: 336px;
+    overflow-y: auto;
     background: var(--surface-1, var(--surface));
     border: 1px solid var(--border);
     border-radius: var(--radius-lg, 12px);
     box-shadow: var(--pop-shadow);
-    padding: 6px; z-index: 220;
+    padding: 6px;
+    z-index: 220;
     animation: ed-pop-menu 0.12s ease-out;
   }
-  .ed-slashmenu { min-width: 300px; }
+  .ed-slashmenu {
+    min-width: 300px;
+  }
   .ed-menu-section {
     padding: 6px 10px 4px;
-    font-size: var(--text-2xs, 10px); font-weight: 600; letter-spacing: 0.05em;
-    text-transform: uppercase; color: var(--t3, var(--text-muted));
+    font-size: var(--text-2xs, 10px);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--t3, var(--text-muted));
   }
   .ed-menu-item {
-    display: flex; align-items: center; gap: 10px;
-    width: 100%; padding: 6px 8px;
-    border: none; background: transparent; border-radius: 8px;
-    color: var(--t1, var(--text)); text-align: start; cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    color: var(--t1, var(--text));
+    text-align: start;
+    cursor: pointer;
   }
-  .ed-menu-item.is-active { background: var(--wash); }
+  .ed-menu-item.is-active {
+    background: var(--wash);
+  }
   .ed-menu-ic {
     flex: 0 0 auto;
-    width: 34px; height: 34px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border: 1px solid var(--border); border-radius: 7px;
-    background: var(--surface-2, color-mix(in srgb, var(--t1, var(--text)) 3%, transparent));
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(
+      --surface-2,
+      color-mix(in srgb, var(--t1, var(--text)) 3%, transparent)
+    );
     color: var(--t2, var(--text-secondary));
   }
-  .ed-menu-item.is-active .ed-menu-ic { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
-  .ed-menu-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  .ed-menu-title { font-size: var(--text-base); font-weight: 500; }
-  .ed-menu-desc {
-    font-size: var(--text-xs); color: var(--t3, var(--text-muted));
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  .ed-menu-item.is-active .ed-menu-ic {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
   }
-  .ed-menu-item--link { padding: 8px; }
-  .ed-menu-item--link .ed-menu-ic { width: 28px; height: 28px; }
+  .ed-menu-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+  .ed-menu-title {
+    font-size: var(--text-base);
+    font-weight: 500;
+  }
+  .ed-menu-desc {
+    font-size: var(--text-xs);
+    color: var(--t3, var(--text-muted));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ed-menu-item--link {
+    padding: 8px;
+  }
+  .ed-menu-item--link .ed-menu-ic {
+    width: 28px;
+    height: 28px;
+  }
 
   @keyframes ed-pop {
-    from { opacity: 0; transform: translate(-50%, calc(-100% - 8px)) scale(0.97); }
+    from {
+      opacity: 0;
+      transform: translate(-50%, calc(-100% - 8px)) scale(0.97);
+    }
   }
   @keyframes ed-pop-menu {
-    from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
   }
-  @keyframes ed-fade { from { opacity: 0; } }
-  @keyframes ed-pulse { 50% { opacity: 0.35; } }
+  @keyframes ed-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes ed-pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
-    .ed-bubble, .ed-menu, .ed-save { animation: none; }
-    .ed-save-dot { animation: none; }
+    .ed-bubble,
+    .ed-menu,
+    .ed-save {
+      animation: none;
+    }
+    .ed-save-dot {
+      animation: none;
+    }
   }
   @media (max-width: 640px) {
-    .ed-scroll { padding-inline: var(--space-4, 16px); }
-    .ed-gutter { display: none; }
+    .ed-pane .ed-topbar,
+    .ed-scroll {
+      padding-inline: var(--space-4, 16px);
+    }
+    .ed-gutter {
+      display: none;
+    }
   }
 </style>

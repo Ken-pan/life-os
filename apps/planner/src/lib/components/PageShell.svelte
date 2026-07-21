@@ -10,8 +10,10 @@
    *              侧栏经 aside snippet 传入;移动端塌单栏。断点/gutter 见 app.css。
    *
    * 有意的独立版式(/settings 返回栏+设置卡、/triage 居中卡片)不走此壳,见 layout-invariants 豁免。
+   * Native shell: AppBar 不渲染；DomainMusicHeader 由 +layout 统一挂载。
    */
   import AppBar from './AppBar.svelte'
+  import { isIosNativeShell } from '@life-os/platform-web/ios-native-shell'
 
   /**
    * @type {{
@@ -43,10 +45,17 @@
     main,
     aside,
   } = $props()
+
+  const nativeShell = $derived(isIosNativeShell())
 </script>
 
-<div class="life-os-page-workspace">
-  <AppBar {title} {subtitle} {backHref} {backLabel} {historyBack} />
+<div
+  class="life-os-page-workspace"
+  class:life-os-page-workspace--native={nativeShell}
+>
+  {#if !nativeShell}
+    <AppBar {title} {subtitle} {backHref} {backLabel} {historyBack} />
+  {/if}
 
   {#if layout === 'split'}
     <div

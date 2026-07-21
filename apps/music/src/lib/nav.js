@@ -1,6 +1,6 @@
 /**
  * Life OS 导航 IA — MUSIC.OS
- * mobile/tablet：4 个 Primary Tab + More Sheet（与 Planner/Finance 对齐）
+ * mobile/tablet：Home · Search · Library · More
  * desktop：完整侧栏分组
  *
  * Contracts mirror: @life-os/contracts/nav NavItemModel / NavGroupModel
@@ -34,16 +34,7 @@ export function buildPrimaryNavItems(tr) {
       href: '/library',
       label: tr('nav.library'),
       icon: 'library',
-      // /import 有独立导航项（More 组），不在此归入 library，避免侧栏双高亮
       match: (p) => p.startsWith('/library'),
-    },
-    {
-      tab: 'playlists',
-      href: '/playlists',
-      label: tr('nav.playlists'),
-      icon: 'list',
-      // /liked 有独立导航项（More 组），不在此归入 playlists，避免侧栏双高亮
-      match: (p) => p.startsWith('/playlists'),
     },
   ]
 }
@@ -51,6 +42,13 @@ export function buildPrimaryNavItems(tr) {
 /** @param {(key: string, params?: Record<string, unknown>) => string} tr */
 export function buildMoreNavItems(tr) {
   return [
+    {
+      tab: 'playlists',
+      href: '/playlists',
+      label: tr('nav.playlists'),
+      icon: 'list',
+      match: (p) => p.startsWith('/playlists'),
+    },
     {
       tab: 'browse',
       href: '/browse',
@@ -118,8 +116,6 @@ export function resolvePrimaryNavTab(pathname) {
   if (pathname === '/') return 'home'
   if (pathname.startsWith('/search')) return 'search'
   if (pathname.startsWith('/library')) return 'library'
-  if (pathname.startsWith('/playlists')) return 'playlists'
-  // /import、/liked 属 More 组（与 /browse 一致）：底栏只点亮「更多」，不点亮 primary tab
   return ''
 }
 
@@ -127,18 +123,22 @@ export function resolvePrimaryNavTab(pathname) {
 export function resolveNavTab(pathname) {
   const primary = resolvePrimaryNavTab(pathname)
   if (primary) return primary
+  if (pathname.startsWith('/playlists')) return 'playlists'
   if (
     pathname.startsWith('/browse') ||
     pathname.startsWith('/album') ||
     pathname.startsWith('/artist')
   )
     return 'browse'
+  if (pathname.startsWith('/liked')) return 'liked'
+  if (pathname.startsWith('/import')) return 'import'
   if (pathname.startsWith('/settings')) return 'settings'
   return 'home'
 }
 
 /** @param {string} pathname */
 export function isMoreNavActive(pathname) {
+  if (pathname.startsWith('/playlists')) return true
   if (
     pathname.startsWith('/browse') ||
     pathname.startsWith('/album') ||
@@ -198,6 +198,7 @@ export function resolvePageBack(pathname) {
   if (pathname === '/import') return '/library'
   if (pathname === '/speed-dial') return '/'
   if (pathname === '/liked') return '/playlists'
+  if (pathname === '/settings') return '/library'
   if (pathname === '/auth') return '/settings'
   return null
 }

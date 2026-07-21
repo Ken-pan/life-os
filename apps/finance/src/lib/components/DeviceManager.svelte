@@ -67,7 +67,7 @@
   }
 </script>
 
-<div class="card">
+<div id="cloud" class="card">
   <div class="card-head">
     <h3 class="flush">{t('device.title')}</h3>
     <button type="button" class="icon-btn" onclick={() => supabase.auth.signOut()}>
@@ -81,6 +81,7 @@
       used: String(devices.length),
     })}
   </p>
+  <p class="muted-note">{t('device.ssoHint')}</p>
 
   {#if err}
     <p class="text-critical">{err}</p>

@@ -1,10 +1,24 @@
 <script>
   // Port of src/components/TxnEntryDrawer.tsx.
+  import { onMount } from 'svelte'
   import { t, locale } from '$lib/i18n.svelte.js'
   import { getTransactionsStore } from '$lib/transactions.svelte.js'
   import { toTxnPayload } from '$lib/txnPayload.js'
-  import { categoryDisplayLabel, DEFAULT_CATEGORY_KEYS } from '../../copy/categories.js'
+  import {
+    categoryDisplayLabel,
+    DEFAULT_CATEGORY_KEYS,
+  } from '../../copy/categories.js'
   import { money, formatDateLocalized } from '$lib/format.js'
+  import { sensory } from '@life-os/platform-web/kenos-sensory'
+  import {
+    clearMoneyOverlay,
+    setMoneyOverlay,
+  } from '$lib/kenos/financeSpaceAdapter.js'
+
+  onMount(() => {
+    setMoneyOverlay('compose')
+    return () => clearMoneyOverlay()
+  })
 
   /** @param {number} [offsetDays] */
   function localToday(offsetDays = 0) {
@@ -47,14 +61,24 @@
       if (txn.inSpending && txn.category && txn.category !== 'Uncategorized') {
         catCount.set(txn.category, (catCount.get(txn.category) ?? 0) + 1)
       }
-      if (txn.merchant && txn.merchant !== 'Manual' && !merchants.includes(txn.merchant)) {
+      if (
+        txn.merchant &&
+        txn.merchant !== 'Manual' &&
+        !merchants.includes(txn.merchant)
+      ) {
         merchants.push(txn.merchant)
       }
-      if (txn.account && txn.account !== 'Manual' && !accounts.includes(txn.account)) {
+      if (
+        txn.account &&
+        txn.account !== 'Manual' &&
+        !accounts.includes(txn.account)
+      ) {
         accounts.push(txn.account)
       }
     }
-    const recentCats = [...catCount.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c)
+    const recentCats = [...catCount.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([c]) => c)
     const merged = [...new Set([...recentCats, ...DEFAULT_CATEGORY_KEYS])]
     const seenLabels = new Set()
     const categories = merged
@@ -65,7 +89,11 @@
         return true
       })
       .slice(0, 10)
-    return { categories, merchants: merchants.slice(0, 12), accounts: accounts.slice(0, 6) }
+    return {
+      categories,
+      merchants: merchants.slice(0, 12),
+      accounts: accounts.slice(0, 6),
+    }
   })
 
   const amount = $derived(Number(amountText))
@@ -87,6 +115,7 @@
           amount,
         }),
       )
+      void sensory('success')
       if (keepOpen) {
         savedCount += 1
         lastSaved = `${category.trim() ? categoryDisplayLabel(category.trim()) : t('txn.uncategorized')} ${money(amount, privacy)}`
@@ -98,22 +127,31 @@
       }
     } catch (error) {
       err = error instanceof Error ? error.message : t('txn.saveFailed')
+      void sensory('error')
     } finally {
       busy = false
     }
   }
 </script>
 
-<div class="drawer-backdrop" onclick={onClose} role="presentation"></div>
-<aside class="drawer quick-txn">
+<div
+  class="drawer-backdrop kenos-drawer-backdrop"
+  onclick={onClose}
+  role="presentation"
+></div>
+<aside class="drawer kenos-drawer-panel quick-txn">
   <div class="drawer-head">
     <h2>
       {t('txn.title')}
       {#if savedCount > 0}
-        <span class="tag inline-meta">{t('txn.savedCount', { count: savedCount })}</span>
+        <span class="tag inline-meta"
+          >{t('txn.savedCount', { count: savedCount })}</span
+        >
       {/if}
     </h2>
-    <button type="button" class="icon-btn" onclick={onClose}>{t('common.close')}</button>
+    <button type="button" class="icon-btn" onclick={onClose}
+      >{t('common.close')}</button
+    >
   </div>
 
   <form
@@ -122,11 +160,23 @@
       void save(false)
     }}
   >
-    <div class="seg quick-txn-flow" role="radiogroup" aria-label={t('txn.flowType')}>
-      <button type="button" class={flow === 'expense' ? 'active' : ''} onclick={() => (flow = 'expense')}>
+    <div
+      class="seg quick-txn-flow"
+      role="radiogroup"
+      aria-label={t('txn.flowType')}
+    >
+      <button
+        type="button"
+        class={flow === 'expense' ? 'active' : ''}
+        onclick={() => (flow = 'expense')}
+      >
         {t('txn.expense')}
       </button>
-      <button type="button" class={flow === 'income' ? 'active' : ''} onclick={() => (flow = 'income')}>
+      <button
+        type="button"
+        class={flow === 'income' ? 'active' : ''}
+        onclick={() => (flow = 'income')}
+      >
         {t('txn.income')}
       </button>
       <button
@@ -176,7 +226,11 @@
     <div class="quick-txn-section">
       <span class="quick-txn-label">{t('txn.date')}</span>
       <div class="quick-txn-chips">
-        <button type="button" class="chip{date === today ? ' active' : ''}" onclick={() => (date = today)}>
+        <button
+          type="button"
+          class="chip{date === today ? ' active' : ''}"
+          onclick={() => (date = today)}
+        >
           {t('txn.today')}
         </button>
         <button
@@ -193,7 +247,9 @@
           bind:value={date}
           aria-label={t('txn.pickDate')}
         />
-        <span class="muted-note quick-txn-date-zh">{formatDateLocalized(date)}</span>
+        <span class="muted-note quick-txn-date-zh"
+          >{formatDateLocalized(date)}</span
+        >
       </div>
     </div>
 
@@ -203,7 +259,9 @@
       onclick={() => (showMore = !showMore)}
       aria-expanded={showMore}
     >
-      {showMore ? t('txn.merchantAccountToggleHide') : t('txn.merchantAccountToggleShow')}
+      {showMore
+        ? t('txn.merchantAccountToggleHide')
+        : t('txn.merchantAccountToggleShow')}
     </button>
     {#if showMore}
       <div class="quick-txn-section">
@@ -214,7 +272,8 @@
           list="quick-txn-merchants"
         />
         <datalist id="quick-txn-merchants">
-          {#each suggestions.merchants as m (m)}<option value={m}></option>{/each}
+          {#each suggestions.merchants as m (m)}<option value={m}
+            ></option>{/each}
         </datalist>
         {#if suggestions.accounts.length > 0}
           <div class="quick-txn-chips mt-2">
@@ -229,17 +288,28 @@
             {/each}
           </div>
         {/if}
-        <input class="input mt-2" bind:value={account} placeholder={t('txn.accountPlaceholder')} />
+        <input
+          class="input mt-2"
+          bind:value={account}
+          placeholder={t('txn.accountPlaceholder')}
+        />
       </div>
     {/if}
 
     {#if lastSaved}
-      <p class="muted-note quick-txn-saved">{t('txn.lastSaved', { detail: lastSaved })}</p>
+      <p class="muted-note quick-txn-saved">
+        {t('txn.lastSaved', { detail: lastSaved })}
+      </p>
     {/if}
     {#if err}<p class="text-critical mt-2">{err}</p>{/if}
 
     <div class="quick-txn-actions">
-      <button type="button" class="btn ghost" disabled={!valid || busy} onclick={() => void save(true)}>
+      <button
+        type="button"
+        class="btn ghost"
+        disabled={!valid || busy}
+        onclick={() => void save(true)}
+      >
         {t('common.saveAndContinue')}
       </button>
       <button class="btn" type="submit" disabled={!valid || busy}>

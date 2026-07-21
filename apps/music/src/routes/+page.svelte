@@ -34,6 +34,7 @@
     restoreLastSession,
     resumeSession,
   } from '$lib/player.svelte.js'
+  import { auth } from '$lib/auth.svelte.js'
   import { visibleWarm } from '$lib/visibleWarm.js'
   import { openUtilityPane, openNowPlaying } from '$lib/ui.svelte.js'
   import { prefetchTracksAudio } from '$lib/cloudAudio.js'
@@ -82,7 +83,10 @@
   onMount(async () => {
     hasOfflineTracks =
       (await db.tracks.filter((t) => t.audioBlob instanceof Blob).count()) > 0
-    scheduleLibraryMaintenance({ lyrics: false })
+    // Layout already schedules Continuity-deferred maintenance — avoid double scan.
+    if (!document.documentElement.dataset.iosNativeShell) {
+      scheduleLibraryMaintenance({ lyrics: false })
+    }
     await reloadHome()
   })
 
@@ -105,16 +109,13 @@
       getRecentTracks(8),
       getRecentlyAdded(6),
       getTopArtists(6),
-      getLikedTracks(),
+      getLikedTracks(64),
       trackCount(),
       restoreLastSession(),
       getSpeedDialPages(fatigueId),
     ])
     quickPicks = await getQuickPicks(speedDialTrackIds(speedDialPages), 6)
-    void prefetchTracksAudio(
-      [...recent, ...recentAdded, ...quickPicks],
-      24,
-    )
+    void prefetchTracksAudio([...recent, ...recentAdded, ...quickPicks], 24)
     scheduleHydrateRecentAudioCache(
       [...recent, ...recentAdded, ...quickPicks].map((tr) => tr.id),
       8,
@@ -432,6 +433,9 @@
         </div>
         <div class="mood-hero-actions">
           <a class="btn-primary" href="/import">{t('home.emptyAction')}</a>
+          {#if auth.ready && !auth.user}
+            <a class="btn-ghost" href="/auth">{t('home.emptyLogin')}</a>
+          {/if}
         </div>
       </section>
     {/if}

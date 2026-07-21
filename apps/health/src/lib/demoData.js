@@ -35,14 +35,38 @@ export function buildDemoHealth() {
     const wobble = (r() - 0.5) * 2 // [-1,1]
     const sleepHours = clamp(6.5 + progress * 0.9 + wobble * 0.6, 6.2, 8.2)
     const hrv = Math.round(clamp(48 + progress * 12 + wobble * 6, 42, 72))
-    const restingHR = Math.round(clamp(58 - progress * 5 + wobble * 2.5, 49, 61))
-    const steps = Math.round(clamp(6000 + progress * 3000 + wobble * 2200, 4800, 11200))
+    const restingHR = Math.round(
+      clamp(58 - progress * 5 + wobble * 2.5, 49, 61),
+    )
+    const steps = Math.round(
+      clamp(6000 + progress * 3000 + wobble * 2200, 4800, 11200),
+    )
+    const activeEnergyKcal = Math.round(
+      clamp(320 + progress * 220 + wobble * 80, 280, 620),
+    )
+    const exerciseMinutes = Math.round(
+      clamp(12 + progress * 25 + wobble * 8, 8, 55),
+    )
+    const standMinutes = Math.round(
+      clamp(40 + progress * 40 + wobble * 15, 30, 100),
+    )
+    // 历史训练日(不含今天),方便演示趋势;今日是否已练由实时 HealthKit 决定
+    const trainedDay = i === 3 || i === 7
     out.push({
       date: ymd(d),
       sleepHours: Number(sleepHours.toFixed(1)),
       restingHR,
       hrv,
       steps,
+      activeEnergyKcal,
+      exerciseMinutes,
+      standMinutes,
+      ...(trainedDay
+        ? {
+            workoutCount: 1,
+            workoutMinutes: Math.round(clamp(35 + wobble * 10, 28, 55)),
+          }
+        : {}),
     })
   }
   return out

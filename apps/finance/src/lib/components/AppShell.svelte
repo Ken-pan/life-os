@@ -21,8 +21,14 @@
     buildAppPath,
     parseAppPath,
   } from '@life-os/finance-core/routing/app-route'
-  import { liquidCashLabel, netWorthLabel } from '@life-os/finance-core/copy/terminology'
-  import { daysSince, formatDateForIntl } from '@life-os/finance-core/format/date'
+  import {
+    liquidCashLabel,
+    netWorthLabel,
+  } from '@life-os/finance-core/copy/terminology'
+  import {
+    daysSince,
+    formatDateForIntl,
+  } from '@life-os/finance-core/format/date'
   import { MOBILE_PRIMARY_TAB_IDS, isMoreNavActive } from '$lib/nav'
   import { t } from '$lib/i18n.svelte.js'
   import { getFinanceStore } from '$lib/finance.svelte.js'
@@ -56,7 +62,9 @@
 
   function readPwaSettings() {
     try {
-      const raw = JSON.parse(localStorage.getItem(PWA_SETTINGS_STORAGE_KEY) ?? 'null')
+      const raw = JSON.parse(
+        localStorage.getItem(PWA_SETTINGS_STORAGE_KEY) ?? 'null',
+      )
       return normalizePwaSettings(raw)
     } catch {
       return { ...DEFAULT_PWA_SETTINGS }
@@ -64,7 +72,9 @@
   }
 
   let pwaSettings = $state(
-    typeof localStorage === 'undefined' ? { ...DEFAULT_PWA_SETTINGS } : readPwaSettings(),
+    typeof localStorage === 'undefined'
+      ? { ...DEFAULT_PWA_SETTINGS }
+      : readPwaSettings(),
   )
 
   const ICON_BY_TAB = {
@@ -95,19 +105,29 @@
       label: t('nav.groupMoney'),
       items: [navItem('accounts'), navItem('history'), navItem('stocks')],
     },
-    { label: t('nav.groupPlan'), items: [navItem('forecast'), navItem('decision')] },
+    {
+      label: t('nav.groupPlan'),
+      items: [navItem('forecast'), navItem('decision')],
+    },
     { label: t('nav.groupReview'), items: [navItem('review')] },
   ])
   const settingsNavTab = $derived(navItem('settings'))
-  const allTabs = $derived([...navGroups.flatMap((g) => g.items), settingsNavTab])
+  const allTabs = $derived([
+    ...navGroups.flatMap((g) => g.items),
+    settingsNavTab,
+  ])
   const mobilePrimaryTabs = $derived(
-    MOBILE_PRIMARY_TAB_IDS.map((id) => allTabs.find((tab) => tab.id === id)).filter(Boolean),
+    MOBILE_PRIMARY_TAB_IDS.map((id) =>
+      allTabs.find((tab) => tab.id === id),
+    ).filter(Boolean),
   )
   const mobileMoreGroups = $derived([
     ...navGroups
       .map((group) => ({
         label: group.label,
-        items: group.items.filter((tab) => !MOBILE_PRIMARY_TAB_IDS.includes(tab.id)),
+        items: group.items.filter(
+          (tab) => !MOBILE_PRIMARY_TAB_IDS.includes(tab.id),
+        ),
       }))
       .filter((group) => group.items.length > 0),
     { label: t('nav.groupSettings'), items: [settingsNavTab] },
@@ -133,7 +153,10 @@
       return { title: t('nav.todayTitle'), subtitle: t('nav.todaySubtitle') }
     }
     const activeTab = allTabs.find((tabItem) => tabItem.id === currentTab)
-    return { title: activeTab?.title ?? t('nav.todayTitle'), subtitle: activeTab?.subtitle ?? '' }
+    return {
+      title: activeTab?.title ?? t('nav.todayTitle'),
+      subtitle: activeTab?.subtitle ?? '',
+    }
   })
 
   const stale = $derived(
@@ -146,7 +169,9 @@
       ? ''
       : finance.data.accounts.length === 0
         ? t('nav.noAccountsYet')
-        : t('nav.dataUpdated', { date: formatDateForIntl(finance.data.updatedAt) }),
+        : t('nav.dataUpdated', {
+            date: formatDateForIntl(finance.data.updatedAt),
+          }),
   )
 
   let moreSheet = $state(false)
@@ -229,7 +254,9 @@
     </div>
     <button
       type="button"
-      class="nav-item sidebar-foot-item{currentTab === settingsNavTab.id ? ' active' : ''}"
+      class="nav-item sidebar-foot-item{currentTab === settingsNavTab.id
+        ? ' active'
+        : ''}"
       onclick={() => switchTab(settingsNavTab.href)}
       aria-current={currentTab === settingsNavTab.id ? 'page' : undefined}
     >
@@ -238,9 +265,17 @@
     </button>
   </aside>
 
-  <div class="main-wrap" data-mobile-chrome={nativeShell ? 'kenos-domain' : 'tabbar'} class:kenos-native-shell={nativeShell}>
+  <div
+    class="main-wrap"
+    data-mobile-chrome={nativeShell ? 'kenos-domain' : 'tabbar'}
+    class:kenos-native-shell={nativeShell}
+  >
     {#if nativeShell}
-      <DomainMusicHeader title={pageHeader.title} domainLabel="Money" showCompose={true} />
+      <DomainMusicHeader
+        title={pageHeader.title}
+        domainLabel="Money"
+        showCompose={currentTab !== 'settings'}
+      />
     {:else}
       <AppBar
         title={pageHeader.title}
@@ -252,7 +287,8 @@
     <main class="content">
       <SyncErrorBanner
         subscribe={subscribeSyncError}
-        formatMessage={(reason) => `${t('sync.bannerPrefix')}${reason}${t('sync.bannerSuffix')}`}
+        formatMessage={(reason) =>
+          `${t('sync.bannerPrefix')}${reason}${t('sync.bannerSuffix')}`}
         dismissLabel={t('common.close')}
       />
       {#if stale}
@@ -262,11 +298,11 @@
     </main>
   </div>
 
-  <div class="bottom-shell" class:kenos-native-hidden={nativeShell}>
+  {#if !nativeShell}
+  <div class="bottom-shell">
     <nav
       class="mobile-tabbar{moreSheet ? ' is-backgrounded' : ''}"
       aria-label={t('nav.mainNavAria')}
-      hidden={nativeShell}
     >
       <div class="mobile-tabbar-inner">
         {#each mobilePrimaryTabs as tabItem (tabItem.id)}
@@ -283,7 +319,9 @@
         {/each}
         <button
           type="button"
-          class="mobile-tab{moreSheet || isMoreNavActive(currentTab) ? ' active' : ''}"
+          class="mobile-tab{moreSheet || isMoreNavActive(currentTab)
+            ? ' active'
+            : ''}"
           onclick={() => (moreSheet = !moreSheet)}
           aria-expanded={moreSheet}
           aria-haspopup="dialog"
@@ -295,9 +333,14 @@
       </div>
     </nav>
   </div>
+  {/if}
 
   {#if moreSheet && !nativeShell}
-    <div class="mobile-more-backdrop" onclick={() => (moreSheet = false)} aria-hidden="true"></div>
+    <div
+      class="mobile-more-backdrop"
+      onclick={() => (moreSheet = false)}
+      aria-hidden="true"
+    ></div>
     <div
       bind:this={moreSheetEl}
       class="mobile-more-sheet"
@@ -307,7 +350,9 @@
     >
       <div class="mobile-more-handle" aria-hidden="true"></div>
       <div class="mobile-more-header">
-        <h2 id="mobile-more-title" class="mobile-more-title">{t('common.more')}</h2>
+        <h2 id="mobile-more-title" class="mobile-more-title">
+          {t('common.more')}
+        </h2>
         <button
           type="button"
           class="mobile-more-close"
@@ -333,9 +378,15 @@
                 </span>
                 <span class="mobile-more-row-label">{item.label}</span>
                 {#if currentTab === item.id}
-                  <span class="mobile-more-row-check" aria-hidden="true">✓</span>
+                  <span class="mobile-more-row-check" aria-hidden="true">✓</span
+                  >
                 {:else}
-                  <ChevronRight class="mobile-more-row-chevron" size={18} strokeWidth={1.75} aria-hidden="true" />
+                  <ChevronRight
+                    class="mobile-more-row-chevron"
+                    size={18}
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
                 {/if}
               </button>
             {/each}
@@ -347,21 +398,9 @@
 </div>
 
 <style>
-  .bottom-shell.kenos-native-hidden,
-  .bottom-shell.kenos-native-hidden .mobile-tabbar {
-    display: none !important;
-  }
   .main-wrap.kenos-native-shell {
     /* Domain Dock owns bottom chrome — drop web tabbar inset */
     --mobile-content-inset-tabbar: 0px;
-  }
-  :global(html[data-ios-native-shell='true'] .mobile-tabbar),
-  :global(html[data-ios-native-shell='true'] .bottom-shell) {
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    height: 0 !important;
-    overflow: hidden !important;
   }
   :global(html[data-ios-native-shell='true'] aside) {
     display: none !important;
@@ -378,8 +417,8 @@
     box-sizing: border-box !important;
   }
   :global(html[data-ios-native-shell='true'] .domain-music-header) {
-    padding-top: 2px;
-    padding-bottom: 12px;
+    padding-top: 0;
+    padding-bottom: 8px;
     padding-inline: 16px;
   }
   :global(html[data-ios-native-shell='true'] header.app-header),

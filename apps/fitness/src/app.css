@@ -2275,8 +2275,8 @@ p {
 
 /* 堆叠块左对齐已下沉到共享 theme(components.css),fitness 不再本地覆盖。 */
 
-.set-row.settings-stack-block > .btn-danger,
-.settings-row.set-row.settings-stack-block > .btn-danger {
+.set-row.settings-stack-block>.btn-danger,
+.settings-row.set-row.settings-stack-block>.btn-danger {
   width: 100%;
   padding: 13px;
   letter-spacing: .08em;
@@ -2551,6 +2551,26 @@ p {
 .tw-btn.cancel:hover {
   color: var(--t2);
   border-color: var(--border-l);
+}
+
+.tw-btn.on {
+  color: var(--t1);
+  border-color: var(--border-l);
+  background: var(--bg-2);
+}
+
+.tw-btn.skip {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 35%, var(--border-l));
+}
+
+.tw-btn.skip:hover {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.tw.paused .tw-time {
+  opacity: .7;
 }
 
 .tw.show-done .tw-ctrls {
@@ -3111,7 +3131,7 @@ html[lang='en'] .mv-name {
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: opacity 160ms var(--ease-emphasized);
+  transition: opacity var(--kenos-motion-reduce) var(--ease-emphasized);
 }
 
 .bw-btn:disabled {
@@ -4137,7 +4157,15 @@ body:has(.focus-view) #main-content {
 
 .focus-view {
   padding-bottom: 0;
-  --focus-safe-top: var(--safe-top-effective, env(safe-area-inset-top, 0px));
+  /*
+   * Prefer native-injected inset, then CSS env(), then a Dynamic-Island floor.
+   * Never use --safe-top-effective (native shell forces it to 0 for Domain chrome).
+   */
+  --focus-safe-top: max(
+    59px,
+    var(--kenos-native-safe-top, 0px),
+    env(safe-area-inset-top, 0px)
+  );
   --focus-safe-bottom: env(safe-area-inset-bottom);
   --focus-gutter: 16px;
   --focus-hero-h: clamp(260px, 42vh, 420px);
@@ -4362,6 +4390,7 @@ body:has(.focus-view) #main-content {
   cursor: pointer;
   opacity: 0.85;
 }
+
 .focus-kenos-continue:hover {
   opacity: 1;
 }
@@ -4371,9 +4400,11 @@ body:has(.focus-view) #main-content {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--control-h);
-  height: var(--control-h);
-  margin-left: calc(-1 * (var(--control-h) - 18px) / 2);
+  width: max(var(--control-h), 44px);
+  height: max(var(--control-h), 44px);
+  min-width: 44px;
+  min-height: 44px;
+  margin-left: calc(-1 * (max(var(--control-h), 44px) - 18px) / 2);
   padding: 0;
   border-radius: 50%;
   color: var(--overlay-strong);
@@ -4381,6 +4412,8 @@ body:has(.focus-view) #main-content {
   border: 1px solid rgba(255, 255, 255, .1);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition:
     color var(--dur-fast) var(--ease-standard),
     background var(--dur-fast) var(--ease-standard),
@@ -4788,6 +4821,10 @@ body:has(.focus-view) #main-content {
   gap: 8px;
 }
 
+.focus-cta.focus-cta-skip-rest {
+  background: color-mix(in srgb, var(--green) 22%, var(--accent));
+}
+
 .focus-cta-ratio {
   font-family: var(--mono);
   font-size: var(--text-sm);
@@ -4855,10 +4892,11 @@ body:has(.focus-view) #main-content {
   position: fixed;
   top: calc(var(--focus-safe-top) + 52px);
   left: 50%;
-  z-index: 260;
+  /* 高于 SetLogSheet(350)，补录时仍能看/调休息 */
+  z-index: 360;
   display: flex;
-  width: min(calc(100vw - 72px), 304px);
-  max-width: calc(520px - 88px);
+  width: min(calc(100vw - 48px), 340px);
+  max-width: calc(520px - 64px);
   transform: translateX(-50%);
   flex-direction: column;
   align-items: center;
@@ -4977,6 +5015,21 @@ body:has(.focus-view) #main-content {
   color: var(--overlay-title);
   border-color: rgba(255, 255, 255, .14);
   background: rgba(255, 255, 255, .08);
+}
+
+.focus-timer-island .tw-btn.on {
+  color: var(--overlay-title);
+  border-color: rgba(255, 255, 255, .22);
+  background: rgba(255, 255, 255, .12);
+}
+
+.focus-timer-island .tw-btn.skip {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 40%, rgba(255, 255, 255, .08));
+}
+
+.focus-timer-island .tw.paused .tw-time {
+  opacity: .72;
 }
 
 .focus-timer-island .tw.show-done .tw-inner {
@@ -6635,4 +6688,18 @@ html[lang="en"] .stat-card .stat-v {
   .fab {
     right: max(var(--nav-trailing), var(--wrap-pad-x));
   }
+}
+
+/* Kenos Domain Mode — native dock owns bottom; hide/raise web FABs. */
+html[data-ios-native-shell='true'] .fab,
+html[data-ios-native-shell='true'] .fab-host,
+html[data-ios-native-shell='true'] .lib-top-fab {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Timer widget — clear Domain Dock (~80px) + safe area. */
+html[data-ios-native-shell='true'] .tw {
+  bottom: calc(80px + 18px + env(safe-area-inset-bottom, 0px)) !important;
 }

@@ -49,6 +49,15 @@ export const taskEditor = $state({
  *   projectId?: string | null,
  * }} [defaults] 新建任务时的默认值（如当前页面对应的日期）
  */
+/** Notify Kenos Domain dock / pad without circular static import. */
+function publishPlannerChromeSoon() {
+  queueMicrotask(() => {
+    import('$lib/kenos/plannerSpaceAdapter.js')
+      .then((m) => m.publishPlannerNavManifest())
+      .catch(() => {})
+  })
+}
+
 export function openTaskEditor(task = null, defaults = {}) {
   taskEditor.taskId = task?.id ?? null
   taskEditor.draft = task
@@ -60,6 +69,7 @@ export function openTaskEditor(task = null, defaults = {}) {
       })
   taskEditor.initialDraft = cloneTask(taskEditor.draft)
   taskEditor.open = true
+  publishPlannerChromeSoon()
 }
 
 /** 日历页当前选中的日期，供 FAB 新建任务时作为默认截止日期 */
@@ -72,6 +82,7 @@ export function closeTaskEditor() {
   taskEditor.taskId = null
   taskEditor.draft = null
   taskEditor.initialDraft = null
+  publishPlannerChromeSoon()
 }
 
 export const quickAdd = $state({ open: false, text: '' })
@@ -91,14 +102,17 @@ export const taskDrawer = $state({ open: false })
 
 export function openTaskDrawer() {
   taskDrawer.open = true
+  publishPlannerChromeSoon()
 }
 
 export function closeTaskDrawer() {
   taskDrawer.open = false
+  publishPlannerChromeSoon()
 }
 
 export function toggleTaskDrawer() {
   taskDrawer.open = !taskDrawer.open
+  publishPlannerChromeSoon()
 }
 
 export const schedulePopover = $state({
@@ -112,6 +126,7 @@ export function openSchedulePopover(taskId, dateKey) {
   schedulePopover.taskId = taskId
   schedulePopover.dateKey = dateKey
   schedulePopover.open = true
+  publishPlannerChromeSoon()
 }
 
 export function closeSchedulePopover() {
@@ -121,6 +136,7 @@ export function closeSchedulePopover() {
   if (typeof document !== 'undefined') {
     document.documentElement.classList.remove('planner-schedule-modal-open')
   }
+  publishPlannerChromeSoon()
 }
 
 export const scheduleSlot = $state({
@@ -144,6 +160,7 @@ export function openScheduleSlot(
   scheduleSlot.start = start
   scheduleSlot.durationMinutes = durationMinutes
   scheduleSlot.open = true
+  publishPlannerChromeSoon()
 }
 
 export function closeScheduleSlot() {
@@ -154,6 +171,7 @@ export function closeScheduleSlot() {
   if (typeof document !== 'undefined') {
     document.documentElement.classList.remove('planner-schedule-modal-open')
   }
+  publishPlannerChromeSoon()
 }
 
 /**

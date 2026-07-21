@@ -25,11 +25,13 @@ export default {
     recall: 'Recall',
     timeline: 'Timeline',
     settings: 'Settings',
+    quickSwitch: 'Quick Switch',
   },
   overview: {
     title: 'Overview',
     emptyTitle: 'Your memory is empty',
-    emptyDesc: 'Capture a few ideas, links or files in the Inbox and the shape of your knowledge base grows here.',
+    emptyDesc:
+      'Capture a few ideas, links or files in the Inbox and the shape of your knowledge base grows here.',
     todayTitle: 'What to handle today',
     actionInbox: '{count} recent captures to process',
     actionInboxEmpty: 'Recent captures look processed',
@@ -67,16 +69,19 @@ export default {
     title: 'Inbox',
     pendingCount: '{count} pending',
     captureLabel: 'Quick capture',
-    placeholder: 'Paste text or a link, or jot a thought… first line is the title, #tags auto-detected',
+    placeholder:
+      'Paste text or a link, or jot a thought… first line is the title, #tags auto-detected',
     captureButton: 'Capture',
     captureHint: '⌘/Ctrl + Enter to submit · bare URLs become links',
     addFile: 'Add file',
     importLabel: 'Drop .md / .txt files, or click to choose',
-    importHint: 'One file per item · filename becomes the title · #tags extracted',
+    importHint:
+      'One file per item · filename becomes the title · #tags extracted',
     pending: 'To process',
     recent: 'Recent captures',
     emptyTitle: 'Your brain is empty',
-    emptyDesc: 'Capture the first idea, link, or file — knowledge grows from here.',
+    emptyDesc:
+      'Capture the first idea, link, or file — knowledge grows from here.',
     weekSummary: '{week} captured this week · {total} in the library',
     autoHint: 'Rules: first line → title · #tags · bare URL → link',
     imported: 'Imported',
@@ -104,7 +109,8 @@ export default {
     emptyTitle: 'No matching items',
     emptyDesc: 'Try another keyword, or clear the tag filters.',
     welcomeTitle: 'No notes yet',
-    welcomeDesc: 'Write your first — ideas, clippings, lists. Jot it down; search and link it later.',
+    welcomeDesc:
+      'Write your first — ideas, clippings, lists. Jot it down; search and link it later.',
     welcomeCta: 'Write your first note',
     editorTitle: 'Edit item',
     fieldTitle: 'Title',
@@ -125,7 +131,8 @@ export default {
     statusReference: 'Reference',
     statusUnknown: 'Unlabeled',
     emptyTitle: 'No project notes',
-    emptyDesc: 'Tag a note with tags: [project] in its frontmatter and its status will be sensed here automatically.',
+    emptyDesc:
+      'Tag a note with tags: [project] in its frontmatter and its status will be sensed here automatically.',
     gitToday: 'Committed today',
     gitAgo: 'Committed {days}d ago',
     gitNone: 'No git history',
@@ -141,19 +148,23 @@ export default {
     applyAll: 'Update all ({count})',
     applied: 'Updated {count} project notes',
     driftTitle: 'Status drift',
-    driftDesc: 'Recorded status disagrees with the evidence (git activity / Planner). One click patches the frontmatter.',
+    driftDesc:
+      'Recorded status disagrees with the evidence (git activity / Planner). One click patches the frontmatter.',
     noDrift: 'All project notes match reality ✓',
     report: 'Generate status report',
     reportDone: 'Written to {path}',
     statusTitle: 'By status',
     statusCenter: 'projects',
-    plannerOffline: 'Not signed in to Life OS cloud — Planner linkage is off (Settings → Cloud).',
+    plannerOffline:
+      'Not signed in to Life OS cloud — Planner linkage is off (Settings → Cloud).',
     plannerError: 'Failed to read Planner: {message}',
     sensing: 'Sensing…',
   },
   cloud: {
     title: 'Cloud linkage',
     desc: 'Sign in with the unified Life OS account and the Projects view reads Planner projects & tasks directly (read-only, RLS scoped to you).',
+    ssoHint:
+      'Same Life OS account as Planner / Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
     email: 'Email',
     password: 'Password',
     signIn: 'Sign in',
@@ -168,7 +179,8 @@ export default {
     today: 'Today',
     yesterday: 'Yesterday',
     emptyTitle: 'Timeline is empty',
-    emptyDesc: 'Everything you capture lands here in time order — watch your thinking grow.',
+    emptyDesc:
+      'Everything you capture lands here in time order — watch your thinking grow.',
   },
   reader: {
     related: 'Related notes',
@@ -177,15 +189,18 @@ export default {
     context: 'Connections',
     contextOpen: 'Show connections',
     contextClose: 'Hide connections',
-    contextEmpty: 'No backlinks or related notes yet. Add [[wikilinks]] or wait for local search.',
+    contextEmpty:
+      'No backlinks or related notes yet. Add [[wikilinks]] or wait for local search.',
     projectNote: 'Project note',
     tagsMore: '+{count}',
   },
   workspace: {
     emptyDocFirstTitle: 'Your notes will show up here',
-    emptyDocFirstDesc: 'Write your first one on the left and it opens here to edit inline.',
+    emptyDocFirstDesc:
+      'Write your first one on the left and it opens here to edit inline.',
     emptyDocTitle: 'Pick a note, or start a new one',
-    emptyDocDesc: 'Open any note on the left to edit it right here, or create one to start writing.',
+    emptyDocDesc:
+      'Open any note on the left to edit it right here, or create one to start writing.',
   },
   group: {
     pinned: 'Pinned',
@@ -272,7 +287,8 @@ export default {
   },
   recall: {
     offlineTitle: 'Local AI not connected',
-    offlineDesc: 'Start the local-ai gateway (127.0.0.1:18888) and the vault retrieval service to recall across your whole knowledge base.',
+    offlineDesc:
+      'Start the local-ai gateway (127.0.0.1:18888) and the vault retrieval service to recall across your whole knowledge base.',
     serviceOn: 'Retrieval online',
     chunks: 'chunks',
     files: 'notes',
@@ -284,21 +300,30 @@ export default {
     sources: 'Sources',
     matches: 'Matches',
     hintTitle: 'Ask your second brain',
-    hintDesc: 'Natural-language questions, answered from your notes via local hybrid retrieval + LLM with citations; or "Search" for raw hits.',
+    hintDesc:
+      'Natural-language questions, answered from your notes via local hybrid retrieval + LLM with citations; or "Search" for raw hits.',
   },
   settings: {
     title: 'Settings',
+    appearance: 'Appearance',
     theme: 'Theme',
+    themeDesc: 'Choose System to follow the device light / dark mode',
     themeLight: 'Light',
     themeDark: 'Dark',
     themeAuto: 'System',
     language: 'Language',
-    vaultDesc: 'Native mode: items are .md files in your Vault directory, edits write straight to disk.',
+    languageDesc: 'Switch the interface language',
+    langZh: '中文',
+    langEn: 'English',
+    vaultDesc:
+      'Native mode: items are .md files in your Vault directory, edits write straight to disk.',
     vaultPath: 'Vault directory',
     vaultWatch: 'External change watch',
-    vaultWatchDesc: 'Auto-refresh when Obsidian / curator writes .md — no restart.',
+    vaultWatchDesc:
+      'Auto-refresh when Obsidian / curator writes .md — no restart.',
     dataTitle: 'Data',
-    dataDesc: 'Everything lives on this device (localStorage). Export JSON to back up, or import to merge.',
+    dataDesc:
+      'Everything lives on this device (localStorage). Export JSON to back up, or import to merge.',
     exportButton: 'Export JSON',
     importButton: 'Import JSON',
     importedCount: 'Merged {count} items',

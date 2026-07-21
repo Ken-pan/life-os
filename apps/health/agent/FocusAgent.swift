@@ -407,7 +407,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         case ("GET", "/health"):
             return (200, json(["days": readJsonl("health.jsonl", limit: 60)]))
         case ("POST", "/ingest"):
-            // 伴侣 app 投递健康样本:{days:[{date,sleepHours?,restingHR?,hrv?,steps?}]}
+            // Kenos iOS / 伴侣 app 投递:{days:[{date,sleepHours?,restingHR?,hrv?,steps?,…extras?}]}
             guard let body,
                   let obj = try? JSONSerialization.jsonObject(with: body) else { return (400, json(["ok": false])) }
             let days = (obj as? [String: Any])?["days"] as? [[String: Any]] ?? (obj as? [[String: Any]])

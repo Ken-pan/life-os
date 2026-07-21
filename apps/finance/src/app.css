@@ -1791,7 +1791,7 @@ div.input {
   background: rgba(16, 23, 25, 0.42);
   backdrop-filter: blur(2px);
   z-index: var(--z-drawer-backdrop);
-  animation: fade-in var(--motion-slow) var(--ease);
+  /* Enter: .kenos-drawer-backdrop (theme kenos-motion.css) */
 }
 
 .drawer {
@@ -1808,20 +1808,7 @@ div.input {
   overflow-y: auto;
   padding: var(--space-6);
   box-shadow: var(--shadow-elevated);
-  animation: slide-in var(--motion-slow) var(--ease);
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes slide-in {
-  from {
-    transform: translateX(24px);
-    opacity: 0.4;
-  }
+  /* Enter: .kenos-drawer-panel (theme kenos-motion.css) */
 }
 
 .drawer-head {
@@ -1879,6 +1866,7 @@ div.input {
   font-weight: 600;
   letter-spacing: 0.02em;
 }
+
 .kv-subhead:first-child {
   margin-top: 0;
   padding-top: 0;
@@ -2966,7 +2954,7 @@ div.input {
   transition: transform var(--dur-fast) var(--ease-standard);
 }
 
-.history-coverage-details[open] > .history-coverage-summary::before {
+.history-coverage-details[open]>.history-coverage-summary::before {
   transform: rotate(90deg);
 }
 
@@ -4717,7 +4705,7 @@ div.input {
     border-radius: 16px 16px 0 0;
     padding:
       var(--space-4) var(--inset-inline-end) max(var(--inset-inline), var(--safe-bottom-effective)) var(--inset-inline-start);
-    animation: sheet-in var(--motion-slow) var(--ease);
+    /* Mobile enter: theme .kenos-drawer-panel → kenos-drawer-sheet-in */
   }
 
   /* iOS Safari：输入框 ≥16px 避免聚焦时自动放大 */
@@ -4843,13 +4831,6 @@ div.input {
 
   .page-header h1 {
     font-size: var(--text-2xl);
-  }
-}
-
-@keyframes sheet-in {
-  from {
-    transform: translateY(22px);
-    opacity: 0.4;
   }
 }
 

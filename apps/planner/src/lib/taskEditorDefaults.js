@@ -8,7 +8,7 @@ import { calendarView } from '$lib/ui.svelte.js'
 export function resolveTaskEditorDefaults(pathname, search = '') {
   void search
   if (pathname === '/') return { dueDate: todayKey() }
-  if (pathname.startsWith('/calendar')) {
+  if (pathname.startsWith('/calendar') || pathname.startsWith('/schedule')) {
     return { dueDate: calendarView.selected || todayKey() }
   }
   if (pathname.startsWith('/lists/')) {
@@ -18,6 +18,13 @@ export function resolveTaskEditorDefaults(pathname, search = '') {
   if (pathname.startsWith('/inbox')) {
     return { listId: 'inbox', dueDate: null }
   }
+  if (pathname.startsWith('/projects/')) {
+    const projectId = pathname.split('/')[2]
+    return projectId
+      ? { projectId, dueDate: todayKey() }
+      : { dueDate: todayKey() }
+  }
+  if (pathname.startsWith('/projects')) return { dueDate: todayKey() }
   if (pathname.startsWith('/upcoming')) return { dueDate: null }
   return {}
 }

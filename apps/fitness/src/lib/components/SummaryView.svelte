@@ -115,7 +115,12 @@
         <div class="stat-v">{progress.done}/{progress.total}</div>
         <div class="stat-l" data-ui-decor="stat-label">{t('summary.setsCompleted')}</div>
       </div>
-      {#if compare}
+      {#if progress.done < progress.total}
+        <div class="stat-card" use:reveal={{ delay: 40 }}>
+          <div class="stat-v">{progress.pct}%</div>
+          <div class="stat-l" data-ui-decor="stat-label">{t('summary.inProgress')}</div>
+        </div>
+      {:else if compare}
         <div class="stat-card" use:reveal={{ delay: 40 }}>
           <div class="stat-v">{compare.delta >= 0 ? '+' : ''}{compare.delta}</div>
           <div class="stat-l" data-ui-decor="stat-label">{t('summary.vsLast', { date: compare.prevDate.slice(5) })}</div>

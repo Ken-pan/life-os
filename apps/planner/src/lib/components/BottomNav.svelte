@@ -13,6 +13,7 @@
   } from '$lib/nav.js'
   import LifeOsBottomNav from '@life-os/platform-web/svelte/navigation/bottom-nav'
   import MobileMoreSheet from '@life-os/platform-web/svelte/navigation/MobileMoreSheet'
+  import { isIosNativeShell } from '@life-os/platform-web/ios-native-shell'
 
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js'
 
@@ -32,7 +33,10 @@
     })),
   )
   const moreGroups = $derived(buildMoreNavGroups(t, userLists(), listLabel))
-  const hidden = $derived(taskEditor.open || isNavChromeHidden(pathname))
+  // Kenos Domain Mode owns the only dock — hide planner BottomNav in embedded shell.
+  const hidden = $derived(
+    taskEditor.open || isNavChromeHidden(pathname) || isIosNativeShell(),
+  )
 
   $effect(() => {
     pathname

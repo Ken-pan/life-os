@@ -178,7 +178,7 @@ const SURPRISE_SEED_POOL = 8
 async function pickSurpriseSeed(exclude) {
   const [recent, liked, stats] = await Promise.all([
     getRecentTracks(16),
-    getLikedTracks(),
+    getLikedTracks(48),
     getEntityPlaybackStats(14),
   ])
   const bucket = getTimeContextBucket()
@@ -248,7 +248,7 @@ function diversifyRecommendationPicks(picks, limit) {
 async function buildLocalSurpriseQueue(exclude, limit, seed = null) {
   const [recent, liked, stats] = await Promise.all([
     getRecentTracks(24),
-    getLikedTracks(),
+    getLikedTracks(64),
     getEntityPlaybackStats(21),
   ])
   const bucket = getTimeContextBucket()

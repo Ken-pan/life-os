@@ -1,7 +1,10 @@
 # HealthOS Companion — Apple Watch + iPhone 数据采集
 
-macOS 没有 HealthKit,所以 HealthOS 的 Mac 端拿不到 Apple Watch 数据。这个伴侣 app 补上这一环:
+macOS 没有 HealthKit,所以 HealthOS 的 Mac 端拿不到 Apple Watch 数据。这个伴侣 app 曾补上这一环:
 **iPhone(+ Apple Watch)读 HealthKit → 交付给 Mac 代理 → State Engine 被动推导状态,零手动记录。**
+
+> **2026-07 起首选路径：** Kenos iOS（`clients/apple`）已内置同一套 HealthKit 读取与交付契约
+> （Settings → Apple Health）。本 companion 仍可作为独立调试壳保留；日常用 Kenos 即可。
 
 Apple Watch 采集的睡眠 / 心率 / HRV / 活动量会自动同步到 iPhone 的健康库,所以 iPhone app 读一处就能拿到手表的全部数据;watchOS target 主要用于腕上一瞥与快速触发。
 
@@ -20,7 +23,8 @@ Apple Watch ──(自动)──▶ iPhone 健康库
 ```
 
 交付 schema 与 Mac 代理 `health.jsonl` / `POST /ingest` **严格同源**:
-`{date:"yyyy-MM-dd", sleepHours?, restingHR?, hrv?, steps?}`(醒来日为 key,睡眠归到入睡+6h 的日期)。
+`{date:"yyyy-MM-dd", sleepHours?, restingHR?, hrv?, steps?, …}`(醒来日为 key,睡眠归到入睡+6h 的日期)。
+Kenos iOS 还可附带 `activeEnergyKcal` / `exerciseMinutes` / `workouts` 等扩展字段;代理按 date 逐字段 upsert。
 
 ## 构建 & 部署(需要你的 Xcode + Apple 开发者账号)
 
@@ -35,6 +39,7 @@ open HealthOSCompanion.xcodeproj
 ```
 
 在 Xcode 里:
+
 1. 选中两个 target → Signing & Capabilities → 选你的 **Team**(自动签名)。
 2. 确认 **HealthKit** 与 **iCloud › CloudDocuments**(容器 `iCloud.space.kenos.healthos`)已开。
 3. 把 iPhone 连上,Build & Run 到手机;watchOS app 会随之装到配对的手表。
@@ -56,11 +61,11 @@ open HealthOSCompanion.xcodeproj
 
 ## 文件
 
-| 路径 | 作用 |
-| --- | --- |
-| `Shared/HealthDay.swift` | 按天聚合模型 + 日期口径(与代理同源) |
-| `Shared/HealthKitReader.swift` | HealthKit 授权 + 查询 + 按天聚合 |
-| `Shared/Delivery.swift` | iCloud Drive 写入 + LAN POST |
-| `iOS/…` | iPhone app(SwiftUI + 后台刷新 BGTask) |
-| `Watch/…` | watchOS app(腕上一瞥 + 手动同步) |
-| `project.yml` | XcodeGen 工程规范 |
+| 路径                           | 作用                                  |
+| ------------------------------ | ------------------------------------- |
+| `Shared/HealthDay.swift`       | 按天聚合模型 + 日期口径(与代理同源)   |
+| `Shared/HealthKitReader.swift` | HealthKit 授权 + 查询 + 按天聚合      |
+| `Shared/Delivery.swift`        | iCloud Drive 写入 + LAN POST          |
+| `iOS/…`                        | iPhone app(SwiftUI + 后台刷新 BGTask) |
+| `Watch/…`                      | watchOS app(腕上一瞥 + 手动同步)      |
+| `project.yml`                  | XcodeGen 工程规范                     |

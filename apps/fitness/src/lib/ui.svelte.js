@@ -21,6 +21,7 @@ export function openWeightModal(dayId, ex) {
   weightModal.exId = ex.id;
   weightModal.ex = ex;
   weightModal.open = true;
+  publishFitnessChromeSoon();
 }
 
 export function closeWeightModal() {
@@ -28,6 +29,7 @@ export function closeWeightModal() {
   weightModal.ex = null;
   weightModal.exId = null;
   weightModal.dayId = null;
+  publishFitnessChromeSoon();
 }
 
 export const setLogSheet = $state({
@@ -41,6 +43,15 @@ export const setLogSheet = $state({
   onSkip: null
 });
 
+/** Notify Kenos Domain dock / pad without circular static import. */
+function publishFitnessChromeSoon() {
+  queueMicrotask(() => {
+    import('$lib/kenos/fitnessSpaceAdapter.js')
+      .then((m) => m.publishFitnessNavManifest())
+      .catch(() => {});
+  });
+}
+
 export function openSetLogSheet({ dayId, ex, setIndex, onConfirm, onSkip }) {
   const { mid } = parseRepsTarget(ex.reps);
   setLogSheet.dayId = dayId;
@@ -51,6 +62,7 @@ export function openSetLogSheet({ dayId, ex, setIndex, onConfirm, onSkip }) {
   setLogSheet.onConfirm = onConfirm;
   setLogSheet.onSkip = onSkip;
   setLogSheet.open = true;
+  publishFitnessChromeSoon();
 }
 
 export function closeSetLogSheet() {
@@ -58,6 +70,7 @@ export function closeSetLogSheet() {
   setLogSheet.ex = null;
   setLogSheet.onConfirm = null;
   setLogSheet.onSkip = null;
+  publishFitnessChromeSoon();
 }
 
 export const skipModal = $state({
@@ -76,12 +89,14 @@ export function openSkipModal({ dayId, ex, onConfirm }) {
   skipModal.substituteId = null;
   skipModal.onConfirm = onConfirm;
   skipModal.open = true;
+  publishFitnessChromeSoon();
 }
 
 export function closeSkipModal() {
   skipModal.open = false;
   skipModal.ex = null;
   skipModal.onConfirm = null;
+  publishFitnessChromeSoon();
 }
 
 export const knowledgeSheet = $state({
@@ -93,11 +108,13 @@ export const knowledgeSheet = $state({
 export function openKnowledgeSheet(entryId) {
   knowledgeSheet.entryId = entryId;
   knowledgeSheet.open = true;
+  publishFitnessChromeSoon();
 }
 
 export function closeKnowledgeSheet() {
   knowledgeSheet.open = false;
   knowledgeSheet.entryId = null;
+  publishFitnessChromeSoon();
 }
 
 export const fitnessToolSheet = $state({
@@ -143,8 +160,10 @@ export function openFitnessToolSheet(opts = {}) {
   fitnessToolSheet.exName = opts.ex?.name ?? null;
   fitnessToolSheet.ex = opts.ex ?? null;
   fitnessToolSheet.open = true;
+  publishFitnessChromeSoon();
 }
 
 export function closeFitnessToolSheet() {
   fitnessToolSheet.open = false;
+  publishFitnessChromeSoon();
 }

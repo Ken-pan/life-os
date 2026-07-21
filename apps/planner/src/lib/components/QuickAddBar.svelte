@@ -1,20 +1,21 @@
 <script>
-  import { createTaskAsync, deleteTaskAsync } from '$lib/domain/tasks.js';
-  import { S } from '$lib/state.svelte.js';
-  import { SYSTEM_LIST_INBOX } from '$lib/types.js';
-  import { t } from '$lib/i18n/index.js';
-  import { todayKey } from '$lib/state.svelte.js';
-  import { toast } from '$lib/ui.svelte.js';
-  import { getProjectById, selectableProjects } from '$lib/domain/projects.js';
+  import { createTaskAsync, deleteTaskAsync } from '$lib/domain/tasks.js'
+  import { sensory } from '@life-os/platform-web/kenos-sensory'
+  import { S } from '$lib/state.svelte.js'
+  import { SYSTEM_LIST_INBOX } from '$lib/types.js'
+  import { t } from '$lib/i18n/index.js'
+  import { todayKey } from '$lib/state.svelte.js'
+  import { toast } from '$lib/ui.svelte.js'
+  import { getProjectById, selectableProjects } from '$lib/domain/projects.js'
   import {
     filterCaptureProjects,
     parseQuickAddTokens,
     projectQueryFromTitle,
     titleWithoutProjectQuery,
-  } from '$lib/domain/taskCapture.js';
-  import { createImeGuard } from '@life-os/theme';
+  } from '$lib/domain/taskCapture.js'
+  import { createImeGuard } from '@life-os/theme'
 
-  const ime = createImeGuard();
+  const ime = createImeGuard()
 
   /** @type {{ placeholder?: string, listId?: string, dueDate?: string|null, projectId?: string|null, showOnMobile?: boolean, toastOnAdd?: string }} */
   let {
@@ -24,51 +25,51 @@
     projectId = null,
     showOnMobile = false,
     toastOnAdd = '',
-  } = $props();
+  } = $props()
 
-  let text = $state('');
-  let selectedProjectId = $state(null);
-  let composing = $state(false);
-  let suggestionsDismissed = $state(false);
-  let activeSuggestion = $state(0);
-  let submitting = $state(false);
+  let text = $state('')
+  let selectedProjectId = $state(null)
+  let composing = $state(false)
+  let suggestionsDismissed = $state(false)
+  let activeSuggestion = $state(0)
+  let submitting = $state(false)
 
-  const canSubmit = $derived(text.trim().length > 0);
-  const selectedProject = $derived(getProjectById(selectedProjectId));
+  const canSubmit = $derived(text.trim().length > 0)
+  const selectedProject = $derived(getProjectById(selectedProjectId))
   const atQuery = $derived.by(() => {
-    if (composing || suggestionsDismissed) return null;
-    return projectQueryFromTitle(text);
-  });
+    if (composing || suggestionsDismissed) return null
+    return projectQueryFromTitle(text)
+  })
   const projectSuggestions = $derived.by(() => {
-    if (atQuery == null) return [];
-    return filterCaptureProjects(selectableProjects(), atQuery, 5);
-  });
+    if (atQuery == null) return []
+    return filterCaptureProjects(selectableProjects(), atQuery, 5)
+  })
 
   $effect(() => {
-    selectedProjectId = projectId;
-  });
+    selectedProjectId = projectId
+  })
 
   function cleanTitle() {
-    return titleWithoutProjectQuery(text);
+    return titleWithoutProjectQuery(text)
   }
 
   /** @param {import('$lib/types.js').PlannerProject} project */
   function selectProject(project) {
-    selectedProjectId = project.id;
-    text = cleanTitle();
-    suggestionsDismissed = true;
-    activeSuggestion = 0;
+    selectedProjectId = project.id
+    text = cleanTitle()
+    suggestionsDismissed = true
+    activeSuggestion = 0
   }
 
   async function submit() {
-    if (ime.isComposing()) return;
-    if (submitting) return;
-    const base = cleanTitle() || text.trim();
-    if (!base) return;
-    const parsed = parseQuickAddTokens(base, todayKey());
+    if (ime.isComposing()) return
+    if (submitting) return
+    const base = cleanTitle() || text.trim()
+    if (!base) return
+    const parsed = parseQuickAddTokens(base, todayKey())
     // 若整串都是语法 token，回退用原文，避免创建空标题
-    const title = parsed.title || base;
-    submitting = true;
+    const title = parsed.title || base
+    submitting = true
     try {
       const created = await createTaskAsync({
         title,
@@ -76,45 +77,59 @@
         dueDate: parsed.dueDate ?? dueDate,
         priority: parsed.priority ?? undefined,
         tags: parsed.tags.length ? parsed.tags : undefined,
-        projectId: selectedProjectId || null
-      });
-      text = '';
-      selectedProjectId = projectId;
-      suggestionsDismissed = false;
+        projectId: selectedProjectId || null,
+      })
+      text = ''
+      selectedProjectId = projectId
+      suggestionsDismissed = false
+      void sensory('success')
       toast(toastOnAdd || t('toast.taskCreated'), {
         actionLabel: t('common.undo'),
-        onAction: () => { void deleteTaskAsync(created.id) },
+        onAction: () => {
+          void deleteTaskAsync(created.id)
+        },
         key: `task-created:${created.id}`,
         dedupeMs: 0,
-      });
+      })
     } catch (error) {
-      toast(error?.message || t('toast.schedulePersistFailed'), 'warn');
+      void sensory('error')
+      toast(error?.message || t('toast.schedulePersistFailed'), 'warn')
     } finally {
-      submitting = false;
+      submitting = false
     }
   }
 
   /** @param {KeyboardEvent} event */
   function handleKeydown(event) {
-    if (ime.isComposing(event)) return;
-    if (!projectSuggestions.length) return;
+    if (ime.isComposing(event)) return
+    if (!projectSuggestions.length) return
     if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      activeSuggestion = Math.min(activeSuggestion + 1, projectSuggestions.length - 1);
+      event.preventDefault()
+      activeSuggestion = Math.min(
+        activeSuggestion + 1,
+        projectSuggestions.length - 1,
+      )
     } else if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      activeSuggestion = Math.max(activeSuggestion - 1, 0);
+      event.preventDefault()
+      activeSuggestion = Math.max(activeSuggestion - 1, 0)
     } else if (event.key === 'Enter') {
-      event.preventDefault();
-      selectProject(projectSuggestions[activeSuggestion]);
+      event.preventDefault()
+      selectProject(projectSuggestions[activeSuggestion])
     } else if (event.key === 'Escape') {
-      event.preventDefault();
-      suggestionsDismissed = true;
+      event.preventDefault()
+      suggestionsDismissed = true
     }
   }
 </script>
 
-<form class="quick-add" class:quick-add--mobile={showOnMobile} onsubmit={(e) => { e.preventDefault(); submit(); }}>
+<form
+  class="quick-add"
+  class:quick-add--mobile={showOnMobile}
+  onsubmit={(e) => {
+    e.preventDefault()
+    submit()
+  }}
+>
   <div class="quick-add-input-wrap">
     {#if selectedProject}
       <button
@@ -138,25 +153,29 @@
         ? `quick-add-project-${projectSuggestions[activeSuggestion].id}`
         : undefined}
       oninput={() => {
-        suggestionsDismissed = false;
-        activeSuggestion = 0;
+        suggestionsDismissed = false
+        activeSuggestion = 0
       }}
       oncompositionstart={() => {
-        composing = true;
-        ime.compositionstart();
+        composing = true
+        ime.compositionstart()
       }}
       oncompositionend={(event) => {
-        ime.compositionend(event);
-        setTimeout(() => (composing = false), 0);
+        ime.compositionend(event)
+        setTimeout(() => (composing = false), 0)
       }}
       oncompositioncancel={() => {
-        composing = false;
-        ime.compositioncancel();
+        composing = false
+        ime.compositioncancel()
       }}
       onkeydown={handleKeydown}
     />
     {#if projectSuggestions.length}
-      <div id="quick-add-project-options" class="quick-add-project-menu" role="listbox">
+      <div
+        id="quick-add-project-options"
+        class="quick-add-project-menu"
+        role="listbox"
+      >
         {#each projectSuggestions as project, index (project.id)}
           <button
             id={`quick-add-project-${project.id}`}
@@ -173,7 +192,9 @@
       </div>
     {/if}
   </div>
-  <button type="submit" class="btn-primary" disabled={!canSubmit}>{t('common.add')}</button>
+  <button type="submit" class="btn-primary" disabled={!canSubmit}
+    >{t('common.add')}</button
+  >
 </form>
 
 <style>

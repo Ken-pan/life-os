@@ -165,11 +165,11 @@ export async function getRecentlyAdded(limit = 8) {
 
 /** @returns {Promise<{ artist: string, artistKey: string, trackCount: number, playCount: number }[]>} */
 export async function getTopArtists(limit = 6) {
-  const tracks = await getAllTracks()
+  // Aggregate without full-library hydrate / album-art work — home only needs counts.
   /** @type {Map<string, { artist: string, artistKey: string, trackCount: number, playCount: number }>} */
   const map = new Map()
-  for (const t of tracks) {
-    const key = t.artistKey
+  await db.tracks.orderBy('artistKey').each((t) => {
+    const key = t.artistKey || slugKey(t.artist)
     const cur = map.get(key) || {
       artist: t.artist,
       artistKey: key,
@@ -179,7 +179,7 @@ export async function getTopArtists(limit = 6) {
     cur.trackCount += 1
     cur.playCount += t.playCount || 0
     map.set(key, cur)
-  }
+  })
   return [...map.values()]
     .sort((a, b) => b.playCount - a.playCount || b.trackCount - a.trackCount)
     .slice(0, limit)
@@ -367,10 +367,19 @@ export async function getTopTracksByPlayCount(limit = 6) {
   return rows.map(hydrateTrack)
 }
 
-/** @returns {Promise<import('./types.js').Track[]>} */
-export async function getLikedTracks() {
-  const rows = await db.tracks.filter((t) => t.liked === 1).toArray()
-  return rows.map(hydrateTrack).sort((a, b) => b.addedAt - a.addedAt)
+/**
+ * Liked tracks newest-first. Prefer indexed `liked` over a full-table filter.
+ * @param {number} [limit] omit for the full liked set (Liked page)
+ * @returns {Promise<import('./types.js').Track[]>}
+ */
+export async function getLikedTracks(limit) {
+  const rows = await db.tracks.where('liked').equals(1).toArray()
+  rows.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
+  const capped =
+    typeof limit === 'number' && Number.isFinite(limit) && limit >= 0
+      ? rows.slice(0, limit)
+      : rows
+  return capped.map(hydrateTrack)
 }
 
 /** @returns {Promise<import('./types.js').Track[]>} */

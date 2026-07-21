@@ -17,6 +17,7 @@ import { pickCloudSettings } from './settingsPersistence.js'
 import { mergeTrackMetaForPush } from './trackMetaMerge.js'
 import { t } from './i18n/index.js'
 import { notifySyncError, withSyncNotify } from './syncNotify.js'
+import { auth } from './auth.svelte.js'
 import {
   clearSyncPending,
   isOnline,
@@ -435,6 +436,7 @@ export function resetSyncCooldown() {
 }
 
 const debouncedSync = createDebouncedTask(async (opts = {}) => {
+  if (!auth.user) return
   if (!isOnline()) {
     markSyncPending()
     return
@@ -454,6 +456,7 @@ const debouncedSync = createDebouncedTask(async (opts = {}) => {
 }, 4000)
 
 export function scheduleAutoCloudPush() {
+  if (!auth.user) return
   if (!isOnline()) {
     markSyncPending()
     return
@@ -466,7 +469,7 @@ export async function syncBidirectionalSafe(opts = {}) {
 }
 
 export function flushPendingSync() {
-  if (!browser || !isOnline()) return
+  if (!browser || !auth.user || !isOnline()) return
   debouncedSync.schedule({ immediate: true })
 }
 

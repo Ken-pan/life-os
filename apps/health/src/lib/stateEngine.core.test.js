@@ -8,6 +8,9 @@ import {
   recommendPolicy,
   metricSeries,
   trendSummary,
+  activityLevel,
+  todayTrainingLedger,
+  trainingRecommendation,
   DIMENSION_ORDER,
 } from './stateEngine.core.js'
 
@@ -20,13 +23,23 @@ const day = (n) => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
 /** N 天历史基线(默认 6 天,足够建基线) */
-const history = ({ hrv = 50, rhr = 56, sleep = 7.5, steps = 8000, n = 6 } = {}) =>
+const history = ({
+  hrv = 50,
+  rhr = 56,
+  sleep = 7.5,
+  steps = 8000,
+  activeEnergyKcal = 450,
+  exerciseMinutes = 25,
+  n = 6,
+} = {}) =>
   Array.from({ length: n }, (_, i) => ({
     date: day(i + 1),
     hrv,
     restingHR: rhr,
     sleepHours: sleep,
     steps,
+    activeEnergyKcal,
+    exerciseMinutes,
   }))
 
 const agentIdle = {
@@ -41,7 +54,11 @@ const agentIdle = {
 }
 
 test('无任何数据:关键维度 unknown,headline 引导连数据', () => {
-  const { dims, headline } = deriveState({ now: NOW, health: [], agent: { online: false } })
+  const { dims, headline } = deriveState({
+    now: NOW,
+    health: [],
+    agent: { online: false },
+  })
   for (const k of ['energy', 'stress', 'sleepDebt', 'physical']) {
     assert.equal(dims[k].level, 'unknown', k)
     assert.ok(dims[k].reasons.length > 0, `${k} 要解释缺什么`)
@@ -50,7 +67,10 @@ test('无任何数据:关键维度 unknown,headline 引导连数据', () => {
 })
 
 test('每个维度都带 reasons(可解释性合同)', () => {
-  const health = [{ date: day(0), hrv: 52, restingHR: 55, sleepHours: 7.5, steps: 9000 }, ...history()]
+  const health = [
+    { date: day(0), hrv: 52, restingHR: 55, sleepHours: 7.5, steps: 9000 },
+    ...history(),
+  ]
   const { dims } = deriveState({ now: NOW, health, agent: agentIdle })
   for (const k of DIMENSION_ORDER) {
     assert.ok(dims[k].reasons.length > 0, `${k} 缺 reasons`)
@@ -59,7 +79,10 @@ test('每个维度都带 reasons(可解释性合同)', () => {
 })
 
 test('测量良好(睡够/HRV 达基线/静息心率正常)→ allGood,零手动输入', () => {
-  const health = [{ date: day(0), hrv: 52, restingHR: 55, sleepHours: 7.5, steps: 9000 }, ...history()]
+  const health = [
+    { date: day(0), hrv: 52, restingHR: 55, sleepHours: 7.5, steps: 9000 },
+    ...history(),
+  ]
   const { dims, headline } = deriveState({ now: NOW, health, agent: agentIdle })
   assert.equal(dims.sleepDebt.level, 'good')
   assert.equal(dims.stress.level, 'good')
@@ -70,7 +93,10 @@ test('测量良好(睡够/HRV 达基线/静息心率正常)→ allGood,零手动
 })
 
 test('HRV 显著低于基线 → 压力 bad(HRV 是自主神经压力代理)', () => {
-  const health = [{ date: day(0), hrv: 32, restingHR: 56, sleepHours: 7.5 }, ...history()]
+  const health = [
+    { date: day(0), hrv: 32, restingHR: 56, sleepHours: 7.5 },
+    ...history(),
+  ]
   const { dims, headline } = deriveState({ now: NOW, health, agent: agentIdle })
   assert.equal(dims.stress.level, 'bad')
   assert.ok(dims.stress.reasons.some((r) => r.k === 'state.r_hrvToday'))
@@ -78,7 +104,10 @@ test('HRV 显著低于基线 → 压力 bad(HRV 是自主神经压力代理)', (
 })
 
 test('静息心率高于基线 +10 → 恢复 bad,精力被下调', () => {
-  const health = [{ date: day(0), hrv: 50, restingHR: 66, sleepHours: 7.5 }, ...history()]
+  const health = [
+    { date: day(0), hrv: 50, restingHR: 66, sleepHours: 7.5 },
+    ...history(),
+  ]
   const { dims } = deriveState({ now: NOW, health, agent: agentIdle })
   assert.equal(dims.recovery.level, 'bad')
   assert.ok(dims.recovery.reasons.some((r) => r.k === 'state.r_rhrToday'))
@@ -86,10 +115,15 @@ test('静息心率高于基线 +10 → 恢复 bad,精力被下调', () => {
 })
 
 test('昨晚睡眠不足 → 睡眠债 bad(测量,非手动)', () => {
-  const health = [{ date: day(0), hrv: 50, restingHR: 56, sleepHours: 4.5 }, ...history()]
+  const health = [
+    { date: day(0), hrv: 50, restingHR: 56, sleepHours: 4.5 },
+    ...history(),
+  ]
   const { dims, headline } = deriveState({ now: NOW, health, agent: agentIdle })
   assert.equal(dims.sleepDebt.level, 'bad')
-  assert.ok(dims.sleepDebt.reasons.some((r) => r.k === 'state.r_sleepLastMeasured'))
+  assert.ok(
+    dims.sleepDebt.reasons.some((r) => r.k === 'state.r_sleepLastMeasured'),
+  )
   assert.equal(headline.k, 'state.h_sleepDebt')
 })
 
@@ -105,10 +139,17 @@ test('有今日 HRV 但历史不足 4 天 → 压力 unknown,提示基线不足'
 })
 
 test('多次逼近强制休息把压力再压一档', () => {
-  const health = [{ date: day(0), hrv: 46, restingHR: 56, sleepHours: 7.5 }, ...history()] // 46/50=0.92 → ok
+  const health = [
+    { date: day(0), hrv: 46, restingHR: 56, sleepHours: 7.5 },
+    ...history(),
+  ] // 46/50=0.92 → ok
   const base = deriveState({ now: NOW, health, agent: agentIdle })
   assert.equal(base.dims.stress.level, 'ok')
-  const warned = deriveState({ now: NOW, health, agent: { ...agentIdle, warnsToday: 2 } })
+  const warned = deriveState({
+    now: NOW,
+    health,
+    agent: { ...agentIdle, warnsToday: 2 },
+  })
   assert.equal(warned.dims.stress.level, 'watch')
 })
 
@@ -122,15 +163,27 @@ test('无生理信号但代理在线:恢复回落到负荷启发式', () => {
 })
 
 test('focus 相位:休息中 → ok;接近窗口 → watch', () => {
-  const breaking = deriveState({ now: NOW, health: [], agent: { ...agentIdle, phase: 'breaking' } })
+  const breaking = deriveState({
+    now: NOW,
+    health: [],
+    agent: { ...agentIdle, phase: 'breaking' },
+  })
   assert.equal(breaking.dims.focus.level, 'ok')
   assert.equal(breaking.headline.k, 'state.h_breaking')
-  const near = deriveState({ now: NOW, health: [], agent: { ...agentIdle, score: 1100 } })
+  const near = deriveState({
+    now: NOW,
+    health: [],
+    agent: { ...agentIdle, score: 1100 },
+  })
   assert.equal(near.dims.focus.level, 'watch')
 })
 
 test('recentSleeps:今天/昨天算昨晚,>36h 外不算', () => {
-  const fresh = [{ date: day(2), sleepHours: 5 }, { date: day(1), sleepHours: 5.5 }, { date: day(0), sleepHours: 8 }]
+  const fresh = [
+    { date: day(2), sleepHours: 5 },
+    { date: day(1), sleepHours: 5.5 },
+    { date: day(0), sleepHours: 8 },
+  ]
   const r = recentSleeps(fresh, NOW)
   assert.equal(r.last.hours, 8)
   assert.equal(r.recent.length, 3)
@@ -151,21 +204,36 @@ test('healthDaysToSleepObs:只取有 sleepHours 的天', () => {
 
 test('recommendPolicy:状态好不覆盖;睡眠债 bad → 12 分钟;watch → 16', () => {
   const good = recommendPolicy(
-    { sleepDebt: { level: 'good' }, stress: { level: 'ok' }, recovery: { level: 'good' }, energy: { level: 'good' } },
+    {
+      sleepDebt: { level: 'good' },
+      stress: { level: 'ok' },
+      recovery: { level: 'good' },
+      energy: { level: 'good' },
+    },
     20,
   )
   assert.equal(good.driver, null)
   assert.equal(good.limitMinutes, 20)
 
   const debt = recommendPolicy(
-    { sleepDebt: { level: 'bad' }, stress: { level: 'ok' }, recovery: { level: 'good' }, energy: { level: 'good' } },
+    {
+      sleepDebt: { level: 'bad' },
+      stress: { level: 'ok' },
+      recovery: { level: 'good' },
+      energy: { level: 'good' },
+    },
     20,
   )
   assert.equal(debt.driver, 'sleepDebt')
   assert.equal(debt.limitMinutes, 12)
 
   const watch = recommendPolicy(
-    { sleepDebt: { level: 'good' }, stress: { level: 'watch' }, recovery: { level: 'good' }, energy: { level: 'good' } },
+    {
+      sleepDebt: { level: 'good' },
+      stress: { level: 'watch' },
+      recovery: { level: 'good' },
+      energy: { level: 'good' },
+    },
     20,
   )
   assert.equal(watch.driver, 'stress')
@@ -198,13 +266,143 @@ test('trendSummary:近 7 天均值 + 相对前 7 天方向', () => {
   // 全空 → na
   assert.equal(trendSummary([null, null], 7).dir, 'na')
   // 变化 <3% → flat
-  assert.equal(trendSummary([...Array(7).fill(7), ...Array(7).fill(7.1)], 7).dir, 'flat')
+  assert.equal(
+    trendSummary([...Array(7).fill(7), ...Array(7).fill(7.1)], 7).dir,
+    'flat',
+  )
 })
 
 test('recommendPolicy:unknown 不触发收紧', () => {
   const rec = recommendPolicy(
-    { sleepDebt: { level: 'unknown' }, stress: { level: 'unknown' }, recovery: { level: 'unknown' }, energy: { level: 'unknown' } },
+    {
+      sleepDebt: { level: 'unknown' },
+      stress: { level: 'unknown' },
+      recovery: { level: 'unknown' },
+      energy: { level: 'unknown' },
+      physical: { level: 'unknown' },
+    },
     20,
   )
   assert.equal(rec.driver, null)
+})
+
+test('activityLevel:相对基线久坐 → bad/watch;达基线 → good', () => {
+  assert.equal(
+    activityLevel(
+      { value: 2000 },
+      { value: 8000, n: 6 },
+      null,
+      { value: null, n: 0 },
+      null,
+    ),
+    'bad',
+  )
+  assert.equal(
+    activityLevel(
+      { value: 7500 },
+      { value: 8000, n: 6 },
+      null,
+      { value: null, n: 0 },
+      null,
+    ),
+    'good',
+  )
+  assert.equal(
+    activityLevel(
+      { value: 9000 },
+      { value: null, n: 0 },
+      null,
+      { value: null, n: 0 },
+      null,
+    ),
+    'good',
+  )
+})
+
+test('久坐相对基线把 physical 从 good 拖到 ok/watch', () => {
+  const health = [
+    {
+      date: day(0),
+      hrv: 52,
+      restingHR: 55,
+      sleepHours: 7.5,
+      steps: 1800,
+      activeEnergyKcal: 120,
+    },
+    ...history({ steps: 9000, activeEnergyKcal: 500 }),
+  ]
+  const { dims } = deriveState({ now: NOW, health, agent: agentIdle })
+  assert.ok(['ok', 'watch'].includes(dims.physical.level), dims.physical.level)
+  assert.ok(
+    dims.physical.reasons.some(
+      (r) => r.k === 'state.r_activityLow' || r.k === 'state.r_activitySoft',
+    ),
+  )
+})
+
+test('今日已完成硬训练 → physical 带 workout 理由且不再是 pure good', () => {
+  const health = [
+    {
+      date: day(0),
+      hrv: 52,
+      restingHR: 55,
+      sleepHours: 7.5,
+      steps: 9000,
+      activeEnergyKcal: 600,
+      exerciseMinutes: 50,
+      workoutCount: 1,
+      workoutMinutes: 55,
+    },
+    ...history(),
+  ]
+  const { dims } = deriveState({ now: NOW, health, agent: agentIdle })
+  assert.ok(dims.physical.reasons.some((r) => r.k === 'state.r_workoutToday'))
+  assert.ok(dims.physical.reasons.some((r) => r.k === 'state.r_alreadyLoaded'))
+  assert.notEqual(dims.physical.level, 'good')
+})
+
+test('todayTrainingLedger + trainingRecommendation 对账', () => {
+  const health = [
+    {
+      date: day(0),
+      sleepHours: 7.5,
+      restingHR: 55,
+      hrv: 52,
+      steps: 9000,
+      workoutCount: 1,
+      workoutMinutes: 40,
+    },
+    ...history(),
+  ]
+  const ledger = todayTrainingLedger(health, NOW)
+  assert.equal(ledger.trained, true)
+  assert.equal(ledger.workoutCount, 1)
+  const { dims } = deriveState({ now: NOW, health, agent: agentIdle })
+  const rec = trainingRecommendation(dims, ledger)
+  assert.equal(rec.code, 'already_trained')
+
+  const tired = trainingRecommendation(
+    {
+      physical: { level: 'bad' },
+      recovery: { level: 'ok' },
+      sleepDebt: { level: 'ok' },
+    },
+    { trained: false, steps: 1000 },
+  )
+  assert.equal(tired.code, 'recover')
+})
+
+test('recommendPolicy:physical bad 也会收紧窗口', () => {
+  const rec = recommendPolicy(
+    {
+      sleepDebt: { level: 'good' },
+      stress: { level: 'ok' },
+      recovery: { level: 'good' },
+      energy: { level: 'good' },
+      physical: { level: 'bad' },
+    },
+    20,
+  )
+  assert.equal(rec.driver, 'physical')
+  assert.equal(rec.limitMinutes, 12)
 })

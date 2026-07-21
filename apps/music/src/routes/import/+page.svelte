@@ -6,9 +6,11 @@
   import { auth } from '$lib/auth.svelte.js';
   import { toast } from '$lib/ui.svelte.js';
   import { goto } from '$app/navigation';
+  import { isIosNativeShell } from '@life-os/platform-web/ios-native-shell';
 
   let dragging = $state(false);
   let progress = $state('');
+  const iosNativeShell = $derived(isIosNativeShell());
 
   /** @param {import('$lib/importPipeline.js').ImportProgress} p */
   function progressLabel(p) {
@@ -119,8 +121,12 @@
     ondragleave={() => (dragging = false)}
     ondrop={onDrop}
   >
-    <p style="font-size:var(--text-xl);font-weight:600;margin-bottom:8px">{t('import.drop')}</p>
-    <p style="color:var(--t3);margin-bottom:16px">{t('import.or')}</p>
+    {#if iosNativeShell}
+      <p style="color:var(--t3);margin-bottom:16px">{t('import.pickFiles')}</p>
+    {:else}
+      <p style="font-size:var(--text-xl);font-weight:600;margin-bottom:8px">{t('import.drop')}</p>
+      <p style="color:var(--t3);margin-bottom:16px">{t('import.or')}</p>
+    {/if}
     <label class="btn-primary file-input-btn">
       {t('common.import')}
       <input type="file" accept="audio/*,.mp3,.m4a,.flac,.wav,.ogg,.lrc,text/plain" multiple onchange={onFileChange} />

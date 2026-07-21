@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte'
   import SettingsSection from '@life-os/platform-web/svelte/settings/section'
   import SettingsRow from '@life-os/platform-web/svelte/settings/row'
   import SettingsActionRow from '@life-os/platform-web/svelte/settings/action-row'
@@ -7,6 +8,9 @@
   import SettingsStackBlock from '@life-os/platform-web/svelte/settings/stack-block'
   import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group'
   import SettingsFileButton from '@life-os/platform-web/svelte/settings/file-button'
+  import SettingsSyncBlock from '@life-os/platform-web/svelte/settings/sync-block'
+  import SettingsAppearanceBlock from '@life-os/platform-web/svelte/settings/appearance-block'
+  import { scrollToSettingsHash } from '@life-os/platform-web/settings-hash'
   import {
     S,
     setTheme,
@@ -22,12 +26,7 @@
     setSunLocation,
   } from '$lib/state.svelte.js'
   import { getActiveProject, isStructureLocked } from '$lib/state.svelte.js'
-  import {
-    auth,
-    signIn,
-    signOut,
-    authErrorMessage,
-  } from '$lib/auth.svelte.js'
+  import { auth, signIn, signOut, authErrorMessage } from '$lib/auth.svelte.js'
   import { isSupabaseConfigured } from '$lib/supabase.js'
   import { toast } from '$lib/ui.svelte.js'
   import CloudScanPicker from '$lib/components/CloudScanPicker.svelte'
@@ -35,11 +34,7 @@
   import RecognitionReview from '$lib/components/RecognitionReview.svelte'
   import { loadRecognitionReviews } from '$lib/recognition-review.js'
 
-  const themeOptions = [
-    { value: 'auto', label: '跟随系统' },
-    { value: 'light', label: '浅色' },
-    { value: 'dark', label: '深色' },
-  ]
+  onMount(() => scrollToSettingsHash('cloud'))
 
   const angleSnapOptions = [
     { value: '0', label: '关闭' },
@@ -171,24 +166,21 @@
   }
 </script>
 
-<SettingsSection title="Life OS 账号">
-  {#if !isSupabaseConfigured}
-    <SettingsRow label="状态">
-      <span class="settings-value">未配置 Supabase</span>
-    </SettingsRow>
-  {:else if auth.user}
-    <SettingsRow label="已登录">
-      <span class="settings-value">{auth.user.email}</span>
-    </SettingsRow>
-    <SettingsActionRow
-      label="操作"
-      buttonLabel="退出登录"
-      onclick={onSignOut}
-    />
-    <p class="block-desc">
-      布局数据仍保存在本机；登录用于跨站 SSO 与 Portal 最近打开记录。
-    </p>
-  {:else}
+<SettingsSyncBlock
+  title="Life OS 账号"
+  unavailableDesc="未配置 Supabase"
+  signedOutDesc="与 Planner / Fitness / Finance / Music 等共用同一 Life OS 账号；本机登录一次后，其它站点可自动接上。"
+  signedInDesc="布局数据仍保存在本机；登录用于跨站 SSO 与 Portal 最近打开记录。"
+  email={auth.user?.email}
+  configured={isSupabaseConfigured}
+  signedIn={!!auth.user}
+>
+  {#snippet actions()}
+    <button type="button" class="btn-secondary" onclick={onSignOut}
+      >退出登录</button
+    >
+  {/snippet}
+  {#snippet signedOut()}
     <form class="auth-form" onsubmit={onAuthSubmit}>
       <SettingsRow label="邮箱">
         <input type="email" bind:value={email} autocomplete="email" required />
@@ -211,28 +203,27 @@
         </button>
       </SettingsButtonGroup>
     </form>
-  {/if}
-</SettingsSection>
+  {/snippet}
+</SettingsSyncBlock>
 
-<SettingsSection title="外观">
-  <SettingsRow label="主题">
-    <SettingsSegment
-      options={themeOptions}
-      value={S.settings.theme || 'auto'}
-      onchange={onTheme}
-      ariaLabel="主题"
-    />
-  </SettingsRow>
-  <SettingsToggleRow
-    label="竖屏锁定（手机）"
-    desc="平面图更适合横屏查看；开启后竖持手机会提示旋转"
-    checked={S.settings.lockPortraitOnPhone}
-    onchange={(v) => {
-      S.settings.lockPortraitOnPhone = v
-      import('$lib/state.svelte.js').then((m) => m.persist())
-    }}
-  />
-</SettingsSection>
+<SettingsAppearanceBlock
+  title="外观"
+  theme={S.settings.theme || 'auto'}
+  onThemeChange={onTheme}
+  themeOptions={[
+    { value: 'auto', label: '跟随系统' },
+    { value: 'light', label: '浅色' },
+    { value: 'dark', label: '深色' },
+  ]}
+  themeLabel="主题"
+  lockPortraitOnPhone={S.settings.lockPortraitOnPhone}
+  onLockPortraitOnPhoneChange={(v) => {
+    S.settings.lockPortraitOnPhone = v
+    import('$lib/state.svelte.js').then((m) => m.persist())
+  }}
+  lockPortraitLabel="竖屏锁定（手机）"
+  lockPortraitDesc="平面图更适合横屏查看；开启后竖持手机会提示旋转"
+/>
 
 <SettingsSection title="阳光模拟">
   <SettingsRow label="纬度">
@@ -393,7 +384,8 @@
     <InventoryImport />
   </SettingsStackBlock>
   <p class="block-desc">
-    从 FinanceOS 的购买记录导入「还在家里」的那批东西。家具会尽量认领平面图上扫描
+    从 FinanceOS
+    的购买记录导入「还在家里」的那批东西。家具会尽量认领平面图上扫描
     出来的那一件(认不准就新建到暂存网格),杂物按线索归进储藏区 —— 导入前有预览,
     确认了才落库。
   </p>

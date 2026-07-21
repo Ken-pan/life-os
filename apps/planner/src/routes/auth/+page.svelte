@@ -82,6 +82,7 @@
       </div>
       {#if error}<p class="auth-error">{error}</p>{/if}
       <button type="submit" class="btn-primary" disabled={busy}>{t('auth.signIn')}</button>
+      <p class="block-desc">{t('auth.footnote')}</p>
     </form>
   {/if}
 </div>

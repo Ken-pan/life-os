@@ -28,7 +28,8 @@
     startVaultWatcher,
     stopVaultWatcher,
   } from '$lib/state.svelte.js'
-  import { initCloud } from '$lib/cloud.svelte.js'
+  import { initCloud, sb } from '$lib/cloud.svelte.js'
+  import { installKenosAppLogs } from '@life-os/platform-web/kenos-app-logs'
   import { t, applyLocale } from '$lib/i18n/index.js'
 
   let { children } = $props()
@@ -36,13 +37,16 @@
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
   // 笔记工作台（/library）走 locked：路由自拥有满高双列、各列独立滚动；其余页维持内容滚动。
-  const scrollMode = $derived(page.url.pathname.startsWith('/library') ? 'locked' : 'content')
+  const scrollMode = $derived(
+    page.url.pathname.startsWith('/library') ? 'locked' : 'content',
+  )
 
   // 窄屏（单列）+ 已打开某条笔记时，顶栏「全部笔记」与文档区「← 全部笔记」返回键重复。
   // 单列发生在 life-os-main < 840，即 viewport < 840 + 侧栏 228 ≈ 1067；此时隐藏顶栏，交给文档区自己的返回。
   let narrowLayout = $state(false)
   const libraryDetail = $derived(
-    page.url.pathname.startsWith('/library') && page.url.searchParams.has('note'),
+    page.url.pathname.startsWith('/library') &&
+      page.url.searchParams.has('note'),
   )
   const hideHeader = $derived(libraryDetail && narrowLayout)
   /** URL param is reactive; session/flag covers SPA navigations that drop ?iosNativeShell=1. */
@@ -54,7 +58,7 @@
     const p = page.url.pathname
     if (p === '/settings') return t('settings.title')
     if (p.startsWith('/overview')) return t('overview.title')
-    if (p.startsWith('/library')) return t('nav.allNotes')
+    if (p.startsWith('/library')) return t('library.title')
     if (p.startsWith('/projects')) return t('projects.title')
     if (p.startsWith('/timeline')) return t('timeline.title')
     if (p.startsWith('/recall')) return t('nav.recall')
@@ -80,13 +84,20 @@
       }),
     )
     const mq = window.matchMedia('(max-width: 1067px)')
-    const syncNarrow = () => { narrowLayout = mq.matches }
+    const syncNarrow = () => {
+      narrowLayout = mq.matches
+    }
     syncNarrow()
     mq.addEventListener('change', syncNarrow)
+    const disposeAppLogs = installKenosAppLogs({
+      app: 'knowledge',
+      getSupabase: () => sb,
+    })
     return () => {
       cleanupTheme()
       cleanupViewport()
       cleanupDeepLink()
+      disposeAppLogs()
       mq.removeEventListener('change', syncNarrow)
       stopVaultWatcher()
     }
@@ -99,6 +110,9 @@
 
   afterNavigate(() => {
     resetScrollLock()
+    if (isIosNativeShell()) {
+      persistLibraryContinue(suspendLibrarySpace())
+    }
   })
 </script>
 
@@ -131,8 +145,15 @@
   {/snippet}
 
   {#snippet main()}
-    {#if nativeShell && !hideHeader}
-      <DomainMusicHeader title={pageTitle} domainLabel="Library" showCompose={true} />
+    {#if nativeShell}
+      <!-- Note detail: compact chrome keeps Quick Switch; list keeps full title + compose. -->
+      <DomainMusicHeader
+        title={pageTitle}
+        domainLabel="Library"
+        showCompose={!libraryDetail && page.url.pathname !== '/settings'}
+        compact={hideHeader}
+        composeLabel={t('common.newNote')}
+      />
     {/if}
     {@render children()}
   {/snippet}
@@ -159,22 +180,28 @@
     height: 0 !important;
     overflow: hidden !important;
   }
+  /*
+    Scroll-root pad (54 / 80+safe) is owned by KenosWebSurfaceView injection,
+    with platform-web ensureIosNativeShellChromeCss() as browser fallback.
+    Do not redeclare padding here — dual sources drift.
+  */
   :global(html[data-ios-native-shell='true']) {
     --mobile-tabbar-total-h: 0px;
     --bottom-chrome-h: 0px;
     --mobile-content-inset-tabbar: 0px;
     --safe-top-effective: 0px;
   }
-  :global(html[data-ios-native-shell='true'] .life-os-app-shell__main),
-  :global(html[data-ios-native-shell='true'] #main-content) {
-    padding-top: 54px !important;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
-    box-sizing: border-box !important;
+  /* Anchor for compact DomainMusicHeader overlay (note detail Quick Switch). */
+  :global(html[data-ios-native-shell='true'] .life-os-app-shell__main) {
+    position: relative;
   }
   :global(html[data-ios-native-shell='true'] .domain-music-header) {
-    padding-top: 2px;
-    padding-bottom: 12px;
+    padding-top: 0;
+    padding-bottom: 8px;
     padding-inline: 16px;
+  }
+  :global(html[data-ios-native-shell='true'] .domain-music-header.is-compact) {
+    padding-inline: 0;
   }
   :global(html[data-ios-native-shell='true'] .page-header),
   :global(html[data-ios-native-shell='true'] .topbar),

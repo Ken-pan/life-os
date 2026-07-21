@@ -8,12 +8,14 @@
   import { LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
   import {
     buildPrimaryNavItems,
+    buildMoreNavGroups,
     buildSettingsNavItem,
     resolveNavTab,
     isNavChromeHidden,
   } from '$lib/nav.js'
 
-  const current = $derived(resolveNavTab(page.url.pathname))
+  const pathname = $derived(page.url.pathname)
+  const current = $derived(resolveNavTab(pathname))
   const groups = $derived([
     {
       items: buildPrimaryNavItems(t).map((item) => ({
@@ -24,6 +26,21 @@
         active: current === item.tab,
       })),
     },
+    ...buildMoreNavGroups(t)
+      .filter((g) => g.label !== t('nav.groupAccount'))
+      .map((group) => ({
+        label: group.label,
+        items: group.items.map((item) => ({
+          key: item.tab,
+          href: item.href,
+          icon: item.icon,
+          label: item.label,
+          active:
+            typeof item.match === 'function'
+              ? item.match(pathname)
+              : current === item.tab,
+        })),
+      })),
   ])
   const footItem = $derived.by(() => {
     const item = buildSettingsNavItem(t)
@@ -35,13 +52,19 @@
       active: current === item.tab,
     }
   })
-  const hidden = $derived(isNavChromeHidden(page.url.pathname))
+  const hidden = $derived(isNavChromeHidden(pathname))
   const canSwitchApps = $derived(
     auth.user?.email?.toLowerCase() === LIFE_OS_PERSONAL_OWNER_EMAIL,
   )
 </script>
 
-<LifeOsSideNav {groups} {footItem} {hidden} ariaLabel={t('nav.mainAria')} labelDecor>
+<LifeOsSideNav
+  {groups}
+  {footItem}
+  {hidden}
+  ariaLabel={t('nav.mainAria')}
+  labelDecor
+>
   {#snippet brand()}
     <AppBrandSwitcher
       appId="fitness"

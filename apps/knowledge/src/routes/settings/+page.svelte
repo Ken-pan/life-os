@@ -1,7 +1,16 @@
 <script>
+  import { onMount } from 'svelte'
   import { S, save, applyTheme } from '$lib/state.svelte.js'
   import { CLOUD, signInCloud, signOutCloud } from '$lib/cloud.svelte.js'
   import { t, setLocale } from '$lib/i18n/index.js'
+  import { scrollToSettingsHash } from '@life-os/platform-web/settings-hash'
+  import SettingsSection from '@life-os/platform-web/svelte/settings/section'
+  import SettingsSyncBlock from '@life-os/platform-web/svelte/settings/sync-block'
+  import SettingsAppearanceBlock from '@life-os/platform-web/svelte/settings/appearance-block'
+  import SettingsRow from '@life-os/platform-web/svelte/settings/row'
+  import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group'
+
+  onMount(() => scrollToSettingsHash('cloud'))
 
   let importInput = $state(null)
   let mergedCount = $state(-1)
@@ -16,7 +25,13 @@
 
   function exportJson() {
     const blob = new Blob(
-      [JSON.stringify({ app: 'knowledge', version: 1, items: S.items }, null, 2)],
+      [
+        JSON.stringify(
+          { app: 'knowledge', version: 1, items: S.items },
+          null,
+          2,
+        ),
+      ],
       { type: 'application/json' },
     )
     const a = document.createElement('a')
@@ -41,12 +56,7 @@
     }
   }
 
-  const themeOptions = $derived([
-    { value: 'light', label: t('settings.themeLight') },
-    { value: 'dark', label: t('settings.themeDark') },
-    { value: 'auto', label: t('settings.themeAuto') },
-  ])
-
+  /** @param {string} value */
   function setTheme(value) {
     S.settings.theme = value
     save()
@@ -54,91 +64,87 @@
   }
 </script>
 
-<div class="wrap">
-  <section class="card">
-    <h2>{t('settings.theme')}</h2>
-    <div class="seg" role="group" aria-label={t('settings.theme')}>
-      {#each themeOptions as option (option.value)}
-        <button
-          type="button"
-          class:on={S.settings.theme === option.value}
-          aria-pressed={S.settings.theme === option.value}
-          onclick={() => setTheme(option.value)}
-        >
-          {option.label}
-        </button>
-      {/each}
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>{t('settings.language')}</h2>
-    <div class="seg" role="group" aria-label={t('settings.language')}>
+<div class="wrap settings-page">
+  <SettingsSyncBlock
+    title={t('cloud.title')}
+    signedOutDesc={t('cloud.desc')}
+    ssoHint={t('cloud.ssoHint')}
+    signedInDesc={t('cloud.desc')}
+    email={CLOUD.user?.email}
+    configured={CLOUD.configured}
+    signedIn={!!CLOUD.user}
+    unavailableDesc={t('cloud.desc')}
+  >
+    {#snippet actions()}
       <button
         type="button"
-        class:on={S.settings.locale === 'zh'}
-        aria-pressed={S.settings.locale === 'zh'}
-        onclick={() => setLocale('zh')}
+        class="btn-secondary"
+        disabled={CLOUD.busy}
+        onclick={signOutCloud}
       >
-        中文
+        {t('cloud.signOut')}
       </button>
-      <button
-        type="button"
-        class:on={S.settings.locale === 'en'}
-        aria-pressed={S.settings.locale === 'en'}
-        onclick={() => setLocale('en')}
-      >
-        English
-      </button>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>{t('cloud.title')}</h2>
-    <p class="data-desc">{t('cloud.desc')}</p>
-    {#if CLOUD.user}
-      <p class="data-desc">
-        <span class="badge badge--success">{t('cloud.signedInAs', { email: CLOUD.user.email })}</span>
-      </p>
-      <div class="settings-actions">
-        <button type="button" class="btn-secondary" disabled={CLOUD.busy} onclick={signOutCloud}>
-          {t('cloud.signOut')}
-        </button>
-      </div>
-    {:else}
+    {/snippet}
+    {#snippet signedOut()}
       <form class="cloud-form" onsubmit={handleSignIn}>
-        <div class="field">
-          <label for="cloud-email">{t('cloud.email')}</label>
+        <SettingsRow label={t('cloud.email')}>
           <input
             id="cloud-email"
             type="email"
             autocomplete="email"
             bind:value={cloudEmail}
           />
-        </div>
-        <div class="field">
-          <label for="cloud-password">{t('cloud.password')}</label>
+        </SettingsRow>
+        <SettingsRow label={t('cloud.password')}>
           <input
             id="cloud-password"
             type="password"
             autocomplete="current-password"
             bind:value={cloudPassword}
           />
-        </div>
-        <button type="submit" class="btn-primary" disabled={CLOUD.busy || !cloudEmail || !cloudPassword}>
-          {t('cloud.signIn')}
-        </button>
+        </SettingsRow>
+        <SettingsButtonGroup>
+          <button
+            type="submit"
+            class="btn-primary"
+            disabled={CLOUD.busy || !cloudEmail || !cloudPassword}
+          >
+            {t('cloud.signIn')}
+          </button>
+        </SettingsButtonGroup>
       </form>
       {#if CLOUD.error}
-        <p class="data-desc"><span class="badge badge--danger">{CLOUD.error}</span></p>
+        <p class="block-desc">
+          <span class="badge badge--danger">{CLOUD.error}</span>
+        </p>
       {/if}
-    {/if}
-  </section>
+    {/snippet}
+  </SettingsSyncBlock>
 
-  <section class="card">
-    <h2>{t('settings.dataTitle')}</h2>
+  <SettingsAppearanceBlock
+    title={t('settings.appearance')}
+    theme={S.settings.theme || 'auto'}
+    onThemeChange={setTheme}
+    themeOptions={[
+      { value: 'light', label: t('settings.themeLight') },
+      { value: 'dark', label: t('settings.themeDark') },
+      { value: 'auto', label: t('settings.themeAuto') },
+    ]}
+    themeLabel={t('settings.theme')}
+    themeDesc={t('settings.themeDesc')}
+    locale={S.settings.locale}
+    onLocaleChange={setLocale}
+    localeOptions={[
+      { value: 'zh', label: t('settings.langZh') },
+      { value: 'en', label: t('settings.langEn') },
+    ]}
+    languageLabel={t('settings.language')}
+    languageDesc={t('settings.languageDesc')}
+  />
+
+  <SettingsSection title={t('settings.dataTitle')}>
     {#if S.backend === 'vault'}
-      <p class="data-desc">
+      <p class="block-desc">
         <span class="badge badge--accent">Vault</span>
         {t('settings.vaultDesc')}
       </p>
@@ -173,13 +179,17 @@
         </li>
       </ul>
     {:else}
-      <p class="data-desc">{t('settings.dataDesc')}</p>
+      <p class="block-desc">{t('settings.dataDesc')}</p>
     {/if}
     <div class="settings-actions">
       <button type="button" class="btn-secondary" onclick={exportJson}>
         {t('settings.exportButton')}
       </button>
-      <button type="button" class="btn-secondary" onclick={() => importInput?.click()}>
+      <button
+        type="button"
+        class="btn-secondary"
+        onclick={() => importInput?.click()}
+      >
         {t('settings.importButton')}
       </button>
     </div>
@@ -195,30 +205,16 @@
       }}
     />
     {#if mergedCount >= 0}
-      <p class="data-desc">
+      <p class="block-desc">
         <span class="badge badge--success">
           {t('settings.importedCount', { count: mergedCount })}
         </span>
       </p>
     {/if}
-  </section>
+  </SettingsSection>
 </div>
 
 <style>
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg, 16px);
-    padding: var(--space-5, 20px);
-    margin-block: var(--space-4, 16px);
-    display: grid;
-    gap: var(--space-3, 12px);
-  }
-  .data-desc {
-    margin: 0;
-    color: var(--t2, var(--text-secondary));
-    font-size: var(--text-sm);
-  }
   .settings-actions {
     display: flex;
     gap: var(--space-2);

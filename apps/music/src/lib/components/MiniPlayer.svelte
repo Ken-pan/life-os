@@ -1,5 +1,7 @@
 <script>
   import { browser } from '$app/environment';
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import Icon from '@life-os/platform-web/svelte/icon';
@@ -16,7 +18,7 @@
     setVolume,
     toggleMute
   } from '$lib/player.svelte.js';
-  import { openUtilityPane, toggleUtilityPane, openQueueDrawer, openNowPlaying as openNowPlayingOverlay } from '$lib/ui.svelte.js';
+  import { openUtilityPane, toggleUtilityPane, openQueueDrawer, openNowPlaying as openNowPlayingOverlay, nowPlaying } from '$lib/ui.svelte.js';
   import { isMiniPlayerHidden } from '$lib/nav.js';
   import { swipeTrack } from '$lib/gestures.js';
   import { setImmersiveViewMode } from '$lib/state.svelte.js';
@@ -24,15 +26,23 @@
 
   const hidden = $derived(isMiniPlayerHidden(page.url.pathname));
   const track = $derived(player.queue[player.index] ?? null);
-  const visible = $derived(Boolean(track) && !hidden);
+  const visible = $derived(Boolean(track) && !hidden && !nowPlaying.open);
   const repeatIcon = $derived(player.repeat === 'one' ? 'repeat-1' : 'repeat');
   const volumeIcon = $derived(player.muted || player.volume === 0 ? 'volume-x' : 'volume-2');
   const statusHint = $derived(player.statusHint || '');
+  const isLyricsOnly = $derived(statusHint === t('player.lyricsOnlyHint'));
   const progressPct = $derived(
-    player.duration > 0
+    visible && player.duration > 0
       ? Math.min(100, Math.max(0, (player.currentTime / player.duration) * 100))
       : 0,
   );
+
+  /** @param {MouseEvent} e */
+  function openImport(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    goto(resolve('/import'));
+  }
 
   let isDesktop = $state(browser && window.matchMedia('(min-width: 840px)').matches);
 
@@ -75,7 +85,7 @@
   <div class="mini-player-body">
     <a
       class="mini-player-link"
-      href="/now-playing"
+      href={resolve('/now-playing')}
       onclick={(e) => {
         e.preventDefault();
         openNowPlaying('player');
@@ -94,7 +104,16 @@
         <div class="mini-player-title">{track?.title}</div>
         <div class="mini-player-artist">{track?.artist}</div>
         {#if statusHint}
-          <p class="mini-player-status-hint" role="status">{statusHint}</p>
+          <p class="mini-player-status-hint" role="status">
+            {statusHint}
+            {#if isLyricsOnly}
+              <button
+                type="button"
+                class="mini-player-import-cta"
+                onclick={openImport}
+              >{t('player.importAudio')}</button>
+            {/if}
+          </p>
         {/if}
       </div>
     </a>
@@ -127,7 +146,9 @@
           <Icon name={repeatIcon} size={16} />
         </button>
       </div>
-      <SeekBar variant="mini-inline" showTimes />
+      {#if visible && isDesktop}
+        <SeekBar variant="mini-inline" showTimes />
+      {/if}
     </div>
 
   <div class="mini-player-actions">
@@ -150,7 +171,7 @@
     </button>
     <a
       class="mini-player-btn mini-player-btn--lyrics-mobile"
-      href="/now-playing"
+      href={resolve('/now-playing')}
       aria-label={t('nowPlaying.lyrics')}
       onclick={(e) => {
         e.preventDefault();

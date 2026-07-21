@@ -1,9 +1,9 @@
 <script>
-  import { SUPPORTED_LOCALES, isAppLocale } from '@life-os/finance-core/i18n/types'
-  import SettingsSection from '@life-os/platform-web/svelte/settings/section'
-  import SettingsRow from '@life-os/platform-web/svelte/settings/row'
-  import SettingsSegment from '@life-os/platform-web/svelte/settings/segment'
-  import SettingsToggleRow from '@life-os/platform-web/svelte/settings/toggle-row'
+  import {
+    SUPPORTED_LOCALES,
+    isAppLocale,
+  } from '@life-os/finance-core/i18n/types'
+  import SettingsAppearanceBlock from '@life-os/platform-web/svelte/settings/appearance-block'
   import { t, locale, setLocale } from '$lib/i18n.svelte.js'
 
   /** @typedef {import('../../../lib/themePreference').ThemePreference} ThemePreference */
@@ -52,30 +52,20 @@
   }
 </script>
 
-<SettingsSection {title} testId="settings-appearance">
-  <SettingsRow label={t('settings.language')} desc={t('settings.languageDesc')}>
-    <SettingsSegment
-      options={SUPPORTED_LOCALES}
-      value={locale()}
-      onchange={pickLocale}
-      ariaLabel={t('settings.language')}
-    />
-  </SettingsRow>
-  <SettingsRow label={t('settings.theme')} desc={t('settings.themeDesc')}>
-    <SettingsSegment
-      options={themeOptions}
-      value={themePreference}
-      onchange={pickTheme}
-      ariaLabel={t('settings.theme')}
-    />
-  </SettingsRow>
-  {#if onLockPortraitOnPhoneChange}
-    <SettingsToggleRow
-      label={t('settings.lockPortraitOnPhone')}
-      desc={t('settings.lockPortraitOnPhoneDesc')}
-      checked={lockPortraitOnPhone}
-      ariaLabel={t('settings.lockPortraitOnPhone')}
-      onchange={onLockPortraitOnPhoneChange}
-    />
-  {/if}
-</SettingsSection>
+<SettingsAppearanceBlock
+  {title}
+  theme={themePreference}
+  onThemeChange={pickTheme}
+  {themeOptions}
+  themeLabel={t('settings.theme')}
+  themeDesc={t('settings.themeDesc')}
+  locale={locale()}
+  onLocaleChange={pickLocale}
+  localeOptions={SUPPORTED_LOCALES}
+  languageLabel={t('settings.language')}
+  languageDesc={t('settings.languageDesc')}
+  {lockPortraitOnPhone}
+  {onLockPortraitOnPhoneChange}
+  lockPortraitLabel={t('settings.lockPortraitOnPhone')}
+  lockPortraitDesc={t('settings.lockPortraitOnPhoneDesc')}
+/>

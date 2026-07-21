@@ -6,10 +6,16 @@ import { browser } from '$app/environment'
 import {
   buildResumeDescriptor,
   buildKenosContinueHandoffUrl,
-  domainContinueStorageKey,
+  clearDomainContinue,
+  writeDomainContinue,
   resolveKenosOrigin,
   resumeDescriptorToOpenUrl,
 } from '@life-os/platform-web/kenos-space-continuity'
+import {
+  installNavManifestPublisher,
+  publishNavManifest,
+} from '@life-os/platform-web/kenos-native-bridge'
+import { sensory } from '@life-os/platform-web/kenos-sensory'
 import { auth } from '$lib/auth.svelte.js'
 import {
   getCurrentSet,
@@ -24,6 +30,13 @@ import {
 import { timer, startTimer, cancelTimer } from '$lib/timer.svelte.js'
 import { todayDayId } from '$lib/state.svelte.js'
 import { goto } from '$app/navigation'
+import {
+  fitnessToolSheet,
+  knowledgeSheet,
+  setLogSheet,
+  skipModal,
+  weightModal,
+} from '$lib/ui.svelte.js'
 
 export const FITNESS_SPACE_ID = 'training'
 export const FITNESS_ACCENT = '#5B8DEF'
@@ -32,9 +45,14 @@ export const FITNESS_ICON = 'activity'
 /**
  * @param {URL | Location | string} [url]
  */
-export function readFitnessResumeQuery(url = browser ? window.location.href : '/') {
+export function readFitnessResumeQuery(
+  url = browser ? window.location.href : '/',
+) {
   try {
-    const u = typeof url === 'string' ? new URL(url, 'https://local.invalid') : new URL(url.href)
+    const u =
+      typeof url === 'string'
+        ? new URL(url, 'https://local.invalid')
+        : new URL(url.href)
     return {
       exerciseId: u.searchParams.get('kenosEx') || null,
       set: u.searchParams.get('kenosSet')
@@ -74,11 +92,7 @@ export function suspendFitnessSpace(opts = {}) {
     (browser ? window.location.pathname : `/day/${dayId}/focus`)
   const queue = getSessionExercises(dayId)
   const progress = getSessionProgress(dayId)
-  let exIndex =
-    opts.exIndex ??
-    loadFocusCursor(dayId) ??
-    progress.exIndex ??
-    0
+  let exIndex = opts.exIndex ?? loadFocusCursor(dayId) ?? progress.exIndex ?? 0
   if (opts.exerciseId) {
     const idx = queue.findIndex((ex) => ex.id === opts.exerciseId)
     if (idx >= 0) exIndex = idx
@@ -108,10 +122,7 @@ export function suspendFitnessSpace(opts = {}) {
         : progress.pct
           ? `${progress.done}/${progress.total}`
           : null
-  const titleBits = [
-    ex?.cn || ex?.name || 'Workout',
-    setLabel,
-  ].filter(Boolean)
+  const titleBits = [ex?.cn || ex?.name || 'Workout', setLabel].filter(Boolean)
 
   const focusPath = pathname.includes('/focus')
     ? pathname.split('?')[0]
@@ -148,10 +159,15 @@ export function suspendFitnessSpace(opts = {}) {
  *   setExIndex?: (n: number) => void,
  * }} [opts]
  */
-export function resumeFitnessFocus(dayId, { descriptor = null, setExIndex } = {}) {
+export function resumeFitnessFocus(
+  dayId,
+  { descriptor = null, setExIndex } = {},
+) {
   if (!browser) return { ok: false }
   const q = readFitnessResumeQuery()
-  const sub = /** @type {Record<string, unknown>} */ (descriptor?.substate || {})
+  const sub = /** @type {Record<string, unknown>} */ (
+    descriptor?.substate || {}
+  )
   const exerciseId =
     descriptor?.entityId ||
     /** @type {string|null} */ (sub.exerciseId) ||
@@ -159,7 +175,9 @@ export function resumeFitnessFocus(dayId, { descriptor = null, setExIndex } = {}
   const queue = getSessionExercises(dayId)
   let exIndex = loadFocusCursor(dayId) ?? getSessionProgress(dayId).exIndex ?? 0
   if (exerciseId) {
-    const idx = queue.findIndex((ex) => ex.id === exerciseId || ex.id.includes(String(exerciseId)))
+    const idx = queue.findIndex(
+      (ex) => ex.id === exerciseId || ex.id.includes(String(exerciseId)),
+    )
     if (idx >= 0) exIndex = idx
   } else if (typeof sub.exIndex === 'number') {
     exIndex = sub.exIndex
@@ -176,7 +194,11 @@ export function resumeFitnessFocus(dayId, { descriptor = null, setExIndex } = {}
         timerRemain,
         timerMode === 'rest' ? '组间休息' : '计时',
         null,
-        { mode: timerMode === 'work' ? 'work' : 'rest' },
+        {
+          mode: timerMode === 'work' ? 'work' : 'rest',
+          // Focus 会话内恢复时必须 inline，否则会落到底部 float 计时器
+          inline: true,
+        },
       )
     } catch {
       /* timer optional */
@@ -185,16 +207,16 @@ export function resumeFitnessFocus(dayId, { descriptor = null, setExIndex } = {}
 
   const ex = queue[exIndex]
   const exerciseComplete = sub.exerciseComplete === true
-  const targetSet =
-    exerciseComplete
-      ? null
-      : q.set != null && Number.isFinite(q.set)
-        ? q.set
-        : sub.set != null && Number.isFinite(Number(sub.set))
-          ? Number(sub.set)
-          : sub.completedSets != null && Number.isFinite(Number(sub.completedSets))
-            ? Number(sub.completedSets) + 1
-            : null
+  const targetSet = exerciseComplete
+    ? null
+    : q.set != null && Number.isFinite(q.set)
+      ? q.set
+      : sub.set != null && Number.isFinite(Number(sub.set))
+        ? Number(sub.set)
+        : sub.completedSets != null &&
+            Number.isFinite(Number(sub.completedSets))
+          ? Number(sub.completedSets) + 1
+          : null
   const setNum = ex
     ? targetSet != null
       ? ensureResumeCurrentSet(dayId, ex.id, targetSet, undefined, {
@@ -204,12 +226,7 @@ export function resumeFitnessFocus(dayId, { descriptor = null, setExIndex } = {}
       : getCurrentSet(dayId, ex.id, ex.sets)
     : null
 
-  if (
-    browser &&
-    targetSet != null &&
-    Number.isFinite(targetSet) &&
-    ex?.id
-  ) {
+  if (browser && targetSet != null && Number.isFinite(targetSet) && ex?.id) {
     try {
       sessionStorage.setItem(
         'kenos.continuity.pendingSet',
@@ -225,9 +242,17 @@ export function resumeFitnessFocus(dayId, { descriptor = null, setExIndex } = {}
     }
   }
 
-  // Continuity query is one-shot: strip after apply so later set completes
-  // are not re-clamped by a stale kenosSet on reload/navigation.
-  if (browser && (q.exerciseId || q.set != null)) {
+  // Continuity query is one-shot: strip only after set pin lands (or no set
+  // target). Early strip used to hide failed pins behind a 1.2s pendingSet retry.
+  const exerciseLanded =
+    !exerciseId ||
+    (ex?.id && (ex.id === exerciseId || ex.id.includes(String(exerciseId))))
+  const setLanded =
+    targetSet == null ||
+    (setNum != null && Number(setNum) === Number(targetSet))
+  const mayStrip = Boolean(exerciseLanded && setLanded)
+
+  if (browser && mayStrip && (q.exerciseId || q.set != null)) {
     try {
       const before = `${window.location.pathname}${window.location.search}${window.location.hash}`
       const u = new URL(window.location.href)
@@ -252,17 +277,21 @@ export function resumeFitnessFocus(dayId, { descriptor = null, setExIndex } = {}
     exIndex,
     exerciseId: ex?.id ?? exerciseId,
     set: setNum,
+    continuityPinned: mayStrip,
   }
 }
 
 /**
  * @param {{ handoffToKenos?: boolean, dayId?: string, exIndex?: number }} [opts]
  */
-export function openFitnessContinue({ handoffToKenos = true, dayId, exIndex } = {}) {
+export function openFitnessContinue({
+  handoffToKenos = true,
+  dayId,
+  exIndex,
+} = {}) {
   const d = suspendFitnessSpace({ dayId, exIndex })
   try {
-    const key = domainContinueStorageKey('fitness', auth.user?.id)
-    localStorage.setItem(key, JSON.stringify(d))
+    writeDomainContinue(FITNESS_SPACE_ID, auth.user?.id, d)
   } catch {
     /* ignore */
   }
@@ -302,12 +331,117 @@ export async function openFitnessActiveWithResume(dayId) {
     { ...d, route: `/day/${dayId}/focus` },
     { origin: browser ? window.location.origin : 'https://local.invalid' },
   )
-  const path =
-    openUrl.startsWith('http')
-      ? new URL(openUrl).pathname + new URL(openUrl).search
-      : openUrl
+  const path = openUrl.startsWith('http')
+    ? new URL(openUrl).pathname + new URL(openUrl).search
+    : openUrl
   await goto(path)
   return d
+}
+
+/** Overlay sheets that should hide the native Domain dock. */
+export function resolveFitnessLiveState() {
+  if (
+    setLogSheet.open ||
+    fitnessToolSheet.open ||
+    knowledgeSheet.open ||
+    weightModal.open ||
+    skipModal.open
+  ) {
+    return 'sheet'
+  }
+  const onFocus =
+    browser &&
+    (window.location.pathname.includes('/focus') ||
+      window.location.pathname.includes('/session'))
+  if (!onFocus) return 'idle'
+  const dayId = todayDayId()
+  const progress = getSessionProgress(dayId)
+  if (progress?.allDone) return 'summary'
+  if (browser && Number(timer.remain) > 0) {
+    return `timer:${timer.mode || 'rest'}:${timer.remain}`
+  }
+  return 'active'
+}
+
+/** Navigation Manifest for Kenos iOS Domain chrome / leave-guard. */
+export function buildFitnessNavManifest() {
+  const path = browser
+    ? `${window.location.pathname}${window.location.search}`
+    : '/'
+  const dayId = browser ? todayDayId() : 'chest'
+  const onFocus =
+    browser &&
+    (window.location.pathname.includes('/focus') ||
+      window.location.pathname.includes('/session'))
+  const progress = onFocus ? getSessionProgress(dayId) : null
+  const setHint = progress?.exId
+    ? `Training · ${progress.done}/${progress.total}`
+    : 'Training'
+  // Align with KenosDomainRegistry Training dock: Today · Program · Discover · More
+  const pathname = browser ? window.location.pathname : '/'
+  let activeTab = 'today'
+  if (onFocus || pathname.includes('/session')) activeTab = 'more'
+  else if (
+    pathname.includes('/discover/records') ||
+    pathname.includes('/history') ||
+    pathname.includes('/library') ||
+    pathname.includes('/discover/stats') ||
+    pathname.includes('/discover/tools')
+  ) {
+    activeTab = 'more'
+  } else if (pathname.includes('/program') || pathname.startsWith('/day')) {
+    activeTab = 'program'
+  } else if (pathname === '/discover' || pathname.startsWith('/discover/')) {
+    activeTab = 'discover'
+  }
+
+  const liveState = resolveFitnessLiveState()
+
+  return {
+    domainId: FITNESS_SPACE_ID,
+    path,
+    title: 'Training',
+    activeTab,
+    canGoBack: browser ? window.history.length > 1 : false,
+    currentEntity: progress?.exId ? String(progress.exId) : '',
+    liveState,
+    unsavedDraft: false,
+    summary: onFocus
+      ? progress?.allDone
+        ? 'Session complete'
+        : setHint
+      : 'Training',
+  }
+}
+
+export function publishFitnessNavManifest() {
+  return publishNavManifest(buildFitnessNavManifest())
+}
+
+/** Install Continuity leave stub + nav-manifest publisher (idempotent). */
+export function installKenosFitnessBridge() {
+  if (!browser) return
+  window.__KENOS_LEAVE_GUARD__ = {
+    probe() {
+      return { dirty: false, summary: '' }
+    },
+    discard() {},
+    compose() {
+      void sensory('soft')
+      void goto('/session')
+      void publishFitnessNavManifest()
+    },
+  }
+  window.__KENOS_DOMAIN_COMPOSE__ = () => {
+    window.__KENOS_LEAVE_GUARD__?.compose?.()
+  }
+  void publishFitnessNavManifest()
+  if (!window.__KENOS_TRAINING_NAV_PUBLISHER__) {
+    window.__KENOS_TRAINING_NAV_PUBLISHER__ = installNavManifestPublisher(
+      () => buildFitnessNavManifest(),
+      { intervalMs: 700 },
+    )
+  }
 }
 
 export const fitnessSpaceAdapter = {
@@ -347,7 +481,7 @@ export const fitnessSpaceAdapter = {
   },
   async clearUserState(userId) {
     try {
-      localStorage.removeItem(domainContinueStorageKey('fitness', userId))
+      clearDomainContinue(FITNESS_SPACE_ID, userId)
       cancelTimer()
     } catch {
       /* ignore */

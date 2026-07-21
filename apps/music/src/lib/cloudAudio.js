@@ -5,7 +5,10 @@ import { MUSIC_TABLES as T } from './supabaseTables.js'
 import { db, getAllTracks } from './db.js'
 import { t } from './i18n/index.js'
 import { loadCachedAudioUrl, peekCachedAudioUrl } from './audioBlobStore.js'
-import { localAudioObjectUrl } from './artUrlCache.js'
+import {
+  localAudioObjectUrl,
+  revokeLocalAudioObjectUrl,
+} from './artUrlCache.js'
 import { getPrefetchLimit, getWarmByteMode } from './networkPolicy.js'
 
 export const MUSIC_BUCKET = 'music'
@@ -583,11 +586,25 @@ export async function uploadTrackAudio(track, onProgress, user) {
     if (error) throw error
   })
 
-  await db.tracks.update(track.id, {
-    storagePath: path,
-    mime: contentType,
-    size: blob.size,
-  })
+  // Drop the local blob once cloud storage owns the bytes — keeps IDB / WKWebView
+  // memory bounded on Continuity cold starts.
+  const row = await db.tracks.get(track.id)
+  if (row) {
+    row.storagePath = path
+    row.mime = contentType
+    row.size = blob.size
+    delete row.audioBlob
+    await db.tracks.put(row)
+  } else {
+    await db.tracks.update(track.id, {
+      storagePath: path,
+      mime: contentType,
+      size: blob.size,
+    })
+  }
+  revokeLocalAudioObjectUrl(track.id)
+  delete track.audioBlob
+  delete track.objectUrl
 
   return path
 }

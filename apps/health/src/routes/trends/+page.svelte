@@ -18,7 +18,8 @@
     }
   })
 
-  const fmt = (key, p) => t(key).replace(/\{(\w+)\}/g, (_, k) => String(p?.[k] ?? ''))
+  const fmt = (key, p) =>
+    t(key).replace(/\{(\w+)\}/g, (_, k) => String(p?.[k] ?? ''))
   const hasMeasured = $derived(A.health.length > 0)
 
   const median = (nums) => {
@@ -30,10 +31,55 @@
 
   // 指标配置:睡眠用柱、生理信号用面积折线;good 决定“↑好还是↓好”标注
   const METRICS = [
-    { key: 'sleepHours', label: 'trends.sleep', unit: 'trends.hoursUnit', kind: 'bar', good: 'high', fmt: (v) => v.toFixed(1) },
-    { key: 'hrv', label: 'trends.hrv', unit: 'trends.msUnit', kind: 'line', good: 'high', fmt: (v) => String(Math.round(v)) },
-    { key: 'restingHR', label: 'trends.restingHR', unit: 'trends.bpmUnit', kind: 'line', good: 'low', fmt: (v) => String(Math.round(v)) },
-    { key: 'steps', label: 'trends.steps', unit: '', kind: 'line', good: 'high', fmt: (v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(Math.round(v))) },
+    {
+      key: 'sleepHours',
+      label: 'trends.sleep',
+      unit: 'trends.hoursUnit',
+      kind: 'bar',
+      good: 'high',
+      fmt: (v) => v.toFixed(1),
+    },
+    {
+      key: 'hrv',
+      label: 'trends.hrv',
+      unit: 'trends.msUnit',
+      kind: 'line',
+      good: 'high',
+      fmt: (v) => String(Math.round(v)),
+    },
+    {
+      key: 'restingHR',
+      label: 'trends.restingHR',
+      unit: 'trends.bpmUnit',
+      kind: 'line',
+      good: 'low',
+      fmt: (v) => String(Math.round(v)),
+    },
+    {
+      key: 'steps',
+      label: 'trends.steps',
+      unit: '',
+      kind: 'line',
+      good: 'high',
+      fmt: (v) =>
+        v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(Math.round(v)),
+    },
+    {
+      key: 'activeEnergyKcal',
+      label: 'trends.activeEnergy',
+      unit: 'trends.kcalUnit',
+      kind: 'line',
+      good: 'high',
+      fmt: (v) => String(Math.round(v)),
+    },
+    {
+      key: 'exerciseMinutes',
+      label: 'trends.exercise',
+      unit: 'trends.minUnit',
+      kind: 'bar',
+      good: 'high',
+      fmt: (v) => String(Math.round(v)),
+    },
   ]
 
   // 趋势方向的语义色:结合“越高越好/越低越好”判断这个方向是好是坏
@@ -47,7 +93,13 @@
     METRICS.map((m) => {
       const s = metricSeries(A.health, m.key, 14, nowMs)
       const sum = trendSummary(s.values, 7)
-      return { ...m, series: s, summary: sum, baseline: median(s.values), tone: toneOf(sum.dir, m.good) }
+      return {
+        ...m,
+        series: s,
+        summary: sum,
+        baseline: median(s.values),
+        tone: toneOf(sum.dir, m.good),
+      }
     }),
   )
 </script>
@@ -65,11 +117,19 @@
         <header class="chart-head">
           <div>
             <h3>{t(c.label)}</h3>
-            <span class="good">{c.good === 'high' ? t('trends.goodHigh') : t('trends.goodLow')}</span>
+            <span class="good"
+              >{c.good === 'high'
+                ? t('trends.goodHigh')
+                : t('trends.goodLow')}</span
+            >
           </div>
           <div class="summary" data-tone={c.tone}>
             {#if c.summary.recent != null}
-              <span class="avg">{fmt('trends.avg7', { v: `${c.fmt(c.summary.recent)}${c.unit ? t(c.unit) : ''}` })}</span>
+              <span class="avg"
+                >{fmt('trends.avg7', {
+                  v: `${c.fmt(c.summary.recent)}${c.unit ? t(c.unit) : ''}`,
+                })}</span
+              >
             {/if}
             <span class="dir">{t(`trends.dir_${c.summary.dir}`)}</span>
           </div>
@@ -94,7 +154,9 @@
           />
         {/if}
         {#if c.baseline != null}
-          <p class="baseline">{t('trends.baseline')}: {c.fmt(c.baseline)}{c.unit ? t(c.unit) : ''}</p>
+          <p class="baseline">
+            {t('trends.baseline')}: {c.fmt(c.baseline)}{c.unit ? t(c.unit) : ''}
+          </p>
         {/if}
       </section>
     {/each}

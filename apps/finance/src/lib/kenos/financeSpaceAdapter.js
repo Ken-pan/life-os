@@ -4,8 +4,14 @@
  */
 import {
   buildResumeDescriptor,
-  domainContinueStorageKey,
+  clearDomainContinue,
+  writeDomainContinue,
 } from '@life-os/platform-web/kenos-space-continuity'
+import {
+  installNavManifestPublisher,
+  publishNavManifest,
+} from '@life-os/platform-web/kenos-native-bridge'
+import { sensory } from '@life-os/platform-web/kenos-sensory'
 
 export const MONEY_SPACE_ID = 'money'
 export const MONEY_ACCENT = '#3D9B6E'
@@ -15,12 +21,63 @@ function isBrowser() {
   return typeof window !== 'undefined'
 }
 
+/** @typedef {'drawer' | 'compose' | 'sheet'} MoneyOverlayKind */
+
+/** Overlay registry for Domain dock hide (native reads liveState). */
+const moneyOverlay = {
+  /** @type {MoneyOverlayKind | null} */
+  kind: null,
+}
+
+/**
+ * Sync liveState to native Domain dock. Call from drawer mount/unmount.
+ * @param {MoneyOverlayKind | null} kind
+ */
+export function setMoneyOverlay(kind) {
+  moneyOverlay.kind = kind || null
+  if (isBrowser()) {
+    try {
+      if (moneyOverlay.kind) {
+        document.documentElement.dataset.kenosLiveState = moneyOverlay.kind
+      } else {
+        delete document.documentElement.dataset.kenosLiveState
+      }
+    } catch {
+      /* ignore */
+    }
+    void publishMoneyNavManifest()
+  }
+}
+
+export function clearMoneyOverlay() {
+  setMoneyOverlay(null)
+}
+
+/** Overlay states that should hide the native Domain dock. */
+export function resolveMoneyLiveState() {
+  if (moneyOverlay.kind) return moneyOverlay.kind
+  if (isBrowser()) {
+    try {
+      const c = new URLSearchParams(window.location.search).get('compose')
+      if (c === '1' || c === 'true') return 'compose'
+    } catch {
+      /* ignore */
+    }
+  }
+  return 'idle'
+}
+
 /**
  * @param {URL | Location | string} [url]
  */
-export function readMoneyResumeQuery(url = isBrowser() ? window.location.href : '/') {
+export function readMoneyResumeQuery(
+  url = isBrowser() ? window.location.href : '/',
+) {
   try {
-    const u = typeof url === 'string' ? new URL(url, 'https://local.invalid') : new URL(url.href)
+    const u =
+      typeof url === 'string'
+        ? new URL(url, 'https://local.invalid')
+        : new URL(url.href)
     return {
       section: u.searchParams.get('kenosSection') || null,
       scrollAnchor: u.searchParams.get('kenosScroll') || null,
@@ -98,6 +155,45 @@ export async function resumeMoneySpace(descriptor = null) {
   return { ok: true, route }
 }
 
+/** @returns {{ domainId: string, path: string, title: string, activeTab: string, canGoBack: boolean, currentEntity: string, liveState: string, unsavedDraft: boolean, summary: string }} */
+export function buildMoneyNavManifest() {
+  const path = isBrowser()
+    ? `${window.location.pathname}${window.location.search}`
+    : '/home/today'
+  const pathname = isBrowser() ? window.location.pathname : '/home/today'
+  // Align with KenosDomainRegistry Money dock: Today · History · Accounts · More
+  let activeTab = 'today'
+  if (pathname.startsWith('/accounts')) activeTab = 'accounts'
+  else if (pathname.startsWith('/history')) activeTab = 'history'
+  else if (
+    pathname.startsWith('/forecast') ||
+    pathname.startsWith('/plan') ||
+    pathname.startsWith('/stocks') ||
+    pathname.startsWith('/decision') ||
+    pathname.startsWith('/review') ||
+    pathname.startsWith('/settings')
+  ) {
+    activeTab = 'more'
+  } else if (pathname.startsWith('/home')) activeTab = 'today'
+  const d = suspendMoneySpace()
+  return {
+    domainId: MONEY_SPACE_ID,
+    path,
+    title: 'Money',
+    activeTab,
+    canGoBack: isBrowser() ? window.history.length > 1 : false,
+    currentEntity: '',
+    liveState: resolveMoneyLiveState(),
+    unsavedDraft: false,
+    // Privacy: never put amounts into native chrome cache.
+    summary: sanitizeMoneySubtitle(d.displaySubtitle || 'Money'),
+  }
+}
+
+export function publishMoneyNavManifest() {
+  return publishNavManifest(buildMoneyNavManifest())
+}
+
 export function installMoneyLeaveGuard() {
   if (!isBrowser()) return
   window.__KENOS_LEAVE_GUARD__ = {
@@ -106,19 +202,29 @@ export function installMoneyLeaveGuard() {
     },
     discard() {},
     compose() {
+      void sensory('soft')
+      // Open History insights with compose=1 → TxnEntryDrawer (记一笔).
       void resumeMoneySpace({
         version: 1,
         userId: 'anonymous',
         spaceId: MONEY_SPACE_ID,
-        route: '/history',
+        route: '/history/insights?compose=1',
         displayTitle: 'Money',
-        displaySubtitle: 'Transactions',
+        displaySubtitle: 'Add transaction',
         updatedAt: new Date().toISOString(),
       })
+      void publishMoneyNavManifest()
     },
   }
   window.__KENOS_DOMAIN_COMPOSE__ = () => {
     window.__KENOS_LEAVE_GUARD__?.compose?.()
+  }
+  void publishMoneyNavManifest()
+  if (!window.__KENOS_MONEY_NAV_PUBLISHER__) {
+    window.__KENOS_MONEY_NAV_PUBLISHER__ = installNavManifestPublisher(
+      () => buildMoneyNavManifest(),
+      { intervalMs: 700 },
+    )
   }
 }
 
@@ -129,7 +235,7 @@ export function installMoneyLeaveGuard() {
 export function persistMoneyContinue(descriptor, userId = null) {
   const d = descriptor || suspendMoneySpace({ userId })
   try {
-    localStorage.setItem(domainContinueStorageKey('finance', userId), JSON.stringify(d))
+    writeDomainContinue(MONEY_SPACE_ID, userId, d)
   } catch {
     /* ignore */
   }
@@ -163,7 +269,7 @@ export const financeSpaceAdapter = {
   },
   async clearUserState(userId) {
     try {
-      localStorage.removeItem(domainContinueStorageKey('finance', userId))
+      clearDomainContinue(MONEY_SPACE_ID, userId)
     } catch {
       /* ignore */
     }

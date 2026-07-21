@@ -25,12 +25,17 @@
     setTidyStepDone,
   } from '$lib/state.svelte.js'
   import { toast } from '$lib/ui.svelte.js'
+  import { sensory } from '@life-os/platform-web/kenos-sensory'
   import { logEvent } from '$lib/event-log.js'
   import { analyzeCirculation } from '$lib/spatial/circulation.js'
   import { renderFloorPlanSvg } from '$lib/spatial/render-svg.js'
   import { buildTidyPlan, EFFORT_LABEL } from '$lib/spatial/tidy-plan.js'
   import { getPhotoBlob } from '$lib/photo-store.js'
   import { ICONS } from '$lib/iconRegistry.js'
+  import {
+    endTidyLiveActivity,
+    publishTidyLiveActivity,
+  } from '$lib/kenos/kenosLiveActivity.js'
   import { onDestroy } from 'svelte'
 
   const project = $derived(getActiveProject())
@@ -51,6 +56,15 @@
   const task = $derived(tasks[idx] ?? null)
   const doneCount = $derived(tasks.filter((t) => isTidyTaskDone(t.id)).length)
   const allDone = $derived(tasks.length > 0 && doneCount === tasks.length)
+
+  $effect(() => {
+    if (!tasks.length) return
+    void publishTidyLiveActivity({
+      zoneLabel: task?.zoneName || task?.title || task?.zoneId || '',
+      done: doneCount,
+      total: tasks.length,
+    })
+  })
 
   const KIND_TAGS = {
     prep: { zh: '准备', cls: 'tag-info' },
@@ -79,6 +93,7 @@
   // objectURL 不 revoke 就是内存泄漏:离开专注模式时浏览器不会自动回收这些缩略图。
   onDestroy(() => {
     for (const url of Object.values(photoUrls)) URL.revokeObjectURL(url)
+    void endTidyLiveActivity()
   })
 
   /**
@@ -108,7 +123,12 @@
 
   function finish() {
     if (!task) return
-    setTidyTaskDone(task.id, true, { zoneId: task.zoneId, zoneName: task.zoneName })
+    const wasLastOpen = tasks.filter((t) => !isTidyTaskDone(t.id)).length <= 1
+    setTidyTaskDone(task.id, true, {
+      zoneId: task.zoneId,
+      zoneName: task.zoneName,
+    })
+    void sensory(wasLastOpen ? 'pulse' : 'commit')
     next()
   }
 
@@ -145,8 +165,17 @@
     blockOpen = false
     await logEvent(
       'tidy_blocked',
-      { taskId: task.id, zoneId: task.zoneId ?? '', zoneName: task.zoneName ?? '' },
-      { reason: reason.id, reasonZh: reason.zh, title: task.title, kind: task.kind },
+      {
+        taskId: task.id,
+        zoneId: task.zoneId ?? '',
+        zoneName: task.zoneName ?? '',
+      },
+      {
+        reason: reason.id,
+        reasonZh: reason.zh,
+        title: task.title,
+        kind: task.kind,
+      },
     )
     toast(`记下了:${reason.zh} —— 这件先跳过`)
     next()
@@ -161,7 +190,11 @@
     if (!task) return
     await logEvent(
       'tidy_partial',
-      { taskId: task.id, zoneId: task.zoneId ?? '', zoneName: task.zoneName ?? '' },
+      {
+        taskId: task.id,
+        zoneId: task.zoneId ?? '',
+        zoneName: task.zoneName ?? '',
+      },
       { stepsDone, stepsTotal: task.steps.length, title: task.title },
     )
     toast(`记下了:${task.title} 做到 ${stepsDone}/${task.steps.length} 步`)
@@ -188,8 +221,16 @@
       <ICONS.x size={16} /> 退出
     </a>
     {#if tasks.length}
-      <div class="prog" role="progressbar" aria-valuenow={doneCount} aria-valuemax={tasks.length}>
-        <span class="prog-fill" style:width={`${(doneCount / tasks.length) * 100}%`}></span>
+      <div
+        class="prog"
+        role="progressbar"
+        aria-valuenow={doneCount}
+        aria-valuemax={tasks.length}
+      >
+        <span
+          class="prog-fill"
+          style:width={`${(doneCount / tasks.length) * 100}%`}
+        ></span>
       </div>
       <span class="prog-txt">{doneCount} / {tasks.length}</span>
     {/if}
@@ -215,9 +256,13 @@
       <div class="card-head">
         <span class="card-n">第 {idx + 1} 件 · 共 {tasks.length}</span>
         {#if KIND_TAGS[task.kind]}
-          <span class="tag {KIND_TAGS[task.kind].cls}">{KIND_TAGS[task.kind].zh}</span>
+          <span class="tag {KIND_TAGS[task.kind].cls}"
+            >{KIND_TAGS[task.kind].zh}</span
+          >
         {/if}
-        <span class="card-eff">{EFFORT_LABEL[task.effort]} · 约 {task.estMinutes} 分钟</span>
+        <span class="card-eff"
+          >{EFFORT_LABEL[task.effort]} · 约 {task.estMinutes} 分钟</span
+        >
         {#if done}<span class="tag tag-done">已完成</span>{/if}
       </div>
 
@@ -228,7 +273,12 @@
       {#if task.focus || (task.photoRef && photoUrls[task.photoRef])}
         <div class="visuals">
           {#if task.focus}
-            <a class="viz" href="/plan" data-sveltekit-noscroll aria-label="在平面图上查看">
+            <a
+              class="viz"
+              href="/plan"
+              data-sveltekit-noscroll
+              aria-label="在平面图上查看"
+            >
               <span class="viz-frame">
                 {@html renderFloorPlanSvg(project, {
                   compact: true,
@@ -254,7 +304,9 @@
       <section class="block">
         <h2 class="block-h">
           怎么做
-          {#if stepsDone}<span class="block-n">{stepsDone}/{task.steps.length}</span>{/if}
+          {#if stepsDone}<span class="block-n"
+              >{stepsDone}/{task.steps.length}</span
+            >{/if}
         </h2>
         <ol class="task-steps">
           {#each task.steps as s, i}
@@ -264,7 +316,8 @@
                 <input
                   type="checkbox"
                   checked={sDone}
-                  onchange={(e) => setTidyStepDone(task.id, i, e.currentTarget.checked)}
+                  onchange={(e) =>
+                    setTidyStepDone(task.id, i, e.currentTarget.checked)}
                 />
                 <span class="step-ico" aria-hidden="true">{stepIcon(s)}</span>
                 <span class="step-text">{s}</span>
@@ -279,18 +332,29 @@
           <h2 class="block-h">做到这样才算完</h2>
           <ul class="checks">
             {#each task.doneWhen as d}
-              <li class="check"><span class="check-ico" aria-hidden="true">✓</span>{d}</li>
+              <li class="check">
+                <span class="check-ico" aria-hidden="true">✓</span>{d}
+              </li>
             {/each}
           </ul>
         </section>
       {/if}
 
       <div class="actions">
-        <button type="button" class="nav-btn" onclick={prev} disabled={idx === 0}>← 上一件</button>
+        <button
+          type="button"
+          class="nav-btn"
+          onclick={prev}
+          disabled={idx === 0}>← 上一件</button
+        >
         {#if done}
-          <button type="button" class="btn-go btn-ghost" onclick={next}>下一件 →</button>
+          <button type="button" class="btn-go btn-ghost" onclick={next}
+            >下一件 →</button
+          >
         {:else}
-          <button type="button" class="btn-go" onclick={finish}>做完了,下一件 →</button>
+          <button type="button" class="btn-go" onclick={finish}
+            >做完了,下一件 →</button
+          >
         {/if}
         <!-- 「跳过」换成了「做不了」。跳过是把事情从屏幕上抹掉,系统什么也没学到,
              下次照样推荐同一件搬不动的箱子;做不了会问一句为什么,那句话是重新规划
@@ -318,7 +382,9 @@
         <ul class="reasons" aria-label="做不了的原因">
           {#each BLOCK_REASONS as r (r.id)}
             <li>
-              <button type="button" class="reason" onclick={() => block(r)}>{r.zh}</button>
+              <button type="button" class="reason" onclick={() => block(r)}
+                >{r.zh}</button
+              >
             </li>
           {/each}
         </ul>

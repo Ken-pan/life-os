@@ -58,6 +58,9 @@ let audioB = null
 /** @type {'a' | 'b'} */
 let activeSlot = 'a'
 let loadToken = 0
+/** @type {Promise<void> | null} */
+let advanceInFlight = null
+let lastUiTick = 0
 const SESSION_KEY = 'musicos_player_session'
 let sessionTimer = /** @type {ReturnType<typeof setTimeout> | null} */ (null)
 
@@ -762,12 +765,20 @@ async function advanceQueueIndex(opts = {}) {
 
 /** @param {{ fromEnded?: boolean }} [opts] */
 async function performTrackAdvance(opts = {}) {
-  const advanced = await advanceQueueIndex(opts)
-  if (!advanced) return
-  const track = getCurrentTrack()
-  if (!track) return
-  if (await transitionToPreloadedTrack(track)) return
-  await loadAndPlay()
+  if (advanceInFlight) return advanceInFlight
+  advanceInFlight = (async () => {
+    try {
+      const advanced = await advanceQueueIndex(opts)
+      if (!advanced) return
+      const track = getCurrentTrack()
+      if (!track) return
+      if (await transitionToPreloadedTrack(track)) return
+      await loadAndPlay()
+    } finally {
+      advanceInFlight = null
+    }
+  })()
+  return advanceInFlight
 }
 
 export function nextTrack({ fromEnded = false } = {}) {
@@ -1084,19 +1095,30 @@ function onTimeUpdate(slot) {
   const audio = getActiveAudio()
   if (!audio) return
 
-  player.currentTime = audio.currentTime || 0
-  player.duration = audio.duration || player.duration
+  const currentTime = audio.currentTime || 0
+  const duration = audio.duration || player.duration
   updatePositionState(audio)
   scheduleSaveSession()
+
+  // Throttle UI writes (~5 Hz) — gapless handoff still uses local samples.
+  const now = performance.now()
+  if (
+    now - lastUiTick >= 200 ||
+    Math.abs(currentTime - player.currentTime) > 1.25
+  ) {
+    lastUiTick = now
+    player.currentTime = currentTime
+    player.duration = duration
+  }
 
   if (
     S.settings.gapless &&
     !gaplessHandoff &&
     !crossfadeInProgress &&
     player.repeat !== 'one' &&
-    player.duration > 0
+    duration > 0
   ) {
-    const remaining = player.duration - player.currentTime
+    const remaining = duration - currentTime
     const handoffSec = getHandoffSec()
     const nextIndex = getUpcomingIndex()
     const next = nextIndex != null ? player.queue[nextIndex] : null

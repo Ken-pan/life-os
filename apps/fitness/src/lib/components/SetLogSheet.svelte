@@ -1,49 +1,61 @@
 <script>
-  import { setLogSheet, closeSetLogSheet, openFitnessToolSheet } from '$lib/ui.svelte.js';
-  import { S, exWeight, exBarWeight, exEquipMode } from '$lib/state.svelte.js';
-  import { estimate1RM, isBarbellExercise, plateConfigFor } from '$lib/tools/calculators.js';
-  import { t } from '$lib/i18n/index.js';
+  import {
+    setLogSheet,
+    closeSetLogSheet,
+    openFitnessToolSheet,
+  } from '$lib/ui.svelte.js'
+  import { S, exWeight, exBarWeight, exEquipMode } from '$lib/state.svelte.js'
+  import {
+    estimate1RM,
+    isBarbellExercise,
+    plateConfigFor,
+  } from '$lib/tools/calculators.js'
+  import { useSheetEnterShown } from '@life-os/platform-web/svelte/overlay'
+  import { t } from '$lib/i18n/index.js'
+
+  const sheetEnter = useSheetEnterShown(() =>
+    Boolean(setLogSheet.open && setLogSheet.ex),
+  )
 
   function confirm() {
-    setLogSheet.onConfirm?.({ reps: setLogSheet.reps, rir: setLogSheet.rir });
-    closeSetLogSheet();
+    setLogSheet.onConfirm?.({ reps: setLogSheet.reps, rir: setLogSheet.rir })
+    closeSetLogSheet()
   }
 
   function skip() {
-    setLogSheet.onSkip?.();
-    closeSetLogSheet();
+    setLogSheet.onSkip?.()
+    closeSetLogSheet()
   }
 
   function onKey(e) {
-    if (e.key === 'Escape') skip();
+    if (e.key === 'Escape') skip()
   }
 
   function bumpReps(d) {
-    setLogSheet.reps = Math.max(1, setLogSheet.reps + d);
+    setLogSheet.reps = Math.max(1, setLogSheet.reps + d)
   }
 
   function setRir(v) {
-    setLogSheet.rir = v;
+    setLogSheet.rir = v
   }
 
-  const exWeightLbs = $derived(
-    setLogSheet.ex ? exWeight(setLogSheet.ex) : null
-  );
-  const hasBarWeight = $derived(exWeightLbs != null && exWeightLbs > 0);
+  const exWeightLbs = $derived(setLogSheet.ex ? exWeight(setLogSheet.ex) : null)
+  const hasBarWeight = $derived(exWeightLbs != null && exWeightLbs > 0)
   const showPlatesLink = $derived(
-    hasBarWeight && isBarbellExercise(setLogSheet.ex, exEquipMode(setLogSheet.ex))
-  );
+    hasBarWeight &&
+      isBarbellExercise(setLogSheet.ex, exEquipMode(setLogSheet.ex)),
+  )
   const rmPreview = $derived(
     hasBarWeight && setLogSheet.reps
       ? estimate1RM(exWeightLbs, setLogSheet.reps)
-      : null
-  );
+      : null,
+  )
 
   function openTool(tab) {
-    if (!setLogSheet.ex) return;
-    const unit = S.settings.unit === 'kg' ? 'kg' : 'lbs';
-    const mode = exEquipMode(setLogSheet.ex);
-    const plateCfg = plateConfigFor(setLogSheet.ex, unit, mode);
+    if (!setLogSheet.ex) return
+    const unit = S.settings.unit === 'kg' ? 'kg' : 'lbs'
+    const mode = exEquipMode(setLogSheet.ex)
+    const plateCfg = plateConfigFor(setLogSheet.ex, unit, mode)
     openFitnessToolSheet({
       tab,
       weight: exWeightLbs,
@@ -54,8 +66,8 @@
       plateSides: plateCfg?.sides,
       plateUnit: unit,
       ex: setLogSheet.ex,
-      fromFocus: true
-    });
+      fromFocus: true,
+    })
   }
 </script>
 
@@ -63,7 +75,8 @@
 
 {#if setLogSheet.open && setLogSheet.ex}
   <div
-    class="sheet-bg"
+    class="sheet-bg kenos-sheet-motion"
+    class:show={sheetEnter.shown}
     role="presentation"
     onclick={(e) => e.target === e.currentTarget && skip()}
   >
@@ -74,15 +87,28 @@
       aria-modal="true"
     >
       <div class="sheet-handle"></div>
-      <div class="sheet-title">{t('setLog.title', { set: setLogSheet.setIndex, name: setLogSheet.ex.name })}</div>
+      <div class="sheet-title">
+        {t('setLog.title', {
+          set: setLogSheet.setIndex,
+          name: setLogSheet.ex.name,
+        })}
+      </div>
       <div class="sheet-sub">{t('setLog.sub')}</div>
 
       <div class="sheet-field">
         <span class="sheet-label">{t('setLog.reps')}</span>
         <div class="sheet-stepper">
-          <button type="button" aria-label={t('setLog.decReps')} onclick={() => bumpReps(-1)}>−</button>
+          <button
+            type="button"
+            aria-label={t('setLog.decReps')}
+            onclick={() => bumpReps(-1)}>−</button
+          >
           <span class="sheet-val">{setLogSheet.reps}</span>
-          <button type="button" aria-label={t('setLog.incReps')} onclick={() => bumpReps(1)}>+</button>
+          <button
+            type="button"
+            aria-label={t('setLog.incReps')}
+            onclick={() => bumpReps(1)}>+</button
+          >
         </div>
       </div>
 
@@ -93,32 +119,40 @@
             type="button"
             class:active={setLogSheet.rir === 0}
             aria-pressed={setLogSheet.rir === 0}
-            onclick={() => setRir(0)}
-          >0</button>
+            onclick={() => setRir(0)}>0</button
+          >
           <button
             type="button"
             class:active={setLogSheet.rir === 1}
             aria-pressed={setLogSheet.rir === 1}
-            onclick={() => setRir(1)}
-          >1</button>
+            onclick={() => setRir(1)}>1</button
+          >
           <button
             type="button"
             class:active={setLogSheet.rir >= 2}
             aria-pressed={setLogSheet.rir >= 2}
-            onclick={() => setRir(2)}
-          >2+</button>
+            onclick={() => setRir(2)}>2+</button
+          >
         </div>
       </div>
 
       {#if (hasBarWeight && rmPreview) || showPlatesLink}
         <div class="setlog-tools">
           {#if hasBarWeight && rmPreview}
-            <button type="button" class="setlog-tool-link" onclick={() => openTool('1rm')}>
+            <button
+              type="button"
+              class="setlog-tool-link"
+              onclick={() => openTool('1rm')}
+            >
               {t('setLog.estimate1rm', { weight: rmPreview.avg })}
             </button>
           {/if}
           {#if showPlatesLink}
-            <button type="button" class="setlog-tool-link" onclick={() => openTool('plates')}>
+            <button
+              type="button"
+              class="setlog-tool-link"
+              onclick={() => openTool('plates')}
+            >
               {t('focus.plates')}
             </button>
           {/if}
@@ -126,8 +160,12 @@
       {/if}
 
       <div class="sheet-actions">
-        <button type="button" class="sheet-skip" onclick={skip}>{t('setLog.skipLog')}</button>
-        <button type="button" class="sheet-save" onclick={confirm}>{t('common.save')}</button>
+        <button type="button" class="sheet-skip" onclick={skip}
+          >{t('setLog.skipLog')}</button
+        >
+        <button type="button" class="sheet-save" onclick={confirm}
+          >{t('common.save')}</button
+        >
       </div>
     </div>
   </div>

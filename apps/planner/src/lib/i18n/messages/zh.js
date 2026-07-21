@@ -24,6 +24,7 @@ export default {
     listsMenu: '清单菜单',
     openLists: '打开清单',
     triage: '快速处理',
+    quickSwitch: '快速切换',
   },
   common: {
     back: '返回',
@@ -357,7 +358,10 @@ export default {
     notifyDeniedHelp: '请点击地址栏左侧的站点图标，在权限设置中允许「通知」。',
     notifyUnsupported: '当前浏览器不支持通知',
     sync: '云同步',
-    syncDesc: '登录后可把任务备份到云端，并在多设备间同步。',
+    syncDesc: '登录 Life OS 账号后可把任务备份到云端，并在多设备间同步。',
+    cloudSsoHint:
+      '与 Fitness / Finance / Music / Home 等共用同一 Life OS 账号；本机登录一次后，其它站点可自动接上。',
+    notSignedIn: '未登录',
     syncAuto: '登录后自动同步',
     syncUnavailable: '未配置 Supabase，云同步不可用',
     data: '数据与备份',
@@ -452,6 +456,8 @@ export default {
     actionClearDate: '清除日期',
     actionDone: '完成',
     actionArchive: '归档',
+    actionMore: '更多',
+    actionLess: '收起',
     archivedSuccess: '已归档「{title}」',
     paperLinks: 'PaperOS 链接',
     paperLinkPage: '笔记第 {page} 页',
@@ -503,6 +509,8 @@ export default {
     errRateLimit: '请求过于频繁，请稍后再试',
     errNetwork: '网络错误，请检查连接',
     errGeneric: '操作失败，请重试',
+    footnote:
+      '与 Fitness / Finance / Music / Home 等共用同一 Life OS 账号；本机登录一次后，其它站点可自动接上。',
   },
   sync: {
     now: '立即同步',

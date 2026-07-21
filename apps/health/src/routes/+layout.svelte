@@ -94,7 +94,11 @@
 
   {#snippet main()}
     {#if nativeShell}
-      <DomainMusicHeader title={pageTitle} domainLabel="Health" />
+      <DomainMusicHeader
+        title={pageTitle}
+        domainLabel="Health"
+        showCompose={page.url.pathname === '/'}
+      />
     {/if}
     {@render children()}
   {/snippet}
@@ -133,8 +137,8 @@
     box-sizing: border-box !important;
   }
   :global(html[data-ios-native-shell='true'] .domain-music-header) {
-    padding-top: 2px;
-    padding-bottom: 12px;
+    padding-top: 0;
+    padding-bottom: 8px;
     padding-inline: 16px;
   }
   :global(html[data-ios-native-shell='true'] .page-header),

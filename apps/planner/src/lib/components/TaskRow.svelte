@@ -23,6 +23,7 @@
   import { getLifeEventSource } from '$lib/lifeEventSource.js'
   import { paperLinksForTask } from '$lib/paperLinks.js'
   import Icon from '@life-os/platform-web/svelte/icon'
+  import { sensory } from '@life-os/platform-web/kenos-sensory'
 
   /** @type {{ task: import('$lib/types.js').Task, compact?: boolean, metaMinimal?: boolean, ritualComplete?: boolean, showScheduleAction?: boolean, scheduleDate?: string, contextDate?: string, onToggle?: (id: string) => void, onEdit?: (task: import('$lib/types.js').Task) => void }} */
   let {
@@ -45,6 +46,12 @@
 
   let completing = $state(false)
   let completeTimer = /** @type {ReturnType<typeof setTimeout> | null} */ (null)
+  let overdueActionsOpen = $state(false)
+
+  $effect(() => {
+    task.id
+    overdueActionsOpen = false
+  })
 
   const showAsCompleted = $derived(task.completed || completing)
 
@@ -63,11 +70,11 @@
   const paperLinks = $derived(paperLinksForTask(task))
   /* compact（Today/Calendar 列表）仍保留关键 chip：来源 · 项目 · 循环 */
   const hasKeyChips = $derived(
-    Boolean(lifeEventSource || task.projectId || hasRecurrence || paperLinks.length),
+    Boolean(
+      lifeEventSource || task.projectId || hasRecurrence || paperLinks.length,
+    ),
   )
-  const showSecondaryMeta = $derived(
-    !metaMinimal && (!compact || hasKeyChips),
-  )
+  const showSecondaryMeta = $derived(!metaMinimal && (!compact || hasKeyChips))
   const showScheduleBtn = $derived(
     showScheduleAction &&
       !task.completed &&
@@ -145,12 +152,13 @@
     if (task.completed || completing) return
 
     if (!ritualComplete || reduceMotion) {
+      void sensory('success')
       onToggle?.(task.id)
       return
     }
 
     completing = true
-    navigator.vibrate?.(8)
+    void sensory('success')
     completeTimer = setTimeout(() => {
       completing = false
       completeTimer = null
@@ -160,6 +168,7 @@
 
   function handleCheckToggle() {
     if (task.completed) {
+      void sensory('soft')
       onToggle?.(task.id)
       return
     }
@@ -208,10 +217,10 @@
     next = Math.max(-rowWidth, Math.min(next, COMPLETE_THRESHOLD + 48))
     dx = next
 
-    // 到达触发点时轻微震动（支持的设备）
+    // 到达触发点时轻确认（iOS shell → native haptic；PWA → vibrate）
     const armed = dx >= COMPLETE_THRESHOLD || dx < -fullDeleteThreshold
     if (armed && !armedHaptic) {
-      navigator.vibrate?.(10)
+      void sensory('tick')
       armedHaptic = true
     } else if (!armed) {
       armedHaptic = false
@@ -334,20 +343,14 @@
       console.error('[kenos] TaskRow clear due failed', error)
     })
     closeActions()
-    toast(
-      t('toast.scheduleCleared', { title: task.title }),
-      'success',
-    )
+    toast(t('toast.scheduleCleared', { title: task.title }), 'success')
   }
 
   function doArchive() {
     if (archiveList) {
       updateTask(task.id, { listId: archiveList.id })
       closeActions()
-      toast(
-        t('task.archivedSuccess', { title: task.title }),
-        'success',
-      )
+      toast(t('task.archivedSuccess', { title: task.title }), 'success')
     }
   }
 
@@ -543,23 +546,55 @@
             <button type="button" class="overdue-action-btn" onclick={doToday}>
               {t('task.actionToday')}
             </button>
-            <button type="button" class="overdue-action-btn" onclick={doTomorrow}>
+            <button
+              type="button"
+              class="overdue-action-btn"
+              onclick={doTomorrow}
+            >
               {t('task.actionTomorrow')}
             </button>
-            <button type="button" class="overdue-action-btn" onclick={doThisWeek}>
-              {t('task.actionThisWeek')}
-            </button>
-            <button type="button" class="overdue-action-btn" onclick={doClearDate}>
-              {t('task.actionClearDate')}
-            </button>
-            <button type="button" class="overdue-action-btn" onclick={handleCheckToggle}>
-              {t('task.actionDone')}
-            </button>
-            {#if archiveList}
-              <button type="button" class="overdue-action-btn" onclick={doArchive}>
-                {t('task.actionArchive')}
+            {#if overdueActionsOpen}
+              <button
+                type="button"
+                class="overdue-action-btn"
+                onclick={doThisWeek}
+              >
+                {t('task.actionThisWeek')}
               </button>
+              <button
+                type="button"
+                class="overdue-action-btn"
+                onclick={doClearDate}
+              >
+                {t('task.actionClearDate')}
+              </button>
+              <button
+                type="button"
+                class="overdue-action-btn"
+                onclick={handleCheckToggle}
+              >
+                {t('task.actionDone')}
+              </button>
+              {#if archiveList}
+                <button
+                  type="button"
+                  class="overdue-action-btn"
+                  onclick={doArchive}
+                >
+                  {t('task.actionArchive')}
+                </button>
+              {/if}
             {/if}
+            <button
+              type="button"
+              class="overdue-action-btn overdue-action-btn--more"
+              aria-expanded={overdueActionsOpen}
+              onclick={() => {
+                overdueActionsOpen = !overdueActionsOpen
+              }}
+            >
+              {overdueActionsOpen ? t('task.actionLess') : t('task.actionMore')}
+            </button>
           </div>
         {/if}
       </div>

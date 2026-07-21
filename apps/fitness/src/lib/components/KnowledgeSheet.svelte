@@ -1,38 +1,51 @@
 <script>
-  import { tick } from 'svelte';
-  import { resolve } from '$app/paths';
-  import { knowledgeSheet, closeKnowledgeSheet } from '$lib/ui.svelte.js';
-  import { getLibraryEntry, getKnowledgePreview, libraryHref } from '$lib/data/libraryHelpers.js';
-  import Icon from '@life-os/platform-web/svelte/icon';
-  import { t } from '$lib/i18n/index.js';
+  import { tick } from 'svelte'
+  import { resolve } from '$app/paths'
+  import { knowledgeSheet, closeKnowledgeSheet } from '$lib/ui.svelte.js'
+  import {
+    getLibraryEntry,
+    getKnowledgePreview,
+    libraryHref,
+  } from '$lib/data/libraryHelpers.js'
+  import Icon from '@life-os/platform-web/svelte/icon'
+  import { useSheetEnterShown } from '@life-os/platform-web/svelte/overlay'
+  import { t } from '$lib/i18n/index.js'
 
-  let closeBtn = $state(null);
+  let closeBtn = $state(null)
+  const sheetEnter = useSheetEnterShown(() =>
+    Boolean(knowledgeSheet.open && knowledgeSheet.entryId),
+  )
 
   const entry = $derived(
-    knowledgeSheet.entryId ? getLibraryEntry(knowledgeSheet.entryId) : null
-  );
-  const bullets = $derived(entry ? getKnowledgePreview(entry) : []);
-  const fullHref = $derived(entry ? libraryHref(entry.id) : '/library');
+    knowledgeSheet.entryId ? getLibraryEntry(knowledgeSheet.entryId) : null,
+  )
+  const bullets = $derived(entry ? getKnowledgePreview(entry) : [])
+  const fullHref = $derived(entry ? libraryHref(entry.id) : '/library')
 
   $effect(() => {
     if (knowledgeSheet.open) {
-      tick().then(() => closeBtn?.focus());
+      tick().then(() => closeBtn?.focus())
     }
-  });
+  })
 
   function onKey(e) {
-    if (e.key === 'Escape' && knowledgeSheet.open) closeKnowledgeSheet();
+    if (e.key === 'Escape' && knowledgeSheet.open) closeKnowledgeSheet()
   }
 
   function onBackdrop(e) {
-    if (e.target === e.currentTarget) closeKnowledgeSheet();
+    if (e.target === e.currentTarget) closeKnowledgeSheet()
   }
 </script>
 
 <svelte:window onkeydown={onKey} />
 
 {#if knowledgeSheet.open && entry}
-  <div class="sheet-bg" role="presentation" onclick={onBackdrop}>
+  <div
+    class="sheet-bg kenos-sheet-motion"
+    class:show={sheetEnter.shown}
+    role="presentation"
+    onclick={onBackdrop}
+  >
     <div
       class="sheet knowledge-sheet"
       role="dialog"
@@ -71,7 +84,11 @@
         <p class="knowledge-cite">{entry.cite}</p>
       {/if}
 
-      <a class="knowledge-full-link" href="{resolve('/library')}#lib-{entry.id}" onclick={closeKnowledgeSheet}>
+      <a
+        class="knowledge-full-link"
+        href="{resolve('/library')}#lib-{entry.id}"
+        onclick={closeKnowledgeSheet}
+      >
         {t('knowledge.viewFull')}
         <Icon name="chevron-right" size={14} />
       </a>

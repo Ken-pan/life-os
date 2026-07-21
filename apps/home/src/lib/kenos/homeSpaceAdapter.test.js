@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 import {
+  buildHomeNavManifest,
   homeResumeEntityId,
   homeResumeSubtitle,
   suspendHomeSpace,
@@ -33,5 +35,21 @@ describe('homeSpaceAdapter', () => {
     assert.equal(d.substate?.surface, 'items')
     const blob = JSON.stringify(d)
     assert.equal(/photoRef|blob:|data:image/i.test(blob), false)
+  })
+
+  it('builds home nav manifest without photo leakage', () => {
+    const m = buildHomeNavManifest()
+    assert.equal(m.domainId, 'home')
+    assert.equal(m.title, 'Home')
+    assert.equal(/photoRef|blob:|data:image/i.test(JSON.stringify(m)), false)
+  })
+
+  it('wires compose to Organize (/tidy)', () => {
+    const src = readFileSync(
+      new URL('./homeSpaceAdapter.js', import.meta.url),
+      'utf8',
+    )
+    assert.match(src, /route:\s*'\/tidy'/)
+    assert.match(src, /__KENOS_DOMAIN_COMPOSE__/)
   })
 })

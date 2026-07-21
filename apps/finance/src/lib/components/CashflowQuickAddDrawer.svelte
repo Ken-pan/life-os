@@ -1,10 +1,20 @@
 <script>
   // Port of src/components/CashflowQuickAddDrawer.tsx.
+  import { onMount } from 'svelte'
   import { getFinanceStore, uid } from '$lib/finance.svelte.js'
   import { signedMonthOffset } from '../../engine/calendar.js'
   import DateField from './fields/DateField.svelte'
   import NumberField from './fields/NumberField.svelte'
   import TextField from './fields/TextField.svelte'
+  import {
+    clearMoneyOverlay,
+    setMoneyOverlay,
+  } from '$lib/kenos/financeSpaceAdapter.js'
+
+  onMount(() => {
+    setMoneyOverlay('drawer')
+    return () => clearMoneyOverlay()
+  })
 
   /** @type {{ onClose: () => void }} */
   let { onClose } = $props()
@@ -49,8 +59,8 @@
   }
 </script>
 
-<div class="drawer-backdrop" onclick={onClose} role="presentation"></div>
-<aside class="drawer">
+<div class="drawer-backdrop kenos-drawer-backdrop" onclick={onClose} role="presentation"></div>
+<aside class="drawer kenos-drawer-panel">
   <div class="drawer-head">
     <h2>添加一次性收支</h2>
     <button type="button" class="icon-btn" onclick={onClose}>关闭</button>

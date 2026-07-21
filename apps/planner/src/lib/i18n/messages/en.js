@@ -24,6 +24,7 @@ export default {
     listsMenu: 'Lists menu',
     openLists: 'Open lists',
     triage: 'Process inbox',
+    quickSwitch: 'Quick Switch',
   },
   common: {
     back: 'Back',
@@ -119,7 +120,8 @@ export default {
     emptyTitle: 'No projects yet',
     emptyHint: 'Create a project first, then group related tasks under it.',
     mapTitle: 'Project map',
-    mapRootNote: '{count} active projects · click a category to drill in, hover for details',
+    mapRootNote:
+      '{count} active projects · click a category to drill in, hover for details',
     mapBackHint: 'Click to return to all projects',
     cat_lifeos: 'Life OS products',
     cat_portfolio: 'Portfolio / Products',
@@ -150,7 +152,8 @@ export default {
     resume: 'Resume',
     ship: 'Mark shipped',
     archive: 'Archive',
-    deleteConfirm: 'Deleting the project hides it but does not delete tasks. Continue?',
+    deleteConfirm:
+      'Deleting the project hides it but does not delete tasks. Continue?',
     addTaskPlaceholder: 'Add a task to this project…',
     openTasks: 'Open tasks',
     completedTasks: 'Completed tasks',
@@ -170,7 +173,8 @@ export default {
     notFound: 'Project not found',
   },
   triage: {
-    subtitle: 'Clarify one task at a time, then place it in your trusted system',
+    subtitle:
+      'Clarify one task at a time, then place it in your trusted system',
     progressLabel: 'Session progress',
     remaining: '{count} remaining',
     due: 'Date',
@@ -178,8 +182,10 @@ export default {
     overdue: 'Overdue',
     repeating: 'Repeating',
     nextAction: 'What is the next concrete action?',
-    nextActionPlaceholder: 'For example: Email the building manager to confirm a repair time',
-    nextActionHint: 'Start with a verb so your future self can begin without rethinking it.',
+    nextActionPlaceholder:
+      'For example: Email the building manager to confirm a repair time',
+    nextActionHint:
+      'Start with a verb so your future self can begin without rethinking it.',
     priority: 'Priority',
     size: 'Size',
     size_small: 'Small',
@@ -265,7 +271,8 @@ export default {
     conflictHint: 'Overlaps {count} block(s)',
     conflictSaveHint: 'You can still save, or pick another time.',
     useNextAvailable: 'Move to next opening · {time}',
-    noAvailableTime: 'No later opening today. Pick another date or shorten the duration.',
+    noAvailableTime:
+      'No later opening today. Pick another date or shorten the duration.',
     saveAnyway: 'Schedule anyway',
     updateSchedule: 'Update schedule',
     confirmSchedule: 'Schedule task',
@@ -361,7 +368,11 @@ export default {
       'Open the site icon in your address bar and allow Notifications for this site.',
     notifyUnsupported: 'Notifications not supported in this browser',
     sync: 'Cloud sync',
-    syncDesc: 'Sign in to back up tasks and sync across devices.',
+    syncDesc:
+      'Sign in with your Life OS account to back up tasks and sync across devices.',
+    cloudSsoHint:
+      'Same Life OS account as Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
+    notSignedIn: 'Not signed in',
     syncAuto: 'Auto-sync after sign-in',
     syncUnavailable: 'Supabase is not configured; cloud sync is unavailable',
     data: 'Data & backup',
@@ -370,7 +381,8 @@ export default {
   task: {
     createTitle: 'New task',
     editTitle: 'Edit task',
-    createDescription: 'Capture the task now. You can add the rest of the details later.',
+    createDescription:
+      'Capture the task now. You can add the rest of the details later.',
     editDescription: 'Adjust timing, context, and execution details.',
     createAction: 'Create task',
     saveChanges: 'Save changes',
@@ -437,7 +449,8 @@ export default {
     discardAction: 'Discard changes',
     deleteTask: 'Delete task',
     deleteTitle: 'Delete this task?',
-    deleteDescription: 'The task will be removed from the list. You can undo immediately after deletion.',
+    deleteDescription:
+      'The task will be removed from the list. You can undo immediately after deletion.',
     deleteAction: 'Delete task',
     kind: 'Task type',
     kindMicro: 'Micro',
@@ -456,6 +469,8 @@ export default {
     actionClearDate: 'Clear date',
     actionDone: 'Done',
     actionArchive: 'Archive',
+    actionMore: 'More',
+    actionLess: 'Less',
     archivedSuccess: 'Archived “{title}”',
     paperLinks: 'PaperOS links',
     paperLinkPage: 'Notebook page {page}',
@@ -464,7 +479,8 @@ export default {
     paperLinkCopyFailed: 'Could not copy the PaperOS page reference',
     noteLinks: 'Referenced knowledge notes',
     openInKnowledge: 'Open “{title}” in KnowledgeOS',
-    openInKnowledgeNative: 'Open “{title}” in native KnowledgeOS (app required)',
+    openInKnowledgeNative:
+      'Open “{title}” in native KnowledgeOS (app required)',
     openInKnowledgeWeb: 'Open “{title}” in KnowledgeOS on the web',
     knowledgeWeb: 'Web',
   },
@@ -507,6 +523,8 @@ export default {
     errRateLimit: 'Too many attempts — try again later',
     errNetwork: 'Network error — check your connection',
     errGeneric: 'Something went wrong',
+    footnote:
+      'Same Life OS account as Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
   },
   sync: {
     now: 'Sync now',
@@ -572,7 +590,8 @@ export default {
     scheduledBlock: 'Scheduled “{title}” at {start}',
     scheduledBlockDetailed: 'Scheduled “{title}” · {date}, {start}–{end}',
     scheduleCleared: 'Cleared schedule for “{title}”',
-    schedulePersistFailed: 'Could not save the schedule; the previous state was restored',
+    schedulePersistFailed:
+      'Could not save the schedule; the previous state was restored',
     restored: 'Restored',
     inboxAdded: 'Added to Inbox',
   },

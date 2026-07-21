@@ -1,10 +1,12 @@
 <script>
   import '../app.css'
   import '$lib/styles/weight-controls.css'
+  import { browser } from '$app/environment'
   import { onMount, setContext } from 'svelte'
   import { afterNavigate } from '$app/navigation'
   import { page } from '$app/state'
   import AppBar from '$lib/components/AppBar.svelte'
+  import DomainMusicHeader from '$lib/components/DomainMusicHeader.svelte'
   import SideNav from '$lib/components/SideNav.svelte'
   import BottomNav from '$lib/components/BottomNav.svelte'
   import TimerWidget from '$lib/components/TimerWidget.svelte'
@@ -23,10 +25,7 @@
   import { subscribeSyncError } from '$lib/syncNotify.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { auth, initAuth } from '$lib/auth.svelte.js'
-  import {
-    bindViewportHeight,
-    resetScrollLock,
-  } from '@life-os/theme'
+  import { bindViewportHeight, resetScrollLock } from '@life-os/theme'
   import { bindNetworkResume } from '@life-os/platform-web/network-resume'
   import { shouldDeferFitnessForegroundSync } from '$lib/pwaResume.js'
   import {
@@ -36,6 +35,13 @@
   import { initTimer, timer } from '$lib/timer.svelte.js'
   import { registerServiceWorker } from '$lib/serviceWorker.js'
   import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
+  import { installKenosAppLogs } from '@life-os/platform-web/kenos-app-logs'
+  import { supabase } from '$lib/supabase.js'
+  import {
+    markIosNativeShellDom,
+    isIosNativeShell,
+  } from '@life-os/platform-web/ios-native-shell'
+  import { installKenosFitnessBridge } from '$lib/kenos/fitnessSpaceAdapter.js'
   import { bindFitnessAudioCleanup } from '$lib/audio.js'
   import { getProgram } from '$lib/programRuntime.js'
   import { finalizeStaleSessions } from '$lib/session.js'
@@ -75,20 +81,44 @@
 
   const documentLocale = $derived(S.settings.locale === 'en' ? 'en' : 'zh')
 
-  const appBarHidden = $derived(
-    /\/focus$|\/summary$|^\/day\/[^/]+$|^\/program\/edit$|^\/discover\/|^\/library$/.test(
-      page.url.pathname,
-    ),
+  /** True immersive surfaces — hide DomainMusicHeader; focus owns its own chrome. */
+  const immersiveRoute = $derived(
+    /\/focus$|\/summary$|^\/session$|^\/auth$/.test(page.url.pathname),
   )
 
+  /** Web AppBar: hide on native shell, or on true immersive routes. */
+  const appBarHidden = $derived(isIosNativeShell() || immersiveRoute)
+
+  /** Drive native chrome-pad CSS (zero pad on immersive focus/summary/session). */
+  $effect(() => {
+    if (!browser) return
+    const root = document.documentElement
+    if (immersiveRoute) root.dataset.immersiveRoute = 'true'
+    else delete root.dataset.immersiveRoute
+    return () => {
+      delete root.dataset.immersiveRoute
+    }
+  })
+
+  /** Native DomainMusicHeader shares document title mapping (avoid empty → "Training"). */
   const appBarTitle = $derived.by(() => {
     const p = page.url.pathname
     if (p === '/') return t('nav.today')
     if (p === '/program') return t('program.title')
+    if (p === '/program/edit') return t('layout.titleProgramEdit')
     if (p === '/discover') return t('nav.discover')
+    if (p === '/discover/tools') return t('layout.titleTools')
+    if (p === '/discover/records') return t('layout.titleRecords')
+    if (p === '/discover/stats') return t('layout.titleStats')
+    if (p === '/library') return t('layout.titleLibrary')
     if (p === '/settings') return t('settings.title')
     if (p === '/auth') return t('auth.title')
-    return ''
+    const dayMatch = p.match(/^\/day\/([^/]+)$/)
+    if (dayMatch) {
+      const day = getProgram().days[dayMatch[1]]
+      if (day) return day.cn || day.name || pageTitle
+    }
+    return pageTitle
   })
 
   const appBarSubtitle = $derived.by(() => {
@@ -110,6 +140,8 @@
   })
 
   onMount(() => {
+    markIosNativeShellDom()
+    installKenosFitnessBridge()
     applyTheme()
     applyLocale()
 
@@ -129,6 +161,10 @@
 
     const cleanupServiceWorker = registerServiceWorker()
     void requestPersistentStorage()
+    const disposeAppLogs = installKenosAppLogs({
+      app: 'fitness',
+      getSupabase: () => supabase,
+    })
 
     return () => {
       cleanupTheme()
@@ -137,6 +173,7 @@
       cleanupAuth()
       cleanupAudio()
       cleanupServiceWorker()
+      disposeAppLogs()
     }
   })
 
@@ -181,23 +218,32 @@
   {#snippet navigation(projection)}
     {#if projection === 'desktop'}
       <SideNav />
-    {:else}
+    {:else if !isIosNativeShell()}
       <BottomNav />
     {/if}
   {/snippet}
 
   {#snippet header()}
-    <AppBar
-      title={appBarTitle}
-      subtitle={appBarSubtitle}
-      meta={appBarMeta}
-      backHref={appBarBack?.href}
-      backLabel={appBarBack?.label}
-      hidden={appBarHidden}
-    />
+    {#if !isIosNativeShell()}
+      <AppBar
+        title={appBarTitle}
+        subtitle={appBarSubtitle}
+        meta={appBarMeta}
+        backHref={appBarBack?.href}
+        backLabel={appBarBack?.label}
+        hidden={appBarHidden}
+      />
+    {/if}
   {/snippet}
 
   {#snippet main()}
+    {#if isIosNativeShell() && !immersiveRoute}
+      <DomainMusicHeader
+        title={appBarTitle}
+        domainLabel="Training"
+        showCompose={page.url.pathname === '/'}
+      />
+    {/if}
     {@render children()}
   {/snippet}
 
@@ -225,3 +271,64 @@
     <Toast />
   {/snippet}
 </LifeOsAppShell>
+
+<style>
+  /* Kenos Domain Mode — native dock is the only bottom bar */
+  :global(html[data-ios-native-shell='true'] nav.bottom-nav),
+  :global(
+      html[data-ios-native-shell='true']
+        [data-testid='fitness-shell-bottom-nav']
+    ) {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+  :global(html[data-ios-native-shell='true']) {
+    --mobile-tabbar-total-h: 0px;
+    --bottom-chrome-h: 0px;
+    --mobile-content-inset-tabbar: 0px;
+    /* Status clearance comes from shell padding-top:54 — don't also inflate safe-top. */
+    --safe-top-effective: 0px;
+  }
+  /* Immersive focus/summary/session: no Kenos chrome pad; focus owns safe areas.
+   * !important — must beat #kenos-ios-native-shell-css `--safe-top-effective:0`. */
+  :global(html[data-ios-native-shell='true'][data-immersive-route='true']) {
+    --safe-top-effective: env(safe-area-inset-top, 0px) !important;
+    --safe-top: env(safe-area-inset-top, 0px) !important;
+  }
+  /* ONE scroll-root pad — match KenosWebChrome; never also pad nested .page. */
+  :global(html[data-ios-native-shell='true'] .life-os-app-shell__main),
+  :global(html[data-ios-native-shell='true'] #main-content) {
+    padding-top: 54px !important;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
+  }
+  :global(
+      html[data-ios-native-shell='true'][data-immersive-route='true']
+        .life-os-app-shell__main
+    ),
+  :global(
+      html[data-ios-native-shell='true'][data-immersive-route='true']
+        #main-content
+    ) {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  :global(html[data-ios-native-shell='true'] .page) {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  :global(html[data-ios-native-shell='true'] .domain-music-header) {
+    padding-top: 0;
+    padding-bottom: 8px;
+    padding-inline: 16px;
+  }
+  :global(html[data-ios-native-shell='true'] .page-header),
+  :global(html[data-ios-native-shell='true'] .topbar),
+  :global(html[data-ios-native-shell='true'] header.app-header) {
+    /* DomainMusicHeader owns top chrome — avoid double headers */
+    display: none !important;
+  }
+</style>

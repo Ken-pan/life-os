@@ -8,6 +8,7 @@ import {
   playCountdownTick,
   previewRestCountdown,
 } from './audio.js'
+import { sensory } from '@life-os/platform-web/kenos-sensory'
 
 /* ═══════════════ TIMER WIDGET STATE ═══════════════ */
 export const timer = $state({
@@ -69,6 +70,7 @@ function finishTimer(fromSw = false) {
 
   timer.remain = 0
   endAt = 0
+  timer.paused = false
   clearTimers()
   cancelSwTimer()
   cancelScheduledCues()
@@ -79,13 +81,8 @@ function finishTimer(fromSw = false) {
   }, 200)
   void playChime()
   if (!fromSw) notifyRestComplete()
-  if (
-    S.settings.sound &&
-    typeof navigator !== 'undefined' &&
-    navigator.vibrate
-  ) {
-    navigator.vibrate([120, 60, 120, 60, 120])
-  }
+  // Haptics stay on when timer sound is muted (silent switch / settings.sound).
+  void sensory('pulse')
 
   if (onCompleteCallback) {
     onCompleteCallback(timer.context)
@@ -173,27 +170,15 @@ function fireRestCue(cue) {
   if (cue === 'warn10') {
     timer.status = 'urgent'
     if (S.settings.sound) void playTenSecondWarning()
-    if (
-      S.settings.sound &&
-      typeof navigator !== 'undefined' &&
-      navigator.vibrate
-    ) {
-      navigator.vibrate(40)
-    }
+    void sensory('warn')
     return
   }
 
   if (typeof cue === 'number' && cue >= 1 && cue <= 5) {
     timer.status = 'urgent'
     if (S.settings.sound) void playCountdownTick(cue)
-    if (
-      cue === 1 &&
-      S.settings.sound &&
-      typeof navigator !== 'undefined' &&
-      navigator.vibrate
-    ) {
-      navigator.vibrate([60, 40, 60])
-    }
+    // 5→2 tick; final second warn — audio still gated by settings.sound.
+    void sensory(cue === 1 ? 'warn' : 'tick')
   }
 }
 
@@ -252,10 +237,7 @@ function syncRemain() {
 }
 
 function tick() {
-  if (timer.paused) {
-    endAt += TICK_MS
-    return
-  }
+  if (timer.paused) return
   syncRemain()
 }
 
@@ -372,23 +354,78 @@ export function cancelTimer() {
   }, 400)
 }
 
+/**
+ * 提前结束休息/计时：走与自然结束相同的完成仪式（done → readyPulse），
+ * 不同于 cancelTimer 的静默关闭。
+ */
+export function skipTimer() {
+  if (!timer.visible || timer.status === 'complete') return
+  finishTimer(false)
+}
+
+/** 无休息时长时仍给 CTA 一次就绪脉冲 */
+export function signalReady() {
+  timer.readyPulse = true
+  setTimeout(() => {
+    timer.readyPulse = false
+  }, 1200)
+}
+
+export function pauseTimer() {
+  if (!timer.visible || timer.paused || timer.status === 'complete') return
+  timer.paused = true
+  cancelSwTimer()
+  cancelScheduledCues()
+}
+
+export function resumeTimer() {
+  if (!timer.visible || !timer.paused || timer.status === 'complete') return
+  endAt = Date.now() + Math.max(0, timer.remain) * 1000
+  timer.paused = false
+  refreshStatus()
+  if (timer.remain <= 0) {
+    finishTimer(false)
+    return
+  }
+  scheduleSwTimer()
+}
+
+export function togglePause() {
+  if (timer.paused) resumeTimer()
+  else pauseTimer()
+}
+
+function reanchorEndAt() {
+  endAt = Date.now() + Math.max(0, timer.remain) * 1000
+}
+
 export function addTime(delta) {
-  if (timer.status === 'complete' || !endAt) return
-  endAt += delta * 1000
-  timer.total += delta
-  timer.remain += delta
+  if (timer.status === 'complete' || !timer.visible) return
+  const secs = Math.max(0, Number(delta) || 0)
+  if (!secs) return
+  timer.remain += secs
+  timer.total = Math.max(timer.total, timer.remain)
   playedCues = new Set()
   refreshStatus()
+  handleRemainCue(timer.remain)
+  if (timer.paused) return
+  reanchorEndAt()
+  cancelSwTimer()
   scheduleSwTimer()
 }
 
 export function subTime(delta) {
-  if (timer.status === 'complete' || !endAt) return
-  timer.remain = Math.max(1, timer.remain - delta)
-  endAt = Date.now() + timer.remain * 1000
+  if (timer.status === 'complete' || !timer.visible) return
+  const secs = Math.max(0, Number(delta) || 0)
+  if (!secs) return
+  timer.remain = Math.max(1, timer.remain - secs)
   if (timer.remain > timer.total) timer.total = timer.remain
   playedCues = new Set()
   refreshStatus()
+  handleRemainCue(timer.remain)
+  if (timer.paused) return
+  reanchorEndAt()
+  cancelSwTimer()
   scheduleSwTimer()
 }
 
@@ -421,7 +458,7 @@ export function initTimer() {
       return
     }
 
-    if (data.type === 'TIMER_DONE' && timer.visible) {
+    if (data.type === 'TIMER_DONE' && timer.visible && !timer.paused) {
       finishTimer(true)
     }
   }

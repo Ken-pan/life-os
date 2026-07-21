@@ -6,25 +6,63 @@ import { browser } from '$app/environment'
 import {
   buildResumeDescriptor,
   buildKenosContinueHandoffUrl,
-  domainContinueStorageKey,
+  clearDomainContinue,
+  writeDomainContinue,
   resolveKenosOrigin,
   resumeDescriptorToOpenUrl,
 } from '@life-os/platform-web/kenos-space-continuity'
+import {
+  installNavManifestPublisher,
+  publishNavManifest,
+} from '@life-os/platform-web/kenos-native-bridge'
+import { sensory } from '@life-os/platform-web/kenos-sensory'
 import { auth } from '$lib/auth.svelte.js'
 import { S } from '$lib/state.svelte.js'
-import { openTaskEditor, taskEditor, closeTaskEditor } from '$lib/ui.svelte.js'
+import {
+  openTaskEditor,
+  taskEditor,
+  closeTaskEditor,
+  taskDrawer,
+  schedulePopover,
+  scheduleSlot,
+} from '$lib/ui.svelte.js'
+import { resolveTaskEditorDefaults } from '$lib/taskEditorDefaults.js'
+import { resolvePrimaryNavTab, isMoreNavActive } from '$lib/nav.js'
 import { goto } from '$app/navigation'
 
 export const PLANNER_SPACE_ID = 'plan'
-export const PLANNER_ACCENT = '#6FCF97'
+/** Match KenosDomainRegistry Plan gold (0xC9A227). */
+export const PLANNER_ACCENT = '#C9A227'
 export const PLANNER_ICON = 'calendar'
+
+function openComposeWithRouteDefaults() {
+  const path = browser ? window.location.pathname : '/'
+  const search = browser ? window.location.search : ''
+  void sensory('soft')
+  openTaskEditor(null, resolveTaskEditorDefaults(path, search))
+  // Sync publish so Domain dock can hide before the next publisher tick.
+  void publishPlannerNavManifest()
+}
+
+/** Overlay states that should hide the native Domain dock. */
+export function resolvePlannerLiveState() {
+  if (taskEditor.open) return 'editing'
+  if (taskDrawer.open) return 'drawer'
+  if (schedulePopover.open || scheduleSlot.open) return 'sheet'
+  return 'idle'
+}
 
 /**
  * @param {URL | Location | string} [url]
  */
-export function readPlannerResumeQuery(url = browser ? window.location.href : '/') {
+export function readPlannerResumeQuery(
+  url = browser ? window.location.href : '/',
+) {
   try {
-    const u = typeof url === 'string' ? new URL(url, 'https://local.invalid') : new URL(url.href)
+    const u =
+      typeof url === 'string'
+        ? new URL(url, 'https://local.invalid')
+        : new URL(url.href)
     return {
       taskId: u.searchParams.get('kenosTask') || null,
       filter: u.searchParams.get('kenosFilter') || null,
@@ -57,9 +95,7 @@ export function readPlannerResumeQuery(url = browser ? window.location.href : '/
  * }} [opts]
  */
 export function suspendPlannerSpace(opts = {}) {
-  const pathname =
-    opts.pathname ??
-    (browser ? window.location.pathname : '/upcoming')
+  const pathname = opts.pathname ?? (browser ? window.location.pathname : '/')
   const search = opts.search ?? (browser ? window.location.search : '')
   const route = `${pathname}${search}`
   const entityId = taskEditor.open ? taskEditor.taskId : null
@@ -87,7 +123,7 @@ export function suspendPlannerSpace(opts = {}) {
   return buildResumeDescriptor({
     userId: auth.user?.id ?? null,
     spaceId: PLANNER_SPACE_ID,
-    route: route.startsWith('http') ? route : route || '/upcoming',
+    route: route.startsWith('http') ? route : route || '/',
     entityId: entityId || undefined,
     displayTitle: 'Plan',
     displaySubtitle: displaySubtitle || 'Plan',
@@ -111,7 +147,10 @@ export function suspendPlannerSpace(opts = {}) {
  * @param {ReturnType<typeof buildResumeDescriptor> | null} [descriptor]
  * @param {{ replaceUrl?: boolean }} [opts]
  */
-export async function resumePlannerSpace(descriptor = null, { replaceUrl = true } = {}) {
+export async function resumePlannerSpace(
+  descriptor = null,
+  { replaceUrl = true } = {},
+) {
   if (!browser) return { ok: false, reason: 'ssr' }
 
   const fromQuery = readPlannerResumeQuery()
@@ -131,7 +170,7 @@ export async function resumePlannerSpace(descriptor = null, { replaceUrl = true 
     fromQuery.scrollAnchor ||
     taskId
 
-  let targetPath = '/upcoming'
+  let targetPath = '/'
   if (descriptor?.route) {
     try {
       const u = /^https?:\/\//i.test(descriptor.route)
@@ -139,15 +178,15 @@ export async function resumePlannerSpace(descriptor = null, { replaceUrl = true 
         : new URL(descriptor.route, window.location.origin)
       targetPath = `${u.pathname}${u.search}`
     } catch {
-      targetPath = '/upcoming'
+      targetPath = '/'
     }
   } else if (projectId) {
     targetPath = `/projects/${projectId}`
   } else if (search) {
     targetPath = `/search?q=${encodeURIComponent(search)}`
   } else if (filter === 'overdue') {
-    // Overdue lives on Today groups; keep Upcoming as list + filter chip via query
-    targetPath = `/upcoming?kenosFilter=overdue`
+    // Overdue group lives on Today (Tasks capsule home).
+    targetPath = '/'
   }
 
   // Ensure restore query present when opening task detail
@@ -165,7 +204,11 @@ export async function resumePlannerSpace(descriptor = null, { replaceUrl = true 
 
   const current = `${window.location.pathname}${window.location.search}`
   if (targetPath !== current) {
-    await goto(targetPath, { replaceState: replaceUrl, keepFocus: true, noScroll: true })
+    await goto(targetPath, {
+      replaceState: replaceUrl,
+      keepFocus: true,
+      noScroll: true,
+    })
   }
 
   if (taskId && detailOpen) {
@@ -191,7 +234,9 @@ export async function resumePlannerSpace(descriptor = null, { replaceUrl = true 
       openTaskEditor(task)
       if (scrollAnchor) {
         queueMicrotask(() => {
-          const el = document.querySelector(`[data-task-id="${CSS.escape(scrollAnchor)}"]`)
+          const el = document.querySelector(
+            `[data-task-id="${CSS.escape(scrollAnchor)}"]`,
+          )
           el?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
         })
       }
@@ -209,11 +254,13 @@ export async function resumePlannerSpace(descriptor = null, { replaceUrl = true 
  * Persist domain-local mirror (user-scoped) + optional Kenos handoff navigation.
  * @param {{ handoffToKenos?: boolean, descriptor?: ReturnType<typeof buildResumeDescriptor> }} [opts]
  */
-export function openPlannerContinue({ handoffToKenos = true, descriptor } = {}) {
+export function openPlannerContinue({
+  handoffToKenos = true,
+  descriptor,
+} = {}) {
   const d = descriptor || suspendPlannerSpace()
   try {
-    const key = domainContinueStorageKey('planner', auth.user?.id)
-    localStorage.setItem(key, JSON.stringify(d))
+    writeDomainContinue(PLANNER_SPACE_ID, auth.user?.id, d)
   } catch {
     /* ignore */
   }
@@ -250,8 +297,83 @@ export function openPlannerContinue({ handoffToKenos = true, descriptor } = {}) 
 export async function applyPlannerResumeFromLocation() {
   if (!browser) return
   const q = readPlannerResumeQuery()
-  if (!q.taskId && !q.filter && !q.search && !q.projectId && !q.detailOpen) return
+  if (!q.taskId && !q.filter && !q.search && !q.projectId && !q.detailOpen)
+    return
   await resumePlannerSpace(null, { replaceUrl: false })
+}
+
+/**
+ * Domain leave guard for Kenos iOS Continuity — probe dirty task editor before Space switch.
+ * Native shell calls `window.__KENOS_LEAVE_GUARD__.probe()` / `.discard()`.
+ * Also publishes Navigation Manifest for Shelf / chrome.
+ */
+export function installKenosLeaveGuard() {
+  if (!browser) return
+  window.__KENOS_LEAVE_GUARD__ = {
+    probe() {
+      const draft = taskEditor.draft
+      const initial = taskEditor.initialDraft
+      const dirty =
+        Boolean(taskEditor.open && draft && initial) &&
+        JSON.stringify(draft) !== JSON.stringify(initial)
+      const title = draft?.title?.trim() || ''
+      return {
+        dirty,
+        summary: dirty ? title || 'Unsaved task' : '',
+      }
+    },
+    discard() {
+      closeTaskEditor()
+      void publishPlannerNavManifest()
+    },
+    compose() {
+      openComposeWithRouteDefaults()
+    },
+  }
+  window.__KENOS_DOMAIN_COMPOSE__ = () => {
+    openComposeWithRouteDefaults()
+  }
+  void publishPlannerNavManifest()
+  if (!window.__KENOS_PLAN_NAV_PUBLISHER__) {
+    window.__KENOS_PLAN_NAV_PUBLISHER__ = installNavManifestPublisher(
+      () => buildPlannerNavManifest(),
+      { intervalMs: 700 },
+    )
+  }
+}
+
+/** @returns {{ domainId: string, path: string, title: string, activeTab: string, canGoBack: boolean, currentEntity: string, liveState: string, unsavedDraft: boolean, summary: string }} */
+export function buildPlannerNavManifest() {
+  const probe = window.__KENOS_LEAVE_GUARD__?.probe?.() || {
+    dirty: false,
+    summary: '',
+  }
+  const path = browser ? window.location.pathname : '/'
+  const search = browser ? window.location.search : ''
+  // Align with Domain dock: Tasks · Calendar · Inbox · More
+  let activeTab = resolvePrimaryNavTab(path)
+  if (!activeTab) {
+    if (path.startsWith('/schedule')) activeTab = 'calendar'
+    else if (isMoreNavActive(path, search)) activeTab = 'more'
+    else activeTab = 'tasks'
+  }
+  return {
+    domainId: PLANNER_SPACE_ID,
+    path: browser
+      ? `${window.location.pathname}${window.location.search}`
+      : path,
+    title: 'Plan',
+    activeTab,
+    canGoBack: browser ? window.history.length > 1 : false,
+    currentEntity: taskEditor.open ? String(taskEditor.taskId || '') : '',
+    liveState: resolvePlannerLiveState(),
+    unsavedDraft: Boolean(probe.dirty),
+    summary: probe.summary || 'Plan',
+  }
+}
+
+export function publishPlannerNavManifest() {
+  return publishNavManifest(buildPlannerNavManifest())
 }
 
 export const plannerSpaceAdapter = {
@@ -261,7 +383,7 @@ export const plannerSpaceAdapter = {
   accent: PLANNER_ACCENT,
   async open(target) {
     if (target) await resumePlannerSpace(target)
-    else if (browser) window.location.assign('/upcoming')
+    else if (browser) window.location.assign('/')
   },
   async suspend() {
     return suspendPlannerSpace()
@@ -281,7 +403,7 @@ export const plannerSpaceAdapter = {
   },
   async clearUserState(userId) {
     try {
-      localStorage.removeItem(domainContinueStorageKey('planner', userId))
+      clearDomainContinue(PLANNER_SPACE_ID, userId)
     } catch {
       /* ignore */
     }
