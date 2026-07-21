@@ -38,13 +38,16 @@
   import { subscribeSyncError } from '$lib/syncNotify'
   import ExtensionSyncBridge from './ExtensionSyncBridge.svelte'
   import AppBar from './AppBar.svelte'
+  import DomainMusicHeader from './DomainMusicHeader.svelte'
   import { auth } from '$lib/auth.svelte.js'
   import { LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
+  import { isIosNativeShell } from '@life-os/platform-web/ios-native-shell'
 
   /** @type {{ children?: import('svelte').Snippet }} */
   let { children } = $props()
 
   const finance = getFinanceStore()
+  const nativeShell = $derived(isIosNativeShell())
 
   const PWA_SETTINGS_STORAGE_KEY = 'fos-pwa-settings'
 
@@ -232,12 +235,16 @@
     </button>
   </aside>
 
-  <div class="main-wrap" data-mobile-chrome="tabbar">
-    <AppBar
-      title={pageHeader.title}
-      subtitle={pageHeader.subtitle}
-      meta={updatedLabel || undefined}
-    />
+  <div class="main-wrap" data-mobile-chrome={nativeShell ? 'kenos-domain' : 'tabbar'} class:kenos-native-shell={nativeShell}>
+    {#if nativeShell}
+      <DomainMusicHeader title={pageHeader.title} domainLabel="Money" showCompose={true} />
+    {:else}
+      <AppBar
+        title={pageHeader.title}
+        subtitle={pageHeader.subtitle}
+        meta={updatedLabel || undefined}
+      />
+    {/if}
 
     <main class="content">
       <SyncErrorBanner
@@ -252,10 +259,11 @@
     </main>
   </div>
 
-  <div class="bottom-shell">
+  <div class="bottom-shell" class:kenos-native-hidden={nativeShell}>
     <nav
       class="mobile-tabbar{moreSheet ? ' is-backgrounded' : ''}"
       aria-label={t('nav.mainNavAria')}
+      hidden={nativeShell}
     >
       <div class="mobile-tabbar-inner">
         {#each mobilePrimaryTabs as tabItem (tabItem.id)}
@@ -285,7 +293,7 @@
     </nav>
   </div>
 
-  {#if moreSheet}
+  {#if moreSheet && !nativeShell}
     <div class="mobile-more-backdrop" onclick={() => (moreSheet = false)} aria-hidden="true"></div>
     <div
       bind:this={moreSheetEl}
@@ -334,3 +342,21 @@
     </div>
   {/if}
 </div>
+
+<style>
+  .bottom-shell.kenos-native-hidden,
+  .bottom-shell.kenos-native-hidden .mobile-tabbar {
+    display: none !important;
+  }
+  .main-wrap.kenos-native-shell {
+    /* Domain Dock owns bottom chrome — drop web tabbar inset */
+    --mobile-content-inset-tabbar: 0px;
+  }
+  :global(html[data-ios-native-shell='true'] .mobile-tabbar),
+  :global(html[data-ios-native-shell='true'] .bottom-shell) {
+    display: none !important;
+  }
+  :global(html[data-ios-native-shell='true'] aside) {
+    display: none !important;
+  }
+</style>

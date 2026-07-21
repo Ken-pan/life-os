@@ -9,7 +9,7 @@
 | plan | Planner OS | `apps/planner` | embedded_web | Continuity WKWebView | reference (Daily Beta READY) |
 | training | Fitness OS | `apps/fitness` | embedded_web | Continuity WKWebView | reference (Daily Beta READY) |
 | work | Work / Deep Work | `apps/aios` `/work`, `/spaces/work` | embedded_web (AIOS origin) | Continuity on Kenos origin | DAILY_BETA_INTEGRATED |
-| money | Finance OS | `apps/finance` | embedded_web | Continuity | PARTIAL (catalog only) |
+| money | Finance OS | `apps/finance` | embedded_web | Continuity | DAILY_BETA_INTEGRATED |
 | library | Knowledge OS | `apps/knowledge` | embedded_web | Continuity | PARTIAL (alias knowledge→library) |
 | music | Music OS | `apps/music` | embedded_web | Continuity | PARTIAL |
 | home | Home OS | `apps/home` | embedded_web | Continuity | PARTIAL (experimental) |

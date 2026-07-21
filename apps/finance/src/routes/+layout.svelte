@@ -16,6 +16,15 @@
   import { setPurchaseImageBaseUrl } from '$lib/engine/purchaseEnrichment'
   import { supabaseUrl } from '$lib/supabase.js'
   import { t, initLocale } from '$lib/i18n.svelte.js'
+  import {
+    markIosNativeShellDom,
+    isIosNativeShell,
+  } from '@life-os/platform-web/ios-native-shell'
+  import {
+    installMoneyLeaveGuard,
+    persistMoneyContinue,
+    suspendMoneySpace,
+  } from '$lib/kenos/financeSpaceAdapter.js'
   import '$lib/repo'
 
   let { children } = $props()
@@ -36,6 +45,12 @@
   })
 
   onMount(() => {
+    markIosNativeShellDom()
+    if (isIosNativeShell()) {
+      installMoneyLeaveGuard()
+      persistMoneyContinue(suspendMoneySpace())
+    }
+
     const cleanupLocale = initLocale({
       onLocaleChange: (locale) => notifyLocalePersist(locale),
     })

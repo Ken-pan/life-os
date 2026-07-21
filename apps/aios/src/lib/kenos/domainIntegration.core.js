@@ -241,9 +241,17 @@ export const DOMAIN_REGISTRY = Object.freeze({
     homePath: '/home/today',
     systemImage: 'dollarsign.circle',
     aliases: ['finance', 'financeos', 'finance-os'],
-    integrationStatus: 'partial',
+    integrationStatus: 'integrated',
     dataOwner: 'finance',
     privacy: 'sensitive',
+    providers: {
+      continue: true,
+      shelf: true,
+      today: true,
+      inbox: false,
+      assistant: false,
+      quickSwitch: true,
+    },
   }),
   library: defineDomain({
     id: 'library',
