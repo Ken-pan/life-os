@@ -91,7 +91,9 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    min-height: 34px;
+    /* HIG-ish mobile hit target — Soft residual a11y (not OS Settings sweep) */
+    min-height: 44px;
+    min-width: 44px;
     padding: 0 12px;
     border-radius: var(--kenos-radius-control, 8px);
     font: inherit;
@@ -106,7 +108,7 @@
     color: var(--t2);
   }
   .icon-btn {
-    width: 34px;
+    width: 44px;
     padding: 0;
     justify-content: center;
   }

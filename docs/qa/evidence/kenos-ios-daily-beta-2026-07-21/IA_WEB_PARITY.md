@@ -32,3 +32,7 @@ Continue no longer dumps All Domains / System tabs.
 Script: `scripts/kenos-ios-daily-beta/ia-web-parity-verify.mjs`
 
 LAN checks (all true): Continue=`continueRecent` no All Domains / no search; Quick Switch searchable Spaces; Switch Space=`switchSpace` with All Domains.
+
+## Soft a11y (LAN Web)
+
+SystemBar Continue / Quick Switch bumped to **≥44×44** hit targets; `logs/ia-web-a11y-soft.json` PASS.

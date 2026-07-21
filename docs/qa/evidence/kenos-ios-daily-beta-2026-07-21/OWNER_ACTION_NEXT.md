@@ -4,6 +4,8 @@
 
 ## Optional soft residuals
 
+- Unlock **17 Pro** so `wait-and-verify-ia-native.sh` can screenshot native Continue / Quick Switch (waiter armed ≤90m).
+
 - Full Dynamic Type / VoiceOver OS Settings sweep
 - Wi‑Fi↔Cellular mid-session
 - Replace LAN-DEPENDENT Mac origin with phone-reachable Owner canary when ready

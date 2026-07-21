@@ -1,0 +1,28 @@
+{
+  "ts": "2026-07-21T06:19:39.822Z",
+  "origin": "http://127.0.0.1:5219",
+  "scope": "LAN_WEB_A11Y_SOFT",
+  "minTouchPx": 44,
+  "controls": {
+    "continue": {
+      "testid": "kenos-space-switcher-fab",
+      "ariaLabel": "Continue to a recent Space",
+      "title": "Continue (⌘.)",
+      "width": 104.25,
+      "height": 44,
+      "meets44": true,
+      "hasName": true
+    },
+    "quickSwitch": {
+      "testid": "kenos-quick-switch-trigger",
+      "ariaLabel": "Quick Switch",
+      "title": "Quick Switch (⌘⇧.)",
+      "width": 44,
+      "height": 44,
+      "meets44": true,
+      "hasName": true
+    }
+  },
+  "pass": true,
+  "notes": []
+}

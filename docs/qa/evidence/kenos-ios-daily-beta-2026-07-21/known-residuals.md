@@ -26,7 +26,8 @@ See `docs/qa/kenos-ios-ia-model-2026-07-21.md`:
 
 ## Soft residuals
 
-1. Full OS Dynamic Type / VoiceOver Settings sweep (DOM labels + 44px probed).
+1. Full OS Dynamic Type / VoiceOver Settings sweep (still needs unlocked 17 Pro OS Settings).
+   - ~~LAN Web Continue/Quick Switch 44px + aria-label~~ → **PASS** (`ia-web-a11y-soft.mjs`) after SystemBar hit-target bump.
 2. Wi‑Fi↔Cellular mid-session toggle.
 3. Network scope remains **LAN-DEPENDENT** until phone-reachable Owner canary replaces Mac LAN.
 4. ~~Hosted title writer OFF in Daily Beta~~ → **CLOSED for Owner keyboard Save**  
