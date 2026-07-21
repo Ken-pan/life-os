@@ -10,25 +10,31 @@
 */
 
 :root {
-  --kenos-motion-chrome: 360ms;
-  --kenos-motion-page: 360ms;
-  --kenos-motion-sheet: 360ms;
-  --kenos-motion-press: 220ms;
+  /* Mirror KenosMotion families: Selection≈280ms, Spatial≈320ms, Micro≈180ms */
+  --kenos-motion-chrome: 280ms;
+  --kenos-motion-page: 320ms;
+  --kenos-motion-sheet: 320ms;
+  --kenos-motion-press: 180ms;
   --kenos-motion-reduce: 160ms;
   --kenos-motion-press-reduce: 100ms;
   --kenos-ease-chrome: cubic-bezier(0.22, 1, 0.36, 1);
   --kenos-ease-page: cubic-bezier(0.22, 1, 0.36, 1);
   --kenos-ease-press: cubic-bezier(0.3, 0, 0.2, 1);
-  --kenos-press-scale: 0.94;
+  --kenos-press-scale: 0.97;
   --kenos-press-scale-bubble: 0.97;
-  --kenos-press-opacity: 0.88;
-  --kenos-page-enter-offset-y: 10px;
-  --kenos-page-enter-scale: 0.992;
+  --kenos-press-opacity: 0.92;
+  --kenos-page-enter-offset-y: 8px;
+  --kenos-page-enter-scale: 0.994;
   --kenos-sheet-enter-offset-y: 18px;
   --kenos-sheet-enter-scale: 0.985;
   --kenos-motion-list: 180ms;
   --kenos-list-enter-offset-y: 6px;
   --kenos-drawer-side-offset-x: 24px;
+  /* Gesture SSOT mirrors KenosShelfGesture (pts → CSS px / px-per-ms). */
+  --kenos-gesture-edge-strip: 28px;
+  --kenos-gesture-dismiss-distance: 64px;
+  --kenos-gesture-dismiss-velocity: 0.32; /* 320 pts/sec */
+  --kenos-title-crossfade: 180ms;
 }
 
 @keyframes kenos-chrome-enter {
@@ -161,8 +167,25 @@ html[data-ios-native-shell='true'] .life-os-app-shell__main.kenos-page-enter {
   animation: kenos-drawer-side-in var(--kenos-motion-sheet) var(--kenos-ease-page) both;
 }
 
+/* Leading-edge navigation drawers (Plan Lists) — never flip to bottom-sheet on mobile. */
+@keyframes kenos-drawer-leading-in {
+  from {
+    opacity: 0.4;
+    transform: translateX(calc(-1 * var(--kenos-drawer-side-offset-x)));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.kenos-drawer-panel.kenos-drawer-panel--leading {
+  animation-name: kenos-drawer-leading-in;
+}
+
 @media (--life-os-mobile) {
-  .kenos-drawer-panel {
+  .kenos-drawer-panel:not(.kenos-drawer-panel--leading) {
     animation-name: kenos-drawer-sheet-in;
   }
 }
@@ -187,11 +210,43 @@ html[data-ios-native-shell='true'] .life-os-app-shell__main.kenos-page-enter {
   animation: kenos-list-enter var(--kenos-motion-list) var(--kenos-ease-page) both;
 }
 
+/* Title / heading text swap — opacity only (peer tab or in-page title change). */
+@keyframes kenos-title-crossfade {
+  from {
+    opacity: 0.35;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.kenos-anim-title-crossfade {
+  animation: kenos-title-crossfade var(--kenos-title-crossfade) var(--kenos-ease-chrome) both;
+}
+
+/* Train Focus / Session immersive enter — opacity settle, no slide. */
+@keyframes kenos-focus-enter {
+  from {
+    opacity: 0.72;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.kenos-anim-focus-enter {
+  animation: kenos-focus-enter var(--kenos-motion-page) var(--kenos-ease-page) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
 
   .kenos-anim-chrome-enter,
   .kenos-anim-chrome-enter-stagger,
-  .kenos-anim-list-enter {
+  .kenos-anim-list-enter,
+  .kenos-anim-title-crossfade,
+  .kenos-anim-focus-enter {
     animation: none;
   }
 

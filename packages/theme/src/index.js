@@ -185,6 +185,17 @@ export function applyResolvedTheme(resolved, options = {}) {
         resolved === 'dark' ? faviconDark : faviconLight,
       )
   }
+
+  // Kenos iOS shell listens for status-bar polarity (light canvas → dark icons).
+  try {
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(
+        new CustomEvent('kenos:resolved-theme', { detail: { theme: resolved } }),
+      )
+    }
+  } catch {
+    /* ignore */
+  }
 }
 
 /**

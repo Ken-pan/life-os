@@ -63,10 +63,10 @@
     "24": { "$type": "dimension", "$value": "96px" }
   },
   "radius": {
-    "control": { "$type": "dimension", "$value": "8px" },
+    "control": { "$type": "dimension", "$value": "10px" },
     "sm": { "$type": "dimension", "$value": "12px" },
-    "lg": { "$type": "dimension", "$value": "12px" },
-    "overlay": { "$type": "dimension", "$value": "20px" },
+    "lg": { "$type": "dimension", "$value": "16px" },
+    "overlay": { "$type": "dimension", "$value": "22px" },
     "pill": { "$type": "dimension", "$value": "999px" }
   },
   "text": {

@@ -125,6 +125,57 @@
   "appbar-h-back": { "$type": "dimension", "$value": "52px" },
   "appbar-height": { "$type": "cssValue", "$value": "var(--appbar-h)" },
   "page-header-h": { "$type": "dimension", "$value": "68px" },
+  "kenos-chrome-top-inset": {
+    "$type": "dimension",
+    "$value": "54px",
+    "$description": "iOS native shell scroll-root padding-top (status clearance). Keep in sync with IOS_NATIVE_SHELL_TOP_PAD_PX / KenosWebChrome."
+  },
+  "kenos-chrome-inline": {
+    "$type": "dimension",
+    "$value": "16px",
+    "$description": "Scroll chrome horizontal gutter (SystemBar + DomainMusicHeader + Assistant)."
+  },
+  "kenos-chrome-header-pad-bottom": {
+    "$type": "dimension",
+    "$value": "8px",
+    "$description": "Large-title row bottom padding inside scroll chrome."
+  },
+  "kenos-chrome-title-size": {
+    "$type": "dimension",
+    "$value": "24px",
+    "$description": "Music-style large title size for Kenos + Continuity scroll headers."
+  },
+  "kenos-chrome-title-weight": { "$type": "number", "$value": "650" },
+  "kenos-chrome-title-leading": { "$type": "number", "$value": "1.15" },
+  "kenos-chrome-title-tracking": {
+    "$type": "cssValue",
+    "$value": "-0.03em"
+  },
+  "kenos-chrome-control-h": {
+    "$type": "cssValue",
+    "$value": "var(--btn-h-sm)",
+    "$description": "Toolbar control height (32–36 band; default 32)."
+  },
+  "kenos-chrome-control-radius": {
+    "$type": "dimension",
+    "$value": "8px",
+    "$description": "Individual toolbar button corner inside the action cluster."
+  },
+  "kenos-chrome-cluster-radius": {
+    "$type": "dimension",
+    "$value": "10px",
+    "$description": "Toolbar action-bubble / cluster outer corner."
+  },
+  "kenos-chrome-icon-size": {
+    "$type": "dimension",
+    "$value": "15px",
+    "$description": "Toolbar icon optical size (15–17 band; default 15)."
+  },
+  "kenos-chrome-title-to-content": {
+    "$type": "dimension",
+    "$value": "8px",
+    "$description": "Gap from scroll chrome bottom to first page content."
+  },
   "nav-leading": {
     "$type": "cssValue",
     "$value": "max(16px, calc(env(safe-area-inset-left, 0px) + 8px))"

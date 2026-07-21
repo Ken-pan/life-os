@@ -18,7 +18,8 @@
   overscroll-behavior: contain;
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--dur-base) var(--ease-standard);
+  /* KenosMotion sheet family (web mirror). */
+  transition: opacity var(--kenos-motion-sheet, var(--dur-base)) var(--kenos-ease-chrome, var(--ease-standard));
 }
 
 .modal-bg.show {
@@ -36,12 +37,25 @@
   margin: auto;
   flex-shrink: 0;
   box-shadow: var(--shadow-elevated, 0 24px 64px rgba(0, 0, 0, 0.26));
-  transform: translateY(10px) scale(0.96);
-  transition: transform var(--dur-base) var(--ease-emphasized);
+  transform: translateY(var(--kenos-sheet-enter-offset-y, 18px)) scale(var(--kenos-sheet-enter-scale, 0.985));
+  transition: transform var(--kenos-motion-sheet, var(--dur-base)) var(--kenos-ease-page, var(--ease-emphasized));
 }
 
 .modal-bg.show .modal {
-  transform: scale(1);
+  transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-bg,
+  .modal-bg .modal {
+    transition-duration: var(--kenos-motion-reduce, 160ms);
+    transition-timing-function: ease-out;
+  }
+
+  .modal-bg .modal,
+  .modal-bg.show .modal {
+    transform: none;
+  }
 }
 
 .modal-title {

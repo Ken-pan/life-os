@@ -263,7 +263,15 @@ body,
   html.keyboard-open[data-ios-native-shell='true'] #main-content,
   html.keyboard-open[data-ios-native-shell='true'] .life-os-app-shell__main,
   html.keyboard-open[data-ios-native-shell='true'] .main-col {
-    padding-bottom: max(12px, var(--keyboard-inset, 0px)) !important;
+    /* Prefer keyboard clearance; never drop below dock scroll-end pad when inset is tiny. */
+    padding-bottom: max(
+      calc(env(safe-area-inset-bottom, 0px) + var(--kenos-dock-scroll-end-pad, 78px)),
+      var(--keyboard-inset, 0px)
+    ) !important;
+    scroll-padding-bottom: max(
+      calc(env(safe-area-inset-bottom, 0px) + var(--kenos-dock-scroll-end-pad, 78px)),
+      var(--keyboard-inset, 0px)
+    ) !important;
   }
 }
 
