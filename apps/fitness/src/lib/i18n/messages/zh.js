@@ -72,8 +72,11 @@ export default {
     suppTraining: '补充训练',
     notInRotation: '不计入轮换',
     suppIntro:
-      '可在任意训练日结尾加练，或单独安排。「肩」补侧束与后束；「腹」每周 2–3 次；「办公恢复」适合久坐后放松。',
+      '肩接胸日+腿日末尾（周2次）；腹接腿日+臂日末尾（周2次）。办公恢复随时；晨间起床做。加练不推进主轮换。',
     anytime: '随时加练',
+    suppPairBadge: '接{days} · 周{n}次',
+    todayAddon: '今日建议加练',
+    todayAddonHint: '主训结束后做，约 {mins} 分钟',
     exercisesCount: '{n} 动作',
     lastOn: '上次 {date}',
     records: '记录',

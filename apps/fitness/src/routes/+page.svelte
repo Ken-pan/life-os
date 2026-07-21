@@ -1,5 +1,5 @@
 <script>
-  import { getProgram, rotationLabel } from '$lib/programRuntime.js'
+  import { getProgram, rotationLabel, suggestedSuppAfter, suppPairBadgeText } from '$lib/programRuntime.js'
   import { dayImage } from '$lib/data/program.js'
   import CoverMedia from '$lib/components/CoverMedia.svelte'
   import {
@@ -96,6 +96,11 @@
 
   const extras = $derived(
     Object.keys(program.days).filter((id) => program.days[id].supp),
+  )
+  const todayAddons = $derived(
+    suggestedSuppAfter(program, recId)
+      .map((id) => program.days[id])
+      .filter(Boolean),
   )
   const coach = $derived(coachBrief())
   const totalSets = $derived(day.ex.reduce((a, e) => a + e.sets, 0))
@@ -256,6 +261,22 @@
       </div>
     </div>
 
+    {#if todayAddons.length}
+      <div class="callout today-addon" use:reveal>
+        <span class="co-label" data-ui-decor="callout-label">{t('home.todayAddon')}</span>
+        <div class="today-addon-list">
+          {#each todayAddons as addon (addon.id)}
+            <a class="today-addon-link" href="/day/{addon.id}">
+              <span class="today-addon-name">{dayDisplayFull(addon)}</span>
+              <span class="today-addon-meta"
+                >{t('home.todayAddonHint', { mins: estMinutes(addon) })}</span
+              >
+            </a>
+          {/each}
+        </div>
+      </div>
+    {/if}
+
     <KnowledgeCarousel dayId={recId} />
 
     <div class="sec-header">
@@ -296,7 +317,7 @@
               <div class="pd-overlay">
                 <div class="pd-head">
                   <div class="pd-name">{dayDisplayFull(d)}</div>
-                  <span class="pd-badge">{t('home.anytime')}</span>
+                  <span class="pd-badge">{suppPairBadgeText(program, eid, t)}</span>
                 </div>
                 <div class="pd-meta">
                   ≈{estMinutes(d)}{t('common.min')} · {t(

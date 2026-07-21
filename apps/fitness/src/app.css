@@ -1301,6 +1301,38 @@ p {
   margin-bottom: 6px;
 }
 
+.today-addon {
+  margin: 0 0 22px;
+}
+
+.today-addon-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.today-addon-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.today-addon-name {
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.today-addon-meta {
+  font-size: var(--text-sm);
+  color: var(--t3);
+}
+
+.today-addon-link:hover .today-addon-name {
+  color: var(--accent);
+}
+
 /* exercise card */
 .cards {
   display: flex;

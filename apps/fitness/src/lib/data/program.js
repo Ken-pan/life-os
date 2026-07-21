@@ -168,8 +168,8 @@ const BRO_DAYS = {
     core: {
       id: 'core', name: 'CORE', cn: '腹', accent: ACCENTS.core, supp: true,
       subtitle: '腹直肌 · 腹斜肌 · 核心稳定', label: '核心',
-      note: '腹肌恢复快、耐受高频，适合接在任意训练日末尾（每周 2–3 次，不计入胸背臂腿轮换）。重视收缩质量：呼气顶峰挤压、离心慢放、避免用惯性甩动。',
-      vol: '核心 ~16 组 · 每周 2–3 次',
+      note: '腹肌恢复快。默认接在腿日与臂日末尾（周 2 次）。腿日若已加练肩，时间紧可只做肩、把腹挪到臂日；想加到 3 次再接胸日。避开背日末尾——次日腿需要核心支撑深蹲。重视收缩质量：呼气顶峰挤压、离心慢放、避免甩动。',
+      vol: '核心 ~16 组 · 接腿+臂 · 周 2 次',
       warmup: [
         { name: '死虫式', val: '2 × 10/侧', note: '激活深层核心' },
         { name: '臀桥', val: '2 × 12', note: '唤醒后链 / 防代偿' }
@@ -186,8 +186,8 @@ const BRO_DAYS = {
     delts: {
       id: 'delts', name: 'DELTS', cn: '肩', accent: ACCENTS.delts, supp: true,
       subtitle: '南瓜肩 · 侧束盖 · 后束立体', label: '肩',
-      note: '科学目标（中级）：侧束与后束各约 12–16 有效组/周，分 2 次完成（Schoenfeld 容量区间）。前束已由卧推/上斜覆盖，勿再加推举。侧平举是肩宽主因（推举几乎练不到侧束）；绳索+哑铃阻力曲线不同但增肌效果相近（Larsen 等 2025）。后束增肌优先反向飞鸟/器械反飞（EMG 最高），面拉留作热身外旋；背日正式面拉另计。12–20 次、RIR 0–1、离心 2–3 秒。务必每周 2 次（推日后或休息日），单次不够周容量。',
-      vol: '侧+后各 ~7 组/次 · 周 2 次 ≈ 14+14 · 南瓜肩',
+      note: '科学目标（中级）：侧束与后束各约 12–16 有效组/周，分 2 次完成（Schoenfeld）。前束已由卧推覆盖，勿加班推举。默认接在胸日与腿日末尾：胸日推完侧束已热、加侧平举效率高；腿日上肢新鲜，保证第二课质量，且与胸日隔开背日（后束有恢复，背日面拉不叠到同一天）。12–20 次、RIR 0–1、离心 2–3 秒。',
+      vol: '侧+后各 ~7 组/次 · 接胸+腿 · 周 2 次',
       warmup: [
         { name: '肩关节绕环', val: '2 × 10/向', note: '激活肩袖，幅度从小' },
         { name: '面拉（轻）', val: '2 × 15', note: '外旋/肩胛预激活（非增肌主项）' }
@@ -415,7 +415,7 @@ const ATHLETE = 'KEN · 186cm · 88kg · 自然训练';
 
 export const DEFAULT_PROGRAM_ID = 'bro-split';
 
-/** @typedef {{ id: string, meta: object, rotationOrder: string[], days: Record<string, object> }} ProgramDef */
+/** @typedef {{ id: string, meta: object, rotationOrder: string[], suppSchedule?: Record<string, { after: string[], timesPerWeek: number }>, days: Record<string, object> }} ProgramDef */
 
 /** @type {ProgramDef[]} */
 export const PROGRAMS = [
@@ -433,6 +433,12 @@ export const PROGRAMS = [
       tags: ['默认', '手臂围优先', '上肢优先']
     },
     rotationOrder: ['chest', 'back', 'legs', 'arms'],
+    /* 肩：胸日（推完侧束已热）+ 腿日（上肢新鲜，与胸隔开背日） */
+    /* 腹：腿日+臂日末尾；避开背日（次日腿需核心支撑） */
+    suppSchedule: {
+      delts: { after: ['chest', 'legs'], timesPerWeek: 2 },
+      core: { after: ['legs', 'arms'], timesPerWeek: 2 }
+    },
     days: { ...BRO_DAYS }
   },
   {
@@ -449,6 +455,10 @@ export const PROGRAMS = [
       tags: ['推荐', '减脂友好', '2×频率']
     },
     rotationOrder: ['upper_a', 'lower_a', 'upper_b', 'lower_b'],
+    suppSchedule: {
+      delts: { after: ['upper_a', 'lower_a'], timesPerWeek: 2 },
+      core: { after: ['lower_a', 'lower_b'], timesPerWeek: 2 }
+    },
     days: { ...UL_DAYS, core: BRO_DAYS.core, delts: BRO_DAYS.delts, office: BRO_DAYS.office, morning: BRO_DAYS.morning }
   },
   {
@@ -465,6 +475,10 @@ export const PROGRAMS = [
       tags: ['高频', '上肢', '高容量']
     },
     rotationOrder: ['push_a', 'pull_a', 'legs_a', 'push_b', 'pull_b', 'legs_b'],
+    suppSchedule: {
+      delts: { after: ['push_a', 'push_b'], timesPerWeek: 2 },
+      core: { after: ['legs_a', 'legs_b'], timesPerWeek: 2 }
+    },
     days: { ...PPL_DAYS, core: BRO_DAYS.core, delts: BRO_DAYS.delts, office: BRO_DAYS.office, morning: BRO_DAYS.morning }
   },
   {
@@ -481,6 +495,10 @@ export const PROGRAMS = [
       tags: ['减脂', '省时', '恢复快']
     },
     rotationOrder: ['full_a', 'full_b', 'full_c'],
+    suppSchedule: {
+      delts: { after: ['full_a', 'full_c'], timesPerWeek: 2 },
+      core: { after: ['full_b', 'full_c'], timesPerWeek: 2 }
+    },
     days: { ...FB_DAYS, core: BRO_DAYS.core, delts: BRO_DAYS.delts, office: BRO_DAYS.office, morning: BRO_DAYS.morning }
   }
 ];
@@ -495,6 +513,37 @@ export function listPrograms() {
 
 export function rotationLabel(program) {
   return program.rotationOrder.map((id) => program.days[id]?.cn ?? id).join(' → ');
+}
+
+/**
+ * 某补充日的科学配对（接在哪些主日末尾）。
+ * @param {ProgramDef} program
+ * @param {string} suppId
+ * @returns {{ after: string[], timesPerWeek: number } | null}
+ */
+export function getSuppSchedule(program, suppId) {
+  const sch = program?.suppSchedule?.[suppId];
+  if (!sch?.after?.length) return null;
+  return {
+    after: sch.after.filter((id) => program.days[id] && !program.days[id].supp),
+    timesPerWeek: sch.timesPerWeek ?? sch.after.length
+  };
+}
+
+/**
+ * 今日主训日建议加练的补充日（按 suppSchedule.after）。
+ * @param {ProgramDef} program
+ * @param {string} mainDayId
+ * @returns {string[]}
+ */
+export function suggestedSuppAfter(program, mainDayId) {
+  if (!program?.suppSchedule || !mainDayId) return [];
+  const out = [];
+  for (const [suppId, sch] of Object.entries(program.suppSchedule)) {
+    if (!program.days[suppId]?.supp) continue;
+    if (sch.after?.includes(mainDayId)) out.push(suppId);
+  }
+  return out;
 }
 
 /** 默认计划（向后兼容） */

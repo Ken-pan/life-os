@@ -1,6 +1,6 @@
-import { getProgramById, DEFAULT_PROGRAM_ID, listPrograms, PROGRAMS } from './data/program.js';
+import { getProgramById, DEFAULT_PROGRAM_ID, listPrograms, PROGRAMS, getSuppSchedule, suggestedSuppAfter } from './data/program.js';
 import { EX_BY_ID, resolveExerciseId } from './data/exercises.js';
-import { localizeDay, localizeProgram, rotationLabel } from './i18n/programLabels.js';
+import { localizeDay, localizeProgram, rotationLabel, dayDisplayName } from './i18n/programLabels.js';
 import { S, save, activeProgramId } from './state.svelte.js';
 
 const PATCH_KEYS = ['name', 'sets', 'reps', 'rest', 'rir', 'w', 'hidden', 'scheme', 'pairWith'];
@@ -199,7 +199,8 @@ export function getProgram() {
   return localizeProgram({
     ...base,
     days,
-    rotationOrder: base.rotationOrder
+    rotationOrder: base.rotationOrder,
+    suppSchedule: base.suppSchedule
   });
 }
 
@@ -387,4 +388,17 @@ export function importProgramOverrides(data) {
 /** 默认计划（只读，用于编辑页对比） */
 export function baseProgram() {
   return getBaseProgram();
+}
+
+export { getSuppSchedule, suggestedSuppAfter };
+
+/** 补充日角标：接胸·腿 · 周2次 */
+export function suppPairBadgeText(program, suppId, translate) {
+  const sch = getSuppSchedule(program, suppId);
+  if (!sch) return translate('home.anytime');
+  const days = sch.after
+    .map((id) => dayDisplayName(program.days[id]))
+    .filter(Boolean)
+    .join('·');
+  return translate('home.suppPairBadge', { days: days || '—', n: sch.timesPerWeek });
 }

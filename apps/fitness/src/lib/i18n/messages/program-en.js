@@ -127,8 +127,8 @@ export default {
       "cn": "Core",
       "subtitle": "Rectus · obliques · stability",
       "label": "Core",
-      "note": "Abs recover fast — add after any day 2–3×/week (not in the 4-day rotation). Quality reps: exhale and squeeze, slow eccentrics, no momentum.",
-      "vol": "Core ~16 sets · 2–3×/week",
+      "note": "Abs recover fast. Default: finish after legs and arms (2×/week; add chest for a 3rd). Skip after back — next day is legs and you need a fresh brace for squats. Quality reps: exhale and squeeze, slow eccentrics, no momentum.",
+      "vol": "Core ~16 sets · after legs + arms · 2×/week",
       "warmup": [
         {
           "name": "Dead bug",
@@ -144,8 +144,8 @@ export default {
       "cn": "Delts",
       "subtitle": "Pumpkin delts · side cap · rear roundness",
       "label": "Shoulders",
-      "note": "Science target (intermediate): ~12–16 hard sets/week each for side and rear, split across 2 sessions (Schoenfeld volume range). Front delts covered by pressing — no extra OHP. Lateral raises drive width; cable + DB are similarly effective (Larsen et al. 2025). Reverse fly/machine for rear size (highest EMG); keep light face pulls as warmup ER — back day already has working face pulls. 12–20 reps, RIR 0–1, 2–3s eccentrics. Do this day twice weekly or weekly volume falls short.",
-      "vol": "~7 side + ~7 rear / session · 2×/week ≈ 14+14",
+      "note": "Target ~12–16 hard sets/week each for side and rear, split across 2 sessions (Schoenfeld). Front delts covered by pressing. Default pairing: after chest (laterals while warm) and after legs (fresh upper body, spaced from chest by back day so rear delts recover; back-day face pulls stay separate). 12–20 reps, RIR 0–1, 2–3s eccentrics.",
+      "vol": "~7 side + ~7 rear / session · after chest + legs · 2×/week",
       "warmup": [
         {
           "name": "Shoulder circles",

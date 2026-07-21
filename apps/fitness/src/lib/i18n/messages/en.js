@@ -72,8 +72,11 @@ export default {
     suppTraining: 'Accessory days',
     notInRotation: 'Not in rotation',
     suppIntro:
-      'Add at the end of any day or train alone. Shoulders for side/rear delts; abs 2–3×/week; desk recovery for long sits.',
+      'Shoulders after chest + legs (2×/week); abs after legs + arms (2×/week). Desk mobility anytime; morning flow on waking. Accessories do not advance rotation.',
     anytime: 'Anytime',
+    suppPairBadge: 'After {days} · {n}×/week',
+    todayAddon: 'Suggested add-on today',
+    todayAddonHint: 'After your main session · ~{mins} min',
     exercisesCount: '{n} exercises',
     lastOn: 'Last {date}',
     records: 'History',

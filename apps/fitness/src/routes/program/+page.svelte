@@ -1,5 +1,5 @@
 <script>
-  import { getProgram, rotationLabel } from '$lib/programRuntime.js';
+  import { getProgram, rotationLabel, suppPairBadgeText } from '$lib/programRuntime.js';
   import { dayImage } from '$lib/data/program.js';
   import CoverMedia from '$lib/components/CoverMedia.svelte';
   import { todayDayId, lastSessionForDay, estMinutes, ORDER } from '$lib/state.svelte.js';
@@ -83,6 +83,7 @@
               <div class="pd-overlay">
                 <div class="pd-head">
                   <div class="pd-name">{dayDisplayFull(d)}</div>
+                  <span class="pd-badge">{suppPairBadgeText(program, did, t)}</span>
                 </div>
                 <div class="pd-meta">
                   ≈{estMinutes(d)}{t('common.min')} · {t('home.exercisesCount', { n: d.ex.length })}
