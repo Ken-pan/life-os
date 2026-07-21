@@ -1,15 +1,24 @@
 # IOS_STABILITY_ACCEPTANCE
 
-## Verdict
+## Verdict (hostname lane · 2026-07-21)
 
 ```text
-IOS DAILY BETA STABILIZATION: AUTOMATED STABILITY: PASSED / OWNER DOGFOOD: OPEN
-HEAD: 71ad6d5f3aca78a1b7985e77061f13fac59afb10 (+ local Planner LWW fix pending commit)
-BUILD: 202607211716 / 71ad6d5f3aca (native) · Daily Beta release rebuilt with LWW fix
+IOS DAILY BETA STABILIZATION:
+AUTOMATED STABILITY: PASSED
+LAN ORIGIN: STABLE_HOSTNAME
+DHCP IP DEPENDENCY: CLOSED
+OWNER DOGFOOD: OPEN
+IOS PERSONAL DAILY BETA: READY_LAN_DEPENDENT
+P0: 0
+P1: 0
+PHASE 4: EXIT_OPEN
+LEGACY FALLBACK: RETAINED
+PUSH / DEPLOY / PRODUCTION MIGRATION: NOT PERFORMED
+
+HEAD (install SHA): de41869aecbce0201036288bba49ebdd4b59c208
+BUILD: 1.0.0 / 202607211735
+ORIGIN: http://Kens-M5-Max-MacBook-Pro.local:5219
 REAL DEVICE: iPhone 17 Pro
-OBSERVATION DURATION: ~80s automated closure window (+ Flow A/B ~45s)
-AUTOMATED RUNS: 3 closures + Flow A/B harness iterations
-OWNER DOGFOOD DAYS: 0
 
 COLD LAUNCH: PASS
 AUTH PERSISTENCE: PRIOR/OWNER
@@ -17,44 +26,29 @@ PLAN FLOW A: PASS_DEVICE_SESSION_MUTATE
 TRAINING FLOW B: PASS_DEVICE_DEEPLINK_SET2
 ALL-DOMAIN SMOKE: PASS
 CONTINUE: LAUNCH_PASS
-SPACE SHELF: OWNER
-QUICK SWITCH: OWNER
 WKWEBVIEW: LAUNCH_PASS
-ACCOUNT ISOLATION: PRIOR/OWNER
+HOSTNAME REGRESSION: PASS_AUTOMATED_HOSTNAME
 MAC SLEEP/WAKE: PROXY_PASS / TRUE_SLEEP_OWNER_OPEN
-SERVICE RESTART: PASS
 WIFI RECOVERY: OWNER_OPEN
-DEGRADED MODE: PROXY_PASS
-ROLLBACK: TARGET_PRESENT
+SERVICE RESTART: PASS
 DOCTOR: PASS
 DATA LOSS: 0
 ISOLATION LEAK: 0
 CRASHES: 0
-P0: 0
-P1: 1 (LAN origin uses DHCP IP — not stable hostname)
-
-IOS PERSONAL DAILY BETA: READY_LAN_DEPENDENT
-PHASE 4: EXIT_OPEN
-LEGACY FALLBACK: RETAINED
-PUSH / DEPLOY / PRODUCTION MIGRATION: NOT PERFORMED
 ```
 
-## Product fix landed this lane
+## Closed this lane
 
-Planner LWW previously treated ISO-string `data.updatedAt` as non-numeric, so Continuity sync could push stale local titles over fresher phone/REST mutations (`FAIL_PLANNER_SYNC_CLOBBER`). Fixed in `apps/planner/src/lib/persist/migrate.js` (`coerceTimestamp`) + unit test. Flow A re-verified PASS after rebuild.
+- DHCP IPv4 baked into app → **stable mDNS** `LocalHostName.local`
+- `KenosOriginResolver` single source for shell/planner/fitness host
+- Sticky UserDefaults DHCP override migrated away when bundle is `.local`
+- CASE_6 soak + hostname-regression automated PASS
+- Planner LWW `coerceTimestamp` still PASS under hostname Continuity
 
-## Open gates
+## Still OPEN (honest)
 
-- OWNER_3_DAY_DOGFOOD
-- PHASE_4_EXIT_OPEN
-- TRUE_MAC_SLEEP_WAKE
-- IPHONE_WIFI_TOGGLE
-- APNS_TESTFLIGHT_DISTRIBUTION
-- PAPER_PARTIAL
-- LAN_IP_ORIGIN_P1 (DHCP)
+- Owner 3-day dogfood (`docs/qa/evidence/kenos-ios-dogfood-2026-07/`)
+- True Mac sleep / phone Wi‑Fi / true Mac reboot (Owner checklist)
+- Phase 4 distribution gates
 
-## Evidence root
-
-`docs/qa/evidence/kenos-ios-stability-2026-07-21/`
-
-Flow A/B: `smoke/flow-ab-latest.json`
+**Not** `READY_LAN_DEPENDENT_STABILIZED` until 3 counted Owner days.

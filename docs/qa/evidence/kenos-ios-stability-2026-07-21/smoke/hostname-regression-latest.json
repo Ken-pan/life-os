@@ -1,0 +1,68 @@
+{
+  "runId": "hostname-2026-07-21T17-37-24-582Z",
+  "ts": "2026-07-21T17:37:30.201Z",
+  "head": "de41869aecbce0201036288bba49ebdd4b59c208",
+  "build": {
+    "iosBuildSha": "de41869aecbce0201036288bba49ebdd4b59c208",
+    "iosBuildNumber": "202607211735",
+    "releaseSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+    "releaseShort": "71ad6d5f3"
+  },
+  "origin": "http://Kens-M5-Max-MacBook-Pro.local:5219",
+  "stableHostname": true,
+  "cases": [
+    {
+      "id": "CASE_A_normal",
+      "ts": "2026-07-21T17:37:26.439Z",
+      "result": "PASS",
+      "origin": "http://Kens-M5-Max-MacBook-Pro.local:5219",
+      "host": "kens-m5-max-macbook-pro.local",
+      "mdns": "Kens-M5-Max-MacBook-Pro",
+      "recordedIp": "10.20.202.15",
+      "note": "Today/Assistant/Plan/Training/Inbox via hostname",
+      "owner": false
+    },
+    {
+      "id": "CASE_B_dhcp_ip_change",
+      "ts": "2026-07-21T17:37:26.472Z",
+      "result": "PASS_HOST_INDEPENDENT_OF_IP",
+      "note": "Hostname health independent of recorded IPv4; true DHCP renew = OWNER",
+      "recordedIp": "10.20.202.15",
+      "hostname": "kens-m5-max-macbook-pro.local",
+      "hostnameHealth": true,
+      "ipHealth": true,
+      "ownerAction": "Optional: renew Mac DHCP, confirm phone still loads without rebuild (hostname unchanged).",
+      "owner": true,
+      "forgedPass": false
+    },
+    {
+      "id": "CASE_C_wifi_toggle",
+      "ts": "2026-07-21T17:37:26.473Z",
+      "result": "OWNER_OPEN",
+      "note": "Do not forge phone Wi-Fi toggle",
+      "ownerAction": "On iPhone: Wi‑Fi off 10s → on → open Kenos → tap Retry if shown. Auth/Continue must remain.",
+      "owner": true
+    },
+    {
+      "id": "CASE_D_service_restart",
+      "ts": "2026-07-21T17:37:30.200Z",
+      "result": "PASS",
+      "note": "kenos-ctl restart; hostname unchanged",
+      "owner": false
+    },
+    {
+      "id": "CASE_E_mac_reboot",
+      "ts": "2026-07-21T17:37:30.201Z",
+      "result": "OWNER_OPEN",
+      "note": "True reboot not automated; launchd RunAtLoad rehearsed via ctl restart in CASE_D",
+      "ownerAction": "Reboot Mac once; unlock; confirm Kenos opens without Settings change.",
+      "owner": true
+    }
+  ],
+  "summary": {
+    "automatedPass": 3,
+    "ownerOpen": 2,
+    "fail": 0
+  },
+  "verdict": "PASS_AUTOMATED_HOSTNAME"
+}

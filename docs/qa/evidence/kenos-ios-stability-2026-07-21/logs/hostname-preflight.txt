@@ -1,0 +1,25 @@
+PASS [device] 17_pro_connected: online
+PASS [product] app_installed: installed
+PASS [service] lan_origin_reachable: health_200
+PASS [service] service_aios: up
+PASS [service] service_planner: up
+PASS [service] service_fitness: up
+PASS [service] service_finance: up
+PASS [service] service_knowledge: up
+PASS [service] service_music: up
+PASS [service] service_home: up
+PASS [service] service_health: up
+PASS [product] build_sha_recorded: ios=de41869ae release=71ad6d5f3
+PASS [product] head_vs_installed_drift: aligned
+PASS [product] stable_hostname_origin: mdns=kens-m5-max-macbook-pro.local
+PASS [product] app_launchable: launched
+PASS [product] wkwebview_payload: payload_launch_accepted
+PASS [product] auth_bootstrap_surface: deferred_to_smoke_flow_a (no token in preflight)
+PASS [product] continue_store_readable: native_store_assumed; verified in continuity soak
+PASS [product] app_log_path: kenos_app_logs schema exists; export in log-export
+PASS [product] legacy_fallback_available: production_fallback_retained_in_settings
+PASS [service] rollback_target: previous_release_present
+{
+  "verdict": "PASS",
+  "fails": []
+}

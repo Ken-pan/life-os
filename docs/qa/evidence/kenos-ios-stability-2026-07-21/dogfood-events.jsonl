@@ -186,3 +186,68 @@
 {"ts":"2026-07-21T17:26:37.354Z","type":"soak_end","verdict":"PASS","total":10,"pass":10,"fail":0,"dataLossTotal":0,"ownerDogfoodOpen":["true_mac_sleep_wake","iphone_wifi_off_on","true_mac_reboot","visual_no_white_screen","visual_auth_not_cleared","visual_continue_retained"]}
 {"ts":"2026-07-21T17:26:39.620Z","type":"log_export","files":36}
 {"ts":"2026-07-21T17:26:39.801Z","type":"closure_end","verdict":"AUTOMATED_STABILITY_PASSED","head":""}
+{"ts":"2026-07-21T17:36:08.745Z","type":"preflight_check","name":"17_pro_connected","ok":true,"class":"device","reason":"online"}
+{"ts":"2026-07-21T17:36:08.881Z","type":"preflight_check","name":"app_installed","ok":true,"class":"product","reason":"installed"}
+{"ts":"2026-07-21T17:36:08.895Z","type":"preflight_check","name":"lan_origin_reachable","ok":true,"class":"service","reason":"health_200"}
+{"ts":"2026-07-21T17:36:08.908Z","type":"preflight_check","name":"service_aios","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:36:08.920Z","type":"preflight_check","name":"service_planner","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:36:08.933Z","type":"preflight_check","name":"service_fitness","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:36:08.946Z","type":"preflight_check","name":"service_finance","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:36:08.958Z","type":"preflight_check","name":"service_knowledge","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:36:08.970Z","type":"preflight_check","name":"service_music","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:36:08.983Z","type":"preflight_check","name":"service_home","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:36:08.997Z","type":"preflight_check","name":"service_health","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-21T17:36:08.997Z","type":"preflight_check","name":"build_sha_recorded","ok":true,"class":"product","reason":"ios=de41869ae release=71ad6d5f3"}
+{"ts":"2026-07-21T17:36:08.998Z","type":"preflight_check","name":"head_vs_installed_drift","ok":true,"class":"product","reason":"aligned"}
+{"ts":"2026-07-21T17:36:08.998Z","type":"preflight_check","name":"stable_hostname_origin","ok":true,"class":"product","reason":"mdns=kens-m5-max-macbook-pro.local"}
+{"ts":"2026-07-21T17:36:09.277Z","type":"preflight_check","name":"app_launchable","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-21T17:36:09.277Z","type":"preflight_check","name":"wkwebview_payload","ok":true,"class":"product","reason":"payload_launch_accepted"}
+{"ts":"2026-07-21T17:36:09.278Z","type":"preflight_check","name":"auth_bootstrap_surface","ok":true,"class":"product","reason":"deferred_to_smoke_flow_a (no token in preflight)"}
+{"ts":"2026-07-21T17:36:09.278Z","type":"preflight_check","name":"continue_store_readable","ok":true,"class":"product","reason":"native_store_assumed; verified in continuity soak"}
+{"ts":"2026-07-21T17:36:09.278Z","type":"preflight_check","name":"app_log_path","ok":true,"class":"product","reason":"kenos_app_logs schema exists; export in log-export"}
+{"ts":"2026-07-21T17:36:09.278Z","type":"preflight_check","name":"legacy_fallback_available","ok":true,"class":"product","reason":"production_fallback_retained_in_settings"}
+{"ts":"2026-07-21T17:36:09.278Z","type":"preflight_check","name":"rollback_target","ok":true,"class":"service","reason":"previous_release_present"}
+{"ts":"2026-07-21T17:36:09.279Z","type":"preflight_end","verdict":"PASS"}
+{"ts":"2026-07-21T17:36:22.840Z","type":"smoke_case","loop":"A_cold_launch","name":"home_screen_relaunch","ok":true,"reason":"launched","ms":1068}
+{"ts":"2026-07-21T17:36:25.080Z","type":"smoke_case","loop":"A_cold_launch","name":"second_cold","ok":true,"reason":"launched","ms":235}
+{"ts":"2026-07-21T17:36:25.081Z","type":"smoke_case","loop":"A_cold_launch","name":"no_external_safari_claim","ok":true,"reason":"launch_stays_in_bundle (Safari escape requires visual Owner confirm)","ms":null}
+{"ts":"2026-07-21T17:36:25.097Z","type":"smoke_case","loop":"B_plan","name":"planner_service","ok":true,"reason":null,"ms":10}
+{"ts":"2026-07-21T17:36:25.602Z","type":"smoke_case","loop":"B_plan","name":"continue_plan_launch","ok":true,"reason":"launched","ms":505}
+{"ts":"2026-07-21T17:36:27.373Z","type":"smoke_case","loop":"B_plan","name":"return_kenos","ok":true,"reason":"launched","ms":269}
+{"ts":"2026-07-21T17:36:27.385Z","type":"smoke_case","loop":"C_training","name":"fitness_service","ok":true,"reason":null,"ms":9}
+{"ts":"2026-07-21T17:36:27.866Z","type":"smoke_case","loop":"C_training","name":"continue_training_launch","ok":true,"reason":"launched","ms":481}
+{"ts":"2026-07-21T17:36:29.631Z","type":"smoke_case","loop":"C_training","name":"return_kenos","ok":true,"reason":"launched","ms":259}
+{"ts":"2026-07-21T17:36:30.162Z","type":"smoke_case","loop":"D_domains","name":"work","ok":true,"reason":"launched","ms":529}
+{"ts":"2026-07-21T17:36:31.206Z","type":"smoke_case","loop":"D_domains","name":"work_return_kenos","ok":true,"reason":"launched","ms":239}
+{"ts":"2026-07-21T17:36:32.025Z","type":"smoke_case","loop":"D_domains","name":"money","ok":true,"reason":"launched","ms":216}
+{"ts":"2026-07-21T17:36:33.032Z","type":"smoke_case","loop":"D_domains","name":"money_return_kenos","ok":true,"reason":"launched","ms":204}
+{"ts":"2026-07-21T17:36:33.860Z","type":"smoke_case","loop":"D_domains","name":"library","ok":true,"reason":"launched","ms":222}
+{"ts":"2026-07-21T17:36:34.869Z","type":"smoke_case","loop":"D_domains","name":"library_return_kenos","ok":true,"reason":"launched","ms":206}
+{"ts":"2026-07-21T17:36:35.700Z","type":"smoke_case","loop":"D_domains","name":"music","ok":true,"reason":"launched","ms":230}
+{"ts":"2026-07-21T17:36:36.721Z","type":"smoke_case","loop":"D_domains","name":"music_return_kenos","ok":true,"reason":"launched","ms":218}
+{"ts":"2026-07-21T17:36:37.538Z","type":"smoke_case","loop":"D_domains","name":"home","ok":true,"reason":"launched","ms":214}
+{"ts":"2026-07-21T17:36:38.583Z","type":"smoke_case","loop":"D_domains","name":"home_return_kenos","ok":true,"reason":"launched","ms":242}
+{"ts":"2026-07-21T17:36:39.396Z","type":"smoke_case","loop":"D_domains","name":"health","ok":true,"reason":"launched","ms":212}
+{"ts":"2026-07-21T17:36:40.429Z","type":"smoke_case","loop":"D_domains","name":"health_return_kenos","ok":true,"reason":"launched","ms":228}
+{"ts":"2026-07-21T17:36:41.259Z","type":"smoke_case","loop":"D_domains","name":"paper","ok":true,"reason":"partial_ok_not_fully_integrated","ms":228}
+{"ts":"2026-07-21T17:36:42.306Z","type":"smoke_case","loop":"D_domains","name":"paper_return_kenos","ok":true,"reason":"launched","ms":242}
+{"ts":"2026-07-21T17:36:44.724Z","type":"smoke_case","loop":"E_assistant_inbox","name":"assistant_in_app","ok":true,"reason":"in_app_webview_payload (Safari chrome = Owner visual)","ms":312}
+{"ts":"2026-07-21T17:36:46.999Z","type":"smoke_case","loop":"E_assistant_inbox","name":"inbox","ok":true,"reason":"launched","ms":272}
+{"ts":"2026-07-21T17:36:48.796Z","type":"smoke_case","loop":"E_assistant_inbox","name":"spaces","ok":true,"reason":"launched","ms":292}
+{"ts":"2026-07-21T17:36:48.797Z","type":"smoke_end","verdict":"PASS","attempts":26,"passed":26,"failed":0,"recovered":0,"latency":{"count":25,"median":235,"p50":235,"p95":529,"min":9,"max":1068},"p0":0,"p1":0}
+{"ts":"2026-07-21T17:36:55.337Z","type":"soak_case","id":"CASE_1_normal_lan","result":"PASS","dataLoss":0,"authEffect":"none_observed"}
+{"ts":"2026-07-21T17:36:57.303Z","type":"soak_case","id":"CASE_2_mac_sleep_proxy","result":"PASS","dataLoss":0,"authEffect":"must_not_logout (Owner visual)"}
+{"ts":"2026-07-21T17:36:58.487Z","type":"soak_case","id":"CASE_3_mac_wake_proxy","result":"PASS","dataLoss":0,"authEffect":"must_not_require_relogin (Owner visual)"}
+{"ts":"2026-07-21T17:37:11.495Z","type":"soak_case","id":"CASE_4_restart_aios","result":"PASS","dataLoss":0,"authEffect":"none_expected"}
+{"ts":"2026-07-21T17:37:14.089Z","type":"soak_case","id":"CASE_4_restart_planner","result":"PASS","dataLoss":0,"authEffect":"none_expected"}
+{"ts":"2026-07-21T17:37:16.655Z","type":"soak_case","id":"CASE_4_restart_fitness","result":"PASS","dataLoss":0,"authEffect":"none_expected"}
+{"ts":"2026-07-21T17:37:16.774Z","type":"soak_case","id":"CASE_5_wifi_proxy","result":"PASS","dataLoss":0,"authEffect":"must_not_misclassify_as_logout"}
+{"ts":"2026-07-21T17:37:16.788Z","type":"soak_case","id":"CASE_6_lan_identity","result":"PASS","dataLoss":0,"authEffect":"n/a"}
+{"ts":"2026-07-21T17:37:18.866Z","type":"soak_case","id":"CASE_7_mac_reboot_proxy","result":"PASS","dataLoss":0,"authEffect":"none"}
+{"ts":"2026-07-21T17:37:24.530Z","type":"soak_case","id":"CASE_8_partial_fitness_down","result":"PASS","dataLoss":0,"authEffect":"none"}
+{"ts":"2026-07-21T17:37:24.535Z","type":"soak_end","verdict":"PASS","total":10,"pass":10,"fail":0,"dataLossTotal":0,"ownerDogfoodOpen":["true_mac_sleep_wake","iphone_wifi_off_on","true_mac_reboot","visual_no_white_screen","visual_auth_not_cleared","visual_continue_retained"]}
+{"ts":"2026-07-21T17:37:26.439Z","type":"hostname_case","id":"CASE_A_normal","result":"PASS"}
+{"ts":"2026-07-21T17:37:26.473Z","type":"hostname_case","id":"CASE_B_dhcp_ip_change","result":"PASS_HOST_INDEPENDENT_OF_IP"}
+{"ts":"2026-07-21T17:37:26.473Z","type":"hostname_case","id":"CASE_C_wifi_toggle","result":"OWNER_OPEN"}
+{"ts":"2026-07-21T17:37:30.200Z","type":"hostname_case","id":"CASE_D_service_restart","result":"PASS"}
+{"ts":"2026-07-21T17:37:30.201Z","type":"hostname_case","id":"CASE_E_mac_reboot","result":"OWNER_OPEN"}

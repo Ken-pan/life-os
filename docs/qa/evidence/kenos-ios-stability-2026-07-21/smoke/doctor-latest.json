@@ -1,9 +1,9 @@
 {
-  "ts": "2026-07-21T17:26:39.481076Z",
-  "head": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
-  "iosBuildSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
-  "iosBuildNumber": "202607211716",
-  "originHost": "10.20.202.15:5219",
+  "ts": "2026-07-21T17:37:32.528186Z",
+  "head": "de41869aecbce0201036288bba49ebdd4b59c208",
+  "iosBuildSha": "de41869aecbce0201036288bba49ebdd4b59c208",
+  "iosBuildNumber": "202607211735",
+  "originHost": "Kens-M5-Max-MacBook-Pro.local:5219",
   "services": {
     "aios": true,
     "planner": true,

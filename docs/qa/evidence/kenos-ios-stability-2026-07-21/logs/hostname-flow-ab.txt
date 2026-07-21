@@ -1,0 +1,53 @@
+{"ts":"2026-07-21T17:37:45.422Z","step":"device.unlocked","i":1}
+{"ts":"2026-07-21T17:37:47.764Z","step":"auth.session","email":"[EMAIL_REDACTED]"}
+{"ts":"2026-07-21T17:37:47.956Z","step":"db.seed.task","TASK_ID":"ios-ab-mruxsc1h","TASK_TITLE":"iOS FlowA Seed 7-37-44-769Z"}
+{"ts":"2026-07-21T17:38:04.653Z","step":"flowA.mutate.beacons","n":20,"last":"10.20.202.6 - \"GET /__health?kenos_flow_a=%7B%22status%22%3A%22ok%22%2C%22title%22%3A%22iOS%20FlowA%20MUT%2037-44-769Z%22%2C%22taskId%22%3A%22ios-ab-mruxsc1h%22%2C%22http%22%3A200%2C%22runId%22%3A%22i"}
+{"ts":"2026-07-21T17:38:04.978Z","step":"flowA.db.after_mutate","dbTitleAfterMutate":"iOS FlowA MUT 37-44-769Z","adminTitleAfterMutate":"iOS FlowA MUT 37-44-769Z"}
+{"ts":"2026-07-21T17:38:15.220Z","step":"flowA.done","status":"PASS_DEVICE_SESSION_MUTATE","taskId":"ios-ab-mruxsc1h","seedTitle":"iOS FlowA Seed 7-37-44-769Z","mutatedTitle":"iOS FlowA MUT 37-44-769Z","dbTitle":"iOS FlowA MUT 37-44-769Z","adminTitleAfterMutate":"iOS FlowA MUT 37-44-769Z","adminTitleAfterPlanner":"iOS FlowA MUT 37-44-769Z","syncClobber":false,"phoneMutOk":true,"phoneVerifyOk":false,"mutateHttp":200,"mutateDetail":{"status":"ok","http":200},"plannerDeepLinkHits":20,"method":"phone WKWebView JWT PATCH + force-quit re-read (not XCUITest DOM edit)"}
+{"ts":"2026-07-21T17:38:15.582Z","step":"flowB.seed.set1","sessionId":"1b5e4f8e-7738-4e9c-9166-de77b2ed8218","error":null}
+{"ts":"2026-07-21T17:38:27.448Z","step":"flowB.done","status":"PASS_DEVICE_DEEPLINK_SET2","sessionId":"1b5e4f8e-7738-4e9c-9166-de77b2ed8218","exerciseId":"c_fly","set":2,"fitnessDeepLinkHits":40,"continueHandoffHits":20,"seedLogError":null,"method":"device deep-link kenosSet=2 + Continue handoff (set ladder UI not XCUITest-tapped)"}
+
+=== REPORT ===
+{
+  "runId": "ios-flow-ab-2026-07-21T17-37-44-769Z",
+  "host": "10.20.202.15",
+  "phoneIp": "10.20.202.6",
+  "flowA": {
+    "status": "PASS_DEVICE_SESSION_MUTATE",
+    "taskId": "ios-ab-mruxsc1h",
+    "seedTitle": "iOS FlowA Seed 7-37-44-769Z",
+    "mutatedTitle": "iOS FlowA MUT 37-44-769Z",
+    "dbTitle": "iOS FlowA MUT 37-44-769Z",
+    "adminTitleAfterMutate": "iOS FlowA MUT 37-44-769Z",
+    "adminTitleAfterPlanner": "iOS FlowA MUT 37-44-769Z",
+    "syncClobber": false,
+    "phoneMutOk": true,
+    "phoneVerifyOk": false,
+    "mutateHttp": 200,
+    "mutateDetail": {
+      "status": "ok",
+      "http": 200
+    },
+    "plannerDeepLinkHits": 20,
+    "method": "phone WKWebView JWT PATCH + force-quit re-read (not XCUITest DOM edit)"
+  },
+  "flowB": {
+    "status": "PASS_DEVICE_DEEPLINK_SET2",
+    "sessionId": "1b5e4f8e-7738-4e9c-9166-de77b2ed8218",
+    "exerciseId": "c_fly",
+    "set": 2,
+    "fitnessDeepLinkHits": 40,
+    "continueHandoffHits": 20,
+    "seedLogError": null,
+    "method": "device deep-link kenosSet=2 + Continue handoff (set ladder UI not XCUITest-tapped)"
+  },
+  "layout": {
+    "status": "PRIOR_PASS"
+  },
+  "auth": {
+    "status": "PRIOR_PASS"
+  },
+  "notes": [
+    "Auth injected to AIOS+Planner+Fitness origins on device"
+  ]
+}

@@ -1,0 +1,14 @@
+PASS CASE_A_normal
+PASS_HOST_INDEPENDENT_OF_IP CASE_B_dhcp_ip_change
+OWNER_OPEN CASE_C_wifi_toggle
+PASS CASE_D_service_restart
+OWNER_OPEN CASE_E_mac_reboot
+{
+  "verdict": "PASS_AUTOMATED_HOSTNAME",
+  "summary": {
+    "automatedPass": 3,
+    "ownerOpen": 2,
+    "fail": 0
+  },
+  "origin": "http://Kens-M5-Max-MacBook-Pro.local:5219"
+}

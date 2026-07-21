@@ -6,21 +6,23 @@ _None._
 
 ## P1
 
-1. **LAN origin uses DHCP IP** (`http://10.20.x.x:5219`) — Mac IP change breaks phone until rebuild/Settings update. mDNS `.local` on this Mac resolves to loopback locally; not adopted without phone Bonjour proof.
+_None open._
 
-## P1 fixed this lane
+### Closed
 
-1. **Planner sync clobber of fresher REST mutations** — ISO `updatedAt` lost LWW to local numeric timestamps. Fixed via `coerceTimestamp` in `migrate.js`. Evidence: Flow A `PASS_DEVICE_SESSION_MUTATE` after rebuild.
+1. **LAN origin DHCP IP** — closed via mDNS `LocalHostName.local` + `KenosOriginResolver` (build `202607211735`).
+2. **Planner sync clobber** — closed via `coerceTimestamp` (prior commit).
 
-## P2
+## P2 / Owner
 
-- True Mac sleep/wake visual confirmation (Owner)
-- iPhone Wi‑Fi toggle (Owner)
-- Shelf / Quick Switch gesture metrics (Owner)
+- True Mac sleep/wake visual confirmation
+- iPhone Wi‑Fi toggle
+- True Mac reboot
 - 3-day natural dogfood OPEN
 - Paper remains PARTIAL
+- Mac hostname rename → rebuild or Settings override (doctor reports host)
 
 ## Environment
 
-- NETWORK SCOPE: **LAN-DEPENDENT** (+ production fallback in Settings)
+- NETWORK SCOPE: **LAN-DEPENDENT** (stable hostname, not DHCP IP)
 - Phase 4: EXIT_OPEN

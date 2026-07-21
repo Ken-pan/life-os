@@ -1,0 +1,45 @@
+PASS A_cold_launch/home_screen_relaunch launched 1068ms
+PASS A_cold_launch/second_cold launched 235ms
+PASS A_cold_launch/no_external_safari_claim launch_stays_in_bundle (Safari escape requires visual Owner confirm) ms
+PASS B_plan/planner_service  10ms
+PASS B_plan/continue_plan_launch launched 505ms
+PASS B_plan/return_kenos launched 269ms
+PASS C_training/fitness_service  9ms
+PASS C_training/continue_training_launch launched 481ms
+PASS C_training/return_kenos launched 259ms
+PASS D_domains/work launched 529ms
+PASS D_domains/work_return_kenos launched 239ms
+PASS D_domains/money launched 216ms
+PASS D_domains/money_return_kenos launched 204ms
+PASS D_domains/library launched 222ms
+PASS D_domains/library_return_kenos launched 206ms
+PASS D_domains/music launched 230ms
+PASS D_domains/music_return_kenos launched 218ms
+PASS D_domains/home launched 214ms
+PASS D_domains/home_return_kenos launched 242ms
+PASS D_domains/health launched 212ms
+PASS D_domains/health_return_kenos launched 228ms
+PASS D_domains/paper partial_ok_not_fully_integrated 228ms
+PASS D_domains/paper_return_kenos launched 242ms
+PASS E_assistant_inbox/assistant_in_app in_app_webview_payload (Safari chrome = Owner visual) 312ms
+PASS E_assistant_inbox/inbox launched 272ms
+PASS E_assistant_inbox/spaces launched 292ms
+{
+  "verdict": "PASS",
+  "summary": {
+    "attempts": 26,
+    "passed": 26,
+    "failed": 0,
+    "recovered": 0,
+    "latency": {
+      "count": 25,
+      "median": 235,
+      "p50": 235,
+      "p95": 529,
+      "min": 9,
+      "max": 1068
+    },
+    "p0": 0,
+    "p1": 0
+  }
+}

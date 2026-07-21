@@ -1,0 +1,27 @@
+PASS CASE_1_normal_lan — core paths healthy
+PASS CASE_2_mac_sleep_proxy — services down; native launch may still open; no white-screen claim without screenshot
+PASS CASE_3_mac_wake_proxy — services restored after stop
+PASS CASE_4_restart_aios — single-domain restart must not brick shell
+PASS CASE_4_restart_planner — single-domain restart must not brick shell
+PASS CASE_4_restart_fitness — single-domain restart must not brick shell
+PASS CASE_5_wifi_proxy — classification-only; real Wi-Fi toggle needs Owner
+PASS CASE_6_lan_identity — stable mDNS hostname strategy
+PASS CASE_7_mac_reboot_proxy — true reboot OWNER_DOGFOOD; agents verify launchd boot path via ctl start
+PASS CASE_8_partial_fitness_down — other domains must stay up; Training unavailable honest
+{
+  "verdict": "PASS",
+  "summary": {
+    "total": 10,
+    "pass": 10,
+    "fail": 0,
+    "dataLossTotal": 0,
+    "ownerDogfoodOpen": [
+      "true_mac_sleep_wake",
+      "iphone_wifi_off_on",
+      "true_mac_reboot",
+      "visual_no_white_screen",
+      "visual_auth_not_cleared",
+      "visual_continue_retained"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 {
-  "ts": "2026-07-21T17:25:21.171Z",
-  "head": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
+  "ts": "2026-07-21T17:36:08.665Z",
+  "head": "de41869aecbce0201036288bba49ebdd4b59c208",
   "headShort": "",
   "formalBaseline": "502d805c28b29d3d50c0efa2699ab717a301ac45",
   "mac": {
@@ -11,10 +11,10 @@
   },
   "lanIpPresent": true,
   "lanIpMasked": "10.20.*.*",
-  "origin": "http://10.20.202.15:5219",
+  "origin": "http://Kens-M5-Max-MacBook-Pro.local:5219",
   "build": {
-    "iosBuildSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
-    "iosBuildNumber": "202607211716",
+    "iosBuildSha": "de41869aecbce0201036288bba49ebdd4b59c208",
+    "iosBuildNumber": "202607211735",
     "releaseSha": "71ad6d5f3aca78a1b7985e77061f13fac59afb10",
     "releaseShort": "71ad6d5f3"
   },
@@ -22,8 +22,8 @@
     "path": "/Users/kenpan/「Projects」/life-os/clients/apple/Apps/build-device/Build/Products/Debug-iphoneos/KenosIOS.app/Info.plist",
     "bundleId": "space.kenos.app.ios",
     "version": "1.0.0",
-    "build": "202607211716",
-    "origin": "http://10.20.202.15:5219"
+    "build": "202607211735",
+    "origin": "http://Kens-M5-Max-MacBook-Pro.local:5219"
   },
   "checks": [
     {
@@ -32,7 +32,7 @@
       "ok": true,
       "class": "device",
       "reason": "online",
-      "line": "Ken’s 17 Pro 🤏🏻  🌊 🌲          Kens-17-Pro-.coredevice.local           8097F071-CAB6-5AF0-8258-BCD985E9D79E   connected     iPhone 17 Pro (iPhone18,1)"
+      "line": "Ken’s 17 Pro 🤏🏻  🌊 🌲          Kens-17-Pro-.coredevice.local           8097F071-CAB6-5AF0-8258-BCD985E9D79E   connected            iPhone 17 Pro (iPhone18,1)"
     },
     {
       "name": "Kenos",
@@ -41,7 +41,7 @@
       "class": "product",
       "reason": "installed",
       "version": "1.0.0",
-      "bundleVersion": "202607211716"
+      "bundleVersion": "202607211735"
     },
     {
       "name": "lan_origin_reachable",
@@ -49,7 +49,7 @@
       "ok": true,
       "class": "service",
       "reason": "health_200",
-      "ms": 11
+      "ms": 14
     },
     {
       "name": "service_aios",
@@ -57,7 +57,7 @@
       "ok": true,
       "class": "service",
       "reason": "up",
-      "ms": 10
+      "ms": 9
     },
     {
       "name": "service_planner",
@@ -73,7 +73,7 @@
       "ok": true,
       "class": "service",
       "reason": "up",
-      "ms": 9
+      "ms": 10
     },
     {
       "name": "service_finance",
@@ -97,7 +97,7 @@
       "ok": true,
       "class": "service",
       "reason": "up",
-      "ms": 10
+      "ms": 9
     },
     {
       "name": "service_home",
@@ -105,7 +105,7 @@
       "ok": true,
       "class": "service",
       "reason": "up",
-      "ms": 9
+      "ms": 10
     },
     {
       "name": "service_health",
@@ -120,7 +120,7 @@
       "category": "product",
       "ok": true,
       "class": "product",
-      "reason": "ios=71ad6d5f3 release=71ad6d5f3"
+      "reason": "ios=de41869ae release=71ad6d5f3"
     },
     {
       "name": "head_vs_installed_drift",
@@ -130,12 +130,19 @@
       "reason": "aligned"
     },
     {
+      "name": "stable_hostname_origin",
+      "category": "product",
+      "ok": true,
+      "class": "product",
+      "reason": "mdns=kens-m5-max-macbook-pro.local"
+    },
+    {
       "name": "app_launchable",
       "category": "product",
       "ok": true,
       "class": "product",
       "reason": "launched",
-      "ms": 309
+      "ms": 279
     },
     {
       "name": "wkwebview_payload",

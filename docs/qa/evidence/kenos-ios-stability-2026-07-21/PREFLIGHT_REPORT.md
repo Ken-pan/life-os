@@ -1,7 +1,7 @@
 # PREFLIGHT_REPORT
 
-**ts:** 2026-07-21T17:25:21.171Z
-**HEAD:** `71ad6d5f3aca78a1b7985e77061f13fac59afb10`
+**ts:** 2026-07-21T17:36:08.665Z
+**HEAD:** `de41869aecbce0201036288bba49ebdd4b59c208`
 **formal baseline:** `502d805c28b29d3d50c0efa2699ab717a301ac45`
 **verdict:** `PASS`
 
@@ -20,8 +20,9 @@
 | service_music | true | service | up |
 | service_home | true | service | up |
 | service_health | true | service | up |
-| build_sha_recorded | true | product | ios=71ad6d5f3 release=71ad6d5f3 |
+| build_sha_recorded | true | product | ios=de41869ae release=71ad6d5f3 |
 | head_vs_installed_drift | true | product | aligned |
+| stable_hostname_origin | true | product | mdns=kens-m5-max-macbook-pro.local |
 | app_launchable | true | product | launched |
 | wkwebview_payload | true | product | payload_launch_accepted |
 | auth_bootstrap_surface | true | product | deferred_to_smoke_flow_a (no token in preflight) |
