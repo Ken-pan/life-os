@@ -182,23 +182,26 @@ const BRO_DAYS = {
         { id: 'co_plank', sets: 3, reps: '40–60s', rest: 45 }
       ])
     },
-    /* 肩/三角肌：附加训练，补侧束宽度与后束厚度（前束由胸推日覆盖）。 */
+    /* 肩/三角肌「南瓜肩」协议：侧束造宽度 + 后束造立体；前束由胸推覆盖，不加班推举。 */
     delts: {
       id: 'delts', name: 'DELTS', cn: '肩', accent: ACCENTS.delts, supp: true,
-      subtitle: '侧束 · 后束 · 肩袖外旋', label: '肩',
-      note: '依据 Schoenfeld 等容量研究：三角肌每周 10–20 有效组为宜；四日分化里前束已由卧推/上斜覆盖，本日专攻侧束（肩宽）与后束（立体度/体态）。轻重量、12–20 次、RIR 1，离心 2–3 秒。推/拉日主训后或休息日单独做，每周 1–2 次。',
-      vol: '肩孤立 ~12 组 · 每周 1–2 次',
+      subtitle: '南瓜肩 · 侧束盖 · 后束立体', label: '肩',
+      note: '科学目标（中级）：侧束与后束各约 12–16 有效组/周，分 2 次完成（Schoenfeld 容量区间）。前束已由卧推/上斜覆盖，勿再加推举。侧平举是肩宽主因（推举几乎练不到侧束）；绳索+哑铃阻力曲线不同但增肌效果相近（Larsen 等 2025）。后束增肌优先反向飞鸟/器械反飞（EMG 最高），面拉留作热身外旋；背日正式面拉另计。12–20 次、RIR 0–1、离心 2–3 秒。务必每周 2 次（推日后或休息日），单次不够周容量。',
+      vol: '侧+后各 ~7 组/次 · 周 2 次 ≈ 14+14 · 南瓜肩',
       warmup: [
         { name: '肩关节绕环', val: '2 × 10/向', note: '激活肩袖，幅度从小' },
-        { name: '面拉（轻）', val: '2 × 15', note: '预激活后束 / 外旋' }
+        { name: '面拉（轻）', val: '2 × 15', note: '外旋/肩胛预激活（非增肌主项）' }
       ],
       ex: pickExSpecs([
-        { id: 'sh_cableraise', w: 15, anchor: true, sets: 3, reps: '12–15', rest: 60, rir: '1',
+        /* 侧束：肩宽「盖」——南瓜肩第一优先级 */
+        { id: 'sh_cableraise', w: 15, anchor: true, sets: 4, reps: '12–20', rest: 60, rir: '0–1',
           alternatives: [{ id: 'sh_latraise', name: '哑铃侧平举' }] },
-        { id: 'sh_latraise', w: 12, unit: 'LBS/侧', sets: 3, reps: '12–15', rest: 60, rir: '1' },
-        { id: 'b_face', w: 100, sets: 3, reps: '15–20', rest: 60, rir: '1' },
-        { id: 'sh_reardelt', w: 10, unit: 'LBS/侧', sets: 3, reps: '12–15', rest: 60, rir: '1',
-          alternatives: [{ id: 'b_revfly', name: '反向飞鸟' }] }
+        { id: 'sh_latraise', w: 12, unit: 'LBS/侧', sets: 3, reps: '15–20', rest: 60, rir: '0–1' },
+        /* 后束：立体/体态——器械反飞 EMG 优于面拉；哑铃飞鸟换自由轨迹 */
+        { id: 'b_revfly', w: 80, sets: 4, reps: '12–15', rest: 60, rir: '0–1',
+          alternatives: [{ id: 'sh_reardelt', name: '俯身哑铃后束飞鸟' }] },
+        { id: 'sh_reardelt', w: 10, unit: 'LBS/侧', sets: 3, reps: '12–15', rest: 60, rir: '0–1',
+          alternatives: [{ id: 'sh_bentlat', name: '俯身侧平举' }] }
       ])
     },
     /* 办公久坐恢复：附加训练，改善髋屈肌紧张与圆肩。 */

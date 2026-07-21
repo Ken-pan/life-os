@@ -65,8 +65,10 @@ assert(coreDay.ex.some((e) => e.id === 'co_plank'), '核心日应含平板支撑
 const deltsDay = PROGRAMS[0].days.delts;
 assert(deltsDay?.supp === true, '肩补充训练应标记为 supp');
 assert(deltsDay.ex.length === 4, '肩补充训练应含 4 个动作');
-assert(deltsDay.ex.some((e) => e.id === 'sh_cableraise'), '肩日应以侧平举打头');
-assert(deltsDay.ex.some((e) => e.id === 'b_face'), '肩日应含面拉');
+assert(deltsDay.ex[0]?.id === 'sh_cableraise', '肩日应以绳索侧平举打头（南瓜肩侧束优先）');
+assert(deltsDay.ex.some((e) => e.id === 'sh_latraise'), '肩日应含哑铃侧平举');
+assert(deltsDay.ex.some((e) => e.id === 'b_revfly'), '肩日应含反向飞鸟（后束增肌主项）');
+assert(deltsDay.ex.some((e) => e.id === 'sh_reardelt'), '肩日应含俯身后束飞鸟');
 assert(!deltsDay.ex.some((e) => e.id === 'sh_ohp' || e.id === 'sh_dbpress'), '肩补充日不含推举（前束已由推日覆盖）');
 assert(PROGRAMS.every((p) => p.days.delts), '所有计划应含肩补充训练');
 

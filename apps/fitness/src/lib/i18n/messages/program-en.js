@@ -142,10 +142,10 @@ export default {
     },
     "delts": {
       "cn": "Delts",
-      "subtitle": "Side · rear · external rotation",
+      "subtitle": "Pumpkin delts · side cap · rear roundness",
       "label": "Shoulders",
-      "note": "Side and rear delt focus (front delts covered by pressing). Light 12–20 reps, RIR ~1, 2–3s eccentrics. 1–2×/week after main days or on rest days.",
-      "vol": "Delts ~12–16 sets · 1–2×/week",
+      "note": "Science target (intermediate): ~12–16 hard sets/week each for side and rear, split across 2 sessions (Schoenfeld volume range). Front delts covered by pressing — no extra OHP. Lateral raises drive width; cable + DB are similarly effective (Larsen et al. 2025). Reverse fly/machine for rear size (highest EMG); keep light face pulls as warmup ER — back day already has working face pulls. 12–20 reps, RIR 0–1, 2–3s eccentrics. Do this day twice weekly or weekly volume falls short.",
+      "vol": "~7 side + ~7 rear / session · 2×/week ≈ 14+14",
       "warmup": [
         {
           "name": "Shoulder circles",
@@ -153,7 +153,7 @@ export default {
         },
         {
           "name": "Face pull (light)",
-          "note": "Rear delts / ER prep"
+          "note": "ER / scap prep (not main hypertrophy)"
         }
       ]
     },
