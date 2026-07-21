@@ -81,17 +81,26 @@ export function resolveAppVhCSSValue() {
 }
 
 /**
- * On-screen keyboard height (px). = layout viewport − visual viewport − offsetTop.
- * Closed keyboard / URL-bar jitter reads ~0; a real keyboard is always well over the
- * floor, so small deltas don't nudge sheets. Used by .sheet-bg padding to lift
- * bottom sheets exactly onto the keyboard (no gap), immune to iOS focus-scroll offset.
+ * On-screen keyboard height (px).
+ * Default: layout viewport − visual viewport − offsetTop (browser / most PWAs).
+ * iOS standalone often keeps vv.height ≈ innerHeight and instead scrolls the
+ * layout viewport; then scrollY + offsetTop is a better keyboard-height proxy.
+ * Closed keyboard / URL-bar jitter stays under the floor.
  * @returns {number}
  */
 export function resolveKeyboardInset() {
   if (typeof window === 'undefined') return 0
   const vv = window.visualViewport
   if (!vv) return 0
-  const inset = window.innerHeight - vv.height - vv.offsetTop
+  const layoutGap = Math.max(
+    0,
+    window.innerHeight - vv.height - vv.offsetTop,
+  )
+  let inset = layoutGap
+  if (isStandalonePwa()) {
+    const scrollGap = (window.scrollY || 0) + (vv.offsetTop || 0)
+    inset = Math.max(layoutGap, scrollGap)
+  }
   return inset > KEYBOARD_INSET_FLOOR_PX ? Math.round(inset) : 0
 }
 

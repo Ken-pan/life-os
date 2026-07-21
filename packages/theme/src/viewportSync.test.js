@@ -7,7 +7,7 @@ import {
   resolveKeyboardInset,
 } from './viewportSync.js'
 
-/** @param {{ standalone?: boolean; mobile?: boolean; innerHeight?: number; visualHeight?: number; offsetTop?: number }} opts */
+/** @param {{ standalone?: boolean; mobile?: boolean; innerHeight?: number; visualHeight?: number; offsetTop?: number; scrollY?: number }} opts */
 function stubViewport(opts) {
   const innerHeight = opts.innerHeight ?? 852
   const visualHeight = opts.visualHeight ?? innerHeight
@@ -16,6 +16,7 @@ function stubViewport(opts) {
   Object.defineProperty(globalThis, 'window', {
     value: {
       innerHeight,
+      scrollY: opts.scrollY ?? 0,
       location: { search: '' },
       /** @param {string} query */
       matchMedia: (query) => ({
@@ -121,7 +122,34 @@ test('resolveKeyboardInset subtracts iOS focus-scroll offsetTop', () => {
     visualHeight: 420,
     offsetTop: 40,
   })
+  // layoutGap = 852 - 420 - 40 = 392; scrollGap = 0 + 40 → max = 392
   assert.equal(resolveKeyboardInset(), 392)
+})
+
+test('resolveKeyboardInset uses scrollY+offsetTop when standalone vv.height does not shrink', () => {
+  stubViewport({
+    standalone: true,
+    innerHeight: 852,
+    visualHeight: 852,
+    offsetTop: 120,
+    scrollY: 280,
+  })
+  // layoutGap = 852 - 852 - 120 = -120 → max with scrollGap 400
+  assert.equal(resolveKeyboardInset(), 400)
+  assert.equal(isKeyboardOpen(), true)
+})
+
+test('resolveKeyboardInset ignores scrollY fallback outside standalone PWA', () => {
+  stubViewport({
+    standalone: false,
+    mobile: true,
+    innerHeight: 852,
+    visualHeight: 852,
+    offsetTop: 120,
+    scrollY: 280,
+  })
+  assert.equal(resolveKeyboardInset(), 0)
+  assert.equal(isKeyboardOpen(), false)
 })
 
 test('isEditableFocusTarget rejects null and non-elements', () => {
