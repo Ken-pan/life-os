@@ -458,13 +458,13 @@
   .spine-banner {
     padding: 8px 12px;
     border-radius: 10px;
-    background: color-mix(in oklab, var(--life-os-accent, #7c6cf0) 12%, transparent);
+    background: color-mix(in oklab, var(--accent) 12%, transparent);
     font-size: 0.82rem;
   }
   .spine-error {
     padding: 8px 12px;
     border-radius: 10px;
-    background: color-mix(in oklab, var(--life-os-danger, #d33) 14%, transparent);
+    background: color-mix(in oklab, var(--accent-2) 14%, transparent);
     font-size: 0.85rem;
   }
   .spine-loading,
@@ -502,8 +502,8 @@
     min-width: 0;
   }
   .spine-item.selected {
-    background: color-mix(in oklab, var(--life-os-accent, #7c6cf0) 10%, transparent);
-    border-color: color-mix(in oklab, var(--life-os-accent, #7c6cf0) 40%, transparent);
+    background: color-mix(in oklab, var(--accent) 10%, transparent);
+    border-color: color-mix(in oklab, var(--accent) 40%, transparent);
   }
   .spine-item-plain {
     flex-direction: row;
@@ -537,14 +537,14 @@
     background: color-mix(in oklab, currentColor 8%, transparent);
     white-space: nowrap;
   }
-  .pill-active { background: color-mix(in oklab, #2f9e60 16%, transparent); }
-  .pill-waiting { background: color-mix(in oklab, #d9a013 18%, transparent); }
+  .pill-active { background: color-mix(in oklab, var(--accent) 16%, transparent); }
+  .pill-waiting { background: color-mix(in oklab, var(--accent-2) 18%, transparent); }
   .pill-paused { background: color-mix(in oklab, currentColor 12%, transparent); }
   .dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--life-os-accent, #7c6cf0);
+    background: var(--accent);
   }
   .spine-detail {
     display: flex;
@@ -672,9 +672,9 @@
     text-decoration: none;
   }
   button.primary {
-    background: var(--life-os-accent, #7c6cf0);
+    background: var(--accent);
     border-color: transparent;
-    color: #fff;
+    color: var(--on-accent);
   }
   .small { font-size: 0.78rem; padding: 4px 10px; white-space: nowrap; }
   button:disabled { opacity: 0.5; cursor: default; }

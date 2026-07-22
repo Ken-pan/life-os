@@ -361,7 +361,7 @@ function checkContractsValueImports(file, content) {
   let match
   while ((match = importRe.exec(stripped)) !== null) {
     const subpath = match[3] ?? ''
-    if (subpath === '/events') continue
+    if (subpath === '/events' || subpath === '/kenos-actions') continue // runtime contract modules (event schemas / action registry)
     if (!isTypeOnlyImportClause(match[1])) {
       fail(
         'contracts-type-only',
@@ -375,7 +375,7 @@ function checkContractsValueImports(file, content) {
     /\bexport\s+(?!type\s)([\s\S]*?)\sfrom\s+(['"])@life-os\/contracts([^'"]*)\2/g
   while ((match = exportRe.exec(stripped)) !== null) {
     const subpath = match[3] ?? ''
-    if (subpath === '/events') continue
+    if (subpath === '/events' || subpath === '/kenos-actions') continue // runtime contract modules (event schemas / action registry)
     if (!isTypeOnlyExportClause(match[1])) {
       fail(
         'contracts-type-only',
