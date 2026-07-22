@@ -140,7 +140,10 @@
   })
 
   const headline = $derived.by(() => {
-    if (!A.online && !hasMeasured) return t('now.stateOffline')
+    if (!hasMeasured) {
+      if (!A.online) return t('now.stateOffline')
+      return t('state.h_noData')
+    }
     if (paused && engine.headline.k === 'state.h_allGood')
       return t('now.statePaused')
     return fmt(engine.headline.k, engine.headline.p)
@@ -160,6 +163,20 @@
     if (s?.phase === 'warning' || frac > 0.85) return 'hot'
     return frac >= 0.05 ? 'active' : 'idle'
   })
+
+  /** Strip CPU peak debug fragments from older agent notes. */
+  const scrubNote = (note) => {
+    if (!note) return ''
+    return String(note)
+      .replace(/CPU\s*峰[\d.]+%\s*\/\s*合[\d.]+%/gi, '工具负载偏高')
+      .replace(/CPU\s*峰[\d.]+%/gi, '工具负载偏高')
+      .replace(/\bCPU\b[^·]*/gi, (m) =>
+        m.toLowerCase().includes('阈值') ? m : '工具负载偏高',
+      )
+      .replace(/\s*·\s*·\s*/g, ' · ')
+      .trim()
+  }
+  const liveNote = $derived(scrubNote(s?.note) || '—')
 </script>
 
 <div class="wrap">
@@ -169,36 +186,36 @@
   </header>
 
   <!-- 六维状态(Understand 层,全部由测量数据被动推导,每格可解释来源) -->
-  <section class="card">
-    <div class="dims-head">
-      <h3>{t('now.dims')}</h3>
-      {#if hasMeasured}
+  {#if hasMeasured}
+    <section class="card">
+      <div class="dims-head">
+        <h3>{t('now.dims')}</h3>
         <span class="health-chip" title={t('now.healthConnected')}>
           <i class="chip-dot"></i>{fmt('now.healthConnected', {
             n: A.health.length,
           })}
         </span>
-      {/if}
-    </div>
-    <div class="dims">
-      {#each DIMENSION_ORDER as key (key)}
-        {@const dim = engine.dims[key]}
-        <article class="dim" data-level={dim.level}>
-          <header class="dim-head">
-            <span class="dim-name">{t(`state.dim_${key}`)}</span>
-            <span class="dim-level"
-              ><i class="dot"></i>{t(`state.level_${dim.level}`)}</span
-            >
-          </header>
-          <ul class="dim-reasons">
-            {#each dim.reasons.slice(0, 2) as r, i (`${r.k}-${i}`)}
-              <li>{reason(r)}</li>
-            {/each}
-          </ul>
-        </article>
-      {/each}
-    </div>
-  </section>
+      </div>
+      <div class="dims">
+        {#each DIMENSION_ORDER as key (key)}
+          {@const dim = engine.dims[key]}
+          <article class="dim" data-level={dim.level}>
+            <header class="dim-head">
+              <span class="dim-name">{t(`state.dim_${key}`)}</span>
+              <span class="dim-level"
+                ><i class="dot"></i>{t(`state.level_${dim.level}`)}</span
+              >
+            </header>
+            <ul class="dim-reasons">
+              {#each dim.reasons.slice(0, 2) as r, i (`${r.k}-${i}`)}
+                <li>{reason(r)}</li>
+              {/each}
+            </ul>
+          </article>
+        {/each}
+      </div>
+    </section>
+  {/if}
 
   <!-- 今日训练对账:活动/Workout → 是否宜练(不泄跨 OS 明细) -->
   {#if hasMeasured}
@@ -254,7 +271,7 @@
         </div>
         <div>
           <dt>{t('now.signalNow')}</dt>
-          <dd>{s?.note ?? '—'}</dd>
+          <dd>{liveNote}</dd>
         </div>
         <div>
           <dt>{t('now.breaksToday')}</dt>

@@ -74,7 +74,7 @@
 {#if reviews.length && !dismissed}
   <div class="recog-banner" role="note">
     <div class="recog-copy">
-      <strong>{reviews.length} 件待认亲确认{total > reviews.length ? `（共 ${total} 处）` : ''}</strong>
+      <strong>{reviews.length} 件待确认{total > reviews.length ? `（共 ${total} 处）` : ''}</strong>
       <span>Mac 精修认出这些像以前扫过的某件 —— 先给你最像的几件，确认完自动浮出下一批；拿不准可以「暂不确定」。</span>
     </div>
     <div class="recog-actions">

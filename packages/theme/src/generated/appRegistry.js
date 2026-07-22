@@ -167,7 +167,7 @@ export const LIFE_OS_SITE_META = {
     },
     themeColor: {
       light: "#ffffff",
-      dark: "#212121",
+      dark: "#08090a",
     },
     defaultTheme: "auto",
     locale: "zh-CN",

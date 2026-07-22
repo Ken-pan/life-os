@@ -233,7 +233,7 @@
   testIdPrefix="fitness-shell"
 >
   {#snippet navigation(projection)}
-    {#if projection === 'desktop'}
+    {#if projection === 'desktop' && !isIosNativeShell()}
       <SideNav />
     {:else if !isIosNativeShell()}
       <BottomNav />

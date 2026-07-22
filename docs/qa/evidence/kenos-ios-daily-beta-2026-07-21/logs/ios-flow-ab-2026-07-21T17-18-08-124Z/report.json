@@ -1,0 +1,29 @@
+{
+  "runId": "ios-flow-ab-2026-07-21T17-18-08-124Z",
+  "host": "10.20.202.15",
+  "phoneIp": "10.20.202.6",
+  "flowA": {
+    "status": "FAIL",
+    "taskId": "ios-ab-mrux340c",
+    "seedTitle": "iOS FlowA Seed 7-18-08-124Z",
+    "mutatedTitle": "iOS FlowA MUT 18-08-124Z",
+    "dbTitle": "iOS FlowA Seed 7-18-08-124Z",
+    "phoneMutOk": true,
+    "phoneVerifyOk": false,
+    "plannerDeepLinkHits": 20,
+    "method": "phone WKWebView JWT PATCH + force-quit re-read (not XCUITest DOM edit)"
+  },
+  "flowB": {
+    "status": "FAIL",
+    "error": "Could not find the 'status' column of 'fitness_workout_sessions' in the schema cache"
+  },
+  "layout": {
+    "status": "PRIOR_PASS"
+  },
+  "auth": {
+    "status": "PRIOR_PASS"
+  },
+  "notes": [
+    "Auth injected to AIOS+Planner+Fitness origins on device"
+  ]
+}

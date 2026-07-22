@@ -294,7 +294,7 @@
   }
   .domain-eyebrow {
     margin: 0;
-    font-size: 10px;
+    font-size: var(--text-2xs, 10px);
     font-weight: 650;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -400,7 +400,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 17px;
+    font-size: var(--text-title, 17px);
     font-weight: 500;
     line-height: 1;
     cursor: pointer;

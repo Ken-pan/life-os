@@ -1461,7 +1461,7 @@
     {/if}
     {#if wallGraphOuterShellOnly}
       <p class="plan-empty-wallgraph" role="status">
-        当前只剩外墙框，内墙与门已清空。
+        当前墙图只含外墙（未检出内墙/门）。
         <button type="button" class="plan-inline-btn" onclick={restoreDefaultLayout}>
           恢复默认户型
         </button>

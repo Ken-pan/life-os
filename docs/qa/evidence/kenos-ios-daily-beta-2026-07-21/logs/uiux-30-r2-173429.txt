@@ -1,0 +1,8 @@
+ORIGIN http://127.0.0.1:5219 AIOS http://10.20.202.15:5219
+web 10 done
+macos 10 done
+ios shots { ok: 10, mode: 'device-dvt' }
+wrote /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/screenshots/uiux-30-boards-2026-07-21-r2/boards/uiux-web-10panel-square.png
+wrote /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/screenshots/uiux-30-boards-2026-07-21-r2/boards/uiux-ios-10panel-square.png
+wrote /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/screenshots/uiux-30-boards-2026-07-21-r2/boards/uiux-macos-10panel-square.png
+OUT /Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-ios-daily-beta-2026-07-21/screenshots/uiux-30-boards-2026-07-21-r2

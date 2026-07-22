@@ -1,7 +1,20 @@
 # NETWORK_ORIGIN_MAP — Kenos iOS Daily Beta
 
-**Updated:** 2026-07-21T05:45Z
-**network scope:** **LAN-DEPENDENT**
+**Updated:** 2026-07-21T16:30Z
+**network scope:** **LAN-DEPENDENT** (dev) · **Production HTTPS + SW** (Phase 1 offline shell)
+
+## Phase 1 — Offline Shell Boot (2026-07-21)
+
+- Health probe failure no longer hard-gates WK when the surface already painted or origin is production `*.kenos.space` (Service Worker may serve cached shell).
+- Non-blocking **Sync paused** banner replaces full-screen gate in those cases; **Use Production** / **Retry** remain available.
+- `WKAppBoundDomains` (10 hosts) in iOS `Info.plist`; `limitsNavigationsToAppBoundDomains` only when the load host is **listed** (not every `*.kenos.space` / `*.netlify.app`). LAN/Tailscale HTTP Daily Beta unchanged.
+- AIOS Service Worker: HTTPS-only registration; navigate fallback tries cached route then `/`.
+
+### App-Bound host list (≤10)
+
+`www.kenos.space`, `planner.kenos.space`, `fitness.kenos.space`, `finance.kenos.space`, `knowledge.kenos.space`, `music.kenos.space`, `home.kenos.space`, `health.kenos.space`, `kenos-www.netlify.app`, `portal.kenos.space`
+
+Excluded: deprecated `aios.kenos.space`; per-app Netlify preview hosts (not production Continuity).
 
 ## Origins
 

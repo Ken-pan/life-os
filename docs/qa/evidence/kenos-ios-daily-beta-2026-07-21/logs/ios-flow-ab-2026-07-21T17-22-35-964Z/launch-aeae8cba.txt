@@ -1,0 +1,4 @@
+10:23:01  Acquired tunnel connection to device.
+10:23:01  Enabling developer disk image services.
+10:23:01  Acquired usage assertion.
+Launched application with space.kenos.app.ios bundle identifier.

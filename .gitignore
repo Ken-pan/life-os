@@ -6,6 +6,8 @@ node_modules
 .env.*
 !.env.example
 **/build
+clients/apple/Apps/build-*/
+/logs/
 **/dist
 **/.svelte-kit
 playwright-report

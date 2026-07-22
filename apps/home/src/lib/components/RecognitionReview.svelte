@@ -84,7 +84,7 @@
         <span>Mac 精修认出下面 {items.length} 件像以前扫过的某件 —— 看图确认，拿不准可以「暂不确定」</span>
       {:else}
         <strong>这批都确认完了</strong>
-        <span>没有更多待认亲的重复件了。</span>
+        <span>没有更多待确认的重复件了。</span>
       {/if}
     </header>
 

@@ -1,0 +1,60 @@
+{
+  "udid": "FC61E6C4-7854-4E07-AA79-80306C3FD06F",
+  "origin": "http://127.0.0.1:5197",
+  "bundle": "space.kenos.app.ios",
+  "uniqueFrames": 10,
+  "shots": [
+    {
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-assistant-10in1-2026-07-21/raw-ios/01-locked.png",
+      "label": "01 锁定 · 需连接账户",
+      "hash": "ad851629231e0d34083ba0a1d9de4b29"
+    },
+    {
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-assistant-10in1-2026-07-21/raw-ios/02-attention-ready.png",
+      "label": "02 空态 · Attention Ready",
+      "hash": "74f62cad5b00d1a641436dc59fe2df80"
+    },
+    {
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-assistant-10in1-2026-07-21/raw-ios/03-chat-debug.png",
+      "label": "03 对话 · 多轮调试",
+      "hash": "4ede07c4bb748f25eba2076ff2bc9198"
+    },
+    {
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-assistant-10in1-2026-07-21/raw-ios/04-followups.png",
+      "label": "04 追问建议 · Follow-ups",
+      "hash": "eb67665c7b4953912220bd5ffa43bf60"
+    },
+    {
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-assistant-10in1-2026-07-21/raw-ios/05-tools-search.png",
+      "label": "05 工具 · 联网检索",
+      "hash": "7d09bab8a108fc956e63dcedc94ba7ce"
+    },
+    {
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-assistant-10in1-2026-07-21/raw-ios/06-image-tool.png",
+      "label": "06 工具 · 本地生图",
+      "hash": "d5cf702790b86410243c6c2821021ec7"
+    },
+    {
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-assistant-10in1-2026-07-21/raw-ios/07-artifact-clock.png",
+      "label": "07 Artifacts · HTML 时钟",
+      "hash": "d6467cd2949fc7da84eef82834231250"
+    },
+    {
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-assistant-10in1-2026-07-21/raw-ios/08-scope-work.png",
+      "label": "08 Scope · Work",
+      "hash": "b19f10fa4a4ac5505df62321f9c70140"
+    },
+    {
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-assistant-10in1-2026-07-21/raw-ios/09-sql-chat.png",
+      "label": "09 对话 · SQL / 代码",
+      "hash": "f5b07669593698fdeeb3e8f44c088151"
+    },
+    {
+      "file": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-assistant-10in1-2026-07-21/raw-ios/10-cap-concept.png",
+      "label": "10 对话 · 概念讲解",
+      "hash": "c09cac9622b80fce23c036fa85dd9faf"
+    }
+  ],
+  "board": "/Users/kenpan/「Projects」/life-os/docs/qa/evidence/kenos-assistant-10in1-2026-07-21/kenos-assistant-ios-10in1-REAL.png",
+  "capturedAt": "2026-07-21T22:23:33.455Z"
+}

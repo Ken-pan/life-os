@@ -954,9 +954,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             closeSession(kind: "reset")
         }
 
+        // MAC-P1-09: user-facing note — no CPU peak / debug telemetry.
         var why: [String] = []
         if !present { why.append("人离开 \(Int(idle))s") }
-        if cpuBusy { why.append(String(format: "CPU 峰%.0f%%/合%.0f%%", maxCpu, sumCpu)) }
+        if cpuBusy { why.append("工具负载偏高") }
         if frontCoding { why.append("前台 \(front)") }
         if frontChat { why.append(chatCounts ? "聊天 \(front) 已 \(chatFrontSeconds / 60) 分钟" : "聊天 \(front) 未满 \(config.chatSustainedSeconds / 60) 分钟(不计)") }
         lastSampleNote = (isActive ? "计时中 · " : "漏水中 · ") + (why.isEmpty ? "无活跃信号" : why.joined(separator: " · "))
