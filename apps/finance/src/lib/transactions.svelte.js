@@ -58,7 +58,7 @@ export class TransactionsStore {
     if (userId) writeCache(CACHE_SCOPES.txns, userId, this.txns)
   }
 
-  /** 重新从云端拉取。 */
+  /** 重新从云端拉取。始终发起一次新的请求，保证写库后的显式刷新拿到最新数据。 */
   async reload() {
     this.error = null
     if (isDemoMode()) {
