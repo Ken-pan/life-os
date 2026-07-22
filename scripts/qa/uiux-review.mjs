@@ -874,7 +874,7 @@ function codeImpact(appId, baseSha) {
 // ── Design Governance：健康分 + 组合视图 + 趋势（行业惯例：单一健康信号 + 轨迹 + 可路由整改） ──
 const HISTORY_PATH = join(REPO_ROOT, 'apps/uiux-review-gallery/history.json')
 
-/** 一个 app 的覆盖率（跨 4 变体 ok/total）。 */
+/** 一个 app 的覆盖率（跨全部已生成变体 ok/total；Web 现为 浅/深×桌面 两变体）。 */
 function coverageOf(/** @type {any} */ a) {
   let ok = 0
   let total = 0
@@ -973,6 +973,20 @@ function computeGovernance(manifest) {
       { name: '无障碍', target: '100% 通过', status: a11yFails === 0 ? 'pass' : 'fail', detail: a11yFails === 0 ? '全通过' : `${a11yFails} 项失败` },
       { name: '捕获覆盖', target: '全部页面截到', status: coverages.every((c) => c === 100) ? 'pass' : 'fail' },
       { name: '样式债务趋势', target: '不新增', status: prevEntry ? (totalDebt <= (prevEntry.portfolio?.debt ?? totalDebt) ? 'pass' : 'fail') : 'n/a', detail: prevEntry ? `${totalDebt - (prevEntry.portfolio?.debt ?? totalDebt) >= 0 ? '+' : ''}${totalDebt - (prevEntry.portfolio?.debt ?? totalDebt)}` : '无基线' },
+      // 原生端覆盖：iOS/Mac 缺位要在仪表盘上可见（Mac 需要终端「屏幕录制」权限才能采集）。
+      (() => {
+        const nat = manifest.apps.filter((/** @type {any} */ a) => a.native)
+        const has = (/** @type {string} */ vp) =>
+          nat.some((/** @type {any} */ a) => Object.keys(a.variants ?? {}).some((k) => k.endsWith(`-${vp}`)))
+        const iosOk = has('ios')
+        const macOk = has('mac')
+        return {
+          name: '原生端覆盖',
+          target: 'iOS + Mac 均有实截',
+          status: iosOk && macOk ? 'pass' : 'fail',
+          detail: `${iosOk ? 'iOS ✓' : 'iOS 缺失'} · ${macOk ? 'Mac ✓' : 'Mac 缺失（需屏幕录制权限）'}`,
+        }
+      })(),
     ],
   }
   manifest.findings = systemicFindings(REPO_ROOT)

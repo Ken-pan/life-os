@@ -52,45 +52,65 @@ const APPS_DIR = join(REPO_ROOT, 'clients/apple/Apps')
 const GALLERY_DIR = join(REPO_ROOT, 'apps/uiux-review-gallery/public')
 const ACCENT = LIFE_OS_APP_WORDMARK_ACCENT.aios ?? { light: '#5c7cfa', dark: '#8aa3ff' }
 
-/** 原生壳「页面」= 深链驱动的界面状态。settle 为截图前静置毫秒。 */
-const NATIVE_SCREENS = Object.freeze({
-  ios: [
-    { link: 'kenos://today', title: '今日', path: 'kenos://today', settle: 5000 },
-    { link: 'kenos://assistant', title: '问答', path: 'kenos://assistant', settle: 3500 },
-    { link: 'kenos://inbox', title: '收件箱', path: 'kenos://inbox', settle: 3500 },
-    { link: 'kenos://shelf', title: '空间 Shelf', path: 'kenos://shelf', settle: 2200 },
-    // settings 会顺带压掉 shelf（实测）；之后回 today 复位，再截 compose。
-    { link: 'kenos://settings', title: '设置', path: 'kenos://settings', settle: 2200 },
-    { link: 'kenos://today', reset: true, settle: 1500 },
-    { link: 'kenos://compose', title: '快速捕获', path: 'kenos://compose', settle: 2200 },
-  ],
-  mac: [
-    { link: 'kenos://today', title: '今日', path: 'kenos://today', settle: 5000 },
-    { link: 'kenos://assistant', title: '问答', path: 'kenos://assistant', settle: 3500 },
-    { link: 'kenos://inbox', title: '收件箱', path: 'kenos://inbox', settle: 3500 },
-    { link: 'kenos://shelf', title: 'Space Shelf', path: 'kenos://shelf', settle: 2200 },
-    { link: 'kenos://settings', title: '设置', path: 'kenos://settings', settle: 2200 },
-  ],
-})
-
-const NATIVE_APPS = Object.freeze({
-  ios: {
-    id: 'kenos-ios',
-    name: 'Kenos iOS',
-    description: 'Kenos 原生 iOS 壳（模拟器实截）：Dock · Space Shelf · 今日/问答/收件箱',
-    theme: /** @type {'dark'} */ ('dark'), // Info.plist 强制 Dark
-    viewportKey: 'ios',
-    viewportLabel: 'iOS 原生壳',
-  },
-  mac: {
-    id: 'kenos-mac',
-    name: 'Kenos Mac',
-    description: 'Kenos Mac Command Center（真实窗口截图）：侧栏 + 详情 · Spaces · Capture',
-    theme: /** @type {'dark'} */ ('dark'),
-    viewportKey: 'mac',
-    viewportLabel: 'Mac 原生壳',
-  },
-})
+/**
+ * 原生画廊条目 —— 像 Web 端一样「一个条目 = 一张卡」：Kenos 壳一张，
+ * 每个可达 Domain（Daily Beta 伴侣）各一张。screens 的 link 为深链，
+ * settle 为截图前静置毫秒；leave 在条目截完后发送（退出 Domain 复位）。
+ *
+ * 暂只含 plan/training：其余域（money/home/music…）在模拟器会落到生产
+ * HTTPS 源（未登录 = 登录墙），等有 QA 登录注入后再扩。
+ */
+function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
+  const V = platform
+  const L = platform === 'ios' ? 'iOS' : 'Mac'
+  const shellSettle = platform === 'mac' ? 4500 : 3500
+  return [
+    {
+      id: `kenos-${V}`,
+      name: `Kenos ${L}`,
+      accentId: 'aios',
+      description:
+        platform === 'ios'
+          ? 'Kenos 原生 iOS 壳（模拟器实截）：Dock · Space Shelf · 今日/问答/收件箱'
+          : 'Kenos Mac Command Center（真实窗口截图）：侧栏 + 详情 · Spaces · Capture',
+      screens: [
+        { link: 'kenos://today', title: '今日', path: 'kenos://today', settle: 5000 },
+        { link: 'kenos://assistant', title: '问答', path: 'kenos://assistant', settle: shellSettle },
+        { link: 'kenos://inbox', title: '收件箱', path: 'kenos://inbox', settle: shellSettle },
+        { link: 'kenos://shelf', title: '空间 Shelf', path: 'kenos://shelf', settle: 2200 },
+        // settings 会顺带压掉 shelf（实测）；之后回 today 复位，再截 compose。
+        { link: 'kenos://settings', title: '设置', path: 'kenos://settings', settle: 2200 },
+        { link: 'kenos://today', reset: true, settle: 1500 },
+        ...(platform === 'ios'
+          ? [{ link: 'kenos://compose', title: '快速捕获', path: 'kenos://compose', settle: 2200 }]
+          : []),
+      ],
+    },
+    {
+      id: `plan-${V}`,
+      name: `计划 · ${L}`,
+      accentId: 'planner',
+      description: `Planner 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：任务 · 日历`,
+      screens: [
+        { link: 'kenos://domain/plan', title: '任务', path: 'kenos://domain/plan', settle: 7000 },
+        { link: 'kenos://domain/plan?path=/calendar', title: '日历', path: 'kenos://domain/plan?path=/calendar', settle: 4000 },
+      ],
+      leave: 'kenos://return',
+    },
+    {
+      id: `training-${V}`,
+      name: `训练 · ${L}`,
+      accentId: 'fitness',
+      description: `Fitness 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：今日训练 · 计划 · 资源库`,
+      screens: [
+        { link: 'kenos://domain/training', title: '今日训练', path: 'kenos://domain/training', settle: 7000 },
+        { link: 'kenos://domain/training?path=/program', title: '训练计划', path: 'kenos://domain/training?path=/program', settle: 4000 },
+        { link: 'kenos://domain/training?path=/discover', title: '资源库', path: 'kenos://domain/training?path=/discover', settle: 4000 },
+      ],
+      leave: 'kenos://return',
+    },
+  ]
+}
 
 const sh = (/** @type {string} */ cmd, /** @type {object} */ opts = {}) =>
   execSync(cmd, { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], ...opts })
@@ -151,6 +171,30 @@ function localDailyBetaOrigin() {
   return `http://${host}.local:5219`
 }
 
+/** 通用逐屏采集：openurl 深链 → 静置 → 截图（shoot 回调产出 PNG buffer）。 */
+async function captureEntryScreens(entry, { open, shoot }) {
+  const cells = []
+  for (const spec of entry.screens) {
+    open(spec.link)
+    await sleep(spec.settle)
+    if (spec.reset) continue
+    try {
+      const buffer = shoot()
+      const size = pngSize(buffer)
+      cells.push({ title: spec.title, path: spec.path, buffer, w: size.w, h: size.h })
+      process.stdout.write('·')
+    } catch (err) {
+      cells.push({ title: spec.title, path: spec.path, note: String(err), w: 4, h: 8 })
+      process.stdout.write('✗')
+    }
+  }
+  if (entry.leave) {
+    open(entry.leave)
+    await sleep(1800)
+  }
+  return cells
+}
+
 async function captureIOS() {
   const udid = bootedSimUdid()
   const app = buildIOSApp()
@@ -164,29 +208,26 @@ async function captureIOS() {
   sh(`xcrun simctl launch ${udid} space.kenos.app.ios`)
   await sleep(4000)
 
-  const cells = []
   const tmp = join(tmpdir(), `kenos-uiux-ios-${Date.now()}`)
   mkdirSync(tmp, { recursive: true })
-  for (const spec of NATIVE_SCREENS.ios) {
-    sh(`xcrun simctl openurl ${udid} "${spec.link}"`)
-    await sleep(spec.settle)
-    if (spec.reset) continue
-    const file = join(tmp, `${cells.length}.png`)
-    try {
-      sh(`xcrun simctl io ${udid} screenshot "${file}"`)
-      const buffer = readFileSync(file)
-      const size = pngSize(buffer)
-      cells.push({ title: spec.title, path: spec.path, buffer, w: size.w, h: size.h })
-      process.stdout.write('·')
-    } catch (err) {
-      cells.push({ title: spec.title, path: spec.path, note: String(err), w: 4, h: 8 })
-      process.stdout.write('✗')
-    }
+  let shot = 0
+  const results = []
+  for (const entry of nativeEntries('ios')) {
+    process.stdout.write(`  ${entry.name} `)
+    const cells = await captureEntryScreens(entry, {
+      open: (link) => sh(`xcrun simctl openurl ${udid} "${link}"`),
+      shoot: () => {
+        const file = join(tmp, `${shot++}.png`)
+        sh(`xcrun simctl io ${udid} screenshot "${file}"`)
+        return readFileSync(file)
+      },
+    })
+    process.stdout.write('\n')
+    results.push({ entry, cells })
   }
-  process.stdout.write('\n')
   sh(`xcrun simctl terminate ${udid} space.kenos.app.ios 2>/dev/null || true`)
   rmSync(tmp, { recursive: true, force: true })
-  return cells
+  return results
 }
 
 // ── Mac（真实窗口；需要屏幕录制权限）──────────────────────────────────────
@@ -260,43 +301,49 @@ async function captureMac() {
     console.warn('⚠ Mac 截图跳过：未找到 Kenos 窗口（app 未启动或被最小化）。')
     return null
   }
-  const cells = []
   const tmp = join(tmpdir(), `kenos-uiux-mac-${Date.now()}`)
   mkdirSync(tmp, { recursive: true })
-  for (const spec of NATIVE_SCREENS.mac) {
-    sh(`open -g "${spec.link}"`)
-    await sleep(spec.settle)
-    if (spec.reset) continue
-    const file = join(tmp, `${cells.length}.png`)
-    try {
-      execFileSync('screencapture', ['-x', '-o', `-l${winId}`, file], { stdio: 'ignore' })
-      const buffer = readFileSync(file)
-      const size = pngSize(buffer)
-      cells.push({ title: spec.title, path: spec.path, buffer, w: size.w, h: size.h })
-      process.stdout.write('·')
-    } catch (err) {
-      cells.push({ title: spec.title, path: spec.path, note: String(err), w: 4, h: 3 })
-      process.stdout.write('✗')
-    }
+  let shot = 0
+  const results = []
+  for (const entry of nativeEntries('mac')) {
+    process.stdout.write(`  ${entry.name} `)
+    const cells = await captureEntryScreens(entry, {
+      open: (link) => sh(`open -g "${link}"`),
+      shoot: () => {
+        const file = join(tmp, `${shot++}.png`)
+        execFileSync('screencapture', ['-x', '-o', `-l${winId}`, file], { stdio: 'ignore' })
+        return readFileSync(file)
+      },
+    })
+    process.stdout.write('\n')
+    results.push({ entry, cells })
   }
-  process.stdout.write('\n')
   sh(`osascript -e 'tell application "KenosMac" to quit' 2>/dev/null || true`)
   rmSync(tmp, { recursive: true, force: true })
-  return cells
+  return results
 }
 
 // ── 合成 + 画廊合并 ───────────────────────────────────────────────────────
 /**
  * @param {import('playwright').Browser} browser
  * @param {'ios'|'mac'} platform
+ * @param {{ id: string, name: string, description: string, accentId: string }} entry
  * @param {{ title?: string, path?: string, buffer?: Buffer, note?: string, w: number, h: number }[]} cells
  */
-async function composeSheet(browser, platform, cells) {
-  const meta = NATIVE_APPS[platform]
+async function composeSheet(browser, platform, entry, cells) {
+  const meta = {
+    id: entry.id,
+    name: entry.name,
+    description: entry.description,
+    theme: /** @type {'dark'} */ ('dark'), // 壳 chrome 强制深色
+    viewportKey: platform,
+    viewportLabel: platform === 'ios' ? 'iOS 原生壳' : 'Mac 原生壳',
+  }
+  const accent = LIFE_OS_APP_WORDMARK_ACCENT[entry.accentId] ?? ACCENT
   const git = gitInfo()
   const layout = nativeSheetLayout(platform)
   const html = buildContactSheetHtml({
-    app: { name: meta.name, accent: ACCENT },
+    app: { name: meta.name, accent },
     theme: meta.theme,
     viewportLabel: meta.viewportLabel,
     git,
@@ -434,16 +481,17 @@ async function main() {
   try {
     if (PLATFORMS.includes('ios')) {
       console.log('· iOS（模拟器）')
-      const cells = await captureIOS()
-      const entry = await composeSheet(browser, 'ios', cells)
-      if (entry) entries.push(entry)
+      for (const { entry, cells } of await captureIOS()) {
+        const ge = await composeSheet(browser, 'ios', entry, cells)
+        if (ge) entries.push(ge)
+      }
     }
     if (PLATFORMS.includes('mac')) {
       console.log('· Mac（真实窗口）')
-      const cells = await captureMac()
-      if (cells) {
-        const entry = await composeSheet(browser, 'mac', cells)
-        if (entry) entries.push(entry)
+      const results = await captureMac()
+      for (const { entry, cells } of results ?? []) {
+        const ge = await composeSheet(browser, 'mac', entry, cells)
+        if (ge) entries.push(ge)
       }
     }
   } finally {

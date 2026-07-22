@@ -25,7 +25,7 @@
     "ios",
     "mac"
   ],
-  "count": 9,
+  "count": 11,
   "apps": [
     {
       "id": "planner",
@@ -969,7 +969,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/kenos-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T15:31:49.490Z",
+          "generatedAt": "2026-07-22T15:50:26.947Z",
           "screens": 6,
           "capture": {
             "ok": 6,
@@ -1008,14 +1008,98 @@
         }
       ],
       "git": {
-        "sha": "e7a595678",
-        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
+        "sha": "483a8904d",
+        "subject": "fix(uiux-gallery): skip native capture on non-macOS (CI keeps committed shots)",
         "branch": "master"
       },
       "metrics": {
         "coverage": {
           "ok": 6,
           "total": 6,
+          "pct": 100
+        }
+      }
+    },
+    {
+      "id": "plan-ios",
+      "variants": {
+        "dark-ios": {
+          "file": "shots/plan-ios-dark-ios.jpg",
+          "generatedAt": "2026-07-22T15:50:27.369Z",
+          "screens": 2,
+          "capture": {
+            "ok": 2,
+            "total": 2
+          }
+        }
+      },
+      "native": true,
+      "name": "计划 · iOS",
+      "description": "Planner 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：任务 · 日历",
+      "screens": 2,
+      "pages": [
+        {
+          "path": "kenos://domain/plan",
+          "title": "任务"
+        },
+        {
+          "path": "kenos://domain/plan?path=/calendar",
+          "title": "日历"
+        }
+      ],
+      "git": {
+        "sha": "483a8904d",
+        "subject": "fix(uiux-gallery): skip native capture on non-macOS (CI keeps committed shots)",
+        "branch": "master"
+      },
+      "metrics": {
+        "coverage": {
+          "ok": 2,
+          "total": 2,
+          "pct": 100
+        }
+      }
+    },
+    {
+      "id": "training-ios",
+      "variants": {
+        "dark-ios": {
+          "file": "shots/training-ios-dark-ios.jpg",
+          "generatedAt": "2026-07-22T15:50:28.072Z",
+          "screens": 3,
+          "capture": {
+            "ok": 3,
+            "total": 3
+          }
+        }
+      },
+      "native": true,
+      "name": "训练 · iOS",
+      "description": "Fitness 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：今日训练 · 计划 · 资源库",
+      "screens": 3,
+      "pages": [
+        {
+          "path": "kenos://domain/training",
+          "title": "今日训练"
+        },
+        {
+          "path": "kenos://domain/training?path=/program",
+          "title": "训练计划"
+        },
+        {
+          "path": "kenos://domain/training?path=/discover",
+          "title": "资源库"
+        }
+      ],
+      "git": {
+        "sha": "483a8904d",
+        "subject": "fix(uiux-gallery): skip native capture on non-macOS (CI keeps committed shots)",
+        "branch": "master"
+      },
+      "metrics": {
+        "coverage": {
+          "ok": 3,
+          "total": 3,
           "pct": 100
         }
       }
@@ -1078,6 +1162,12 @@
         "target": "不新增",
         "status": "fail",
         "detail": "+101"
+      },
+      {
+        "name": "原生端覆盖",
+        "target": "iOS + Mac 均有实截",
+        "status": "fail",
+        "detail": "iOS ✓ · Mac 缺失（需屏幕录制权限）"
       }
     ]
   },

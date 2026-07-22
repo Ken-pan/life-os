@@ -212,6 +212,11 @@
       .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 
       .state { max-width: 1360px; margin: 40px auto; padding: 0 24px; color: var(--sub); }
+      .empty-viewport { grid-column: 1 / -1; max-width: 560px; padding: 28px;
+        border: 1px dashed var(--border); border-radius: 14px; color: var(--sub); line-height: 1.8; }
+      .empty-viewport strong { color: var(--ink); font-size: 15px; }
+      .empty-viewport code { display: inline-block; margin-top: 4px; padding: 3px 8px; border-radius: 6px;
+        background: var(--card); border: 1px solid var(--border); font-size: 12px; }
       footer { max-width: 1360px; margin: 16px auto 48px; padding: 0 24px; color: var(--faint); font-size: 12px; line-height: 1.9; }
       footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
       footer a:hover { text-decoration: underline; }
@@ -585,6 +590,16 @@
         const thZh = state.theme === 'dark' ? '深色' : '浅色'
         const grid = document.getElementById('grid')
         grid.className = state.viewport === 'ios' ? 'mobile' : ''
+        if (!apps.length) {
+          grid.className = ''
+          grid.innerHTML =
+            '<div class="empty-viewport">' +
+            (state.viewport === 'mac'
+              ? '<strong>Mac 端截图待采集</strong><p>采集需要给运行管线的终端开启「屏幕录制」权限：系统设置 → 隐私与安全性 → 屏幕录制。授权后在仓库根运行：</p><code>node scripts/qa/uiux-review-native.mjs --platform mac --gallery</code>'
+              : '<strong>该端暂无截图</strong><p>运行 <code>npm run qa:uiux-gallery:all</code> 生成。</p>') +
+            '</div>'
+          return
+        }
         grid.innerHTML = apps.map((a) => {
           const variants = a.variants || {}
           // 原生壳只有单主题（深色）——主题不命中时回退该端任一变体。
