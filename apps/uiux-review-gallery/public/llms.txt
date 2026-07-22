@@ -23,10 +23,11 @@
 - [计划 · iOS](https://kenos-uiux-review.netlify.app/shots/plan-ios-dark-ios.jpg): Planner 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：任务 · 日历 · 2 屏 · 页面: 任务 / 日历
 - [训练 · iOS](https://kenos-uiux-review.netlify.app/shots/training-ios-dark-ios.jpg): Fitness 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：今日训练 · 计划 · 资源库 · 3 屏 · 页面: 今日训练 / 训练计划 / 资源库
 - [音乐 · iOS](https://kenos-uiux-review.netlify.app/shots/music-ios-dark-ios.jpg): Music 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：播放 · 音乐库 · 2 屏 · 页面: 播放 / 音乐库
-- [财务 · iOS](https://kenos-uiux-review.netlify.app/shots/money-ios-dark-ios.jpg): Finance 在 Kenos iOS Domain 模式：敏感域 Face ID 锁定门（未解锁设备的真实首态） · 1 屏 · 页面: 锁定门（Face ID）
+- [财务 · iOS](https://kenos-uiux-review.netlify.app/shots/money-ios-dark-ios.jpg): Finance 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：今日财务 · 账户 · 1 屏 · 页面: 今日财务
 - [家 · iOS](https://kenos-uiux-review.netlify.app/shots/home-ios-dark-ios.jpg): Home 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：户型 · 储物 · 2 屏 · 页面: 户型规划 / 储物
 - [知识库 · iOS](https://kenos-uiux-review.netlify.app/shots/library-ios-dark-ios.jpg): Knowledge 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：书库 · 项目 · 2 屏 · 页面: 书库 / 项目现状
 - [健康 · iOS](https://kenos-uiux-review.netlify.app/shots/health-ios-dark-ios.jpg): Health 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：状态 · 趋势 · 2 屏 · 页面: 状态 / 趋势
+- [Code · iOS](https://kenos-uiux-review.netlify.app/shots/code-ios-dark-ios.jpg): Code 在 Kenos iOS Domain 模式（AIOS 壳路由实截）：Cursor 对话 · 1 屏 · 页面: Cursor 对话
 
 ## 设计治理指标（每 app，见 manifest.json 的 apps[].metrics / variants[].capture|diff）
 字段：capture=捕获覆盖(ok/total) · a11y=无障碍(pass/checked, 查图无alt/控件无名/输入无标注) · sharedAdoption=共享UI import占比 · styleDebt=样式债务(棘轮基线, byRule+triage整改方向) · diff=视觉变更(vs上次基线, 哪些屏变了)。
@@ -46,6 +47,7 @@
 - 家 · iOS: 
 - 知识库 · iOS: 
 - 健康 · iOS: 
+- Code · iOS: 
 
 ## 全部变体
 ### PLANNER.OS
@@ -88,3 +90,5 @@
 - [知识库 · iOS · dark-ios](https://kenos-uiux-review.netlify.app/shots/library-ios-dark-ios.jpg)
 ### 健康 · iOS
 - [健康 · iOS · dark-ios](https://kenos-uiux-review.netlify.app/shots/health-ios-dark-ios.jpg)
+### Code · iOS
+- [Code · iOS · dark-ios](https://kenos-uiux-review.netlify.app/shots/code-ios-dark-ios.jpg)

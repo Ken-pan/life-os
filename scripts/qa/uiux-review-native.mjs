@@ -57,8 +57,8 @@ const ACCENT = LIFE_OS_APP_WORDMARK_ACCENT.aios ?? { light: '#5c7cfa', dark: '#8
  * 每个可达 Domain（Daily Beta 伴侣）各一张。screens 的 link 为深链，
  * settle 为截图前静置毫秒；leave 在条目截完后发送（退出 Domain 复位）。
  *
- * 暂只含 plan/training：其余域（money/home/music…）在模拟器会落到生产
- * HTTPS 源（未登录 = 登录墙），等有 QA 登录注入后再扩。
+ * 全部 Domain 走 kenos-ctl 本地伴侣；空库域用「私网显式 ?demo=1」通道灌演示数据
+ * （见各 app demoMode 的 isPrivateLanExplicitDemo —— 真机不带参数永不激活）。
  */
 function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
   const V = platform
@@ -92,7 +92,7 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       accentId: 'planner',
       description: `Planner 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：任务 · 日历`,
       screens: [
-        { link: 'kenos://domain/plan', title: '任务', path: 'kenos://domain/plan', settle: 7000 },
+        { link: 'kenos://domain/plan?path=%2F%3Fdemo%3D1', title: '任务', path: 'kenos://domain/plan', settle: 7000 },
         { link: 'kenos://domain/plan?path=/calendar', title: '日历', path: 'kenos://domain/plan?path=/calendar', settle: 4000 },
       ],
       leave: 'kenos://return',
@@ -115,7 +115,7 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       accentId: 'music',
       description: `Music 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：播放 · 音乐库`,
       screens: [
-        { link: 'kenos://domain/music', title: '播放', path: 'kenos://domain/music', settle: 7000 },
+        { link: 'kenos://domain/music?path=%2F%3Fdemo%3D1', title: '播放', path: 'kenos://domain/music', settle: 7000 },
         { link: 'kenos://domain/music?path=/library', title: '音乐库', path: 'kenos://domain/music?path=/library', settle: 4000 },
       ],
       leave: 'kenos://return',
@@ -124,9 +124,9 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       id: `money-${V}`,
       name: `财务 · ${L}`,
       accentId: 'finance',
-      description: `Finance 在 Kenos ${L} Domain 模式：敏感域 Face ID 锁定门（未解锁设备的真实首态）`,
+      description: `Finance 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：今日财务 · 账户`,
       screens: [
-        { link: 'kenos://domain/money', title: '锁定门（Face ID）', path: 'kenos://domain/money', settle: 7000 },
+        { link: 'kenos://domain/money?path=%2Fhome%2Ftoday%3Fdemo%3D1', title: '今日财务', path: 'kenos://domain/money', settle: 8000 },
       ],
       leave: 'kenos://return',
     },
@@ -147,8 +147,18 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       accentId: 'knowledge',
       description: `Knowledge 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：书库 · 项目`,
       screens: [
-        { link: 'kenos://domain/library', title: '书库', path: 'kenos://domain/library', settle: 7000 },
+        { link: 'kenos://domain/library?path=%2Flibrary%3Fdemo%3D1', title: '书库', path: 'kenos://domain/library', settle: 7000 },
         { link: 'kenos://domain/library?path=/projects', title: '项目现状', path: 'kenos://domain/library?path=/projects', settle: 4000 },
+      ],
+      leave: 'kenos://return',
+    },
+    {
+      id: `code-${V}`,
+      name: `Code · ${L}`,
+      accentId: 'aios',
+      description: `Code 在 Kenos ${L} Domain 模式（AIOS 壳路由实截）：Cursor 对话`,
+      screens: [
+        { link: 'kenos://domain/code', title: 'Cursor 对话', path: 'kenos://domain/code', settle: 6000 },
       ],
       leave: 'kenos://return',
     },
@@ -158,7 +168,7 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       accentId: 'health',
       description: `Health 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：状态 · 趋势`,
       screens: [
-        { link: 'kenos://domain/health', title: '状态', path: 'kenos://domain/health', settle: 7000 },
+        { link: 'kenos://domain/health?path=%2F%3Fdemo%3D1', title: '状态', path: 'kenos://domain/health', settle: 7000 },
         { link: 'kenos://domain/health?path=/trends', title: '趋势', path: 'kenos://domain/health?path=/trends', settle: 4000 },
       ],
       leave: 'kenos://return',

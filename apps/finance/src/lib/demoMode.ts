@@ -28,6 +28,19 @@ function isLocalHost(): boolean {
   )
 }
 
+/**
+ * 私网主机（mDNS .local / RFC1918）—— Kenos 原生壳 Daily Beta / QA 采集经此访问。
+ * 与 localhost 不同：只认显式 ?demo=1（或已持久化 '1'），绝不按登录态自动 —— 真机不受影响。
+ */
+function isPrivateLanHost(): boolean {
+  if (typeof window === 'undefined') return false
+  const h = window.location.hostname
+  return (
+    h.endsWith('.local') ||
+    /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h)
+  )
+}
+
 type DemoFlag = 'on' | 'off' | 'unset'
 
 /**
@@ -66,7 +79,8 @@ function hasSession(): boolean {
  * 规则（仅 localhost）：显式 on/off 优先；未设置时，未登录→演示、已登录→真实。
  */
 export function isDemoMode(): boolean {
-  if (!isLocalHost()) return false
+  // 私网主机：只走显式 'on'，永不按登录态自动演示。
+  if (!isLocalHost()) return isPrivateLanHost() && readFlagState() === 'on'
   const flag = readFlagState()
   if (flag === 'on') return true
   if (flag === 'off') return false
@@ -75,7 +89,7 @@ export function isDemoMode(): boolean {
 
 /** 供脚本/控制台显式开启演示（返回是否成功——仅本地）。 */
 export function enableDemoMode(): boolean {
-  if (!isLocalHost()) return false
+  if (!isLocalHost() && !isPrivateLanHost()) return false
   try {
     window.localStorage.setItem(DEMO_FLAG_KEY, '1')
     return true
@@ -86,7 +100,7 @@ export function enableDemoMode(): boolean {
 
 /** 供控制台显式关闭演示（持久化 '0'，露出登录门用真实账户；仅本地）。 */
 export function disableDemoMode(): boolean {
-  if (!isLocalHost()) return false
+  if (!isLocalHost() && !isPrivateLanHost()) return false
   try {
     window.localStorage.setItem(DEMO_FLAG_KEY, '0')
     return true

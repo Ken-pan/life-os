@@ -25,7 +25,7 @@
     "ios",
     "mac"
   ],
-  "count": 16,
+  "count": 17,
   "apps": [
     {
       "id": "planner",
@@ -969,7 +969,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/kenos-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T15:59:26.933Z",
+          "generatedAt": "2026-07-22T16:16:00.552Z",
           "screens": 6,
           "capture": {
             "ok": 6,
@@ -1008,8 +1008,8 @@
         }
       ],
       "git": {
-        "sha": "fcb8b9bbf",
-        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "sha": "cc8492350",
+        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
         "branch": "master"
       },
       "metrics": {
@@ -1025,7 +1025,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/plan-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T15:59:27.353Z",
+          "generatedAt": "2026-07-22T16:16:00.998Z",
           "screens": 2,
           "capture": {
             "ok": 2,
@@ -1048,8 +1048,8 @@
         }
       ],
       "git": {
-        "sha": "fcb8b9bbf",
-        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "sha": "cc8492350",
+        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
         "branch": "master"
       },
       "metrics": {
@@ -1065,7 +1065,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/training-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T15:59:28.038Z",
+          "generatedAt": "2026-07-22T16:16:01.669Z",
           "screens": 3,
           "capture": {
             "ok": 3,
@@ -1092,8 +1092,8 @@
         }
       ],
       "git": {
-        "sha": "fcb8b9bbf",
-        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "sha": "cc8492350",
+        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
         "branch": "master"
       },
       "metrics": {
@@ -1109,7 +1109,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/music-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T15:59:28.453Z",
+          "generatedAt": "2026-07-22T16:16:02.257Z",
           "screens": 2,
           "capture": {
             "ok": 2,
@@ -1132,8 +1132,8 @@
         }
       ],
       "git": {
-        "sha": "fcb8b9bbf",
-        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "sha": "cc8492350",
+        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
         "branch": "master"
       },
       "metrics": {
@@ -1149,7 +1149,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/money-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T15:59:28.858Z",
+          "generatedAt": "2026-07-22T16:16:02.667Z",
           "screens": 1,
           "capture": {
             "ok": 1,
@@ -1159,17 +1159,17 @@
       },
       "native": true,
       "name": "财务 · iOS",
-      "description": "Finance 在 Kenos iOS Domain 模式：敏感域 Face ID 锁定门（未解锁设备的真实首态）",
+      "description": "Finance 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：今日财务 · 账户",
       "screens": 1,
       "pages": [
         {
           "path": "kenos://domain/money",
-          "title": "锁定门（Face ID）"
+          "title": "今日财务"
         }
       ],
       "git": {
-        "sha": "fcb8b9bbf",
-        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "sha": "cc8492350",
+        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
         "branch": "master"
       },
       "metrics": {
@@ -1185,7 +1185,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/home-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T15:59:29.311Z",
+          "generatedAt": "2026-07-22T16:16:03.115Z",
           "screens": 2,
           "capture": {
             "ok": 2,
@@ -1208,8 +1208,8 @@
         }
       ],
       "git": {
-        "sha": "fcb8b9bbf",
-        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "sha": "cc8492350",
+        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
         "branch": "master"
       },
       "metrics": {
@@ -1225,7 +1225,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/library-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T15:59:29.719Z",
+          "generatedAt": "2026-07-22T16:16:03.574Z",
           "screens": 2,
           "capture": {
             "ok": 2,
@@ -1248,8 +1248,8 @@
         }
       ],
       "git": {
-        "sha": "fcb8b9bbf",
-        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "sha": "cc8492350",
+        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
         "branch": "master"
       },
       "metrics": {
@@ -1265,7 +1265,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/health-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T15:59:30.135Z",
+          "generatedAt": "2026-07-22T16:16:04.416Z",
           "screens": 2,
           "capture": {
             "ok": 2,
@@ -1288,14 +1288,50 @@
         }
       ],
       "git": {
-        "sha": "fcb8b9bbf",
-        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "sha": "cc8492350",
+        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
         "branch": "master"
       },
       "metrics": {
         "coverage": {
           "ok": 2,
           "total": 2,
+          "pct": 100
+        }
+      }
+    },
+    {
+      "id": "code-ios",
+      "variants": {
+        "dark-ios": {
+          "file": "shots/code-ios-dark-ios.jpg",
+          "generatedAt": "2026-07-22T16:16:03.972Z",
+          "screens": 1,
+          "capture": {
+            "ok": 1,
+            "total": 1
+          }
+        }
+      },
+      "native": true,
+      "name": "Code · iOS",
+      "description": "Code 在 Kenos iOS Domain 模式（AIOS 壳路由实截）：Cursor 对话",
+      "screens": 1,
+      "pages": [
+        {
+          "path": "kenos://domain/code",
+          "title": "Cursor 对话"
+        }
+      ],
+      "git": {
+        "sha": "cc8492350",
+        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
+        "branch": "master"
+      },
+      "metrics": {
+        "coverage": {
+          "ok": 1,
+          "total": 1,
           "pct": 100
         }
       }

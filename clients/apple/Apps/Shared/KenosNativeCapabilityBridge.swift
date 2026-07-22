@@ -842,6 +842,18 @@ enum KenosNativeCapabilityBridge {
             return
         }
 
+        #if targetEnvironment(simulator)
+        // Simulator / XCTest must never block on LA（与 KenosShellUnlock 同策）——
+        // 直接发 grant，让 Money/Work Continuity 在 QA/画廊采集里可见。
+        KenosUnlockGrantStore.remember(storageKey, ttl: grantTTL)
+        resolve(id: id, webView: webView, value: [
+            "ok": true,
+            "cached": false,
+            "biometryType": "simulator",
+        ])
+        return
+        #else
+
         if !allowPrompt {
             resolve(id: id, webView: webView, value: [
                 "ok": false,
@@ -936,6 +948,7 @@ enum KenosNativeCapabilityBridge {
                 }
             }
         }
+        #endif
     }
 
     /// Web "Cancel" / explicit leave — invalidate system Face ID and settle the Promise.

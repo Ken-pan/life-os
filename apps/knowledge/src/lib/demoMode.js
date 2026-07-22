@@ -21,9 +21,30 @@ function isLocalHost() {
   )
 }
 
+// 私网主机（mDNS .local / RFC1918）—— Kenos 原生壳 Daily Beta / QA 采集经此访问。
+// 与 localhost 不同：只认显式 ?demo=1（或已持久化 '1'），绝不默认灌 —— 真机空库不受影响。
+function isPrivateLanExplicitDemo() {
+  if (!browser) return false
+  const h = location.hostname
+  const priv =
+    h.endsWith('.local') ||
+    /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h)
+  if (!priv) return false
+  try {
+    const p = new URLSearchParams(location.search)
+    if (p.get('demo') === '1') {
+      localStorage.setItem(FLAG_KEY, '1')
+      return true
+    }
+    return localStorage.getItem(FLAG_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 /** 空库时是否应灌入 demo 数据。仅 localhost 网页（非 Tauri）；消化 ?demo= 开关。 */
 export function shouldSeedDemo() {
-  if (!browser || isTauri() || !isLocalHost()) return false
+  if (!browser || isTauri() || (!isLocalHost() && !isPrivateLanExplicitDemo())) return false
   try {
     const p = new URLSearchParams(location.search)
     if (p.has('demo')) {
