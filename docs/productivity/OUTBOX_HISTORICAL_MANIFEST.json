@@ -1,0 +1,2564 @@
+{
+  "generated": "2026-07-22 (read-only accountability review)",
+  "epoch": "2026-07-22T17:00:00Z",
+  "total": 150,
+  "summary": {
+    "canonical_present": 97,
+    "orphan": 53,
+    "external_side_effect_ever": 0,
+    "replay_eligible": 0,
+    "dead_letter": 1
+  },
+  "records": [
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "6a30310b-1598-4d27-a581-4fd7f497b354",
+      "created_at": "2026-07-20T04:20:30.365479+00:00",
+      "entity_ref": {
+        "id": "00640f6d-a71e-4bbe-b5aa-7f3cc4ea45cc",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "37d1a037-5230-47bb-9768-7fe2d35fa5bb",
+      "created_at": "2026-07-20T04:20:53.871428+00:00",
+      "entity_ref": {
+        "id": "844497e7-348f-4263-b315-25b058f6baa8",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "de3b9105-fbca-4060-ba51-320dadb9b79e",
+      "created_at": "2026-07-20T04:21:14.091327+00:00",
+      "entity_ref": {
+        "id": "477564c1-d16e-4f75-98c3-9fcff026ae44",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "6bf6f17e-00cc-44a7-9d75-ec4bbfbe4037",
+      "created_at": "2026-07-20T04:25:02.553768+00:00",
+      "entity_ref": {
+        "id": "fb49321b-10d0-4ceb-8c57-f79045b96ff2",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "0b7ee1ab-7df5-4294-ae24-2c78b36f8cbc",
+      "created_at": "2026-07-20T04:27:19.262232+00:00",
+      "entity_ref": {
+        "id": "e63020cd-99ff-47d9-b773-c7470c2e5284",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "b440c64e-74a8-41e2-86f9-c3d55db1a45d",
+      "created_at": "2026-07-20T04:27:19.392758+00:00",
+      "entity_ref": {
+        "id": "e63020cd-99ff-47d9-b773-c7470c2e5284",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_title",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "492550ba-9bd8-487e-ab20-fe3a7141ac00",
+      "created_at": "2026-07-20T04:34:06.805618+00:00",
+      "entity_ref": {
+        "id": "ea0b1b72-c100-4eb4-9c02-367adfe53ced",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "e7d40768-4b2d-4f5f-a54e-53b01d06c619",
+      "created_at": "2026-07-20T04:34:07.05187+00:00",
+      "entity_ref": {
+        "id": "ea0b1b72-c100-4eb4-9c02-367adfe53ced",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_due_date",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "4c9227b0-ab22-4d31-a10d-bf06aa1c9555",
+      "created_at": "2026-07-20T04:38:13.944012+00:00",
+      "entity_ref": {
+        "id": "c8212268-d8e1-4cd5-872d-7515b126fb9b",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "856b33ba-4131-4cc2-9b0e-c09bef35a8d5",
+      "created_at": "2026-07-20T04:38:46.063132+00:00",
+      "entity_ref": {
+        "id": "c8212268-d8e1-4cd5-872d-7515b126fb9b",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_title",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "2c043d69-e397-4c3d-b0ac-2133b2a5e3d5",
+      "created_at": "2026-07-20T04:38:46.537214+00:00",
+      "entity_ref": {
+        "id": "c8212268-d8e1-4cd5-872d-7515b126fb9b",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_due_date",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "4fc0b6cb-f0df-40ee-9c46-836d68453e28",
+      "created_at": "2026-07-20T04:42:05.98209+00:00",
+      "entity_ref": {
+        "id": "67430841-89f9-469a-813a-18c6104f3f48",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "51bea413-48e4-4191-9c91-be521aef8753",
+      "created_at": "2026-07-20T04:42:06.133808+00:00",
+      "entity_ref": {
+        "id": "67430841-89f9-469a-813a-18c6104f3f48",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_schedule",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "5bafe430-7256-4947-9d4a-8e94328cc8c9",
+      "created_at": "2026-07-20T04:44:45.677594+00:00",
+      "entity_ref": {
+        "id": "dda75a5e-0a31-437e-a873-1bf68f9da6ea",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "d2d2561b-afdf-4762-bd25-93a02de2d7c6",
+      "created_at": "2026-07-20T04:45:31.086336+00:00",
+      "entity_ref": {
+        "id": "dda75a5e-0a31-437e-a873-1bf68f9da6ea",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_schedule",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "966b357d-074d-4e46-94e8-b43f778dd15f",
+      "created_at": "2026-07-20T04:48:35.382129+00:00",
+      "entity_ref": {
+        "id": "a29faab6-5baf-40fa-803d-b56f51ccbb65",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "943d3ea2-33f3-4082-b469-cb27fdc90e08",
+      "created_at": "2026-07-20T04:48:35.523677+00:00",
+      "entity_ref": {
+        "id": "a29faab6-5baf-40fa-803d-b56f51ccbb65",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_project",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "023e241e-9212-4de9-942b-b49fbaaadd4d",
+      "created_at": "2026-07-20T04:51:59.075175+00:00",
+      "entity_ref": {
+        "id": "3e063fbb-7099-457d-bb40-9f5d89656025",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "87ae7952-838d-4b52-868b-bee4a0be70cf",
+      "created_at": "2026-07-20T04:51:59.317362+00:00",
+      "entity_ref": {
+        "id": "3e063fbb-7099-457d-bb40-9f5d89656025",
+        "type": "plan.task"
+      },
+      "action_type": "plan.complete_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "eac4497d-08b7-4565-957e-29194b57a15e",
+      "created_at": "2026-07-20T04:51:59.536946+00:00",
+      "entity_ref": {
+        "id": "3e063fbb-7099-457d-bb40-9f5d89656025",
+        "type": "plan.task"
+      },
+      "action_type": "plan.reopen_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "4c7ae4d9-30e5-4c3a-998a-789ff923680b",
+      "created_at": "2026-07-20T04:57:08.586634+00:00",
+      "entity_ref": {
+        "id": "f78de805-e7f6-4d51-a146-82a9a9f09462",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "da1d7eb2-4541-4468-9a5f-207880e02c19",
+      "created_at": "2026-07-20T04:57:08.724926+00:00",
+      "entity_ref": {
+        "id": "f78de805-e7f6-4d51-a146-82a9a9f09462",
+        "type": "plan.task"
+      },
+      "action_type": "plan.archive_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "91821a5c-75c8-404a-9d1c-8aee44a22b95",
+      "created_at": "2026-07-20T05:24:07.304384+00:00",
+      "entity_ref": {
+        "id": "8c63f96d-81c1-42c0-9ed1-11fe5e052ad0",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "99f55a08-f4a1-4d84-bd0f-5f1edbf24b53",
+      "created_at": "2026-07-20T14:33:09.605927+00:00",
+      "entity_ref": {
+        "id": "98f3e43c-e1c9-40eb-81fb-ebdaea685353",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "e6157348-40d1-41bc-b26a-530a7d5a3a86",
+      "created_at": "2026-07-20T14:33:10.383034+00:00",
+      "entity_ref": {
+        "id": "98f3e43c-e1c9-40eb-81fb-ebdaea685353",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_due_date",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "fe458765-f03b-43a4-926c-fece349b12f7",
+      "created_at": "2026-07-20T14:33:13.406627+00:00",
+      "entity_ref": {
+        "id": "98f3e43c-e1c9-40eb-81fb-ebdaea685353",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_due_date",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "5a872213-e33d-4fa1-bdfa-f4f525b7c278",
+      "created_at": "2026-07-20T14:33:16.401446+00:00",
+      "entity_ref": {
+        "id": "98f3e43c-e1c9-40eb-81fb-ebdaea685353",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_due_date",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "8b3f89c1-f7d1-468e-8f74-cbb9e0e40eb6",
+      "created_at": "2026-07-20T14:33:19.655305+00:00",
+      "entity_ref": {
+        "id": "98f3e43c-e1c9-40eb-81fb-ebdaea685353",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_schedule",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "c4ec160f-f2ee-448e-942a-5dce68a28c29",
+      "created_at": "2026-07-20T14:33:23.193226+00:00",
+      "entity_ref": {
+        "id": "98f3e43c-e1c9-40eb-81fb-ebdaea685353",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_schedule",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "c44e2ed7-78e2-4eea-a180-da3e4e1f3eb5",
+      "created_at": "2026-07-20T14:33:26.382601+00:00",
+      "entity_ref": {
+        "id": "98f3e43c-e1c9-40eb-81fb-ebdaea685353",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_schedule",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "5ff8e7dc-2df6-49b2-9a14-27ff86ac7c8b",
+      "created_at": "2026-07-20T14:33:34.746943+00:00",
+      "entity_ref": {
+        "id": "98f3e43c-e1c9-40eb-81fb-ebdaea685353",
+        "type": "plan.task"
+      },
+      "action_type": "plan.archive_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "1ed55544-dd05-4297-b368-ca01ac9c13fe",
+      "created_at": "2026-07-20T14:34:02.722461+00:00",
+      "entity_ref": {
+        "id": "45d36fc1-b319-49d7-a184-8542db49165a",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "46caf756-3cad-4eff-ae94-90edb11a5e9f",
+      "created_at": "2026-07-20T14:34:03.375846+00:00",
+      "entity_ref": {
+        "id": "45d36fc1-b319-49d7-a184-8542db49165a",
+        "type": "plan.task"
+      },
+      "action_type": "plan.complete_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "4a01fe98-9d10-4199-992b-1c8fbd56b7b2",
+      "created_at": "2026-07-20T14:34:06.924261+00:00",
+      "entity_ref": {
+        "id": "45d36fc1-b319-49d7-a184-8542db49165a",
+        "type": "plan.task"
+      },
+      "action_type": "plan.reopen_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "f1a1b94c-9b03-4814-89d6-898fb5f398fc",
+      "created_at": "2026-07-20T14:34:07.631543+00:00",
+      "entity_ref": {
+        "id": "45d36fc1-b319-49d7-a184-8542db49165a",
+        "type": "plan.task"
+      },
+      "action_type": "plan.archive_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "c41a96b4-62fb-44c9-9217-6c018d7175ae",
+      "created_at": "2026-07-20T14:34:59.319463+00:00",
+      "entity_ref": {
+        "id": "1c85bd76-71d8-495f-8693-db9f4e58a8d3",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "264c99c2-1c6d-48af-b57d-6ed6c3926e98",
+      "created_at": "2026-07-20T14:34:59.941277+00:00",
+      "entity_ref": {
+        "id": "e726c1fe-9b97-4d25-b422-a76c7589a666",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "6c7a9789-f4e7-4851-97f9-4cee76ae8a05",
+      "created_at": "2026-07-20T14:34:59.941277+00:00",
+      "entity_ref": {
+        "id": "1c85bd76-71d8-495f-8693-db9f4e58a8d3",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.convert_to_plan_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "76bf617f-7010-435d-abc3-4312491d8b62",
+      "created_at": "2026-07-20T14:35:04.237301+00:00",
+      "entity_ref": {
+        "id": "e726c1fe-9b97-4d25-b422-a76c7589a666",
+        "type": "plan.task"
+      },
+      "action_type": "plan.archive_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "34047dc1-84ae-4fd0-87c4-7f826f2a3423",
+      "created_at": "2026-07-20T14:37:09.930359+00:00",
+      "entity_ref": {
+        "id": "8010afb2-f1dc-492d-bdbc-dce58cd1dcab",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "e073468d-bb23-4ed0-ab32-b990961816f0",
+      "created_at": "2026-07-20T14:38:54.140898+00:00",
+      "entity_ref": {
+        "id": "0bb9bed0-fab5-4f42-b473-f8eeb363f169",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "e26c0c52-afbf-45f8-81a1-c2c0d4facb93",
+      "created_at": "2026-07-20T14:38:54.140898+00:00",
+      "entity_ref": {
+        "id": "8010afb2-f1dc-492d-bdbc-dce58cd1dcab",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.convert_to_plan_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "3131e6ce-5588-42ab-a1c4-48daeb77ed85",
+      "created_at": "2026-07-20T14:39:09.555031+00:00",
+      "entity_ref": {
+        "id": "0bb9bed0-fab5-4f42-b473-f8eeb363f169",
+        "type": "plan.task"
+      },
+      "action_type": "plan.archive_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "0e8ea706-27c3-4733-a7f3-82a6cb542e7b",
+      "created_at": "2026-07-20T14:39:36.541335+00:00",
+      "entity_ref": {
+        "id": "53254848-7273-4763-ba14-829bd33f1a5d",
+        "type": "approval.decision"
+      },
+      "action_type": "approval.decide",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "dead_letter",
+      "outbox_id": "647271a2-78b1-40f6-8fe5-3cc519d2f7d0",
+      "created_at": "2026-07-20T14:41:48.184976+00:00",
+      "entity_ref": {
+        "id": "9289e639-f6b0-45c8-867a-79b56d7785dd",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "0e5b25a0-670a-4572-bbad-5326f2e92f71",
+      "created_at": "2026-07-20T14:41:52.712699+00:00",
+      "entity_ref": {
+        "id": "9289e639-f6b0-45c8-867a-79b56d7785dd",
+        "type": "plan.task"
+      },
+      "action_type": "plan.archive_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": true,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "4a7d5111-5c36-42cf-a1af-767f4dee1205",
+      "created_at": "2026-07-21T03:48:19.653412+00:00",
+      "entity_ref": {
+        "id": "76b8418d-7ff7-4e14-938f-a0040cc589fc",
+        "type": "plan.task"
+      },
+      "action_type": "plan.complete_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "3270fdae-2ea7-4439-b96a-0b8801e75a7e",
+      "created_at": "2026-07-21T03:48:21.900763+00:00",
+      "entity_ref": {
+        "id": "42bbae6c-b9d4-4cb4-81c6-67e01b259155",
+        "type": "plan.task"
+      },
+      "action_type": "plan.complete_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "245c4634-5b28-47d8-a4bb-62fc6fac6a42",
+      "created_at": "2026-07-21T03:48:23.697366+00:00",
+      "entity_ref": {
+        "id": "c1639bea-9238-49a3-8301-01efc3739fd6",
+        "type": "plan.task"
+      },
+      "action_type": "plan.complete_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "89d44d05-44f1-4628-b303-030c4fafda3d",
+      "created_at": "2026-07-22T02:06:16.259689+00:00",
+      "entity_ref": {
+        "id": "83764d11-ed15-473c-8be7-fdfa7aad5b3e",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "2e0dcec9-03db-414b-b641-98ea2668715f",
+      "created_at": "2026-07-22T02:06:16.268456+00:00",
+      "entity_ref": {
+        "id": "688fe698-b044-4af6-be27-3f279c3ec879",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "341e5190-66d2-4ce3-b4b4-b08d92ad5ced",
+      "created_at": "2026-07-22T02:06:16.603049+00:00",
+      "entity_ref": {
+        "id": "7e223b54-9fe5-42a9-b3d0-49bd3a3e9983",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "cea84905-7664-48fa-b143-eda4406a51d7",
+      "created_at": "2026-07-22T02:06:16.603719+00:00",
+      "entity_ref": {
+        "id": "ea986491-a373-4b5e-b54a-093e768e5111",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "2bbcde6a-ef25-4017-8eab-a389b4b480e7",
+      "created_at": "2026-07-22T02:06:16.904654+00:00",
+      "entity_ref": {
+        "id": "61747f4e-434f-440f-a8f8-e54313cfc555",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "4b37e2e3-b2a9-43c1-bc0b-c8e83a10b040",
+      "created_at": "2026-07-22T02:06:16.913489+00:00",
+      "entity_ref": {
+        "id": "babf2f49-4e1e-4463-ab4c-de4cea2b49c6",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "fe0a0dd1-01b4-4b68-8f1e-ac86984c0a6e",
+      "created_at": "2026-07-22T02:06:17.160093+00:00",
+      "entity_ref": {
+        "id": "7bd23f76-8ca2-4c47-9cbd-3db1ed78fcb9",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "fe3dd608-1957-4184-9f5a-109cb176d8b9",
+      "created_at": "2026-07-22T02:06:17.166802+00:00",
+      "entity_ref": {
+        "id": "88a99f76-a640-47c0-978d-47060e5a1626",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "06b93a68-4f7b-4343-921e-0360de70cb9e",
+      "created_at": "2026-07-22T02:06:17.439165+00:00",
+      "entity_ref": {
+        "id": "62b894e4-08b2-4564-b6d1-0e00f58cb2ab",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "2df92fe7-c196-4638-86d9-5b9cf4ce055f",
+      "created_at": "2026-07-22T02:06:17.452817+00:00",
+      "entity_ref": {
+        "id": "f072fe44-8361-43aa-b9fa-04b12f48a8b3",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "85d0c038-acc8-4a5b-a094-70ae669f76ac",
+      "created_at": "2026-07-22T02:06:17.700518+00:00",
+      "entity_ref": {
+        "id": "1b3c6f3d-cd14-415a-90f3-02b958f44654",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "0afc2fa7-744d-43b6-bab6-8fedd172e751",
+      "created_at": "2026-07-22T02:06:17.722903+00:00",
+      "entity_ref": {
+        "id": "9d8cc5b6-f778-488c-a041-155f63ed9724",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "70d71041-8c69-404e-905b-c6f727db02d8",
+      "created_at": "2026-07-22T02:06:17.952182+00:00",
+      "entity_ref": {
+        "id": "0933103e-352d-4136-a2db-039c83fddf9b",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "f20c0bc6-4973-4fa7-ac7d-1717fdf3cae8",
+      "created_at": "2026-07-22T02:06:17.975336+00:00",
+      "entity_ref": {
+        "id": "43a38692-31ce-4140-acd4-29188e7a929d",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "280dee4a-9f49-4c95-b03c-8479b5aa6c2d",
+      "created_at": "2026-07-22T02:29:01.179194+00:00",
+      "entity_ref": {
+        "id": "19e0bc8c-f265-4513-93ed-584ff5f404ec",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "5325d8e5-875f-4eb9-89a9-4c4890e16c6d",
+      "created_at": "2026-07-22T02:29:01.185926+00:00",
+      "entity_ref": {
+        "id": "8aa09de0-e949-4d0a-a9ce-ef6ec7c4c285",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "13ed15a0-aa0f-44b6-9b20-ecf40d1c28db",
+      "created_at": "2026-07-22T02:29:01.188152+00:00",
+      "entity_ref": {
+        "id": "de870f61-c9cc-4c53-bf75-0574b8d5c903",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "8b477592-45a4-48d4-90e0-d151d127a9bf",
+      "created_at": "2026-07-22T02:29:01.608612+00:00",
+      "entity_ref": {
+        "id": "2f08ccb5-20ec-4639-9dc0-ac248e65da6c",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "acdcc590-ac44-4fcf-9f07-25b9b311567b",
+      "created_at": "2026-07-22T02:29:01.617261+00:00",
+      "entity_ref": {
+        "id": "f1882f15-3c53-4fc6-9842-f40141f3d477",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "c774d1c9-d3e7-42b1-a98c-6a4469fb9e01",
+      "created_at": "2026-07-22T02:29:01.629842+00:00",
+      "entity_ref": {
+        "id": "e8edcaa4-f76e-4ce3-af03-59ceff51b2b7",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "52899b69-42f0-4fa3-80c4-ec8bba427468",
+      "created_at": "2026-07-22T02:29:01.888962+00:00",
+      "entity_ref": {
+        "id": "47041ab2-f3b5-4e24-af31-eb0c8daf3014",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "1044f7e6-6bd9-4e65-9930-b5e100fa1d56",
+      "created_at": "2026-07-22T02:29:01.893518+00:00",
+      "entity_ref": {
+        "id": "76e50edf-324c-4810-a6e2-f2b1a1b5d488",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "e6858a59-fc54-494c-8d31-53ae37e2c041",
+      "created_at": "2026-07-22T02:29:01.902533+00:00",
+      "entity_ref": {
+        "id": "96f254a5-02ec-402f-9832-c1ec8fcccf49",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "d266ff10-396c-44ea-9a97-880d578a593c",
+      "created_at": "2026-07-22T02:29:02.155262+00:00",
+      "entity_ref": {
+        "id": "d365856e-df3e-4b08-969d-39b84cd28a33",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "5b851579-6d1f-44b1-928f-81cd12de64ec",
+      "created_at": "2026-07-22T02:29:02.16203+00:00",
+      "entity_ref": {
+        "id": "bd49d2ea-bdf0-4562-acd7-7185d31936b0",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "70deceb9-6e19-4899-ba37-a940eebd3a6d",
+      "created_at": "2026-07-22T02:29:02.247007+00:00",
+      "entity_ref": {
+        "id": "e2b3c798-db18-4e0f-8a69-d7c9be1d01ab",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "1fd7c392-0a9b-4791-951c-6576d9e42cf0",
+      "created_at": "2026-07-22T02:29:02.435558+00:00",
+      "entity_ref": {
+        "id": "97ba1f83-d47b-48aa-9be0-854ebd436620",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "cdf0ef65-9500-4ff6-8bf0-f4044bf9eb74",
+      "created_at": "2026-07-22T02:29:02.47059+00:00",
+      "entity_ref": {
+        "id": "17f934b1-bb18-44de-b1ad-62adf55cfaed",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "76afb9d5-b225-43d6-93f0-356ce634c8c9",
+      "created_at": "2026-07-22T02:29:02.49348+00:00",
+      "entity_ref": {
+        "id": "c0309817-e6cc-4b9b-9b2e-fae83f45e1aa",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "7e9a6390-8823-47ba-a878-ce569f7dc3c2",
+      "created_at": "2026-07-22T02:29:02.776726+00:00",
+      "entity_ref": {
+        "id": "1cdb659f-b394-40c6-a3a8-d94fe3a6357d",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "baac39da-7797-4286-9067-2f51239d1148",
+      "created_at": "2026-07-22T02:29:02.796543+00:00",
+      "entity_ref": {
+        "id": "694750f2-c8b9-4d71-b6dc-80b625d730a5",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "bafaed24-cdc3-4280-861d-ed626523aa2a",
+      "created_at": "2026-07-22T02:29:02.823051+00:00",
+      "entity_ref": {
+        "id": "9d76ea03-d185-4436-ac97-032970d0c007",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "636c87ff-4292-4f14-a374-2fe92ada57f5",
+      "created_at": "2026-07-22T02:29:03.05488+00:00",
+      "entity_ref": {
+        "id": "84f78849-e466-4fbf-bf3c-6288461e99ba",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "bf40a9d8-1c10-4235-ada1-a992a99197eb",
+      "created_at": "2026-07-22T02:29:03.059947+00:00",
+      "entity_ref": {
+        "id": "36744d44-f59e-43c1-a254-c275fc1408e8",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "800af6bd-f2d6-44c2-b600-c0f02eac705f",
+      "created_at": "2026-07-22T02:29:03.07016+00:00",
+      "entity_ref": {
+        "id": "feec2751-23be-40d0-9b23-561e7c22d976",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "0ae02de8-9e7d-45cb-9de9-a1b7b123bafa",
+      "created_at": "2026-07-22T02:29:03.349916+00:00",
+      "entity_ref": {
+        "id": "2fed3e53-0b21-4132-8efc-415a0fe3ff5d",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "c81ee4cb-4fb7-49d5-9f36-f8a3fa468216",
+      "created_at": "2026-07-22T02:29:03.352149+00:00",
+      "entity_ref": {
+        "id": "7adf4eef-617a-42af-b1a9-04dfd3c97f03",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "d50fcb01-1a12-4104-9ee2-a9361a711a3b",
+      "created_at": "2026-07-22T02:29:03.367391+00:00",
+      "entity_ref": {
+        "id": "442bcbf6-ff88-48ab-bafa-99fdd30736e5",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "6686fc71-1c92-4783-80d7-a17d0650be26",
+      "created_at": "2026-07-22T02:29:03.592344+00:00",
+      "entity_ref": {
+        "id": "181c87bf-fd8a-47ec-9d5b-9759ea528b26",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "02f6fc18-8b72-4d60-955e-e6e8958999ea",
+      "created_at": "2026-07-22T02:29:03.598977+00:00",
+      "entity_ref": {
+        "id": "53aa7c17-d441-4228-877f-b76d007b45ef",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "ba7fa0a8-bd41-4c25-bf8f-56f7fda0e2f2",
+      "created_at": "2026-07-22T02:29:03.641528+00:00",
+      "entity_ref": {
+        "id": "14841321-f78a-4996-b7fa-2e1aaba34c06",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "433b56d1-364e-485f-a5a2-70b38e857af1",
+      "created_at": "2026-07-22T02:29:03.860801+00:00",
+      "entity_ref": {
+        "id": "c6bece15-bad0-47f2-bc90-e692aa6216cf",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "d84449ac-3f31-4d63-8624-09fcb72b2721",
+      "created_at": "2026-07-22T02:29:03.878568+00:00",
+      "entity_ref": {
+        "id": "9370eedd-a613-4910-ba01-ca10b15665ff",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "2ac461ae-6f16-4d5d-9e2e-96fc83e2bb22",
+      "created_at": "2026-07-22T02:29:03.892973+00:00",
+      "entity_ref": {
+        "id": "003df71a-d1aa-455c-a501-d7708c859cc6",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "024aae8e-97c3-4dac-a24f-885b94de5ade",
+      "created_at": "2026-07-22T04:02:40.217055+00:00",
+      "entity_ref": {
+        "id": "8c3f3fba-969d-488d-b75d-01aba95a306f",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "b5415282-d9aa-4fef-bdff-927ff1665189",
+      "created_at": "2026-07-22T04:03:19.960708+00:00",
+      "entity_ref": {
+        "id": "150acbaf-f793-4582-b68a-3a438ba6dda5",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "2c16128f-9938-40d0-95d8-c88738a842ff",
+      "created_at": "2026-07-22T04:08:12.901203+00:00",
+      "entity_ref": {
+        "id": "bd23b03b-2389-4787-b88d-75241ff6f0d4",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "67bc9a8b-34bc-4035-8db4-1b805c1f524b",
+      "created_at": "2026-07-22T04:08:52.940372+00:00",
+      "entity_ref": {
+        "id": "92a25900-607f-42e8-be0e-74ed2abad66c",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "a1b42da8-a090-45b9-877a-24230e091d9e",
+      "created_at": "2026-07-22T04:14:30.886298+00:00",
+      "entity_ref": {
+        "id": "eb112e9b-c45f-494c-ba52-ba7f76b32726",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "48ab41e8-cc11-49c7-a649-0a89b0423e9f",
+      "created_at": "2026-07-22T04:15:10.417876+00:00",
+      "entity_ref": {
+        "id": "341764f0-8f85-41c5-a544-55a0602f4cc9",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "a629424a-2bd3-40dd-bedd-3078503ae7e6",
+      "created_at": "2026-07-22T04:19:40.288741+00:00",
+      "entity_ref": {
+        "id": "2e42110b-72d8-43fb-893e-cbb6f2c85d37",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "7299fcef-2e0e-4688-bc3e-812b0a7e81fa",
+      "created_at": "2026-07-22T04:19:45.587013+00:00",
+      "entity_ref": {
+        "id": "fb38a61b-d867-4081-8969-b99a360c16f5",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "93608fe5-9f9c-4249-8e13-737b79731bbd",
+      "created_at": "2026-07-22T04:19:45.587013+00:00",
+      "entity_ref": {
+        "id": "2e42110b-72d8-43fb-893e-cbb6f2c85d37",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.convert_to_plan_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "58941e36-3e1a-40a9-a23c-6a93996c0977",
+      "created_at": "2026-07-22T04:20:19.686603+00:00",
+      "entity_ref": {
+        "id": "661b2f70-481a-4440-bbcf-b1a86d041582",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "59003f54-4177-4812-907e-5739e668e39a",
+      "created_at": "2026-07-22T04:21:24.046922+00:00",
+      "entity_ref": {
+        "id": "5b7e4ab0-826e-4ab0-bb18-b61013012303",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "b7611f0d-3ad4-4613-8371-c7cdab5d4c7a",
+      "created_at": "2026-07-22T04:21:29.425582+00:00",
+      "entity_ref": {
+        "id": "833ea28a-9150-4713-9960-031b5c6ab946",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "3bb4f8a9-41fa-47c8-8101-503b67119610",
+      "created_at": "2026-07-22T04:21:29.425582+00:00",
+      "entity_ref": {
+        "id": "5b7e4ab0-826e-4ab0-bb18-b61013012303",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.convert_to_plan_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "d636160e-7af8-4172-af57-d88cc964782d",
+      "created_at": "2026-07-22T04:21:38.479829+00:00",
+      "entity_ref": {
+        "id": "833ea28a-9150-4713-9960-031b5c6ab946",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_title",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "c44ced76-7185-444b-86ce-51a6f8cd3193",
+      "created_at": "2026-07-22T04:21:38.661539+00:00",
+      "entity_ref": {
+        "id": "833ea28a-9150-4713-9960-031b5c6ab946",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_due_date",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "d50c03f0-31be-42f7-a7f3-833ad6a6a482",
+      "created_at": "2026-07-22T04:21:51.007591+00:00",
+      "entity_ref": {
+        "id": "d-t2",
+        "type": "plan.task"
+      },
+      "action_type": "plan.complete_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "942c2c06-cd58-47b5-a6ad-510e0a401188",
+      "created_at": "2026-07-22T04:22:08.358307+00:00",
+      "entity_ref": {
+        "id": "c94f4875-c620-41e8-b555-71e1a66a4656",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "ed845a21-335e-4207-a13b-19da4be8aacd",
+      "created_at": "2026-07-22T04:24:02.108192+00:00",
+      "entity_ref": {
+        "id": "fdd99984-774f-4dd2-832e-9c534c82c372",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "ddf653c8-d21a-4a28-a3ec-38dfda110326",
+      "created_at": "2026-07-22T04:24:07.642625+00:00",
+      "entity_ref": {
+        "id": "c6472b64-2bfc-4a79-9d2b-fa451317bbfe",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "043a9e44-a621-4bae-97b2-768cf62b5da1",
+      "created_at": "2026-07-22T04:24:07.642625+00:00",
+      "entity_ref": {
+        "id": "fdd99984-774f-4dd2-832e-9c534c82c372",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.convert_to_plan_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "68fd2fdb-7193-4e29-9f33-80e227a19e60",
+      "created_at": "2026-07-22T04:24:16.770548+00:00",
+      "entity_ref": {
+        "id": "c6472b64-2bfc-4a79-9d2b-fa451317bbfe",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_title",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "de4203ff-9926-46da-8e51-cf2191f5ad69",
+      "created_at": "2026-07-22T04:24:17.082155+00:00",
+      "entity_ref": {
+        "id": "c6472b64-2bfc-4a79-9d2b-fa451317bbfe",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_due_date",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "8db6deea-7cb4-48c1-bc2d-254ccb1bacd0",
+      "created_at": "2026-07-22T04:25:25.157739+00:00",
+      "entity_ref": {
+        "id": "f2c6322b-891f-4bca-a55d-0e47ee28cd68",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "ad63b54e-7697-490b-9917-95b6a8f1b3f1",
+      "created_at": "2026-07-22T04:25:30.44166+00:00",
+      "entity_ref": {
+        "id": "f2c6322b-891f-4bca-a55d-0e47ee28cd68",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.convert_to_plan_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "4fccea8a-4368-4f70-b4ac-e89f80c7fa5e",
+      "created_at": "2026-07-22T04:25:30.44166+00:00",
+      "entity_ref": {
+        "id": "7d9349be-f979-4fbe-b129-6fee82521419",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "38bb4d5d-f713-4e5c-b520-1137228612ab",
+      "created_at": "2026-07-22T04:25:39.542754+00:00",
+      "entity_ref": {
+        "id": "7d9349be-f979-4fbe-b129-6fee82521419",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_title",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "0e7d08d2-0886-4893-8e1e-72adfab5f7f9",
+      "created_at": "2026-07-22T04:25:39.773332+00:00",
+      "entity_ref": {
+        "id": "7d9349be-f979-4fbe-b129-6fee82521419",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_due_date",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "2d72429e-85fc-4c78-b6fa-edf8f7bdccdb",
+      "created_at": "2026-07-22T04:27:05.909151+00:00",
+      "entity_ref": {
+        "id": "099bc126-6334-4aa8-8349-0afaf359b162",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "3bad57cc-b831-46aa-8569-702c047d991b",
+      "created_at": "2026-07-22T04:27:11.223119+00:00",
+      "entity_ref": {
+        "id": "38a1dfd9-c179-4ef6-a5a1-f4d14b135d1b",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "94253741-6abc-4602-a0e7-d898a6ecd425",
+      "created_at": "2026-07-22T04:27:11.223119+00:00",
+      "entity_ref": {
+        "id": "099bc126-6334-4aa8-8349-0afaf359b162",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.convert_to_plan_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "02022abc-4b4f-4729-bf6e-e4ff80e7795b",
+      "created_at": "2026-07-22T04:27:20.228053+00:00",
+      "entity_ref": {
+        "id": "38a1dfd9-c179-4ef6-a5a1-f4d14b135d1b",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_title",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "857cf2f3-895e-4095-a112-60d9a8f36542",
+      "created_at": "2026-07-22T04:27:20.363932+00:00",
+      "entity_ref": {
+        "id": "38a1dfd9-c179-4ef6-a5a1-f4d14b135d1b",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_due_date",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "cba65d88-1e88-498d-86a4-64b08dea14d3",
+      "created_at": "2026-07-22T04:27:35.700044+00:00",
+      "entity_ref": {
+        "id": "38a1dfd9-c179-4ef6-a5a1-f4d14b135d1b",
+        "type": "plan.task"
+      },
+      "action_type": "plan.complete_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "5427790b-3a66-4002-9e51-f1f08236d52c",
+      "created_at": "2026-07-22T04:28:16.048336+00:00",
+      "entity_ref": {
+        "id": "b4f9d7a6-4249-4215-885d-7d305df4c48f",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "acd9502d-e8da-48d1-9d2d-a517dfb26cbc",
+      "created_at": "2026-07-22T04:28:21.389249+00:00",
+      "entity_ref": {
+        "id": "eb2b4a84-6fe3-45c6-8d77-066d65809569",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "bc15205e-3320-4071-8619-b7145af5f983",
+      "created_at": "2026-07-22T04:28:21.389249+00:00",
+      "entity_ref": {
+        "id": "b4f9d7a6-4249-4215-885d-7d305df4c48f",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.convert_to_plan_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "1641a428-3e74-4873-8c95-6108d7fa9619",
+      "created_at": "2026-07-22T04:28:31.140607+00:00",
+      "entity_ref": {
+        "id": "eb2b4a84-6fe3-45c6-8d77-066d65809569",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_title",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "39ff143a-f4d4-4390-9169-b8338c7cebfa",
+      "created_at": "2026-07-22T04:28:31.47869+00:00",
+      "entity_ref": {
+        "id": "eb2b4a84-6fe3-45c6-8d77-066d65809569",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_due_date",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "a4983959-00e6-4311-b9e2-530fcce08c75",
+      "created_at": "2026-07-22T04:28:46.700916+00:00",
+      "entity_ref": {
+        "id": "eb2b4a84-6fe3-45c6-8d77-066d65809569",
+        "type": "plan.task"
+      },
+      "action_type": "plan.complete_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "2c1e183b-e215-4b1a-b0c2-ddaef373d3ba",
+      "created_at": "2026-07-22T04:29:37.659286+00:00",
+      "entity_ref": {
+        "id": "e8ea8fa8-c7c0-4963-9ae3-ee09397211a6",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "b3b7a2fe-9a7c-436d-b962-87593b7751c4",
+      "created_at": "2026-07-22T04:29:42.41682+00:00",
+      "entity_ref": {
+        "id": "1ff73f44-dd36-4832-bc1d-22a614aa9aa7",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "86133c27-d3ac-4774-a6b1-c3582f099c88",
+      "created_at": "2026-07-22T04:29:42.41682+00:00",
+      "entity_ref": {
+        "id": "e8ea8fa8-c7c0-4963-9ae3-ee09397211a6",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.convert_to_plan_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "db6ec004-2126-41ca-8a21-bb2cb412d20c",
+      "created_at": "2026-07-22T04:29:51.510409+00:00",
+      "entity_ref": {
+        "id": "1ff73f44-dd36-4832-bc1d-22a614aa9aa7",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_title",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "c4c08e6b-06c8-4cad-8943-ca73e330bd66",
+      "created_at": "2026-07-22T04:29:52.151419+00:00",
+      "entity_ref": {
+        "id": "1ff73f44-dd36-4832-bc1d-22a614aa9aa7",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_due_date",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "ded5e4cf-6536-4490-825d-4f28e33f745b",
+      "created_at": "2026-07-22T04:30:07.490666+00:00",
+      "entity_ref": {
+        "id": "1ff73f44-dd36-4832-bc1d-22a614aa9aa7",
+        "type": "plan.task"
+      },
+      "action_type": "plan.complete_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "9701f180-fee5-4c9b-ad24-2a1d623e6730",
+      "created_at": "2026-07-22T04:30:30.017099+00:00",
+      "entity_ref": {
+        "id": "6d318a33-ec0b-49c0-9964-13a4959f6521",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "fc00648a-f99e-4e0d-858f-5727fa919496",
+      "created_at": "2026-07-22T04:31:01.739968+00:00",
+      "entity_ref": {
+        "id": "09939ea8-3649-4ecd-8c4a-30989197ee19",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.ingest_envelope",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "976e6b22-0faf-4407-823b-4dc98c6dee2f",
+      "created_at": "2026-07-22T04:31:07.030629+00:00",
+      "entity_ref": {
+        "id": "09939ea8-3649-4ecd-8c4a-30989197ee19",
+        "type": "capture.envelope"
+      },
+      "action_type": "capture.convert_to_plan_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "90980566-3f50-41dd-bd2b-58951508dbd0",
+      "created_at": "2026-07-22T04:31:07.030629+00:00",
+      "entity_ref": {
+        "id": "35e24298-647d-4c1b-bff5-f7c19f7e38e0",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "5916d46f-1960-443a-a06b-7e1b84ada4f3",
+      "created_at": "2026-07-22T04:31:16.285454+00:00",
+      "entity_ref": {
+        "id": "35e24298-647d-4c1b-bff5-f7c19f7e38e0",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_title",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "45f1c663-57d6-44ee-841f-e9f9df79d803",
+      "created_at": "2026-07-22T04:31:16.728505+00:00",
+      "entity_ref": {
+        "id": "35e24298-647d-4c1b-bff5-f7c19f7e38e0",
+        "type": "plan.task"
+      },
+      "action_type": "plan.update_task_due_date",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "fc8008c3-bc12-4970-b48d-9cb28538c030",
+      "created_at": "2026-07-22T04:31:29.057392+00:00",
+      "entity_ref": {
+        "id": "35e24298-647d-4c1b-bff5-f7c19f7e38e0",
+        "type": "plan.task"
+      },
+      "action_type": "plan.complete_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": true,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "34baafc9-7f69-406d-beee-a37ad896c61d",
+      "created_at": "2026-07-22T04:31:52.178544+00:00",
+      "entity_ref": {
+        "id": "2be2a842-1673-456f-b97b-b0c0c9cd10e1",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": false
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "b05226a4-4768-4ad1-844c-ab042f62866f",
+      "created_at": "2026-07-22T16:42:07.127981+00:00",
+      "entity_ref": {
+        "id": "1223da70-32d8-4f96-8131-1295cc3ccf0e",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "596ff950-e110-4d59-b548-f5dfb4660ff2",
+      "created_at": "2026-07-22T16:42:07.238451+00:00",
+      "entity_ref": {
+        "id": "18115c4d-e5cc-406b-86fb-b0444bb7a652",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "9ea0a2a7-1f51-4124-a189-bed7390fad78",
+      "created_at": "2026-07-22T16:42:08.054566+00:00",
+      "entity_ref": {
+        "id": "7c14f16e-524b-438b-9d18-3e6d76bac347",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    },
+    {
+      "orphan": false,
+      "reason": "created before worker epoch 2026-07-22T17:00:00Z; business state already committed in-txn; delivery consumer did not exist at creation; no external side effect",
+      "status": "pending",
+      "outbox_id": "9a722be3-b41b-4a9d-9cd8-50ca1a08f81a",
+      "created_at": "2026-07-22T16:42:09.429442+00:00",
+      "entity_ref": {
+        "id": "46321e30-7b71-42bf-809b-e1c0750cb381",
+        "type": "plan.task"
+      },
+      "action_type": "plan.create_task",
+      "disposition": "quarantine",
+      "qa_cleanroom": false,
+      "replay_eligible": false,
+      "external_side_effect_ever": false,
+      "canonical_business_mutation_exists": true
+    }
+  ]
+}
