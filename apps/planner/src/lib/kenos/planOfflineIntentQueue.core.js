@@ -4,6 +4,8 @@
  * Must NOT fallback to Legacy dual-write. Must NOT flush when auth expired.
  */
 
+import { MUTATION_STATE, NON_RETRYABLE_STATUSES, nextIntentState } from './mutationLifecycle.core.js'
+
 export const KENOS_OFFLINE_QUEUE_STORAGE_KEY = 'kenos.plan.offlineIntentQueue.v1'
 
 /** Failed flushes beyond this become dead_letter (skipped until explicit retry). */
@@ -78,30 +80,28 @@ export async function flushOfflineIntentQueue(state, flushOne, opts = {}) {
   const remaining = []
   let flushed = 0
   let deadLettered = 0
+  let rejected = 0
   for (const intent of state.intents || []) {
-    if (intent.status === 'dead_letter') {
+    // Terminal / hold states are never re-attempted automatically.
+    if (NON_RETRYABLE_STATUSES.has(intent.status)) {
       remaining.push(intent)
       continue
     }
     const result = await flushOne(intent)
-    if (result?.ok) {
+    const next = nextIntentState(intent, result, maxAttempts)
+    if (next.removed) {
       flushed += 1
       continue
     }
-    const attempts = (intent.attempts || 0) + 1
-    const dead = attempts >= maxAttempts
-    if (dead) deadLettered += 1
-    remaining.push({
-      ...intent,
-      status: dead ? 'dead_letter' : 'failed',
-      attempts,
-      lastError: result?.error || 'flush_failed',
-    })
+    if (next.status === MUTATION_STATE.DEAD_LETTER) deadLettered += 1
+    if (next.status === MUTATION_STATE.REJECTED) rejected += 1
+    remaining.push({ ...intent, status: next.status, attempts: next.attempts, lastError: next.lastError })
   }
   return {
     state: { ...state, intents: remaining },
     flushed,
     deadLettered,
+    rejected,
     blocked: null,
     remaining: remaining.length,
   }
@@ -151,9 +151,24 @@ export function rebindOfflineQueueForSession(storage, userId) {
  * @param {object} state
  */
 export function countPendingOfflineIntents(state) {
+  // Work still trying to sync: queued, retrying, or held for reauth.
   return (state?.intents || []).filter(
-    (intent) => intent.status === 'pending' || intent.status === 'failed' || !intent.status,
+    (intent) =>
+      intent.status === MUTATION_STATE.QUEUED ||
+      intent.status === MUTATION_STATE.RETRYABLE_FAILURE ||
+      intent.status === MUTATION_STATE.AUTH_BLOCKED ||
+      !intent.status,
   ).length
+}
+
+/**
+ * Intents that need explicit user action (permanent rejection or conflict).
+ * @param {object} state
+ */
+export function listActionableOfflineIntents(state) {
+  return (state?.intents || []).filter(
+    (intent) => intent.status === MUTATION_STATE.REJECTED || intent.status === MUTATION_STATE.CONFLICT,
+  )
 }
 
 /**

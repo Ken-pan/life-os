@@ -110,8 +110,11 @@ export function intentTaskId(intent) {
 export function syncOfflineQueuedMetaFromIntents(intents) {
   /** @type {Set<string>} */
   const pendingTaskIds = new Set()
+  // Only intents still trying to sync mark a task as offlineQueued; terminal
+  // states (dead_letter / rejected / conflict) need user action, not "pending".
+  const TERMINAL = new Set(['dead_letter', 'rejected', 'conflict'])
   for (const intent of intents || []) {
-    if (intent?.status === 'dead_letter') continue
+    if (TERMINAL.has(intent?.status)) continue
     const taskId = intentTaskId(intent)
     if (taskId) pendingTaskIds.add(taskId)
   }

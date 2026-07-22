@@ -301,7 +301,8 @@ describe('planOfflineIntentQueue.host', () => {
     expect(unsupported.flushed).toBe(0)
     expect(unsupported.remaining).toBe(1)
     const parsed = JSON.parse(String(storage.getItem(KENOS_OFFLINE_QUEUE_STORAGE_KEY)))
-    expect(parsed.intents[0].status).toBe('failed')
+    // Unknown/unsupported action is a permanent rejection — must NOT burn retries.
+    expect(parsed.intents[0].status).toBe('rejected')
     expect(parsed.intents[0].lastError).toMatch(/unsupported_action/)
   })
 
