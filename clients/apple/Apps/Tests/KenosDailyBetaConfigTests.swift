@@ -234,12 +234,30 @@ final class KenosDailyBetaConfigTests: XCTestCase {
 
     func testWebAuthRelatedHosts() {
         XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("planner.kenos.space"))
+        XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("kenos.space"))
         XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("10.20.202.15"))
         XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("localhost"))
         XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("financeos-ken.netlify.app"))
         XCTAssertFalse(KenosSharedWebAuth.isAuthRelatedHost("example.com"))
         XCTAssertEqual(KenosSharedWebAuth.authStorageKey, "life_os_auth")
         XCTAssertEqual(KenosSharedWebAuth.ssoCookieName, "lifeos_shared_session")
+    }
+
+    // F5-03.4: substring-satisfiable spoof hosts must NOT be treated as auth hosts.
+    // Previously `.contains()` matching let these steal the shared Supabase session.
+    func testWebAuthRelatedHostSpoofRejected() {
+        XCTAssertFalse(KenosSharedWebAuth.isAuthRelatedHost("kenos.space.attacker.com"))
+        XCTAssertFalse(KenosSharedWebAuth.isAuthRelatedHost("x.netlify.app.evil.com"))
+        XCTAssertFalse(KenosSharedWebAuth.isAuthRelatedHost("a.local.evil.com"))
+        XCTAssertFalse(KenosSharedWebAuth.isAuthRelatedHost("evilkenos.space"))
+        XCTAssertFalse(KenosSharedWebAuth.isAuthRelatedHost("kenos.space.evil"))
+        XCTAssertFalse(KenosSharedWebAuth.isAuthRelatedHost("10.evil.com"))
+        XCTAssertFalse(KenosSharedWebAuth.isAuthRelatedHost("localhost.evil.com"))
+        XCTAssertFalse(KenosSharedWebAuth.isAuthRelatedHost(""))
+        // Genuine LAN/Tailscale forms still accepted.
+        XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("192.168.1.42"))
+        XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("kens-mac.local"))
+        XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("kens-mac.tail04e0e6.ts.net"))
     }
 
     func testSharedWebAuthTokenRoundTrip() {

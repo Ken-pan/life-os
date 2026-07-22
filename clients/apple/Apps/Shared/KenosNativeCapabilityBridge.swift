@@ -612,39 +612,31 @@ enum KenosNativeCapabilityBridge {
         resolve(id: id, webView: webView, value: payload)
     }
 
-    /// Prefer JS `host` (window.location.hostname) — `webView.url` is often nil during
-    /// provisional Continuity loads, which previously blocked vault restore.
-    /// When both JS host and WK URL host are present, require auth-related + compatible
-    /// family (blocks a compromised page from reading the vault for an unrelated host).
+    /// Authorize releasing Supabase session tokens to page JS.
+    ///
+    /// SECURITY (F5-03.4): the decision is anchored on the REAL committed origin
+    /// (`webView.url.host`, else our own managed Continuity/shell WebView's
+    /// committed host) — NEVER on the JS-supplied `params["host"]`, which a
+    /// malicious page fully controls. If the real origin is unverifiable, fail
+    /// closed (the page can retry once its URL commits). When `params["host"]`
+    /// is present it is only an additional compatibility constraint.
     private static func allowSharedAuth(for webView: WKWebView?, params: [String: Any] = [:]) -> Bool {
         let fromParams = stringValue(params["host"])
-        let fromWeb = webView?.url?.host ?? ""
-
-        if !fromParams.isEmpty, !fromWeb.isEmpty {
-            guard KenosSharedWebAuth.isAuthRelatedHost(fromParams),
-                  KenosSharedWebAuth.isAuthRelatedHost(fromWeb),
-                  KenosSharedWebAuth.hostsCompatible(fromParams, fromWeb)
-            else { return false }
-            return true
+        // Authentic origin only: the committed URL of this webview, or of our own
+        // managed Continuity/shell webview. Not the client-supplied host.
+        let realHost = (webView?.url?.host)
+            ?? KenosActiveWebRegistry.domainWebView?.url?.host
+            ?? KenosActiveWebRegistry.shellWebView?.url?.host
+            ?? ""
+        guard !realHost.isEmpty, KenosSharedWebAuth.isAuthRelatedHost(realHost) else {
+            return false
         }
-        if !fromParams.isEmpty, KenosSharedWebAuth.isAuthRelatedHost(fromParams) {
-            return true
+        // If the page also declared a host, it must belong to the same auth family
+        // as the real origin — a mismatch means a lying/confused caller.
+        if !fromParams.isEmpty {
+            return KenosSharedWebAuth.hostsCompatible(fromParams, realHost)
         }
-        if !fromWeb.isEmpty, KenosSharedWebAuth.isAuthRelatedHost(fromWeb) {
-            return true
-        }
-        // Last resort: Continuity surface already pointed at a known Life OS host.
-        if let loaded = KenosActiveWebRegistry.domainWebView?.url?.host
-            ?? KenosActiveWebRegistry.shellWebView?.url?.host,
-           !loaded.isEmpty,
-           KenosSharedWebAuth.isAuthRelatedHost(loaded)
-        {
-            if !fromParams.isEmpty {
-                return KenosSharedWebAuth.hostsCompatible(fromParams, loaded)
-            }
-            return true
-        }
-        return false
+        return true
     }
 
     private static func boolValue(_ value: Any?) -> Bool {

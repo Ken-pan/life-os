@@ -35,23 +35,40 @@ enum KenosSharedWebAuth {
         var userId: String?
     }
 
+    /// Whether `host` is a private/LAN IPv4 literal (Daily Beta Continuity ports).
+    /// Full-string IPv4 match so a hostname like "10.evil.com" is NOT treated as an IP.
+    static func isPrivateLanIPv4(_ host: String) -> Bool {
+        let ipv4 = #"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$"#
+        guard let m = host.range(of: ipv4, options: .regularExpression) else { return false }
+        let octets = host[m].split(separator: ".").compactMap { Int($0) }
+        guard octets.count == 4, octets.allSatisfy({ $0 >= 0 && $0 <= 255 }) else { return false }
+        if octets[0] == 10 { return true }
+        if octets[0] == 192 && octets[1] == 168 { return true }
+        if octets[0] == 172 && (16...31).contains(octets[1]) { return true }
+        if octets[0] == 100 && (64...127).contains(octets[1]) { return true } // CGNAT / Tailscale
+        return false
+    }
+
     /// Hosts that may hold Life OS Supabase session (production + LAN Daily Beta).
+    /// SECURITY: exact host / suffix matching only — substring `.contains` would let
+    /// an attacker-registrable host like `kenos.space.evil.com` satisfy the token gate.
     static func isAuthRelatedHost(_ displayName: String) -> Bool {
-        let name = displayName.lowercased()
-        if name.contains("kenos.space") { return true }
-        if name.contains("netlify.app") { return true }
-        if name.contains("localhost") || name.contains("127.0.0.1") { return true }
-        if name.hasSuffix(".local") || name.contains(".local") { return true }
+        // WKWebsiteDataRecord.displayName is a bare host; be defensive if a full URL slips in.
+        var name = displayName.lowercased()
+        if let u = URL(string: name), let h = u.host?.lowercased() { name = h }
+        if name.isEmpty { return false }
+        if name == "kenos.space" || name.hasSuffix(".kenos.space") { return true }
+        if name.hasSuffix(".netlify.app") { return true }
+        if name == "localhost" || name == "127.0.0.1" || name == "::1" { return true }
+        if name.hasSuffix(".local") { return true }        // mDNS
+        if name.hasSuffix(".ts.net") { return true }       // Tailscale MagicDNS
         if let lan = KenosDailyBetaConfig.configuredLanOrigin.host?.lowercased(),
            !lan.isEmpty,
-           name.contains(lan)
+           name == lan
         {
             return true
         }
-        // Private LAN IPs used by Daily Beta Continuity ports.
-        if name.range(of: #"^(?:10\.|192\.168\.|172\.(?:1[6-9]|2\d|3[01])\.)"#, options: .regularExpression) != nil {
-            return true
-        }
+        if isPrivateLanIPv4(name) { return true }
         return false
     }
 
