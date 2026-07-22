@@ -75,7 +75,7 @@ final class KenosAppModel: ObservableObject {
 
     /// Sidebar Space order — architecture §4.2 Command Center.
     static let macSidebarDomainOrder = [
-        "work", "plan", "library", "health", "training", "money", "home", "music",
+        "work", "code", "plan", "library", "health", "training", "money", "home", "music",
     ]
 
     @Published var selectedTab: Tab = .today

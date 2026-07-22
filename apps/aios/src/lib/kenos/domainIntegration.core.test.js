@@ -34,6 +34,7 @@ describe('domainIntegration.core — registry', () => {
       'music',
       'home',
       'health',
+      'code',
       'paper',
     ]) {
       assert.ok(DOMAIN_REGISTRY[id], `missing ${id}`)
@@ -42,6 +43,11 @@ describe('domainIntegration.core — registry', () => {
     // Shelf Current title = Space name only (destination lives in subtitle).
     assert.equal(DOMAIN_REGISTRY.kenos.label, 'Kenos')
     assert.equal(DOMAIN_REGISTRY.kenos.subtitle, 'Today · Ask · Inbox')
+    // Code domain — aios-owned native route, Cursor-sensitive.
+    assert.equal(DOMAIN_REGISTRY.code.homePath, '/code')
+    assert.equal(DOMAIN_REGISTRY.code.appId, 'aios')
+    assert.equal(DOMAIN_REGISTRY.code.privacy, 'sensitive')
+    assert.equal(DOMAIN_REGISTRY.code.accent, '#35B5AC')
   })
 
   it('reuses domainIdentity accents for plan/training/money', () => {
@@ -68,7 +74,7 @@ describe('domainIntegration.core — registry', () => {
     assert.ok(shelf.some((d) => d.id === 'plan'))
     assert.deepEqual(
       [...INTEGRATION_DOMAIN_ORDER],
-      ['work', 'money', 'library', 'music', 'home', 'health', 'paper'],
+      ['work', 'money', 'library', 'music', 'home', 'health', 'code', 'paper'],
     )
   })
 })

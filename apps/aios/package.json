@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
-    "test": "node --experimental-test-module-mocks --test src/lib/*.test.js src/lib/kenos/*.test.js server/*.test.mjs && node scripts/mcp.presets.test.mjs"
+    "test": "node --experimental-test-module-mocks --test src/lib/*.test.js src/lib/kenos/*.test.js server/*.test.mjs && node scripts/mcp.presets.test.mjs",
+    "agent:cursor-bridge": "node agent/cursor-bridge.mjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",
@@ -22,6 +23,7 @@
     "vite": "^8.1.0"
   },
   "dependencies": {
+    "@life-os/contracts": "*",
     "@life-os/platform-web": "*",
     "@life-os/sync": "*",
     "@life-os/theme": "*",
@@ -30,9 +32,9 @@
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-process": "^2.3.0",
     "@tauri-apps/plugin-shell": "^2.3.5",
-    "tauri-plugin-macos-permissions-api": "^2.3.0",
     "fflate": "^0.8.3",
     "katex": "^0.17.0",
-    "pdfjs-dist": "^6.1.200"
+    "pdfjs-dist": "^6.1.200",
+    "tauri-plugin-macos-permissions-api": "^2.3.0"
   }
 }

@@ -7,6 +7,14 @@
  */
 
 import { GATEWAY } from '$lib/localai.js'
+import {
+  clampThreadMessages,
+  extractBubbleHeaders,
+  mergeThreadDelta,
+  projectCodeSessionsResult,
+  projectCursorSessions,
+  projectCursorThread,
+} from '$lib/kenos/codeReadSource.core.js'
 
 export const isNative = typeof window !== 'undefined' && !!window.__TAURI_INTERNALS__
 
@@ -148,6 +156,194 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 async function osa(script) {
   const { Command } = await shell()
   return await Command.create('osascript', ['-e', script]).execute()
+}
+
+/* —— Cursor 对话监控(只读本机 SQLite) ——
+ * state.vscdb(27GB)禁全表扫:列表走小库 conversation-search.db,详情按 key 主键点查/前缀 GLOB。
+ * 一律 file:...?mode=ro 只读打开:两库都是 WAL 模式,ro 能读到未 checkpoint 的最新数据,
+ * 且 WAL 下读不阻塞 Cursor 写(immutable=1 会忽略 WAL,流式新气泡要等 checkpoint 才可见)。
+ * 不写库、绝不上云。 */
+
+const CURSOR_HOME = '/Users/kenpan/Library/Application Support/Cursor/User/globalStorage'
+const CURSOR_STATE_DB = `${CURSOR_HOME}/state.vscdb`
+const CURSOR_SEARCH_DB = `${CURSOR_HOME}/conversation-search.db`
+
+/** 本机路径 → sqlite3 可用的只读 file: URI(空格等需百分号编码)。 */
+function readonlyUri(path) {
+  return `file:${encodeURI(path)}?mode=ro`
+}
+
+/** composerId 白名单校验:只允许 uuid 类字符,挡住 SQL/GLOB 注入。 */
+function isSafeComposerId(id) {
+  return typeof id === 'string' && /^[0-9a-zA-Z-]{8,64}$/.test(id)
+}
+
+/** bubbleId 同款白名单(允许更短的 id)。 */
+function isSafeBubbleId(id) {
+  return typeof id === 'string' && /^[0-9a-zA-Z-]{1,64}$/.test(id)
+}
+
+/** 跑一条只读查询,-json 输出 → 解析成行数组;失败返回 {error}。 */
+async function sqliteJson(dbPath, query) {
+  const { Command } = await shell()
+  const out = await Command.create('sqlite3', ['-json', readonlyUri(dbPath), query], {
+    env: { PATH: AGENT_PATH },
+  }).execute()
+  if (out.code !== 0) return { error: (out.stderr || out.stdout || '').trim() || `exit ${out.code}` }
+  const text = (out.stdout || '').trim()
+  if (!text) return { rows: [] }
+  try {
+    return { rows: JSON.parse(text) }
+  } catch (err) {
+    return { error: `解析失败:${err?.message ?? err}` }
+  }
+}
+
+/**
+ * 读最近的 Cursor 会话列表 → {items,state}。UI 直连用。
+ * @param {{ limit?: number }} [opts]
+ */
+async function readCursorSessions({ limit = 40 } = {}) {
+  if (!isNative) return projectCodeSessionsResult({ native: false })
+  const n = Math.min(Math.max(Number(limit) || 40, 1), 200)
+  const res = await sqliteJson(
+    CURSOR_SEARCH_DB,
+    `SELECT id, title, updated_at, is_archived, source FROM conversations ORDER BY updated_at DESC LIMIT ${n}`,
+  )
+  if (res.error) return projectCodeSessionsResult({ native: true, error: res.error })
+  return projectCodeSessionsResult({ native: true, sessions: res.rows })
+}
+
+/**
+ * 读单个会话的完整消息流 → thread 对象 或 {error}。UI 直连用。
+ * @param {{ composerId?: string }} opts
+ */
+async function readCursorThread({ composerId } = {}) {
+  if (!isNative) return { error: '此功能仅在 Mac app 内可用。' }
+  if (!isSafeComposerId(composerId)) return { error: 'composerId 非法。' }
+  const head = await sqliteJson(
+    CURSOR_STATE_DB,
+    `SELECT value FROM cursorDiskKV WHERE key='composerData:${composerId}'`,
+  )
+  if (head.error) return { error: head.error }
+  if (!head.rows?.length) return { error: '找不到该会话。' }
+  let composerJson
+  try {
+    composerJson = JSON.parse(head.rows[0].value)
+  } catch {
+    return { error: '会话数据解析失败。' }
+  }
+  const headers = extractBubbleHeaders(composerJson)
+  if (!headers.length) {
+    return projectCursorThread(composerJson, {})
+  }
+  // 前缀 GLOB → PK 范围扫,只命中本会话的气泡(不全表扫)。
+  const bubbleRes = await sqliteJson(
+    CURSOR_STATE_DB,
+    `SELECT key, value FROM cursorDiskKV WHERE key GLOB 'bubbleId:${composerId}:*'`,
+  )
+  if (bubbleRes.error) return { error: bubbleRes.error }
+  /** @type {Record<string, any>} */
+  const bubbles = {}
+  for (const row of bubbleRes.rows || []) {
+    const bid = String(row.key).split(':').pop()
+    try {
+      bubbles[bid] = JSON.parse(row.value)
+    } catch {
+      /* 跳过坏气泡 */
+    }
+  }
+  return projectCursorThread(composerJson, bubbles)
+}
+
+/**
+ * 增量读取会话消息流:只拉「新出现的气泡 + 可能还在流式增长的尾气泡」。
+ * 空闲 tick = 1 次 spawn(会话头 + 尾气泡,两个主键点查);有新气泡才发第二条 IN 点查。
+ * prevThread/seenBubbleIds 传空 = 全量首载(前缀 GLOB 一把抓)。UI 高频轮询用。
+ * @param {{ composerId?: string, prevThread?: any, seenBubbleIds?: string[] }} opts
+ * @returns {Promise<{ thread?: any, bubbleIds?: string[], error?: string }>}
+ */
+async function readCursorThreadDelta({ composerId, prevThread = null, seenBubbleIds = [] } = {}) {
+  if (!isNative) return { error: '此功能仅在 Mac app 内可用。' }
+  if (!isSafeComposerId(composerId)) return { error: 'composerId 非法。' }
+  const tailId = prevThread?.messages?.at?.(-1)?.bubbleId
+  const headKeys = [`composerData:${composerId}`]
+  if (isSafeBubbleId(tailId)) headKeys.push(`bubbleId:${composerId}:${tailId}`)
+  const head = await sqliteJson(
+    CURSOR_STATE_DB,
+    `SELECT key, value FROM cursorDiskKV WHERE key IN (${headKeys.map(sqlQuote).join(',')})`,
+  )
+  if (head.error) return { error: head.error }
+  let composerJson = null
+  /** @type {Record<string, any>} */
+  const bubbles = {}
+  const takeBubbleRow = (row) => {
+    const bid = String(row.key).split(':').pop()
+    try {
+      bubbles[bid] = JSON.parse(row.value)
+    } catch {
+      /* 跳过坏气泡 */
+    }
+  }
+  for (const row of head.rows || []) {
+    if (String(row.key).startsWith('composerData:')) {
+      try {
+        composerJson = JSON.parse(row.value)
+      } catch {
+        return { error: '会话数据解析失败。' }
+      }
+    } else {
+      takeBubbleRow(row)
+    }
+  }
+  if (!composerJson) return { error: '找不到该会话。' }
+  const headers = extractBubbleHeaders(composerJson)
+  const seen = new Set(seenBubbleIds)
+  const newIds = headers
+    .map((h) => h.bubbleId)
+    .filter((id) => !seen.has(id) && id !== tailId && isSafeBubbleId(id))
+  if (newIds.length) {
+    // 首载或缺口太大 → 前缀 GLOB(PK 范围扫)一把抓;正常增量 → IN 主键点查。
+    const query =
+      !seen.size || newIds.length > 40
+        ? `SELECT key, value FROM cursorDiskKV WHERE key GLOB 'bubbleId:${composerId}:*'`
+        : `SELECT key, value FROM cursorDiskKV WHERE key IN (${newIds
+            .map((id) => sqlQuote(`bubbleId:${composerId}:${id}`))
+            .join(',')})`
+    const res = await sqliteJson(CURSOR_STATE_DB, query)
+    if (res.error) return { error: res.error }
+    for (const row of res.rows || []) takeBubbleRow(row)
+  }
+  return {
+    thread: mergeThreadDelta(prevThread, composerJson, bubbles),
+    bubbleIds: headers.map((h) => h.bubbleId),
+  }
+}
+
+/**
+ * 全文搜索 Cursor 会话标题/正文 → 会话摘要数组。UI 直连用。
+ * @param {{ query?: string, limit?: number }} opts
+ */
+async function searchCursor({ query, limit = 30 } = {}) {
+  if (!isNative) return []
+  const q0 = String(query || '').trim()
+  if (!q0) return []
+  const n = Math.min(Math.max(Number(limit) || 30, 1), 100)
+  // FTS MATCH 用参数化不便,转义双引号后作短语查询,避免语法字符炸掉。
+  const phrase = `"${q0.replaceAll('"', '""')}"`
+  const res = await sqliteJson(
+    CURSOR_SEARCH_DB,
+    `SELECT c.id AS id, c.title AS title, c.updated_at AS updated_at, c.is_archived AS is_archived, c.source AS source
+     FROM conversation_fts f JOIN conversations c ON c.fts_rowid = f.rowid
+     WHERE conversation_fts MATCH ${sqlQuote(phrase)} ORDER BY c.updated_at DESC LIMIT ${n}`,
+  )
+  if (res.error) return []
+  return projectCursorSessions(res.rows)
+}
+
+/** SQL 字符串字面量转义(单引号加倍)。仅用于已受控的短语。 */
+function sqlQuote(s) {
+  return `'${String(s).replaceAll("'", "''")}'`
 }
 
 /**
@@ -442,6 +638,63 @@ export const NATIVE_DEFS = [
     },
   },
   {
+    key: 'read_cursor_sessions',
+    icon: 'code',
+    def: {
+      type: 'function',
+      function: {
+        name: 'read_cursor_sessions',
+        description:
+          '读取本机 Cursor 编辑器最近的对话会话列表(标题 + 最近时间),只读、不打扰 Cursor。用于监控用户在 Cursor 里都开了哪些 AI 对话。返回会话 id 可交给 read_cursor_thread 看完整消息。',
+        parameters: {
+          type: 'object',
+          properties: {
+            limit: { type: 'number', description: '最多返回几条,默认 40' },
+          },
+        },
+      },
+    },
+  },
+  {
+    key: 'read_cursor_thread',
+    icon: 'code',
+    def: {
+      type: 'function',
+      function: {
+        name: 'read_cursor_thread',
+        description:
+          '读取本机 Cursor 某个对话的完整消息流(用户发的 + agent 回复的),只读。composerId 来自 read_cursor_sessions。用于查看某段 Cursor 对话的历史与 agent 说了什么。',
+        parameters: {
+          type: 'object',
+          properties: {
+            composerId: { type: 'string', description: '会话 id(来自 read_cursor_sessions)' },
+          },
+          required: ['composerId'],
+        },
+      },
+    },
+  },
+  {
+    key: 'search_cursor_sessions',
+    icon: 'code',
+    def: {
+      type: 'function',
+      function: {
+        name: 'search_cursor_sessions',
+        description:
+          '按关键词全文搜索本机 Cursor 的对话(标题 + 正文),返回匹配的会话列表。用于找到「那个聊过 X 的对话」;返回的会话 id 可交给 read_cursor_thread 看完整消息。',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: '搜索关键词' },
+            limit: { type: 'number', description: '最多返回几条,默认 30' },
+          },
+          required: ['query'],
+        },
+      },
+    },
+  },
+  {
     key: 'run_applescript',
     icon: 'monitor',
     def: {
@@ -590,6 +843,14 @@ export const AI_APP_LIST = Object.entries(AI_APPS).map(([key, a]) => ({
 /** 直连管道(代理会话用,不经过模型工具调用) */
 export { aiAppSend as aiAppSendDirect, aiAppRead as aiAppReadDirect }
 
+/** Code 域(/code 操控台)直连读源,返回结构化数据而非模型字符串。 */
+export {
+  readCursorSessions as readCursorSessionsDirect,
+  readCursorThread as readCursorThreadDirect,
+  readCursorThreadDelta as readCursorThreadDeltaDirect,
+  searchCursor as searchCursorDirect,
+}
+
 export function isNativeTool(name) {
   return isNative && NATIVE_DEFS.some((t) => t.key === name)
 }
@@ -602,6 +863,45 @@ export async function executeNativeTool(name, args) {
       return checkTask(args)
     case 'cancel_task':
       return await cancelTask(args)
+    case 'read_cursor_sessions': {
+      const { items, state } = await readCursorSessions(args)
+      if (state.status === 'unsupported') return state.message
+      if (state.status === 'unavailable') return state.message
+      if (!items.length) return '当前没有读到 Cursor 会话。'
+      return items
+        .slice(0, args?.limit || 40)
+        .map(
+          (s) =>
+            `${s.id} · ${s.title}${s.archived ? '(已归档)' : ''} · ${new Date(s.updatedAt).toLocaleString('zh-CN')}`,
+        )
+        .join('\n')
+    }
+    case 'read_cursor_thread': {
+      const thread = await readCursorThread(args)
+      if (thread?.error) return `读取失败:${thread.error}`
+      const textCount = thread.messages.filter((m) => m.text).length
+      if (!textCount) return `会话「${thread.title}」暂无可读消息。`
+      // 模型上下文有限:只喂最近的文本消息(工具步骤不进上下文),超长会话截尾。
+      const { messages, dropped } = clampThreadMessages(thread.messages)
+      const head = `会话「${thread.title}」[${thread.status}] · 共 ${textCount} 条${
+        dropped ? `(仅展示最近 ${messages.length} 条)` : ''
+      }`
+      const body = messages
+        .map((m) => `【${m.role === 'user' ? '我' : 'Agent'}】${m.text}`)
+        .join('\n\n')
+      return `${head}\n——\n${body}`
+    }
+    case 'search_cursor_sessions': {
+      if (!isNative) return '此功能仅在 Mac app 内可用。'
+      const items = await searchCursor(args)
+      if (!items.length) return '没有匹配的 Cursor 会话。'
+      return items
+        .map(
+          (s) =>
+            `${s.id} · ${s.title}${s.archived ? '(已归档)' : ''} · ${new Date(s.updatedAt).toLocaleString('zh-CN')}`,
+        )
+        .join('\n')
+    }
     case 'run_applescript':
       return await runAppleScript(args)
     case 'open_mac_app':

@@ -144,6 +144,28 @@ export const DOMAIN_IDENTITY = Object.freeze({
     icon: 'brain',
     cssVar: '--kenos-domain-health',
   }),
+  code: defineIdentity({
+    id: 'code',
+    label: 'Code',
+    // Teal — distinct from work 蓝 / knowledge 靛 / money 绿。
+    accentLight: '#1F8A82',
+    accentDark: '#35B5AC',
+    accentOnGlassLight: '#17726B',
+    accentOnGlassDark: '#4ECFC5',
+    icon: 'code',
+    cssVar: '--kenos-domain-code',
+  }),
+  projects: defineIdentity({
+    id: 'projects',
+    label: 'Projects',
+    // 与 plan 同族但更深:脊柱是 Planner 真源上的编排层。
+    accentLight: '#8A4FB0',
+    accentDark: '#A96BD4',
+    accentOnGlassLight: '#734094',
+    accentOnGlassDark: '#C08BE4',
+    icon: 'target',
+    cssVar: '--kenos-domain-projects',
+  }),
 })
 
 /**

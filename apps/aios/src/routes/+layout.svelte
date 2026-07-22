@@ -100,6 +100,7 @@
     '/approvals',
     '/activity',
     '/work',
+    '/code',
     '/history',
     '/settings',
     '/uiux-states',
@@ -120,6 +121,7 @@
       '/approvals',
       '/activity',
       '/work',
+      '/code',
       '/uiux-states',
     ].includes(page.url.pathname) || !knownRoutes.has(page.url.pathname),
   )
@@ -154,6 +156,8 @@
     if (p === '/spaces/knowledge') return t('nav.spaceKnowledge')
     if (p === '/focus') return FOCUS.focus?.title || t('nav.focus')
     if (p === '/work') return t('nav.work')
+    if (p === '/code') return 'Code'
+    if (p === '/projects') return 'Projects'
     if (p === '/uiux-states') return 'UIUX States'
     if (p === '/') return t('nav.today')
     if (p === '/assistant' || p === '/chat') return t('chat.title')

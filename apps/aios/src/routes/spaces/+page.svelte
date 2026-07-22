@@ -3,9 +3,11 @@
   import { goto } from '$app/navigation'
   import { buildSpacesList } from '$lib/kenos/spacesList.core.js'
   import { launchSpace } from '$lib/kenos/spaceSwitcher.svelte.js'
+  import { isShellSurface } from '$lib/kenos/shellSurface.js'
   import { t } from '$lib/i18n/index.js'
 
-  const spaces = buildSpacesList()
+  // shellOnly 域(Code)只在 Mac/iOS 壳内列出,普通浏览器隐藏。
+  const spaces = buildSpacesList({ shellAllowed: isShellSurface() })
   const focusSpaces = spaces.filter((s) => s.id === 'training' || s.id === 'work-focus')
   const domainSpaces = spaces.filter((s) => !['training', 'work-focus'].includes(s.id))
 

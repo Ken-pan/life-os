@@ -186,6 +186,10 @@ struct KenosDomainAccent: Equatable {
         light: 0x4556D4, dark: 0x5B6CFF,
         onGlassLight: 0x3846B8, onGlassDark: 0x7A88FF
     )
+    static let code = KenosDomainAccent(
+        light: 0x1F8A82, dark: 0x35B5AC,
+        onGlassLight: 0x17726B, onGlassDark: 0x4ECFC5
+    )
     static let paper = KenosDomainAccent(
         light: 0x6E5A42, dark: 0x8B7355,
         onGlassLight: 0x5A4834, onGlassDark: 0xC4A882
@@ -269,6 +273,7 @@ enum KenosDomainRegistry {
         // Household Space — zh UI shows 「家」; never collide with Kenos system home.
         .init(id: "home", label: "Home", subtitle: "Rooms · Items · Organize", strategy: .embeddedWeb, appId: "home", productionOrigin: "https://home.kenos.space", devPort: 5196, homePath: "/plan", systemImage: "house", aliases: [], accent: .home),
         .init(id: "health", label: "Health", subtitle: "Status · Focus · Trends", strategy: .embeddedWeb, appId: "health", productionOrigin: "https://health.kenos.space", devPort: 5192, homePath: "/", systemImage: "heart.text.square", aliases: ["focus", "status"], accent: .health),
+        .init(id: "code", label: "Code", subtitle: "Cursor conversations", strategy: .embeddedWeb, appId: "aios", productionOrigin: "https://www.kenos.space", devPort: 5219, homePath: "/code", systemImage: "chevron.left.forwardslash.chevron.right", aliases: [], accent: .code),
         .init(id: "paper", label: "Paper", subtitle: "Notebooks and capture", strategy: .legacyFallback, appId: nil, productionOrigin: nil, devPort: nil, homePath: "/spaces/paper", systemImage: "pencil.and.outline", aliases: ["paperos", "paper-os"], accent: .paper),
     ]
 
@@ -387,6 +392,16 @@ enum KenosDomainRegistry {
                 .init(title: "Status", systemImage: "heart.text.square", path: "/"),
                 .init(title: "Focus", systemImage: "target", path: "/focus"),
                 .init(title: "Trends", systemImage: "chart.line.uptrend.xyaxis", path: "/trends")
+            ],
+            more: [
+                .init(title: "Settings", systemImage: "gearshape", path: "/settings#cloud"),
+            ]
+        ),
+        // Code — 单一诚实 slot:就是聊天(会话+消息+输入),无内部操作面。
+        "code": .init(
+            domainId: "code",
+            slots: [
+                .init(title: "Chats", systemImage: "bubble.left.and.bubble.right", path: "/code"),
             ],
             more: [
                 .init(title: "Settings", systemImage: "gearshape", path: "/settings#cloud"),

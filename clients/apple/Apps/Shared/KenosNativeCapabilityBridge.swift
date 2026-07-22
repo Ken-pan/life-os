@@ -142,6 +142,7 @@ enum KenosNativeCapabilityBridge {
       window.kenosNative = {
         getCapabilities: function () { return call('getCapabilities'); },
         haptic: function (style) { return call('haptic', { style: style || 'light' }); },
+        httpFetchLocal: function (p) { return call('httpFetchLocal', p || {}); },
         share: function (payload) { return call('share', payload || {}); },
         authenticate: function (opts) { return call('authenticate', opts || {}); },
         cancelAuthenticate: function () { return call('cancelAuthenticate', {}); },
@@ -219,6 +220,7 @@ enum KenosNativeCapabilityBridge {
     static var capabilitySnapshot: [String: Bool] {
         [
             "haptic": true,
+            "httpFetchLocal": true,
             "share": true,
             "authenticate": true,
             "cancelAuthenticate": true,
@@ -411,6 +413,9 @@ enum KenosNativeCapabilityBridge {
             let style = stringValue(params["style"]).lowercased()
             playHaptic(style)
             resolve(id: id, webView: webView, value: ["ok": true, "style": style])
+
+        case "httpFetchLocal":
+            httpFetchLocal(params: params, id: id, webView: webView)
 
         case "share":
             share(params: params, id: id, webView: webView)
@@ -1209,6 +1214,67 @@ enum KenosNativeCapabilityBridge {
     }
 
     // MARK: - Reply helpers
+
+    /// 局域网 HTTP 转发(Code 域 cursor-bridge 等)。
+    /// https 页面 fetch http://LAN 会被 WebKit mixed-content 拦,由原生 URLSession 代发。
+    /// 白名单:仅 http 协议 + 局域网主机(.local / localhost / RFC1918 私网段)。
+    private static func httpFetchLocal(params: [String: Any], id: String, webView: WKWebView?) {
+        let urlString = stringValue(params["url"])
+        guard let url = URL(string: urlString),
+              url.scheme == "http",
+              let host = url.host,
+              isLocalNetworkHost(host)
+        else {
+            reject(id: id, webView: webView, code: "bad_url", message: "仅允许局域网 http 地址")
+            return
+        }
+        var request = URLRequest(url: url, timeoutInterval: 12)
+        let method = stringValue(params["method"]).uppercased()
+        request.httpMethod = method.isEmpty ? "GET" : method
+        if let headers = params["headers"] as? [String: Any] {
+            for (key, value) in headers {
+                // 只透传桥协议需要的头,别把网页任意头带出去。
+                guard ["x-kenos-token", "authorization", "content-type"].contains(key.lowercased()) else { continue }
+                request.setValue(stringValue(value), forHTTPHeaderField: key)
+            }
+        }
+        if let body = params["body"], !(body is NSNull), JSONSerialization.isValidJSONObject(body) {
+            request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+            if request.value(forHTTPHeaderField: "Content-Type") == nil {
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            }
+        }
+        Task {
+            do {
+                let (data, response) = try await URLSession.shared.data(for: request)
+                let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                let bodyJSON = try? JSONSerialization.jsonObject(with: data)
+                await MainActor.run {
+                    resolve(id: id, webView: webView, value: [
+                        "ok": true,
+                        "status": status,
+                        "body": bodyJSON ?? NSNull(),
+                    ])
+                }
+            } catch {
+                await MainActor.run {
+                    reject(id: id, webView: webView, code: "network_error", message: error.localizedDescription)
+                }
+            }
+        }
+    }
+
+    private static func isLocalNetworkHost(_ host: String) -> Bool {
+        let h = host.lowercased()
+        if h == "localhost" || h == "127.0.0.1" { return true }
+        if h.hasSuffix(".local") { return true }
+        if h.hasPrefix("10.") || h.hasPrefix("192.168.") { return true }
+        if h.hasPrefix("172.") {
+            let parts = h.split(separator: ".")
+            if parts.count >= 2, let second = Int(parts[1]), (16...31).contains(second) { return true }
+        }
+        return false
+    }
 
     private static func resolve(id: String, webView: WKWebView?, value: [String: Any]) {
         guard let webView else { return }

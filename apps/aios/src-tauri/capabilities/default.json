@@ -15,6 +15,7 @@
         { "name": "claude", "cmd": "/Users/kenpan/.local/bin/claude", "args": true },
         { "name": "cursor-agent", "cmd": "/Users/kenpan/.local/bin/cursor-agent", "args": true },
         { "name": "gh", "cmd": "/opt/homebrew/bin/gh", "args": true },
+        { "name": "sqlite3", "cmd": "/usr/bin/sqlite3", "args": true },
         { "name": "osascript", "cmd": "/usr/bin/osascript", "args": true },
         { "name": "screencapture", "cmd": "/usr/sbin/screencapture", "args": true },
         { "name": "sips", "cmd": "/usr/bin/sips", "args": true },

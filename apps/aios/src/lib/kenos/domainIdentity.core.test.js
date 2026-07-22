@@ -18,6 +18,8 @@ describe('domainIdentity.core', () => {
     assert.equal(DOMAIN_IDENTITY.home.icon, 'home')
     assert.equal(DOMAIN_IDENTITY.knowledge.icon, 'notebook')
     assert.equal(DOMAIN_IDENTITY.work.icon, 'briefcase')
+    assert.equal(DOMAIN_IDENTITY.code.icon, 'code')
+    assert.equal(DOMAIN_IDENTITY.code.accentDark, '#35B5AC')
   })
 
   it('keeps Training warm coral distinct from critical-like reds', () => {

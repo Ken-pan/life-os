@@ -49,15 +49,24 @@ describe('spacesList.core', () => {
     assert.ok(list.some((s) => s.listKey === 'hosted:money'))
   })
 
-  it('list length equals HOSTED_SPACES length by default', () => {
-    const list = buildSpacesList({ warn() {} })
-    assert.equal(list.length, HOSTED_SPACES.length)
+  it('hides shellOnly spaces by default, includes them when shellAllowed', () => {
+    const shellCount = HOSTED_SPACES.filter((s) => s.shellOnly).length
+    assert.ok(shellCount >= 1, 'expected at least one shellOnly space (code)')
+    // 默认(普通浏览器):不含 shellOnly
+    const web = buildSpacesList({ warn() {} })
+    assert.equal(web.length, HOSTED_SPACES.length - shellCount)
+    assert.ok(!web.some((s) => s.id === 'code'))
+    // 壳内:含 shellOnly
+    const shell = buildSpacesList({ shellAllowed: true, warn() {} })
+    assert.equal(shell.length, HOSTED_SPACES.length)
+    assert.ok(shell.some((s) => s.id === 'code'))
   })
 
   it('can still build legacy external rows when requested', () => {
     const external = buildLegacyExternalSpaces()
+    const nonShell = HOSTED_SPACES.filter((s) => !s.shellOnly).length
     const list = buildSpacesList({ external, warn() {} })
-    assert.equal(list.length, HOSTED_SPACES.length + external.length)
+    assert.equal(list.length, nonShell + external.length)
     assert.ok(list.some((s) => s.listKey === 'external:plan'))
   })
 

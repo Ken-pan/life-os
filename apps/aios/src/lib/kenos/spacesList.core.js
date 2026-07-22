@@ -43,6 +43,30 @@ export const HOSTED_SPACES = Object.freeze([
     availability: 'ready',
   },
   {
+    id: 'code',
+    label: 'Code',
+    detail: 'Cursor 对话 · 远程操控',
+    // aios 自有原生路由(同 work 模式),非外部域深链。
+    href: '/code',
+    domainId: 'code',
+    accent: domainAccent('code'),
+    icon: domainIcon('code'),
+    availability: 'ready',
+    // 仅在 Mac app(Tauri)/ iOS app(WKWebView 壳)内出现;普通浏览器隐藏。
+    shellOnly: true,
+  },
+  {
+    id: 'projects',
+    label: 'Projects',
+    detail: 'Outcome · 下一步 · 关联 · 回顾',
+    // aios 自有原生路由:Project Spine cockpit(真源仍在 Planner/Vault)。
+    href: '/projects',
+    domainId: 'projects',
+    accent: domainAccent('projects'),
+    icon: domainIcon('projects'),
+    availability: 'ready',
+  },
+  {
     id: 'plan',
     label: '计划',
     detail: '任务 · 日程 · 即将到期',
@@ -119,6 +143,7 @@ export const TODAY_SPACE_SHORTCUTS = Object.freeze(
   HOSTED_SPACES.filter((space) =>
     [
       'work',
+      'projects',
       'plan',
       'training',
       'money',
@@ -169,9 +194,13 @@ export function buildSpacesList({
   hosted = HOSTED_SPACES,
   external = [],
   warn = console.warn,
+  // shellOnly 空间(如 code)默认隐藏;仅 Mac/iOS 壳内传 true 放行。
+  shellAllowed = false,
 } = {}) {
   const items = [
-    ...hosted.map((space) => ({
+    ...hosted
+      .filter((space) => shellAllowed || !space.shellOnly)
+      .map((space) => ({
       ...space,
       // https domain URLs still use hosted:* listKeys for Continuity with resume store
       external: false,

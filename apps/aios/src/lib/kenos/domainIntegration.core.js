@@ -369,6 +369,30 @@ export const DOMAIN_REGISTRY = Object.freeze({
     integrationStatus: 'missing',
     dataOwner: 'paperos-external',
   }),
+  code: defineDomain({
+    id: 'code',
+    label: 'Code',
+    subtitle: 'Cursor conversations · dispatch',
+    // aios-owned native route(镜像 work);读本机 Cursor 数据,仅 Mac app 内可用。
+    strategy: 'embedded_web',
+    appId: 'aios',
+    productionOrigin: 'https://www.kenos.space',
+    devPort: 5219,
+    homePath: '/code',
+    systemImage: 'chevron.left.forwardslash.chevron.right',
+    integrationStatus: 'integrated',
+    dataOwner: 'aios-code',
+    // Cursor 对话可能含密钥/隐私 —— Shelf/Today 不外泄内容缩略。
+    privacy: 'sensitive',
+    providers: {
+      continue: true,
+      shelf: true,
+      today: true,
+      inbox: false,
+      assistant: true,
+      quickSwitch: true,
+    },
+  }),
 })
 
 /**
@@ -699,6 +723,24 @@ export const DOMAIN_NAVIGATION_MANIFESTS = Object.freeze({
       }),
     ]),
   }),
+  // Code — 单一诚实 slot:就是聊天(会话列表 + 消息流 + 输入),无内部操作面。
+  code: Object.freeze({
+    domainId: 'code',
+    slots: Object.freeze([
+      Object.freeze({
+        title: 'Chats',
+        systemImage: 'bubble.left.and.bubble.right',
+        path: '/code',
+      }),
+    ]),
+    more: Object.freeze([
+      Object.freeze({
+        title: 'Settings',
+        systemImage: 'gearshape',
+        path: '/settings#cloud',
+      }),
+    ]),
+  }),
   // Legacy fallback — single honest slot (no fake multi-tab dock).
   paper: Object.freeze({
     domainId: 'paper',
@@ -948,6 +990,7 @@ export const INTEGRATION_DOMAIN_ORDER = Object.freeze([
   'music',
   'home',
   'health',
+  'code',
   'paper',
 ])
 

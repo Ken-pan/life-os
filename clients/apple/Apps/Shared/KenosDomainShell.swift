@@ -834,6 +834,7 @@ struct KenosSpaceShelfView: View {
         case "music": return "音乐"
         case "library", "knowledge": return "知识库"
         case "health": return "健康"
+        case "code": return "Code"
         case "paper": return "Paper"
         default: return card.title
         }
@@ -856,6 +857,7 @@ struct KenosSpaceShelfView: View {
         case "music": return "曲库与播放"
         case "home": return "房间 · 物品 · 整理"
         case "health": return "状态 · 专注 · 趋势"
+        case "code": return "Cursor 对话"
         case "paper": return "笔记与采集"
         default:
             return localizedLiveSubtitle(card.subtitle)

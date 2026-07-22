@@ -4,6 +4,7 @@
  * switching is Shelf-only; openQuickSwitchSheet redirects to Switch Space.
  */
 import { CLOUD } from '$lib/cloud.svelte.js'
+import { isShellSurface } from '$lib/kenos/shellSurface.js'
 import {
   SPACE_CHROME_MODES,
   applySpaceVisit,
@@ -56,14 +57,14 @@ export const SPACE_SWITCHER = {
     return hydrated
   },
   get catalog() {
-    return buildSpaceCatalog({ warn() {} })
+    return buildSpaceCatalog({ warn() {}, shellAllowed: isShellSurface() })
   },
   get chromeMode() {
     return chromeMode
   },
   get sections() {
     return buildSpaceSwitcherSections({
-      catalog: buildSpaceCatalog({ warn() {} }),
+      catalog: buildSpaceCatalog({ warn() {}, shellAllowed: isShellSurface() }),
       state,
       mode: chromeMode,
     })
@@ -72,7 +73,7 @@ export const SPACE_SWITCHER = {
   get recentItems() {
     return (
       buildSpaceSwitcherSections({
-        catalog: buildSpaceCatalog({ warn() {} }),
+        catalog: buildSpaceCatalog({ warn() {}, shellAllowed: isShellSurface() }),
         state,
         mode: SPACE_CHROME_MODES.continueRecent,
       }).find((s) => s.id === 'recent')?.items ?? []
