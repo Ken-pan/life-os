@@ -8,6 +8,8 @@
     selectConversation,
     deleteConversation,
   } from '$lib/chat.svelte.js'
+  import { buildAssistantHref } from '$lib/kenos/assistantShell.core.js'
+  import { page } from '$app/state'
 
   function formatTime(ts) {
     const date = new Date(ts)
@@ -34,12 +36,22 @@
 
   function open(id) {
     selectConversation(id)
-    goto('/assistant')
+    void goto(
+      buildAssistantHref({
+        conversationId: id,
+        currentSearch: page.url.search,
+      }),
+    )
   }
 
   function newChat() {
     startNewChat()
-    goto('/assistant')
+    void goto(
+      buildAssistantHref({
+        conversationId: null,
+        currentSearch: page.url.search,
+      }),
+    )
   }
 </script>
 

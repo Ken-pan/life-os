@@ -72,6 +72,7 @@ export {
 
 /** Session unlock keys for sensitive Continuity domains. */
 export const NATIVE_UNLOCK_KEYS = {
+  shell: 'kenos.unlock.shell',
   money: 'kenos.unlock.money',
   work: 'kenos.unlock.work',
 }

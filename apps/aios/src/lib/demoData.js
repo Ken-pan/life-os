@@ -283,10 +283,10 @@ export function buildDemoConversations() {
             name: 'browser_search',
             arguments: JSON.stringify({ query: 'Svelte 5 runes 官方文档 $state $derived' }),
             result:
-              '1. What are runes? • Svelte docs — Runes are symbols that control the Svelte compiler. $state, $derived, $effect, $props…\n2. Svelte 5 migration guide — Replaces `$:` reactive statements with explicit runes; works in .svelte.js modules.\n3. Svelte 5 is out! (blog) — Runes make reactivity explicit and universal.',
+              'Found 3 results\n1. What are runes? • Svelte docs — Runes are symbols that control the Svelte compiler. $state, $derived, $effect, $props…\n2. Svelte 5 migration guide — Replaces `$:` reactive statements with explicit runes; works in .svelte.js modules.\n3. Svelte 5 is out! (blog) — Runes make reactivity explicit and universal.',
           },
         ],
-        suggestions: ['$effect 和 onMount 有什么不同?', '旧项目怎么迁移到 runes?', '.svelte.js 模块怎么用'],
+        suggestions: ['$effect 和 onMount 有什么不同?', '旧项目怎么迁移到 runes?'],
       },
     ],
   }

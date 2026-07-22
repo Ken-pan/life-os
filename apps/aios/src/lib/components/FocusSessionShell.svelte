@@ -74,7 +74,7 @@
     </header>
 
     <p class="scope" data-testid="assistant-scope-chip" data-scope-kind={scopeUi.kind}>{scopeUi.label}</p>
-    <p class="scope-actions"><a href="/assistant" data-testid="context-assistant-entry">Context Assistant</a></p>
+    <p class="scope-actions"><a href="/assistant" data-testid="context-assistant-entry">Ask</a></p>
 
     <section class="panel">
       <h2>当前内容</h2>

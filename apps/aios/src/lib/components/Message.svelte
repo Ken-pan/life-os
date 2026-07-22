@@ -21,6 +21,7 @@
   import { toolIcon } from '$lib/tools.js'
   import { createSpeechSession } from '$lib/localai.js'
   import { S, save } from '$lib/state.svelte.js'
+  import { summarizeToolActivity } from '$lib/kenos/toolActivity.core.js'
   import {
     openArtifact,
     openUrl,
@@ -546,23 +547,47 @@
     {/if}
 
     {#if message.toolCalls?.length}
-      <div class="tools">
+      <div class="tools" data-testid="tool-activity">
         {#each message.toolCalls as tc (tc.id)}
           {@const ctx = toolContext(tc)}
-          <details class="tool" class:running={tc.running}>
+          {@const activity = summarizeToolActivity(tc, {
+            locale: S.settings.locale === 'en' ? 'en' : 'zh',
+            tTool: (name) => t(`tool.${name}`),
+          })}
+          <details
+            class="tool activity"
+            class:running={tc.running}
+            class:failed={activity.failed}
+          >
             <summary class:shimmer={tc.running}>
-              <span class="tool-icon" class:running={tc.running}>
-                <Icon name={toolIcon(tc.name)} size={13} strokeWidth={2} />
+              <span
+                class="tool-status"
+                class:running={tc.running}
+                class:failed={activity.failed}
+                aria-hidden="true"
+              >
+                {#if tc.running}
+                  <Icon name={toolIcon(tc.name)} size={13} strokeWidth={2} />
+                {:else if activity.failed}
+                  <Icon name="x" size={13} strokeWidth={2.25} />
+                {:else}
+                  <Icon name="check" size={13} strokeWidth={2.25} />
+                {/if}
               </span>
-              <span class="tool-name">{t(`tool.${tc.name}`)}</span>
-              {#if ctx}
-                <span class="tool-ctx" title={ctx}>{ctx}</span>
-              {/if}
+              <span class="tool-copy">
+                <span class="tool-name">{activity.title}</span>
+                {#if activity.detail || ctx}
+                  <span class="tool-meta" title={activity.detail || ctx}
+                    >{activity.detail || ctx}</span
+                  >
+                {/if}
+              </span>
               <span class="tool-chevron" aria-hidden="true">
                 <Icon name="chevron-down" size={12} strokeWidth={2} />
               </span>
             </summary>
             <div class="tool-body">
+              <p class="tool-raw-label">{t(`tool.${tc.name}`)}</p>
               {#if tc.arguments && tc.arguments !== '{}'}
                 <pre class="tool-args aios-scroll">{tc.arguments}</pre>
               {/if}
@@ -1043,23 +1068,25 @@
     gap: var(--space-2, 8px);
   }
 
-  /* —— 工具调用卡片 —— */
+  /* —— Tool Activity Cards (collapsed by default) —— */
   .tools {
     display: grid;
-    gap: 6px;
-    justify-items: start;
+    gap: 8px;
+    justify-items: stretch;
+    width: 100%;
   }
   .tool {
-    max-width: 100%;
+    max-width: min(100%, 520px);
   }
-  .tool summary {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 5px 10px 5px 7px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: var(--bg-2);
+  .tool.activity summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid color-mix(in srgb, var(--t1) 8%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--t1) 3.5%, transparent);
     color: var(--t2);
     font-size: var(--text-sm, 13px);
     cursor: pointer;
@@ -1073,35 +1100,49 @@
   .tool summary::-webkit-details-marker {
     display: none;
   }
-  .tool summary:hover {
-    border-color: var(--border-l);
-    background: var(--card);
+  .tool.activity summary:hover {
+    border-color: color-mix(in srgb, var(--t1) 14%, transparent);
+    background: color-mix(in srgb, var(--t1) 5.5%, transparent);
     color: var(--t1);
   }
-  .tool-icon {
+  .tool-status {
     display: grid;
     place-items: center;
-    width: 20px;
-    height: 20px;
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
     border-radius: 50%;
-    background: var(--card);
+    background: color-mix(in srgb, var(--t1) 6%, transparent);
     color: var(--t2);
   }
-  .tool summary:hover .tool-icon {
-    background: var(--card-h);
-    color: var(--t1);
+  .tool-status:not(.running):not(.failed) {
+    color: color-mix(in srgb, #34c759 85%, var(--t1));
+    background: color-mix(in srgb, #34c759 12%, transparent);
   }
-  /* 折叠箭头:静止淡色,展开时旋转 180°(对齐 ChatGPT/Claude 的可展开工具卡) */
+  .tool-status.failed {
+    color: color-mix(in srgb, #ff453a 85%, var(--t1));
+    background: color-mix(in srgb, #ff453a 12%, transparent);
+  }
+  .tool-status.running {
+    animation: tool-pulse 1s ease-in-out infinite;
+  }
+  .tool-copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+    text-align: start;
+  }
   .tool-chevron {
     display: inline-flex;
+    flex: 0 0 auto;
+    margin-top: 3px;
     color: var(--t3);
     transition: transform var(--dur-fast) var(--ease-standard);
   }
   .tool[open] > summary .tool-chevron {
     transform: rotate(180deg);
-  }
-  .tool-icon.running {
-    animation: tool-pulse 1s ease-in-out infinite;
   }
   @keyframes tool-pulse {
     0%,
@@ -1113,24 +1154,30 @@
     }
   }
   .tool-name {
-    font-weight: 550;
-    flex: none;
+    font-weight: 600;
+    color: var(--t1);
+    line-height: 1.35;
   }
-  /* chip 上的上下文标签:搜索词 / 域名等,一眼看清 AI 在做什么 */
-  .tool-ctx {
-    min-width: 0;
-    max-width: 260px;
+  .tool-meta {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--t3);
-    font-size: var(--text-xs, 12px);
+    font-size: 12px;
+    line-height: 1.35;
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
   }
-  .tool-ctx::before {
-    content: '·';
-    margin-right: 6px;
+  .tool-raw-label {
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     color: var(--t3);
   }
+  /* chip 上的上下文标签:搜索词 / 域名等,一眼看清 AI 在做什么 */
   .tool.running summary {
     border-color: var(--border-l);
   }
@@ -1336,11 +1383,11 @@
     }
   }
 
-  /* —— markdown 正文 —— */
+  /* —— markdown 正文（Rich Response baseline）—— */
   .md {
     color: var(--t1);
-    font-size: var(--text-base, 15px);
-    line-height: 1.65;
+    font-size: 16px;
+    line-height: 1.5;
     overflow-wrap: anywhere;
   }
   /* 流式打字光标:贴在已揭示文字末尾,闪烁提示"正在生成" */
@@ -1371,7 +1418,7 @@
     }
   }
   .md :global(p) {
-    margin: 0 0 0.75em;
+    margin: 0 0 0.7em;
   }
   .md :global(> :last-child) {
     margin-bottom: 0;
@@ -1682,6 +1729,7 @@
   .actions {
     display: flex;
     gap: 2px;
+    min-height: 36px;
     opacity: 0;
     transition: opacity var(--dur-fast) var(--ease, ease);
   }
@@ -1689,11 +1737,16 @@
   .actions:focus-within {
     opacity: 1;
   }
+  .row.assistant:last-child .actions {
+    opacity: 1;
+  }
   .actions button {
     display: grid;
     place-items: center;
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
     border: none;
     border-radius: 7px;
     background: transparent;

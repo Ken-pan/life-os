@@ -9,6 +9,7 @@
   import { TODAY_SPACE_SHORTCUTS, spaceListKey } from '$lib/kenos/spacesList.core.js'
   import { clearAssistantContext } from '$lib/kenos/assistantContext.svelte.js'
   import { SPACE_SWITCHER, launchSpace } from '$lib/kenos/spaceSwitcher.svelte.js'
+  import { buildAssistantHref } from '$lib/kenos/assistantShell.core.js'
 
   /** @type {{ onCapture?: () => void, onSpaceSwitcher?: (e?: Event) => void, onSwitchSpace?: (e?: Event) => void }} */
   let {
@@ -53,13 +54,25 @@
   function openConversation(id) {
     closeAgent()
     selectConversation(id)
-    if (!onChatRoute) goto('/assistant')
+    void goto(
+      buildAssistantHref({
+        conversationId: id,
+        currentSearch: page.url.search,
+      }),
+      { keepFocus: true, noScroll: true },
+    )
   }
 
   function newChat() {
     closeAgent()
     startNewChat()
-    if (!onChatRoute) goto('/assistant')
+    void goto(
+      buildAssistantHref({
+        conversationId: null,
+        currentSearch: page.url.search,
+      }),
+      { keepFocus: true, noScroll: true },
+    )
   }
 
   function openAgentThread(key) {

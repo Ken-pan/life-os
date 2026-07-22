@@ -106,6 +106,10 @@
       event?.preventDefault?.()
     }
   }
+
+  function goTodayHref() {
+    return nativeShell ? 'kenos://today' : '/'
+  }
 </script>
 
 <div class="work-page" class:native-shell={nativeShell} data-domain="work">
@@ -143,8 +147,8 @@
     <div>
       {#if !nativeShell}
         <p class="kicker"><a href="/spaces" onclick={openSpacesShelf}>Spaces</a> · Work</p>
+        <h1>Work</h1>
       {/if}
-      <h1>Work</h1>
       <p class="intro">当前目标、下一个交付、阻塞、决定，以及需要转为任务的提案。</p>
     </div>
     <div class="header-actions">
@@ -157,7 +161,7 @@
         data-testid="work-context-assistant-entry"
         onclick={openWorkContextAssistant}
       >
-        Context Assistant
+        Ask
       </a>
       <span class="scope-hint" data-testid="assistant-scope-chip" data-scope-kind={scopeUi.kind} title={scopeUi.label}>
         {scopeUi.label}
@@ -179,10 +183,9 @@
       <h2>Work 正在准备中</h2>
       <p>你目前仍可以通过 Plan 管理相关任务。</p>
       <div class="state-actions">
-        <a class="primary" href="/spaces">返回 Spaces</a>
         <button
           type="button"
-          class="quiet"
+          class="primary"
           onclick={() =>
             launchSpace(
               {
@@ -199,19 +202,20 @@
         >
           打开 Plan
         </button>
+        <a class="quiet" href={goTodayHref()}>回到今日</a>
       </div>
     </section>
   {:else if prodReady && CONTROL.sources.work.status === 'empty' && WORK.status !== 'ready'}
     <section class="state-panel">
       <h2>还没有 Work 记录</h2>
       <p>可以从 Spaces 开始整理项目与交付；这里不是错误面板。</p>
-      <a href="/spaces">返回 Spaces</a>
+      <a class="quiet" href={goTodayHref()}>回到今日</a>
     </section>
   {:else if WORK.status === 'unsupported' && !prodProjects.length}
     <section class="state-panel" aria-live="polite">
       <h2>Work 暂不可用</h2>
-      <p>此 Space 尚未开启。可返回 Spaces，或稍后再试。</p>
-      <a href="/spaces">返回 Spaces</a>
+      <p>此 Space 尚未开启。可回到今日，或稍后再试。</p>
+      <a class="quiet" href={goTodayHref()}>回到今日</a>
     </section>
   {:else if WORK.status === 'empty' && !prodProjects.length}
     <section class="state-panel">

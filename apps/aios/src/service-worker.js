@@ -45,7 +45,7 @@ self.addEventListener('fetch', (event) => {
   // Never cache opaque third-party or cross-origin API traffic
   if (url.origin !== self.location.origin) return
 
-  // Navigation: network-first, fallback to SPA shell
+  // Navigation: network-first, fallback to cached shell (offline boot Phase 1).
   if (request.mode === 'navigate') {
     event.respondWith(
       (async () => {
@@ -59,6 +59,7 @@ self.addEventListener('fetch', (event) => {
           /* offline */
         }
         return (
+          (await cache.match(request)) ||
           (await cache.match('/')) ||
           (await cache.match('/index.html')) ||
           Response.error()

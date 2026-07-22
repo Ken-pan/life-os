@@ -301,7 +301,12 @@
     online = typeof navigator !== 'undefined' ? navigator.onLine : true
     window.addEventListener('offline', onWindowOffline)
     window.addEventListener('online', onWindowOnline)
-    if (typeof navigator !== 'undefined') {
+    // HTTPS production only — HTTP LAN Daily Beta may not support Service Worker.
+    if (
+      typeof navigator !== 'undefined' &&
+      typeof location !== 'undefined' &&
+      location.protocol === 'https:'
+    ) {
       navigator.serviceWorker?.register('/service-worker.js').catch(() => {})
     }
     const disposeAppLogs = installKenosAppLogs({
@@ -512,6 +517,21 @@
     ) !important;
     box-sizing: border-box !important;
   }
+  /* Assistant is scrollMode=locked with a pinned composer — bottom clearance
+     belongs on the composer, not #main-content (Today scroll-end model). */
+  :global(
+    html[data-ios-native-shell='true']
+      .life-os-app-shell[data-scroll-mode='locked']
+      .life-os-app-shell__main
+  ),
+  :global(
+    html[data-ios-native-shell='true']
+      .life-os-app-shell[data-scroll-mode='locked']
+      #main-content
+  ) {
+    padding-bottom: 0 !important;
+    scroll-padding-bottom: 0 !important;
+  }
   :global(html[data-ios-native-shell='true'] .today-page) {
     padding-top: 0 !important;
     padding-bottom: 12px !important;
@@ -561,5 +581,30 @@
   :global(html[data-ios-native-shell='true'] .chat-top) {
     min-height: 0 !important;
     border-bottom: 0 !important;
+  }
+
+  /*
+   * macOS KenosMac WKWebView — sidebar + native titlebar (no bottom dock).
+   * WK sets both data-ios-native-shell and data-mac-native-shell; Mac rules
+   * must win via higher-specificity attribute selectors.
+   */
+  :global(html[data-mac-native-shell='true']) {
+    --kenos-chrome-top-inset: 8px;
+    --kenos-dock-scroll-end-pad: 0px;
+    --kenos-native-safe-bottom: 0px;
+  }
+  /* Assistant locked scroll — composer owns bottom clearance, not #main-content. */
+  :global(
+    html[data-mac-native-shell='true']
+      .life-os-app-shell[data-scroll-mode='locked']
+      .life-os-app-shell__main
+  ),
+  :global(
+    html[data-mac-native-shell='true']
+      .life-os-app-shell[data-scroll-mode='locked']
+      #main-content
+  ) {
+    padding-bottom: 0 !important;
+    scroll-padding-bottom: 0 !important;
   }
 </style>

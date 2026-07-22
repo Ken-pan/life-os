@@ -14,8 +14,28 @@
   import { transcribe, polishTranscript } from '$lib/localai.js'
   import { importFile, IMPORT_ACCEPT } from '$lib/fileImport.js'
 
-  /** @type {{ autofocus?: boolean }} */
-  let { autofocus = false } = $props()
+  /** @type {{
+   *   autofocus?: boolean
+   *   placeholder?: string
+   *   contextLabel?: string
+   *   contextMeta?: string
+   *   onClearContext?: (() => void) | undefined
+   * }} */
+  let {
+    autofocus = false,
+    placeholder = undefined,
+    contextLabel = undefined,
+    contextMeta = undefined,
+    onClearContext = undefined,
+  } = $props()
+
+  const resolvedPlaceholder = $derived(
+    recording
+      ? t('chat.listening')
+      : transcribing
+        ? t('chat.transcribing')
+        : placeholder || t('chat.placeholder'),
+  )
 
   const ime = createImeGuard()
 
@@ -320,6 +340,26 @@
 </script>
 
 <div class="composer" class:recording>
+  {#if contextLabel}
+    <div class="context-row" data-testid="composer-context-row">
+      <span class="context-chip" title={contextLabel}>
+        <span class="context-chip-label">{contextLabel}</span>
+        {#if onClearContext}
+          <button
+            type="button"
+            class="context-chip-x"
+            aria-label={t('chat.clearScope')}
+            onclick={onClearContext}
+          >
+            <Icon name="x" size={12} strokeWidth={2.5} />
+          </button>
+        {/if}
+      </span>
+      {#if contextMeta}
+        <span class="context-meta">{contextMeta}</span>
+      {/if}
+    </div>
+  {/if}
   {#if images.length || files.length || importing > 0}
     <div class="attachments">
       {#each images as src, i (i)}
@@ -417,12 +457,8 @@
       autocorrect="on"
       autocapitalize="sentences"
       spellcheck="true"
-      placeholder={recording
-        ? t('chat.listening')
-        : transcribing
-          ? t('chat.transcribing')
-          : t('chat.placeholder')}
-      aria-label={t('chat.placeholder')}
+      placeholder={resolvedPlaceholder}
+      aria-label={resolvedPlaceholder}
       oninput={onInput}
       onkeydown={onKeydown}
       onpaste={onPaste}
@@ -529,6 +565,63 @@
       border-color 160ms ease,
       background 160ms ease,
       box-shadow 160ms ease;
+  }
+
+  .context-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 0 2px;
+  }
+  .context-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    min-height: 28px;
+    padding: 2px 8px 2px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--t1) 6%, transparent);
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+    font-size: 12px;
+    font-weight: 550;
+    letter-spacing: 0.01em;
+  }
+  .context-chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .context-chip-x {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .context-chip-x:hover {
+    background: color-mix(in srgb, var(--t1) 10%, transparent);
+  }
+  .context-meta {
+    font-size: 11px;
+    font-weight: 500;
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+    opacity: 0.85;
   }
 
   /* —— 「+」能力菜单 —— */

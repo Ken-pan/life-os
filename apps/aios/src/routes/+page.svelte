@@ -360,21 +360,30 @@
               </div>
             </div>
           {:else if session.inboxSyncState === 'locked' || todayNeedsSignIn}
-            <a
-              href="/settings#cloud"
-              class="queue-row queue-row--primary kenos-anim-list-enter"
-            >
-              <div class="queue-copy">
-                <span class="queue-label"
-                  >{PRODUCT_COPY.todayInboxUnavailable.title}</span
-                >
-                <small>{PRODUCT_COPY.todayInboxUnavailable.detail}</small>
+            {#if todayNeedsSignIn}
+              <div class="queue-row queue-row--primary kenos-anim-list-enter" role="status">
+                <div class="queue-copy">
+                  <span class="queue-label">收件箱待同步</span>
+                  <small>连接账户后会显示待处理事项</small>
+                </div>
               </div>
-              <span class="queue-action-label"
-                >{PRODUCT_COPY.todayInboxUnavailable.action}</span
+            {:else}
+              <a
+                href="/settings#cloud"
+                class="queue-row queue-row--primary kenos-anim-list-enter"
               >
-              <Icon name="chevron-right" size={16} strokeWidth={1.75} />
-            </a>
+                <div class="queue-copy">
+                  <span class="queue-label"
+                    >{PRODUCT_COPY.todayInboxUnavailable.title}</span
+                  >
+                  <small>{PRODUCT_COPY.todayInboxUnavailable.detail}</small>
+                </div>
+                <span class="queue-action-label"
+                  >{PRODUCT_COPY.todayInboxUnavailable.action}</span
+                >
+                <Icon name="chevron-right" size={16} strokeWidth={1.75} />
+              </a>
+            {/if}
           {:else if !queue.inboxAvailable}
             <div class="queue-row queue-row--primary kenos-anim-list-enter" role="status">
               <div class="queue-copy">
