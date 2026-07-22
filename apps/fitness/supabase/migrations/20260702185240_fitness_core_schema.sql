@@ -41,11 +41,14 @@ create table if not exists fitness.fitness_profiles (
 
 alter table fitness.fitness_profiles enable row level security;
 
-create policy if not exists "fitness_profiles_select_own" on fitness.fitness_profiles
+drop policy if exists "fitness_profiles_select_own" on fitness.fitness_profiles;
+create policy "fitness_profiles_select_own" on fitness.fitness_profiles
   for select using ((select auth.uid()) = id);
-create policy if not exists "fitness_profiles_insert_own" on fitness.fitness_profiles
+drop policy if exists "fitness_profiles_insert_own" on fitness.fitness_profiles;
+create policy "fitness_profiles_insert_own" on fitness.fitness_profiles
   for insert with check ((select auth.uid()) = id);
-create policy if not exists "fitness_profiles_update_own" on fitness.fitness_profiles
+drop policy if exists "fitness_profiles_update_own" on fitness.fitness_profiles;
+create policy "fitness_profiles_update_own" on fitness.fitness_profiles
   for update using ((select auth.uid()) = id);
 
 drop trigger if exists fitness_profiles_updated_at on fitness.fitness_profiles;
@@ -89,11 +92,14 @@ create table if not exists fitness.fitness_user_state (
 
 alter table fitness.fitness_user_state enable row level security;
 
-create policy if not exists "fitness_user_state_select_own" on fitness.fitness_user_state
+drop policy if exists "fitness_user_state_select_own" on fitness.fitness_user_state;
+create policy "fitness_user_state_select_own" on fitness.fitness_user_state
   for select using ((select auth.uid()) = user_id);
-create policy if not exists "fitness_user_state_insert_own" on fitness.fitness_user_state
+drop policy if exists "fitness_user_state_insert_own" on fitness.fitness_user_state;
+create policy "fitness_user_state_insert_own" on fitness.fitness_user_state
   for insert with check ((select auth.uid()) = user_id);
-create policy if not exists "fitness_user_state_update_own" on fitness.fitness_user_state
+drop policy if exists "fitness_user_state_update_own" on fitness.fitness_user_state;
+create policy "fitness_user_state_update_own" on fitness.fitness_user_state
   for update using ((select auth.uid()) = user_id);
 
 drop trigger if exists fitness_user_state_updated_at on fitness.fitness_user_state;
@@ -112,13 +118,17 @@ create table if not exists fitness.fitness_exercise_weights (
 
 alter table fitness.fitness_exercise_weights enable row level security;
 
-create policy if not exists "fitness_exercise_weights_select_own" on fitness.fitness_exercise_weights
+drop policy if exists "fitness_exercise_weights_select_own" on fitness.fitness_exercise_weights;
+create policy "fitness_exercise_weights_select_own" on fitness.fitness_exercise_weights
   for select using ((select auth.uid()) = user_id);
-create policy if not exists "fitness_exercise_weights_insert_own" on fitness.fitness_exercise_weights
+drop policy if exists "fitness_exercise_weights_insert_own" on fitness.fitness_exercise_weights;
+create policy "fitness_exercise_weights_insert_own" on fitness.fitness_exercise_weights
   for insert with check ((select auth.uid()) = user_id);
-create policy if not exists "fitness_exercise_weights_update_own" on fitness.fitness_exercise_weights
+drop policy if exists "fitness_exercise_weights_update_own" on fitness.fitness_exercise_weights;
+create policy "fitness_exercise_weights_update_own" on fitness.fitness_exercise_weights
   for update using ((select auth.uid()) = user_id);
-create policy if not exists "fitness_exercise_weights_delete_own" on fitness.fitness_exercise_weights
+drop policy if exists "fitness_exercise_weights_delete_own" on fitness.fitness_exercise_weights;
+create policy "fitness_exercise_weights_delete_own" on fitness.fitness_exercise_weights
   for delete using ((select auth.uid()) = user_id);
 
 drop trigger if exists fitness_exercise_weights_updated_at on fitness.fitness_exercise_weights;
@@ -145,13 +155,17 @@ create index if not exists fitness_workout_sessions_user_date_idx
 
 alter table fitness.fitness_workout_sessions enable row level security;
 
-create policy if not exists "fitness_workout_sessions_select_own" on fitness.fitness_workout_sessions
+drop policy if exists "fitness_workout_sessions_select_own" on fitness.fitness_workout_sessions;
+create policy "fitness_workout_sessions_select_own" on fitness.fitness_workout_sessions
   for select using ((select auth.uid()) = user_id);
-create policy if not exists "fitness_workout_sessions_insert_own" on fitness.fitness_workout_sessions
+drop policy if exists "fitness_workout_sessions_insert_own" on fitness.fitness_workout_sessions;
+create policy "fitness_workout_sessions_insert_own" on fitness.fitness_workout_sessions
   for insert with check ((select auth.uid()) = user_id);
-create policy if not exists "fitness_workout_sessions_update_own" on fitness.fitness_workout_sessions
+drop policy if exists "fitness_workout_sessions_update_own" on fitness.fitness_workout_sessions;
+create policy "fitness_workout_sessions_update_own" on fitness.fitness_workout_sessions
   for update using ((select auth.uid()) = user_id);
-create policy if not exists "fitness_workout_sessions_delete_own" on fitness.fitness_workout_sessions
+drop policy if exists "fitness_workout_sessions_delete_own" on fitness.fitness_workout_sessions;
+create policy "fitness_workout_sessions_delete_own" on fitness.fitness_workout_sessions
   for delete using ((select auth.uid()) = user_id);
 
 drop trigger if exists fitness_workout_sessions_updated_at on fitness.fitness_workout_sessions;
@@ -179,13 +193,17 @@ create index if not exists fitness_exercise_logs_user_ex_idx
 
 alter table fitness.fitness_exercise_logs enable row level security;
 
-create policy if not exists "fitness_exercise_logs_select_own" on fitness.fitness_exercise_logs
+drop policy if exists "fitness_exercise_logs_select_own" on fitness.fitness_exercise_logs;
+create policy "fitness_exercise_logs_select_own" on fitness.fitness_exercise_logs
   for select using ((select auth.uid()) = user_id);
-create policy if not exists "fitness_exercise_logs_insert_own" on fitness.fitness_exercise_logs
+drop policy if exists "fitness_exercise_logs_insert_own" on fitness.fitness_exercise_logs;
+create policy "fitness_exercise_logs_insert_own" on fitness.fitness_exercise_logs
   for insert with check ((select auth.uid()) = user_id);
-create policy if not exists "fitness_exercise_logs_update_own" on fitness.fitness_exercise_logs
+drop policy if exists "fitness_exercise_logs_update_own" on fitness.fitness_exercise_logs;
+create policy "fitness_exercise_logs_update_own" on fitness.fitness_exercise_logs
   for update using ((select auth.uid()) = user_id);
-create policy if not exists "fitness_exercise_logs_delete_own" on fitness.fitness_exercise_logs
+drop policy if exists "fitness_exercise_logs_delete_own" on fitness.fitness_exercise_logs;
+create policy "fitness_exercise_logs_delete_own" on fitness.fitness_exercise_logs
   for delete using ((select auth.uid()) = user_id);
 
 drop trigger if exists fitness_exercise_logs_updated_at on fitness.fitness_exercise_logs;
