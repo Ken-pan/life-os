@@ -17,6 +17,7 @@ import { createHash } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { chromium } from 'playwright'
 import { execSync } from 'node:child_process'
+import { assertTestWriteAllowed } from '../lib/testProductionGuard.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '../..')
@@ -263,6 +264,10 @@ async function main() {
   }
 
   const url = 'https://iueozzuctstwvzbcxcyh.supabase.co'
+  // Default-DENY production. This harness historically wrote un-torn-down test rows to the
+  // Owner's production Planner; it now refuses a production target unless a scoped G2
+  // authorization is present AND KENOS_PROD_TEST_AUTHORIZED=1. Prefer a local Supabase / test user.
+  assertTestWriteAllowed({ url })
   const admin = createClient(url, srk, {
     auth: { persistSession: false, autoRefreshToken: false },
   })

@@ -86,7 +86,7 @@
     "app:knowledge": "bash scripts/knowledge/build-app.sh",
     "prod:authorize": "node scripts/prod-authorize.mjs",
     "check:migration-drift": "node scripts/check-migration-drift.mjs",
-    "test:governance": "node scripts/check-migration-drift.test.mjs && node scripts/lib/prodAuthorization.test.mjs"
+    "test:governance": "node scripts/check-migration-drift.test.mjs && node scripts/lib/prodAuthorization.test.mjs && node scripts/lib/testProductionGuard.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
