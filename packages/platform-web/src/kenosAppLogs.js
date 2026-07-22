@@ -43,7 +43,9 @@ const REDACT_PATTERNS = [
     '$1=«redacted»',
   ],
   [/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, '«jwt»'],
-  [/sb_publishable_[A-Za-z0-9_-]+/g, '«supabase_key»'],
+  [/sb_(publishable|secret)_[A-Za-z0-9_-]+/g, '«supabase_key»'],
+  [/\bsk-[A-Za-z0-9]{16,}\b/g, '«api_key»'],
+  [/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '«email»'],
 ]
 
 const MAX_MESSAGE = 2000
