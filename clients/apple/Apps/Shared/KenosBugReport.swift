@@ -36,17 +36,121 @@ enum KenosActiveWebRegistry {
 }
 
 /// Touches outside the prompt card fall through to the app (and any modal sheet).
-/// SwiftUI's `_UIHostingView` fills the window and would otherwise swallow every tap.
+///
+/// Hit policy is **frame-based**, not class-name / full-bleed heuristics:
+/// - Filtering `HostingView` by name made Buttons look tappable but swallow presses
+///   (SwiftUI controls often resolve to nested hosting views).
+/// - Filtering by "full window bounds" also failed — iOS 26 interactive
+///   `glassEffect` can return a large hosting container as the deepest hit even
+///   when the finger is on the card, so taps passed through and the CTA did nothing.
 final class KenosPassthroughWindow: UIWindow {
-    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        guard let hit = super.hitTest(point, with: event) else { return nil }
-        if hit === rootViewController?.view { return nil }
-        // Empty ZStack / Spacer lands on the hosting container — pass through.
-        let name = NSStringFromClass(type(of: hit))
-        if name.contains("HostingView") || name.contains("HostingScrollView") {
-            return nil
+    /// Interactive card frame in **this window's** coordinates. `.null` → pass everything.
+    static var interactiveFrameInWindow: CGRect = .null
+
+    /// Whether a window-space point should be claimed by the elevated prompt.
+    static func shouldClaimPoint(_ point: CGPoint, interactiveFrame: CGRect) -> Bool {
+        guard interactiveFrame.isNull == false, interactiveFrame.isEmpty == false else {
+            return false
         }
-        return hit
+        // Small slop so anti-aliased glass edges still receive the press.
+        return interactiveFrame.insetBy(dx: -8, dy: -8).contains(point)
+    }
+
+    /// Fallback while the card frame has not laid out yet (first frame after present).
+    /// Keep compact controls; pass through full-bleed SwiftUI hosts.
+    static func shouldDeliverHitWithoutFrame(
+        hit: UIView?,
+        root: UIView?,
+        windowBounds: CGRect,
+        fillSlop: CGFloat = 2
+    ) -> Bool {
+        guard let hit else { return false }
+        if hit === root { return false }
+        if hit.bounds.width >= windowBounds.width - fillSlop,
+           hit.bounds.height >= windowBounds.height - fillSlop
+        {
+            return false
+        }
+        return true
+    }
+
+    /// `true` → deliver; `false` → pass through.
+    /// Prefer the published card frame; fall back to compact-hit heuristic until layout.
+    static func shouldDeliverHit(
+        at point: CGPoint,
+        interactiveFrame: CGRect,
+        hit: UIView?,
+        root: UIView?,
+        windowBounds: CGRect
+    ) -> Bool {
+        if shouldClaimPoint(point, interactiveFrame: interactiveFrame) {
+            return hit != nil
+        }
+        if interactiveFrame.isNull || interactiveFrame.isEmpty {
+            return shouldDeliverHitWithoutFrame(hit: hit, root: root, windowBounds: windowBounds)
+        }
+        return false
+    }
+
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let frame = Self.interactiveFrameInWindow
+        // Fast path: known card frame — only walk the tree when the point is on-card.
+        if frame.isNull == false, frame.isEmpty == false {
+            guard Self.shouldClaimPoint(point, interactiveFrame: frame) else { return nil }
+            return super.hitTest(point, with: event)
+        }
+        // Frame not published yet — resolve hit, then keep only compact controls.
+        guard let hit = super.hitTest(point, with: event) else { return nil }
+        return Self.shouldDeliverHit(
+            at: point,
+            interactiveFrame: frame,
+            hit: hit,
+            root: rootViewController?.view,
+            windowBounds: bounds
+        ) ? hit : nil
+    }
+}
+
+/// Reports the card's frame in window coordinates for `KenosPassthroughWindow`.
+private final class KenosBugPromptHitAnchorView: UIView {
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+        backgroundColor = .clear
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        publishFrame()
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window == nil {
+            KenosPassthroughWindow.interactiveFrameInWindow = .null
+        } else {
+            publishFrame()
+        }
+    }
+
+    private func publishFrame() {
+        guard let window else { return }
+        let next = convert(bounds, to: window)
+        guard next.isNull == false, next.isEmpty == false else { return }
+        KenosPassthroughWindow.interactiveFrameInWindow = next
+    }
+}
+
+private struct KenosBugPromptHitAnchor: UIViewRepresentable {
+    func makeUIView(context: Context) -> KenosBugPromptHitAnchorView {
+        KenosBugPromptHitAnchorView()
+    }
+
+    func updateUIView(_ uiView: KenosBugPromptHitAnchorView, context: Context) {
+        uiView.setNeedsLayout()
     }
 }
 
@@ -56,7 +160,8 @@ enum KenosScreenshotBugPromptPresenter {
     private static var window: KenosPassthroughWindow?
 
     static func sync(model: KenosAppModel) {
-        if model.showScreenshotBugPrompt {
+        // Never keep the elevated window above the full bug-report sheet.
+        if model.showScreenshotBugPrompt, !model.showBugReportSheet {
             present(model: model)
         } else {
             dismiss()
@@ -91,6 +196,7 @@ enum KenosScreenshotBugPromptPresenter {
     }
 
     static func dismiss() {
+        KenosPassthroughWindow.interactiveFrameInWindow = .null
         window?.isHidden = true
         window?.rootViewController = nil
         window = nil
@@ -117,6 +223,9 @@ private struct KenosScreenshotBugPromptWindowRoot: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        // When the card is gone, disable the whole hosting tree so an orphan
+        // elevated window cannot sit above the bug-report sheet and eat taps.
+        .allowsHitTesting(model.showScreenshotBugPrompt && !model.showBugReportSheet)
         .animation(KenosMotion.chrome(reduceMotion: reduceMotion), value: model.showScreenshotBugPrompt)
     }
 }
@@ -1284,6 +1393,7 @@ struct KenosScreenshotBugPrompt: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: KenosSpacing.sm) {
+            // Drag only on the header — a parent DragGesture steals Button taps.
             HStack(alignment: .center, spacing: KenosSpacing.md) {
                 thumbnail
 
@@ -1296,6 +1406,8 @@ struct KenosScreenshotBugPrompt: View {
                         .lineLimit(2)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .gesture(dismissDrag)
 
                 Button {
                     model.dismissScreenshotBugPrompt()
@@ -1305,6 +1417,7 @@ struct KenosScreenshotBugPrompt: View {
                         .foregroundStyle(KenosColorToken.secondary)
                         .frame(width: 32, height: 32)
                         .background(Circle().fill(Color.primary.opacity(0.08)))
+                        .contentShape(Circle())
                 }
                 .buttonStyle(KenosPressStyle(reduceMotion: reduceMotion))
                 .accessibilityLabel("Not now")
@@ -1317,6 +1430,7 @@ struct KenosScreenshotBugPrompt: View {
                 Text("Report a Bug")
                     .font(KenosTypography.headline)
                     .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.regular)
@@ -1324,11 +1438,16 @@ struct KenosScreenshotBugPrompt: View {
             .accessibilityIdentifier("kenos.bug.prompt.report")
         }
         .padding(KenosSpacing.md)
-        .kenosLiquidGlass(in: RoundedRectangle(cornerRadius: 22, style: .continuous), interactive: true)
+        // Non-interactive glass: interactive Liquid Glass competes with Button hit-testing.
+        .kenosLiquidGlass(in: RoundedRectangle(cornerRadius: 22, style: .continuous), interactive: false)
         .shadow(color: .black.opacity(0.28), radius: 18, y: 8)
+        .background {
+            KenosBugPromptHitAnchor()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .allowsHitTesting(false)
+        }
         .padding(.horizontal, KenosGlass.dockHorizontalInset)
         .offset(y: dragOffset)
-        .gesture(dismissDrag)
         .scaleEffect(appeared || reduceMotion ? 1 : 0.96)
         .opacity(appeared || reduceMotion ? 1 : max(0, 1 - Double(dragOffset) / 120))
         .onAppear {
@@ -1336,6 +1455,9 @@ struct KenosScreenshotBugPrompt: View {
                 appeared = true
             }
             hapticToken += 1
+        }
+        .onDisappear {
+            KenosPassthroughWindow.interactiveFrameInWindow = .null
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("kenos.bug.prompt")

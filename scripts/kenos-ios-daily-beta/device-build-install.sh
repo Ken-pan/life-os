@@ -111,6 +111,37 @@ APP="$DERIVED/Build/Products/Debug-iphoneos/KenosIOS.app"
 [[ -d "$APP" ]] || { echo "ERROR: missing $APP" >&2; exit 1; }
 echo "==> CFBundleVersion=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist" 2>/dev/null || echo unknown)"
 
+# Archive dSYMs next to Daily Beta home so MetricKit `binary +offset` frames can be
+# symbolicated later (industry baseline — without this, topFrames stay opaque).
+DSYM_ROOT="${KENOS_DAILY_BETA_HOME:-$HOME/.kenos-daily-beta}/dsyms"
+DSYM_DIR="$DSYM_ROOT/$BUILD_NUM"
+mkdir -p "$DSYM_DIR"
+while IFS= read -r -d '' dsym; do
+  cp -R "$dsym" "$DSYM_DIR/" 2>/dev/null || true
+done < <(find "$DERIVED/Build/Products/Debug-iphoneos" -name '*.dSYM' -print0 2>/dev/null)
+# Debug builds may embed DWARF only — synthesize dSYMs with dsymutil.
+if ! find "$DSYM_DIR" -name '*.dSYM' -maxdepth 1 | grep -q .; then
+  if [[ -x "$APP/KenosIOS" ]]; then
+    dsymutil "$APP/KenosIOS" -o "$DSYM_DIR/KenosIOS.app.dSYM" 2>/dev/null || true
+  fi
+  if [[ -f "$APP/KenosIOS.debug.dylib" ]]; then
+    dsymutil "$APP/KenosIOS.debug.dylib" -o "$DSYM_DIR/KenosIOS.debug.dylib.dSYM" 2>/dev/null || true
+  fi
+fi
+{
+  echo "build=$BUILD_NUM"
+  echo "sha=$SHA"
+  echo "origin=$ORIGIN"
+  echo "archivedAt=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  if command -v dwarfdump >/dev/null; then
+    find "$DSYM_DIR" \( -name '*.dSYM' -o -name 'KenosIOS' -o -name '*.dylib' \) 2>/dev/null | while read -r d; do
+      dwarfdump --uuid "$d" 2>/dev/null || true
+    done
+  fi
+} >"$DSYM_DIR/README.txt"
+echo "$BUILD_NUM $SHA $(date -u +%Y-%m-%dT%H:%M:%SZ)" >>"$DSYM_ROOT/index.txt"
+echo "==> dSYMs archived → $DSYM_DIR ($(find "$DSYM_DIR" -name '*.dSYM' | wc -l | tr -d ' ') bundles)"
+
 echo "==> Installing $APP"
 set +e
 xcrun devicectl device install app --device "$DEVICE" "$APP"

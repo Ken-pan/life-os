@@ -568,6 +568,21 @@ enum KenosNativeCapabilityBridge {
             refreshToken: refresh,
             userId: userId.isEmpty ? nil : userId
         )
+        // Owner Device Lock: one-time shell pairing after SSO (server rejects non-owner).
+        // Requires shell unlock; concurrent SSO token writes coalesce inside DeviceAuthClient.
+        Task { @MainActor in
+            guard KenosUnlockGrantStore.isShellUnlocked() else { return }
+            guard !KenosDeviceIdentityStore.isPaired else { return }
+            do {
+                try await KenosDeviceAuthClient.pairWithAccessToken(access)
+            } catch {
+                KenosLog.notice(
+                    "device pair after SSO failed",
+                    category: .session,
+                    metadata: ["error": String(describing: error)]
+                )
+            }
+        }
         // Never echo tokens back — only presence flags.
         resolve(id: id, webView: webView, value: [
             "ok": true,

@@ -95,7 +95,7 @@ struct KenosDomainMoreSheet: View {
         case "Inbox": return "收件箱"
         case "Stats": return "统计"
         case "Tools": return "工具"
-        case "Ask", "Assistant": return "助手"
+        case "Ask", "Assistant": return "问答"
         case "Spaces": return "Spaces"
         case "Forecast": return "预测"
         case "Stocks": return "股票"

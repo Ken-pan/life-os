@@ -1,14 +1,17 @@
 import Foundation
 
-/// Process-scoped unlock grants for Continuity Money / Work gates.
+/// Process-scoped unlock grants for Continuity Money / Work gates and shell-wide unlock.
 ///
 /// Survives WKWebView remounts (LAN `-1004`, Continuity reload) without
 /// re-prompting Face ID. Cleared on app process death, `force` re-auth,
-/// or explicit `clearUnlockGrant`. Not persisted to disk — Money/Work
+/// or explicit `clearUnlockGrant`. Not persisted to disk — shell / Money / Work
 /// must Face ID again after a cold launch.
 enum KenosUnlockGrantStore {
-    /// Default Continuity session window after a successful Face ID.
+    /// Default Continuity / shell session window after a successful Face ID.
     static let defaultTTL: TimeInterval = 15 * 60
+
+    /// Shell-wide unlock key — gates SSO cookie seed and root content.
+    static let shellKey = "kenos.unlock.shell"
 
     private static let lock = NSLock()
     nonisolated(unsafe) private static var grants: [String: Date] = [:]
@@ -26,6 +29,10 @@ enum KenosUnlockGrantStore {
         return true
     }
 
+    static func isShellUnlocked(now: Date = Date()) -> Bool {
+        isValid(shellKey, now: now)
+    }
+
     static func remember(
         _ storageKey: String,
         ttl: TimeInterval = defaultTTL,
@@ -37,6 +44,10 @@ enum KenosUnlockGrantStore {
         lock.lock()
         grants[key] = now.addingTimeInterval(seconds)
         lock.unlock()
+    }
+
+    static func rememberShell(ttl: TimeInterval = defaultTTL, now: Date = Date()) {
+        remember(shellKey, ttl: ttl, now: now)
     }
 
     /// Clear one key, or all grants when `storageKey` is empty/nil.

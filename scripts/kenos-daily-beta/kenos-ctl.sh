@@ -208,13 +208,27 @@ cmd_build() {
     echo "  building aios-os (local daily beta origins)…"
     VITE_KENOS_LOCAL_DAILY_BETA=1 VITE_AIOS_CLOUD=0 \
       npm run build -w aios-os
-    echo "  building planner-os (Owner-limited title writer for Daily Beta)…"
-    # Soft residual closeout: enable hosted title writer for Owner cohort so real
-    # keyboard Save uses Kenos RPC (not legacy-only). Automation still proves editor open.
+    echo "  building planner-os (Owner-limited writers + offline queue for Daily Beta)…"
+    # Owner cohort: hosted create/lifecycle/title writers + offline intent queue for dogfood.
+    OWNER_EMAIL="${KENOS_DAILY_BETA_OWNER_EMAIL:-334452284ken@gmail.com}"
     VITE_KENOS_CONTINUE_ORIGIN="$AIOS_URL" \
       VITE_KENOS_PROD_WRITES=1 \
+      VITE_KENOS_PLAN_CREATE_TASK_WRITER=1 \
+      VITE_KENOS_PLAN_CREATE_TASK_WRITER_OWNER_EMAILS="$OWNER_EMAIL" \
+      VITE_KENOS_PLAN_COMPLETE_TASK_WRITER=1 \
+      VITE_KENOS_PLAN_COMPLETE_TASK_WRITER_OWNER_EMAILS="$OWNER_EMAIL" \
+      VITE_KENOS_PLAN_REOPEN_TASK_WRITER=1 \
+      VITE_KENOS_PLAN_REOPEN_TASK_WRITER_OWNER_EMAILS="$OWNER_EMAIL" \
       VITE_KENOS_PLAN_UPDATE_TASK_TITLE_WRITER=1 \
-      VITE_KENOS_PLAN_UPDATE_TASK_TITLE_WRITER_OWNER_EMAILS="${KENOS_DAILY_BETA_OWNER_EMAIL:-334452284ken@gmail.com}" \
+      VITE_KENOS_PLAN_UPDATE_TASK_TITLE_WRITER_OWNER_EMAILS="$OWNER_EMAIL" \
+      VITE_KENOS_PLAN_UPDATE_TASK_DUE_DATE_WRITER=1 \
+      VITE_KENOS_PLAN_UPDATE_TASK_DUE_DATE_WRITER_OWNER_EMAILS="$OWNER_EMAIL" \
+      VITE_KENOS_PLAN_UPDATE_TASK_SCHEDULE_WRITER=1 \
+      VITE_KENOS_PLAN_UPDATE_TASK_SCHEDULE_WRITER_OWNER_EMAILS="$OWNER_EMAIL" \
+      VITE_KENOS_PLAN_UPDATE_TASK_PROJECT_WRITER=1 \
+      VITE_KENOS_PLAN_UPDATE_TASK_PROJECT_WRITER_OWNER_EMAILS="$OWNER_EMAIL" \
+      VITE_KENOS_PLAN_ARCHIVE_TASK_WRITER=1 \
+      VITE_KENOS_PLAN_ARCHIVE_TASK_WRITER_OWNER_EMAILS="$OWNER_EMAIL" \
       VITE_KENOS_PLAN_OFFLINE_WRITER_QUEUE=1 \
       VITE_KENOS_COMPAT_CANARY=0 \
       VITE_KENOS_READ_CANARY=0 \
@@ -243,7 +257,13 @@ cmd_build() {
   },
   "flags": {
     "planOfflineWriterQueue": true,
+    "planCreateTaskWriter": true,
+    "planCompleteReopenWriters": true,
     "planUpdateTaskTitleWriter": true,
+    "planUpdateTaskDueDateWriter": true,
+    "planUpdateTaskScheduleWriter": true,
+    "planUpdateTaskProjectWriter": true,
+    "planArchiveTaskWriter": true,
     "prodWrites": true
   }
 }

@@ -100,7 +100,16 @@ enum KenosLog {
     ) {
         var meta = metadata
         meta["breadcrumb"] = "1"
-        shared.log(.notice, category: category, message: message(), metadata: meta, file: file, function: function, line: line)
+        let text = message()
+        shared.log(.notice, category: category, message: text, metadata: meta, file: file, function: function, line: line)
+        #if os(iOS)
+        // Persist a short trail so the next launch can explain unclean exits.
+        var trail = "[\(category.rawValue)] \(text)"
+        if let space = meta["space"], !space.isEmpty { trail += " space=\(space)" }
+        if let host = meta["host"], !host.isEmpty { trail += " host=\(host)" }
+        if let path = meta["path"], !path.isEmpty { trail += " path=\(path)" }
+        KenosCrashContextStore.noteBreadcrumb(trail)
+        #endif
     }
 
     /// Measure a synchronous block; logs duration under `.performance`.

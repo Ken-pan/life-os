@@ -106,7 +106,7 @@ targets:
           workouts, and more) to power Health status. Data stays on your devices
           and can optionally sync to your Mac.
         NSFaceIDUsageDescription: >-
-          Kenos can use Face ID to unlock sensitive Money and Work surfaces
+          Kenos uses Face ID to unlock the app and sensitive Money and Work surfaces
           inside the Continuity shell.
         UIBackgroundModes:
           - fetch
@@ -118,12 +118,12 @@ targets:
         NSSupportsLiveActivitiesFrequentUpdates: true
     entitlements:
       path: iOS/KenosIOS.entitlements
-      properties:
-        # HealthKit only for now — required for the system permission sheet.
-        # App Groups / iCloud need an explicit App ID registration; add after
-        # HealthKit dogfood works (wildcard profiles cannot carry HealthKit).
-        com.apple.developer.healthkit: true
-        com.apple.developer.healthkit.access: []
+      # HealthKit temporarily removed — wildcard / daily-beta signing cannot
+      # carry com.apple.developer.healthkit. Re-add after App ID + Xcode
+      # account can refresh a HealthKit Development profile:
+      #   com.apple.developer.healthkit: true
+      #   com.apple.developer.healthkit.access: []
+      properties: {}
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios
@@ -135,6 +135,8 @@ targets:
         CODE_SIGN_ENTITLEMENTS: iOS/KenosIOS.entitlements
         CURRENT_PROJECT_VERSION: '1'
         MARKETING_VERSION: '1.0.0'
+        # Emit standalone dSYMs (MetricKit / crash symbolication).
+        DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
         # Prefer Tailscale MagicDNS (Mac↔iPhone pair). device-build-install.sh
         # overwrites from ~/.kenos-daily-beta/device-trust.json when present.
         KENOS_DAILY_BETA_ORIGIN: 'http://kens-m5-max-macbook-pro.tail04e0e6.ts.net:5219'
@@ -310,6 +312,14 @@ targets:
           - KenosWebWarmupTests.swift
           - KenosWidgetSnapshotTests.swift
           - KenosNowPlayingBridgeTests.swift
+          - KenosAssistantDockHideTests.swift
+          - KenosCrashReportTests.swift
+          - KenosOfflineShellPolicyTests.swift
+          - KenosPerfStateReporterTests.swift
+          - KenosDomainHomePathTests.swift
+          - KenosAppRouteTests.swift
+          - KenosShellUnlockTests.swift
+          - KenosDeviceIdentityStoreTests.swift
     dependencies:
       - target: KenosMac
       - package: KenosClient

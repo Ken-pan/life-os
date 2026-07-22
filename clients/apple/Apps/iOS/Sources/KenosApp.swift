@@ -21,9 +21,14 @@ struct KenosApp: App {
             .background(model.chromeAppearance.canvasColor.ignoresSafeArea())
             .privacySensitive()
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
+                // Breadcrumb emitted by KenosDiagnosticsLifecycle; only reclaim here.
                 model.releaseInactiveContinuityIfNeeded()
             }
             .task {
+                guard KenosHealthKitFeature.isEnabled else {
+                    KenosLog.debug("HealthKit temporarily disabled — skip sync", category: .health)
+                    return
+                }
                 let health = KenosHealthSyncer.shared
                 guard health.available else {
                     KenosLog.debug("HealthKit unavailable — skip sync", category: .health)
@@ -60,15 +65,16 @@ final class KenosAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificatio
         // Music Continuity — HTML5 audio needs playback session + remote commands early.
         KenosNowPlayingBridge.prepareAudioSession()
         // Warm WebContent before first Continuity surface mounts (hidden seed WKWebView).
+        // Owner Device Lock Face ID lives only in KenosRootView → AppModel.unlockShellAndHydrate
+        // (a second evaluatePolicy here raced the UI gate and flapped LocalAuthentication).
         Task { @MainActor in
             KenosWebRuntime.warmWebContentProcessIfNeeded()
         }
-        // Mirror Keychain SSO vault → shared WK cookies before first Continuity paint.
-        Task { @MainActor in
-            await KenosSharedWebAuth.seedSharedSessionCookies()
-        }
         Task { @MainActor in
             KenosMetricKitSubscriber.shared.start()
+            KenosDiagnosticsLifecycle.start()
+            KenosPerfStateReporter.setShell("kenos")
+            KenosPerfStateReporter.setSurface("native")
         }
         return true
     }

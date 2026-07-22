@@ -111,6 +111,7 @@ enum KenosNowPlayingBridge {
         )
         let metadataChanged = snapshot != next
         snapshot = next
+        KenosCrashContextStore.noteNowPlaying(trackId: trackId, title: title, playing: playing)
 
         let center = MPNowPlayingInfoCenter.default()
         var info = center.nowPlayingInfo ?? [:]
@@ -179,6 +180,7 @@ enum KenosNowPlayingBridge {
         artwork = nil
         artworkCacheId = nil
         playbackWebView = nil
+        KenosCrashContextStore.clearNowPlaying()
         NotificationCenter.default.post(name: .kenosNowPlayingDidChange, object: nil)
     }
 
@@ -315,9 +317,47 @@ enum KenosNowPlayingBridge {
               image.size.width > 1,
               image.size.height > 1
         else { return nil }
-        let size = image.size
-        return MPMediaItemArtwork(boundsSize: size) { _ in image }
+        guard let cgImage = cgImageBacking(for: image) else { return nil }
+        // MediaPlayer invokes the request handler on `*/accessQueue`. A closure
+        // formed inside this @MainActor type is MainActor-isolated and traps
+        // with EXC_BREAKPOINT / SIGTRAP when the system pushes Now Playing
+        // (Music Continuity crash fingerprint 75109b108116574b).
+        return makeArtwork(
+            cgImage: cgImage,
+            scale: image.scale,
+            orientation: image.imageOrientation,
+            size: image.size
+        )
     }
+
+    /// Resolve a CGImage even when UIImage is CIImage-backed.
+    private static func cgImageBacking(for image: UIImage) -> CGImage? {
+        if let cg = image.cgImage { return cg }
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = image.scale
+        let rendered = UIGraphicsImageRenderer(size: image.size, format: format).image { _ in
+            image.draw(at: .zero)
+        }
+        return rendered.cgImage
+    }
+
+    nonisolated private static func makeArtwork(
+        cgImage: CGImage,
+        scale: CGFloat,
+        orientation: UIImage.Orientation,
+        size: CGSize
+    ) -> MPMediaItemArtwork {
+        MPMediaItemArtwork(boundsSize: size) { _ in
+            UIImage(cgImage: cgImage, scale: scale, orientation: orientation)
+        }
+    }
+
+    #if DEBUG
+    /// Test hook — exercises the same off-main request-handler path that crashed.
+    static func testingMakeArtwork(fromBase64 dataUrlOrBase64: String) -> MPMediaItemArtwork? {
+        decodeArtwork(dataUrlOrBase64)
+    }
+    #endif
 
     private static func string(_ value: Any?) -> String {
         guard let value else { return "" }

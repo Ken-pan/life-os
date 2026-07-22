@@ -7,11 +7,19 @@ struct KenosCrashDiagnosticSummary: Equatable, Codable, Sendable, Identifiable {
     var id: UUID
     var kind: String
     var applicationVersion: String
+    var buildVersion: String
+    var osVersion: String
+    var deviceType: String
     var terminationReason: String
     var exceptionType: String
     var exceptionCode: String
+    var exceptionName: String
     var signal: String
+    var signalName: String
     var summaryText: String
+    /// Compact attributed-thread frames, newest/deepest last (MetricKit nesting order).
+    var topFrames: String
+    var crashedBinary: String
     var fingerprint: String
     var receivedAt: Date
     var timeStampBegin: Date?
@@ -19,7 +27,7 @@ struct KenosCrashDiagnosticSummary: Equatable, Codable, Sendable, Identifiable {
 
     var isSevere: Bool {
         switch kind {
-        case "crash", "hang", "cpuException":
+        case "crash", "hang", "cpuException", "memoryException":
             return true
         default:
             return false
@@ -28,14 +36,100 @@ struct KenosCrashDiagnosticSummary: Equatable, Codable, Sendable, Identifiable {
 
     var bugTitle: String {
         var parts = ["[\(kind)]"]
-        if !signal.isEmpty { parts.append("signal=\(signal)") }
-        if !exceptionType.isEmpty { parts.append("exc=\(exceptionType)") }
-        if !terminationReason.isEmpty {
+        if !signalName.isEmpty { parts.append(signalName) }
+        else if !signal.isEmpty { parts.append("signal=\(signal)") }
+        if !exceptionName.isEmpty { parts.append(exceptionName) }
+        else if !exceptionType.isEmpty { parts.append("exc=\(exceptionType)") }
+        if !crashedBinary.isEmpty {
+            parts.append(crashedBinary)
+        } else if !terminationReason.isEmpty {
             parts.append(String(terminationReason.prefix(48)))
+        } else if !buildVersion.isEmpty {
+            parts.append("b\(buildVersion)")
         } else if !applicationVersion.isEmpty {
             parts.append("v\(applicationVersion)")
         }
         return parts.joined(separator: " ")
+    }
+
+    var logHeadline: String {
+        var parts = ["MetricKit", kind]
+        if !signalName.isEmpty { parts.append(signalName) }
+        if !exceptionName.isEmpty { parts.append(exceptionName) }
+        if !crashedBinary.isEmpty { parts.append(crashedBinary) }
+        return parts.joined(separator: " ")
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, kind, applicationVersion, buildVersion, osVersion, deviceType
+        case terminationReason, exceptionType, exceptionCode, exceptionName
+        case signal, signalName, summaryText, topFrames, crashedBinary
+        case fingerprint, receivedAt, timeStampBegin, timeStampEnd
+    }
+
+    init(
+        id: UUID,
+        kind: String,
+        applicationVersion: String,
+        buildVersion: String = "",
+        osVersion: String = "",
+        deviceType: String = "",
+        terminationReason: String,
+        exceptionType: String,
+        exceptionCode: String,
+        exceptionName: String = "",
+        signal: String,
+        signalName: String = "",
+        summaryText: String,
+        topFrames: String = "",
+        crashedBinary: String = "",
+        fingerprint: String,
+        receivedAt: Date,
+        timeStampBegin: Date?,
+        timeStampEnd: Date?
+    ) {
+        self.id = id
+        self.kind = kind
+        self.applicationVersion = applicationVersion
+        self.buildVersion = buildVersion
+        self.osVersion = osVersion
+        self.deviceType = deviceType
+        self.terminationReason = terminationReason
+        self.exceptionType = exceptionType
+        self.exceptionCode = exceptionCode
+        self.exceptionName = exceptionName
+        self.signal = signal
+        self.signalName = signalName
+        self.summaryText = summaryText
+        self.topFrames = topFrames
+        self.crashedBinary = crashedBinary
+        self.fingerprint = fingerprint
+        self.receivedAt = receivedAt
+        self.timeStampBegin = timeStampBegin
+        self.timeStampEnd = timeStampEnd
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        kind = try c.decode(String.self, forKey: .kind)
+        applicationVersion = try c.decodeIfPresent(String.self, forKey: .applicationVersion) ?? ""
+        buildVersion = try c.decodeIfPresent(String.self, forKey: .buildVersion) ?? ""
+        osVersion = try c.decodeIfPresent(String.self, forKey: .osVersion) ?? ""
+        deviceType = try c.decodeIfPresent(String.self, forKey: .deviceType) ?? ""
+        terminationReason = try c.decodeIfPresent(String.self, forKey: .terminationReason) ?? ""
+        exceptionType = try c.decodeIfPresent(String.self, forKey: .exceptionType) ?? ""
+        exceptionCode = try c.decodeIfPresent(String.self, forKey: .exceptionCode) ?? ""
+        exceptionName = try c.decodeIfPresent(String.self, forKey: .exceptionName) ?? ""
+        signal = try c.decodeIfPresent(String.self, forKey: .signal) ?? ""
+        signalName = try c.decodeIfPresent(String.self, forKey: .signalName) ?? ""
+        summaryText = try c.decodeIfPresent(String.self, forKey: .summaryText) ?? ""
+        topFrames = try c.decodeIfPresent(String.self, forKey: .topFrames) ?? ""
+        crashedBinary = try c.decodeIfPresent(String.self, forKey: .crashedBinary) ?? ""
+        fingerprint = try c.decode(String.self, forKey: .fingerprint)
+        receivedAt = try c.decode(Date.self, forKey: .receivedAt)
+        timeStampBegin = try c.decodeIfPresent(Date.self, forKey: .timeStampBegin)
+        timeStampEnd = try c.decodeIfPresent(Date.self, forKey: .timeStampEnd)
     }
 }
 
@@ -89,6 +183,14 @@ enum KenosCrashDiagnosticParser {
             end: end,
             into: &out
         )
+        appendDiagnostics(
+            root["memoryExceptionDiagnostics"],
+            kind: "memoryException",
+            receivedAt: receivedAt,
+            begin: begin,
+            end: end,
+            into: &out
+        )
         return out
     }
 
@@ -121,23 +223,93 @@ enum KenosCrashDiagnosticParser {
 
     static func fingerprint(
         kind: String,
-        applicationVersion: String,
-        terminationReason: String,
-        exceptionType: String,
-        exceptionCode: String,
         signal: String,
-        summaryText: String
+        exceptionType: String,
+        crashedBinary: String,
+        topFrames: String,
+        buildVersion: String
     ) -> String {
         let raw = [
             kind,
-            applicationVersion,
-            terminationReason,
-            exceptionType,
-            exceptionCode,
             signal,
-            String(summaryText.prefix(240)),
+            exceptionType,
+            crashedBinary,
+            buildVersion,
+            String(topFrames.prefix(280)),
         ].joined(separator: "|")
         return stableHash(raw)
+    }
+
+    /// Walk MetricKit `callStackTree` and return compact frame lines + best Kenos binary.
+    static func extractTopFrames(
+        from callStackTree: Any?,
+        limit: Int = 14
+    ) -> (frames: [String], crashedBinary: String) {
+        guard let tree = callStackTree as? [String: Any] else { return ([], "") }
+        let stacks = asObjectArray(tree["callStacks"])
+        let attributed = stacks.first { bool($0["threadAttributed"]) }
+            ?? stacks.first
+        guard let stack = attributed else { return ([], "") }
+        let roots = asObjectArray(stack["callStackRootFrames"])
+        var frames: [String] = []
+        var kenosBinary = ""
+
+        func walk(_ frame: [String: Any]) {
+            guard frames.count < limit else { return }
+            let binary = string(frame["binaryName"]) ?? "?"
+            let offset = intValue(frame["offsetIntoBinaryTextSegment"])
+            let symbol = string(frame["symbol"])
+            let line: String
+            if let symbol, !symbol.isEmpty {
+                line = "\(binary) \(symbol)"
+            } else if offset >= 0 {
+                line = "\(binary) +\(offset)"
+            } else {
+                line = binary
+            }
+            frames.append(line)
+            if kenosBinary.isEmpty, binary.localizedCaseInsensitiveContains("Kenos") {
+                kenosBinary = binary
+            }
+            for sub in asObjectArray(frame["subFrames"]) {
+                walk(sub)
+            }
+        }
+        for root in roots { walk(root) }
+        if kenosBinary.isEmpty {
+            kenosBinary = frames.reversed().first(where: {
+                $0.localizedCaseInsensitiveContains("Kenos")
+            }).flatMap { $0.split(separator: " ").first.map(String.init) } ?? ""
+        }
+        return (frames, kenosBinary)
+    }
+
+    static func signalName(for code: String) -> String {
+        switch code {
+        case "4": return "SIGILL"
+        case "5": return "SIGTRAP"
+        case "6": return "SIGABRT"
+        case "8": return "SIGFPE"
+        case "9": return "SIGKILL"
+        case "10": return "SIGBUS"
+        case "11": return "SIGSEGV"
+        case "12": return "SIGSYS"
+        default: return ""
+        }
+    }
+
+    static func exceptionName(for type: String) -> String {
+        switch type {
+        case "1": return "EXC_BAD_ACCESS"
+        case "2": return "EXC_BAD_INSTRUCTION"
+        case "3": return "EXC_ARITHMETIC"
+        case "4": return "EXC_EMULATION"
+        case "5": return "EXC_SOFTWARE"
+        case "6": return "EXC_BREAKPOINT"
+        case "9": return "EXC_RESOURCE"
+        case "10": return "EXC_GUARD"
+        default: return ""
+        }
     }
 
     // MARK: Private
@@ -152,33 +324,63 @@ enum KenosCrashDiagnosticParser {
     ) {
         let items = asObjectArray(raw)
         for item in items {
+            let meta = dict(item["diagnosticMetaData"]) ?? [:]
             let appVersion = string(item["applicationVersion"])
+                ?? string(meta["appVersion"])
                 ?? string(dict(item["metaData"])?["applicationBuildVersion"])
                 ?? ""
-            let terminationReason = string(item["terminationReason"]) ?? ""
-            let exceptionType = numberString(item["exceptionType"])
-            let exceptionCode = numberString(item["exceptionCode"])
-            let signal = numberString(item["signal"])
-            let summaryText = compactJSON(item)
+            let buildVersion = string(meta["appBuildVersion"])
+                ?? string(meta["applicationBuildVersion"])
+                ?? ""
+            let osVersion = string(meta["osVersion"]) ?? ""
+            let deviceType = string(meta["deviceType"]) ?? ""
+            let terminationReason = string(item["terminationReason"])
+                ?? string(meta["terminationReason"])
+                ?? ""
+            let terminationCategory = string(item["terminationCategory"])
+                ?? string(meta["terminationCategory"])
+                ?? ""
+            let exceptionType = numberString(item["exceptionType"]).ifEmpty(numberString(meta["exceptionType"]))
+            let exceptionCode = numberString(item["exceptionCode"]).ifEmpty(numberString(meta["exceptionCode"]))
+            let signal = numberString(item["signal"]).ifEmpty(numberString(meta["signal"]))
+            let excName = exceptionName(for: exceptionType)
+            let sigName = signalName(for: signal)
+            let (frameLines, crashedBinary) = extractTopFrames(from: item["callStackTree"])
+            let topFrames = frameLines.joined(separator: "\n")
+            var summaryText = compactSummary(
+                kind: kind,
+                item: item,
+                meta: meta,
+                topFrames: topFrames
+            )
+            if !terminationCategory.isEmpty {
+                summaryText = "terminationCategory=\(terminationCategory)\n" + summaryText
+            }
             let fp = fingerprint(
                 kind: kind,
-                applicationVersion: appVersion,
-                terminationReason: terminationReason,
-                exceptionType: exceptionType,
-                exceptionCode: exceptionCode,
                 signal: signal,
-                summaryText: summaryText
+                exceptionType: exceptionType,
+                crashedBinary: crashedBinary,
+                topFrames: topFrames,
+                buildVersion: buildVersion
             )
             out.append(
                 KenosCrashDiagnosticSummary(
                     id: UUID(),
                     kind: kind,
                     applicationVersion: appVersion,
+                    buildVersion: buildVersion,
+                    osVersion: osVersion,
+                    deviceType: deviceType,
                     terminationReason: KenosLogRedactor.redact(terminationReason),
                     exceptionType: exceptionType,
                     exceptionCode: exceptionCode,
+                    exceptionName: excName,
                     signal: signal,
+                    signalName: sigName,
                     summaryText: KenosLogRedactor.redact(summaryText),
+                    topFrames: KenosLogRedactor.redact(topFrames),
+                    crashedBinary: crashedBinary,
                     fingerprint: fp,
                     receivedAt: receivedAt,
                     timeStampBegin: begin,
@@ -186,6 +388,49 @@ enum KenosCrashDiagnosticParser {
                 )
             )
         }
+    }
+
+    private static func compactSummary(
+        kind: String,
+        item: [String: Any],
+        meta: [String: Any],
+        topFrames: String
+    ) -> String {
+        var lines: [String] = []
+        lines.append("kind=\(kind)")
+        if let v = string(meta["appBuildVersion"]) ?? string(item["applicationVersion"]) {
+            lines.append("build=\(v)")
+        }
+        if let v = string(meta["osVersion"]) { lines.append("os=\(v)") }
+        if let v = string(meta["deviceType"]) { lines.append("device=\(v)") }
+        if let v = string(item["terminationReason"]) ?? string(meta["terminationReason"]) {
+            lines.append("termination=\(v)")
+        }
+        if let v = string(item["hangDuration"]) ?? numberString(item["hangDuration"]).nilIfEmpty {
+            lines.append("hangDuration=\(v)")
+        }
+        if let v = string(meta["virtualMemoryRegionInfo"]) {
+            lines.append("vm=\(String(v.prefix(160)))")
+        }
+        if !topFrames.isEmpty {
+            lines.append("stack:")
+            lines.append(contentsOf: topFrames.split(separator: "\n").prefix(14).map(String.init))
+        } else {
+            // Fallback: tiny non-tree residue (never dump full callStackTree).
+            var slim = item
+            slim.removeValue(forKey: "callStackTree")
+            slim.removeValue(forKey: "diagnosticMetaData")
+            if let data = try? JSONSerialization.data(withJSONObject: slim, options: [.sortedKeys]),
+               let text = String(data: data, encoding: .utf8)
+            {
+                lines.append(String(text.prefix(240)))
+            }
+        }
+        let text = lines.joined(separator: "\n")
+        if text.count > 1_600 {
+            return String(text.prefix(1_600)) + "…«truncated»"
+        }
+        return text
     }
 
     private static func asObjectArray(_ raw: Any?) -> [[String: Any]] {
@@ -214,6 +459,19 @@ enum KenosCrashDiagnosticParser {
         return ""
     }
 
+    private static func intValue(_ raw: Any?) -> Int {
+        if let n = raw as? Int { return n }
+        if let n = raw as? NSNumber { return n.intValue }
+        if let s = string(raw), let n = Int(s) { return n }
+        return -1
+    }
+
+    private static func bool(_ raw: Any?) -> Bool {
+        if let b = raw as? Bool { return b }
+        if let n = raw as? NSNumber { return n.boolValue }
+        return false
+    }
+
     private static func date(from raw: Any?) -> Date? {
         if let d = raw as? Date { return d }
         if let s = string(raw) {
@@ -238,22 +496,6 @@ enum KenosCrashDiagnosticParser {
         return nil
     }
 
-    private static func compactJSON(_ object: [String: Any]) -> String {
-        var slim = object
-        // Drop bulky trees; keep enough for triage.
-        slim.removeValue(forKey: "callStackTree")
-        slim.removeValue(forKey: "diagnosticMetaData")
-        guard let data = try? JSONSerialization.data(withJSONObject: slim, options: [.sortedKeys]),
-              var text = String(data: data, encoding: .utf8)
-        else {
-            return String(String(describing: object).prefix(800))
-        }
-        if text.count > 1_200 {
-            text = String(text.prefix(1_200)) + "…«truncated»"
-        }
-        return text
-    }
-
     private static func stableHash(_ raw: String) -> String {
         var hash: UInt64 = 5381
         for byte in raw.utf8 {
@@ -263,6 +505,11 @@ enum KenosCrashDiagnosticParser {
     }
 }
 
+private extension String {
+    func ifEmpty(_ other: String) -> String { isEmpty ? other : self }
+    var nilIfEmpty: String? { isEmpty ? nil : self }
+}
+
 /// Detects previous process death without a clean `willTerminate`.
 enum KenosSessionWatchdog {
     private static let dirtyKey = "kenos.session.dirty"
@@ -270,20 +517,29 @@ enum KenosSessionWatchdog {
 
     static func recordLaunch() {
         let defaults = UserDefaults.standard
+        let previous = defaults.string(forKey: lastSessionKey) ?? ""
         if defaults.bool(forKey: dirtyKey) {
-            let previous = defaults.string(forKey: lastSessionKey) ?? ""
+            var meta: [String: String] = [
+                "kind": "unclean_exit",
+                "event": "unclean_exit",
+                "schema": "kenos.crash.v2",
+                "previousSessionId": previous,
+                "breadcrumb": "1",
+            ]
+            let ctx = KenosCrashContextStore.load()
+            meta.merge(KenosCrashContextStore.metadata(from: ctx)) { _, new in new }
             KenosLog.fault(
                 "previous session exited uncleanly",
                 category: .diagnostics,
-                metadata: [
-                    "kind": "unclean_exit",
-                    "previousSessionId": previous,
-                    "breadcrumb": "1",
-                ]
+                metadata: meta
             )
         }
         defaults.set(true, forKey: dirtyKey)
         defaults.set(KenosLog.shared.sessionId, forKey: lastSessionKey)
+        KenosCrashContextStore.noteLaunch(
+            sessionId: KenosLog.shared.sessionId,
+            build: KenosBugDeviceInfo.build
+        )
     }
 
     static func markCleanExit() {
@@ -385,22 +641,36 @@ final class KenosCrashReporter {
             "appVersion": summary.applicationVersion,
             "breadcrumb": "1",
         ]
+        if !summary.buildVersion.isEmpty { meta["buildVersion"] = summary.buildVersion }
+        if !summary.osVersion.isEmpty { meta["osVersion"] = summary.osVersion }
+        if !summary.deviceType.isEmpty { meta["deviceType"] = summary.deviceType }
         if !summary.signal.isEmpty { meta["signal"] = summary.signal }
+        if !summary.signalName.isEmpty { meta["signalName"] = summary.signalName }
         if !summary.exceptionType.isEmpty { meta["exceptionType"] = summary.exceptionType }
+        if !summary.exceptionName.isEmpty { meta["exceptionName"] = summary.exceptionName }
         if !summary.exceptionCode.isEmpty { meta["exceptionCode"] = summary.exceptionCode }
         if !summary.terminationReason.isEmpty { meta["terminationReason"] = summary.terminationReason }
+        if !summary.crashedBinary.isEmpty { meta["crashedBinary"] = summary.crashedBinary }
+        if !summary.topFrames.isEmpty {
+            meta["topFrames"] = String(summary.topFrames.prefix(700))
+        }
+        // Stable event key for SQL views / release-health queries.
+        meta["event"] = "metrickit_\(summary.kind)"
+        meta["schema"] = "kenos.crash.v2"
         if let begin = summary.timeStampBegin {
             meta["begin"] = KenosLogFormatting.iso8601(begin)
         }
         if let end = summary.timeStampEnd {
             meta["end"] = KenosLogFormatting.iso8601(end)
         }
-        meta["detail"] = String(summary.summaryText.prefix(400))
+        // Correlate with last Continuity / space trail from the death context.
+        meta.merge(KenosCrashContextStore.metadata(from: KenosCrashContextStore.load())) { cur, _ in cur }
+        meta["detail"] = String(summary.summaryText.prefix(500))
 
         if summary.isSevere {
-            KenosLog.fault("MetricKit \(summary.kind)", category: .diagnostics, metadata: meta)
+            KenosLog.fault(summary.logHeadline, category: .diagnostics, metadata: meta)
         } else {
-            KenosLog.warning("MetricKit \(summary.kind)", category: .diagnostics, metadata: meta)
+            KenosLog.warning(summary.logHeadline, category: .diagnostics, metadata: meta)
         }
     }
 
@@ -418,7 +688,6 @@ final class KenosCrashReporter {
     private func flushPending(reason: String) async {
         let files = pendingFiles()
         guard !files.isEmpty else {
-            // Still push any fault/error logs already written.
             _ = await KenosLogCloudSync.shared.uploadPending(reason: "crash-\(reason)")
             return
         }
@@ -471,7 +740,6 @@ final class KenosCrashReporter {
                         ]
                     )
                 case .local(let dir):
-                    // Keep pending so a later signed-in session can still push remote.
                     KenosLog.warning(
                         "auto crash report saved locally — will retry remote",
                         category: .diagnostics,
@@ -502,34 +770,57 @@ final class KenosCrashReporter {
 
     private func makeDraft(from summary: KenosCrashDiagnosticSummary) -> KenosBugReportDraft {
         let now = ISO8601DateFormatter().string(from: summary.receivedAt)
-        let notes = [
+        let ctx = KenosCrashContextStore.load()
+        let ctxLines: [String] = {
+            guard let ctx else { return ["deathContext: —"] }
+            return [
+                "deathContext:",
+                "  shell: \(ctx.shellMode.isEmpty ? "—" : ctx.shellMode)",
+                "  space: \(ctx.lastSpace.isEmpty ? "—" : ctx.lastSpace)",
+                "  domain: \(ctx.continuitySummary.isEmpty ? "—" : ctx.continuitySummary)",
+                "  nowPlaying: \(ctx.nowPlaying.isEmpty ? "—" : ctx.nowPlaying)",
+                "  build: \(ctx.build.isEmpty ? "—" : ctx.build)",
+                "  trail:",
+                ctx.trailSummary.isEmpty ? "    —" : ctx.breadcrumbs.suffix(10).map { "    - \($0)" }.joined(separator: "\n"),
+            ]
+        }()
+        let notes = ([
             "Auto-reported from MetricKit (no screenshot).",
             "kind: \(summary.kind)",
-            "signal: \(summary.signal.isEmpty ? "—" : summary.signal)",
-            "exceptionType: \(summary.exceptionType.isEmpty ? "—" : summary.exceptionType)",
+            "signal: \(summary.signalName.isEmpty ? (summary.signal.isEmpty ? "—" : summary.signal) : "\(summary.signalName) (\(summary.signal))")",
+            "exception: \(summary.exceptionName.isEmpty ? (summary.exceptionType.isEmpty ? "—" : summary.exceptionType) : "\(summary.exceptionName) (\(summary.exceptionType))")",
             "exceptionCode: \(summary.exceptionCode.isEmpty ? "—" : summary.exceptionCode)",
             "terminationReason: \(summary.terminationReason.isEmpty ? "—" : summary.terminationReason)",
             "applicationVersion: \(summary.applicationVersion.isEmpty ? "—" : summary.applicationVersion)",
+            "buildVersion: \(summary.buildVersion.isEmpty ? "—" : summary.buildVersion)",
+            "osVersion: \(summary.osVersion.isEmpty ? "—" : summary.osVersion)",
+            "deviceType: \(summary.deviceType.isEmpty ? "—" : summary.deviceType)",
+            "crashedBinary: \(summary.crashedBinary.isEmpty ? "—" : summary.crashedBinary)",
             "fingerprint: \(summary.fingerprint)",
+            "",
+        ] + ctxLines + [
+            "",
+            "topFrames:",
+            summary.topFrames.isEmpty ? "  —" : summary.topFrames,
             "",
             "summary:",
             summary.summaryText,
-        ].joined(separator: "\n")
+        ]).joined(separator: "\n")
 
         let diagnostics = KenosBugDiagnostics(
             app: "kenos",
             route: "metrickit/\(summary.kind)",
-            pageTitle: "MetricKit \(summary.kind)",
+            pageTitle: summary.logHeadline,
             heading: summary.bugTitle,
-            href: "",
+            href: ctx?.continuitySummary ?? "",
             tab: "diagnostics",
-            domainLabel: "",
+            domainLabel: ctx?.domainId ?? "",
             viewportWidth: Int(UIScreen.main.bounds.width.rounded()),
             viewportHeight: Int(UIScreen.main.bounds.height.rounded()),
             devicePixelRatio: UIScreen.main.scale,
             userAgent: "kenos-ios-metrickit",
             timestamp: now,
-            shellMode: "kenos",
+            shellMode: ctx?.shellMode ?? "kenos",
             build: KenosBugDeviceInfo.build,
             marketingVersion: KenosBugDeviceInfo.marketingVersion,
             originHost: KenosDailyBetaConfig.kenOsOrigin.host ?? "",
@@ -538,9 +829,16 @@ final class KenosCrashReporter {
             authState: "auto",
             online: true,
             focusState: "off",
-            lastErrorClass: summary.kind,
+            lastErrorClass: [
+                summary.kind,
+                summary.signalName,
+                summary.exceptionName,
+                summary.crashedBinary,
+            ].filter { !$0.isEmpty }.joined(separator: "/"),
             screenshotBytes: 0,
-            consoleSummary: String(summary.summaryText.prefix(500)),
+            consoleSummary: String(
+                (summary.topFrames.isEmpty ? summary.summaryText : summary.topFrames).prefix(700)
+            ),
             webViewKind: "none",
             captureSource: "metrickit",
             captureMs: 0,
@@ -577,6 +875,9 @@ final class KenosCrashReporter {
             metadata: [
                 "kind": summary.kind,
                 "fingerprint": summary.fingerprint,
+                "signalName": summary.signalName,
+                "exceptionName": summary.exceptionName,
+                "crashedBinary": summary.crashedBinary,
                 "file": url.lastPathComponent,
             ]
         )

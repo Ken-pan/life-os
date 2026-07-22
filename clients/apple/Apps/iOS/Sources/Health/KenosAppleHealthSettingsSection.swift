@@ -8,7 +8,11 @@ struct KenosAppleHealthSettingsSection: View {
 
     var body: some View {
         Section {
-            if !syncer.available {
+            if !KenosHealthKitFeature.isEnabled {
+                Text("Apple Health is temporarily disabled in this build (signing / HealthKit entitlement).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if !syncer.available {
                 Text("HealthKit is unavailable on this device.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -20,11 +24,15 @@ struct KenosAppleHealthSettingsSection: View {
         } header: {
             Text("Apple Health")
         } footer: {
-            Text("On the system Health Access sheet, tap Turn On All then Allow. Core metrics power Health status; optional metrics re-prompt when enabled.")
+            Text(
+                KenosHealthKitFeature.isEnabled
+                    ? "On the system Health Access sheet, tap Turn On All then Allow. Core metrics power Health status; optional metrics re-prompt when enabled."
+                    : "Re-enable KenosHealthKitFeature + HealthKit entitlement when App ID provisioning is ready."
+            )
                 .font(KenosTypography.caption)
         }
 
-        if syncer.available {
+        if KenosHealthKitFeature.isEnabled, syncer.available {
             Section("Optional metrics") {
                 ForEach(KenosHealthMetricID.optional) { metric in
                     Toggle(isOn: Binding(

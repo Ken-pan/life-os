@@ -250,6 +250,10 @@ final class KenosHealthSyncer: ObservableObject {
     }
 
     static func registerBackgroundSync() {
+        guard KenosHealthKitFeature.isEnabled else {
+            KenosLog.debug("HealthKit disabled — skip background sync register", category: .health)
+            return
+        }
         BGTaskScheduler.shared.register(forTaskWithIdentifier: bgTaskID, using: nil) { task in
             handleBackground(task as! BGAppRefreshTask)
         }
@@ -257,6 +261,7 @@ final class KenosHealthSyncer: ObservableObject {
     }
 
     static func scheduleBackgroundSync() {
+        guard KenosHealthKitFeature.isEnabled else { return }
         let req = BGAppRefreshTaskRequest(identifier: bgTaskID)
         req.earliestBeginDate = Date(timeIntervalSinceNow: 2 * 3600)
         try? BGTaskScheduler.shared.submit(req)

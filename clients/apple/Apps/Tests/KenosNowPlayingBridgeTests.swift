@@ -1,5 +1,7 @@
 import XCTest
 #if canImport(UIKit)
+import MediaPlayer
+import UIKit
 @testable import KenosIOS
 #endif
 
@@ -62,6 +64,25 @@ final class KenosNowPlayingBridgeTests: XCTestCase {
         ])
         XCTAssertTrue(KenosNowPlayingBridge.hasLiveTrack)
         XCTAssertEqual(KenosNowPlayingBridge.liveAccessoryTitle, "BigArt")
+    }
+
+    /// Regression: Music Continuity crashed when MediaPlayer invoked the
+    /// artwork request handler off-main (EXC_BREAKPOINT in decodeArtwork).
+    func testArtworkRequestHandlerSafeOffMainActor() async {
+        // 2×2 PNG (width/height > 1 — decoder rejects 1×1 placeholders)
+        let png =
+            "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEUlEQVR4nGP4z8DwH4QZYAwAR8oH+WdZbrcAAAAASUVORK5CYII="
+        let art = KenosNowPlayingBridge.testingMakeArtwork(
+            fromBase64: "data:image/png;base64,\(png)"
+        )
+        XCTAssertNotNil(art, "artwork decode should succeed for tiny PNG covers")
+        let image = await withCheckedContinuation { (cont: CheckedContinuation<UIImage?, Never>) in
+            DispatchQueue.global(qos: .userInitiated).async {
+                // Same path as MediaPlayer `*/accessQueue` — must not trap.
+                cont.resume(returning: art?.image(at: CGSize(width: 64, height: 64)))
+            }
+        }
+        XCTAssertNotNil(image)
     }
 }
 #endif

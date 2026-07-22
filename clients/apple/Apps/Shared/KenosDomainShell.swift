@@ -29,7 +29,8 @@ struct KenosDomainModeShell: View {
     @State private var openDragX: CGFloat = 0
     @State private var dismissDragX: CGFloat = 0
     @State private var shelfProgress: CGFloat = 0
-    @State private var domainUnreachable = false
+    @State private var domainHardUnreachable = false
+    @State private var domainSyncPaused = false
     @State private var domainDidPaint = false
     @State private var domainProbeError: String?
     @State private var domainSurfaceEpoch = 0
@@ -238,74 +239,32 @@ struct KenosDomainModeShell: View {
         }
     }
 
+    private var domainProbeContext: KenosOfflineShellPolicy.ProbeContext {
+        KenosOfflineShellPolicy.ProbeContext(
+            didPaint: domainDidPaint,
+            originHost: model.continuityURL?.host,
+            isLanDependent: KenosDailyBetaConfig.isLanDependentOrigin,
+            useProductionOverride: KenosDailyBetaConfig.useProductionOverride
+        )
+    }
+
+    private var showsDomainUseProduction: Bool {
+        KenosDailyBetaConfig.isConfiguredOriginLanDependent
+            && !KenosDailyBetaConfig.useProductionOverride
+    }
+
     /// Full-bleed WKWebView only — chrome (dock/shelf) is a sibling above this layer.
     private var domainWebCanvas: some View {
         ZStack {
             model.chromeAppearance.canvasColor
-            if domainUnreachable {
-                ContentUnavailableView {
-                    Label("\(model.domainDisplayTitle) unreachable", systemImage: "wifi.exclamationmark")
-                } description: {
-                    VStack(spacing: 8) {
-                        Text(
-                            KenosDailyBetaConfig.isLanDependentOrigin
-                                ? "Mac companion offline. Open Production (cellular) or start Daily Beta on the same Wi‑Fi."
-                                : "This Space origin did not respond. Check network, then Retry."
-                        )
-                        if let domainProbeError, !domainProbeError.isEmpty {
-                            Text(domainProbeError).font(.caption2)
-                        }
-                    }
-                } actions: {
-                    if KenosDailyBetaConfig.isConfiguredOriginLanDependent,
-                       !KenosDailyBetaConfig.useProductionOverride
-                    {
-                        Button("Use Production") {
-                            domainDidPaint = false
-                            domainProbeError = nil
-                            domainUnreachable = false
-                            if model.rewriteContinuityToProduction(reason: "domain_manual", force: true) {
-                                domainSurfaceEpoch &+= 1
-                            } else {
-                                domainUnreachable = true
-                            }
-                        }
-                        .accessibilityIdentifier("kenos.domain.useProduction")
-                    }
-                    Button("Retry") {
-                        if KenosDailyBetaConfig.useProductionOverride,
-                           KenosDailyBetaConfig.isConfiguredOriginLanDependent
-                        {
-                            KenosDailyBetaConfig.retryLanOrigin()
-                            if let live = model.continuityURL {
-                                let id = KenosDomainRegistry.domainId(fromContinuity: live)
-                                var path = live.path.isEmpty ? "/" : live.path
-                                if let query = live.query, !query.isEmpty { path += "?\(query)" }
-                                if let fragment = live.fragment, !fragment.isEmpty { path += "#\(fragment)" }
-                                if let lan = KenosDomainRegistry.continuityURL(for: id, path: path) {
-                                    model.continuityURL = lan
-                                    model.persistDomainContinuityPublic(lan)
-                                }
-                            }
-                        }
-                        if let url = model.continuityURL {
-                            KenosWebRuntime.domainReachableKeys.remove(
-                                KenosWebRuntime.originKey(for: url)
-                            )
-                        }
-                        domainDidPaint = false
-                        domainProbeError = nil
-                        domainUnreachable = false
-                        domainSurfaceEpoch &+= 1
-                    }
-                    Button("Back to Kenos") {
-                        model.dismissContinuity()
-                    }
-                }
-            } else if let url = model.continuityURL {
+            if !domainHardUnreachable, let url = model.continuityURL {
                 KenosWebSurfaceView(
                     url: url,
-                    onTitle: { _ in domainDidPaint = true },
+                    onTitle: { _ in
+                        domainDidPaint = true
+                        domainSyncPaused = false
+                        domainHardUnreachable = false
+                    },
                     stayInApp: true,
                     onCanGoBackChange: { webCanGoBack = $0 },
                     onURLChange: { live in
@@ -327,8 +286,47 @@ struct KenosDomainModeShell: View {
                 .id(domainSurfaceEpoch)
             }
 
+            if domainHardUnreachable {
+                ContentUnavailableView {
+                    Label("\(model.domainDisplayTitle) unreachable", systemImage: "wifi.exclamationmark")
+                } description: {
+                    VStack(spacing: 8) {
+                        Text(
+                            KenosOfflineShellPolicy.hardGateDomainDetail(
+                                isLanDependent: KenosDailyBetaConfig.isLanDependentOrigin
+                            )
+                        )
+                        if let domainProbeError, !domainProbeError.isEmpty {
+                            Text(domainProbeError).font(.caption2)
+                        }
+                    }
+                } actions: {
+                    if showsDomainUseProduction {
+                        Button("Use Production", action: activateProductionFromDomain)
+                            .accessibilityIdentifier("kenos.domain.useProduction")
+                    }
+                    Button("Retry", action: retryDomainOrigin)
+                    Button("Back to Kenos") {
+                        model.dismissContinuity()
+                    }
+                }
+            }
+
+            if domainSyncPaused, !domainHardUnreachable {
+                KenosShellSyncStatusBanner(
+                    message: KenosOfflineShellPolicy.domainUnreachableDetail(
+                        isLanDependent: KenosDailyBetaConfig.isLanDependentOrigin
+                    ),
+                    errorDetail: domainProbeError,
+                    showsUseProduction: showsDomainUseProduction,
+                    useProductionIdentifier: "kenos.domain.useProduction",
+                    onUseProduction: activateProductionFromDomain,
+                    onRetry: retryDomainOrigin
+                )
+            }
+
             // Keep load hairline while editing (dock hidden); hide only on true immersive.
-            if isActive, !isWebFocusSurface, !domainUnreachable {
+            if isActive, !isWebFocusSurface, !domainHardUnreachable {
                 VStack {
                     KenosLoadProgressBar(
                         progress: loadProgress,
@@ -344,13 +342,15 @@ struct KenosDomainModeShell: View {
         .ignoresSafeArea()
         .task(id: model.continuityURL?.absoluteString ?? "") {
             domainDidPaint = false
-            domainUnreachable = false
+            domainHardUnreachable = false
+            domainSyncPaused = false
             domainProbeError = nil
             await probeDomainInBackground()
         }
         .onReceive(NotificationCenter.default.publisher(for: .kenosDailyBetaOriginDidChange)) { _ in
             domainDidPaint = false
-            domainUnreachable = false
+            domainHardUnreachable = false
+            domainSyncPaused = false
             domainProbeError = nil
             domainSurfaceEpoch &+= 1
         }
@@ -358,6 +358,46 @@ struct KenosDomainModeShell: View {
             domainDidPaint = false
             domainSurfaceEpoch &+= 1
         }
+    }
+
+    private func activateProductionFromDomain() {
+        domainDidPaint = false
+        domainProbeError = nil
+        domainSyncPaused = false
+        domainHardUnreachable = false
+        if model.rewriteContinuityToProduction(reason: "domain_manual", force: true) {
+            domainSurfaceEpoch &+= 1
+        } else {
+            domainHardUnreachable = true
+        }
+    }
+
+    private func retryDomainOrigin() {
+        if KenosDailyBetaConfig.useProductionOverride,
+           KenosDailyBetaConfig.isConfiguredOriginLanDependent
+        {
+            KenosDailyBetaConfig.retryLanOrigin()
+            if let live = model.continuityURL {
+                let id = KenosDomainRegistry.domainId(fromContinuity: live)
+                var path = live.path.isEmpty ? "/" : live.path
+                if let query = live.query, !query.isEmpty { path += "?\(query)" }
+                if let fragment = live.fragment, !fragment.isEmpty { path += "#\(fragment)" }
+                if let lan = KenosDomainRegistry.continuityURL(for: id, path: path) {
+                    model.continuityURL = lan
+                    model.persistDomainContinuityPublic(lan)
+                }
+            }
+        }
+        if let url = model.continuityURL {
+            KenosWebRuntime.domainReachableKeys.remove(
+                KenosWebRuntime.originKey(for: url)
+            )
+        }
+        domainDidPaint = false
+        domainProbeError = nil
+        domainSyncPaused = false
+        domainHardUnreachable = false
+        domainSurfaceEpoch &+= 1
     }
 
     /// Soft health check for Domain Continuity — never steals a canvas that already painted.
@@ -386,6 +426,9 @@ struct KenosDomainModeShell: View {
             if ok {
                 await MainActor.run {
                     KenosWebRuntime.domainReachableKeys.insert(key)
+                    domainSyncPaused = false
+                    domainHardUnreachable = false
+                    domainProbeError = nil
                 }
             } else {
                 await markDomainUnreachableOrFallback(error: "health status \(code)")
@@ -400,6 +443,9 @@ struct KenosDomainModeShell: View {
                 if (200..<500).contains(code) || code == 0 {
                     await MainActor.run {
                         KenosWebRuntime.domainReachableKeys.insert(key)
+                        domainSyncPaused = false
+                        domainHardUnreachable = false
+                        domainProbeError = nil
                     }
                 } else {
                     await markDomainUnreachableOrFallback(error: "root status \(code)")
@@ -439,7 +485,8 @@ struct KenosDomainModeShell: View {
                         model.persistDomainContinuityPublic(lan)
                     }
                 }
-                domainUnreachable = false
+                domainHardUnreachable = false
+                domainSyncPaused = false
                 domainProbeError = nil
                 domainSurfaceEpoch &+= 1
             }
@@ -457,17 +504,28 @@ struct KenosDomainModeShell: View {
                     model.continuityURL = next
                     model.persistDomainContinuityPublic(next)
                     model.syncDomainDockSlot(for: next)
-                    domainUnreachable = false
+                    domainHardUnreachable = false
+                    domainSyncPaused = false
                     domainProbeError = nil
                     domainSurfaceEpoch &+= 1
                     return
                 }
-                domainUnreachable = true
+                domainHardUnreachable = true
+                domainSyncPaused = false
             }
             return
         }
 
-        await MainActor.run { domainUnreachable = true }
+        let ctx = await MainActor.run { domainProbeContext }
+        await MainActor.run {
+            if KenosOfflineShellPolicy.shouldUseHardUnavailableGate(ctx) {
+                domainHardUnreachable = true
+                domainSyncPaused = false
+            } else {
+                domainSyncPaused = true
+                domainHardUnreachable = false
+            }
+        }
     }
 
 }

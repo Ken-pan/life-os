@@ -351,13 +351,128 @@ final class KenosBugReportTests: XCTestCase {
         XCTAssertEqual(model.screenshotChromeContext(), "focus")
     }
 
-    func testPassthroughWindowPassesRootViewHits() {
+    func testPassthroughWindowPassesHitsOutsideCardFrame() {
+        KenosPassthroughWindow.interactiveFrameInWindow = CGRect(x: 20, y: 300, width: 160, height: 90)
+        defer { KenosPassthroughWindow.interactiveFrameInWindow = .null }
         let window = KenosPassthroughWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 400))
         let root = UIViewController()
         let host = UIView(frame: window.bounds)
         root.view = host
         window.rootViewController = root
+        // Outside the card — must pass through even if a full-bleed host sits under the point.
         XCTAssertNil(window.hitTest(CGPoint(x: 10, y: 10), with: nil))
+    }
+
+    func testPassthroughHitPolicyUsesCardFrameNotHitViewSize() {
+        let bounds = CGRect(x: 0, y: 0, width: 200, height: 400)
+        let card = CGRect(x: 20, y: 300, width: 160, height: 90)
+        let control = UIView(frame: CGRect(x: 24, y: 320, width: 152, height: 44))
+        let fullBleed = UIView(frame: bounds)
+        let root = UIView(frame: bounds)
+        // Point on the CTA with a known frame — deliver.
+        XCTAssertTrue(
+            KenosPassthroughWindow.shouldDeliverHit(
+                at: CGPoint(x: 100, y: 360),
+                interactiveFrame: card,
+                hit: control,
+                root: root,
+                windowBounds: bounds
+            )
+        )
+        // Point above the card — pass through (Settings / app keep receiving taps).
+        XCTAssertFalse(
+            KenosPassthroughWindow.shouldDeliverHit(
+                at: CGPoint(x: 100, y: 40),
+                interactiveFrame: card,
+                hit: fullBleed,
+                root: root,
+                windowBounds: bounds
+            )
+        )
+        // Frame not ready yet — keep compact controls so the first tap still works.
+        XCTAssertTrue(
+            KenosPassthroughWindow.shouldDeliverHit(
+                at: CGPoint(x: 100, y: 360),
+                interactiveFrame: .null,
+                hit: control,
+                root: root,
+                windowBounds: bounds
+            )
+        )
+        // Frame not ready + full-bleed host — still pass through empty chrome.
+        XCTAssertFalse(
+            KenosPassthroughWindow.shouldDeliverHit(
+                at: CGPoint(x: 10, y: 10),
+                interactiveFrame: .null,
+                hit: fullBleed,
+                root: root,
+                windowBounds: bounds
+            )
+        )
+    }
+
+    func testConfirmScreenshotBugReportDismissesPromptBeforeSheet() {
+        let model = KenosAppModel()
+        model.focusStore.logoutClear()
+        model.bugReportDraft = KenosBugReportDraft(
+            id: UUID(),
+            title: "Tap miss",
+            notes: "",
+            severity: .medium,
+            screenshotJPEG: nil,
+            diagnostics: sampleDiagnostics(route: "/", pageTitle: "", heading: ""),
+            capturedAt: Date()
+        )
+        model.showScreenshotBugPrompt = true
+        model.confirmScreenshotBugReport()
+        XCTAssertFalse(model.showScreenshotBugPrompt)
+        XCTAssertTrue(model.showBugReportSheet)
+    }
+
+    @MainActor
+    func testPromptPresenterPublishesCardFrameAndClaimsCTAHit() async {
+        let model = KenosAppModel()
+        model.focusStore.logoutClear()
+        model.bugReportDraft = KenosBugReportDraft(
+            id: UUID(),
+            title: "Frame hit",
+            notes: "",
+            severity: .medium,
+            screenshotJPEG: nil,
+            diagnostics: sampleDiagnostics(route: "/", pageTitle: "", heading: ""),
+            capturedAt: Date()
+        )
+        model.showScreenshotBugPrompt = true
+        KenosScreenshotBugPromptPresenter.sync(model: model)
+        defer {
+            model.showScreenshotBugPrompt = false
+            KenosScreenshotBugPromptPresenter.dismiss()
+        }
+
+        var frame = CGRect.null
+        for _ in 0..<40 {
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 25_000_000)
+            frame = KenosPassthroughWindow.interactiveFrameInWindow
+            if frame.isNull == false, frame.isEmpty == false { break }
+        }
+        XCTAssertFalse(frame.isNull || frame.isEmpty, "prompt card should publish a hit frame")
+
+        let scene = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first
+        let window = scene?.windows.first(where: { $0 is KenosPassthroughWindow }) as? KenosPassthroughWindow
+        XCTAssertNotNil(window, "elevated passthrough window should be presented")
+        // CTA sits in the lower portion of the glass card.
+        let cta = CGPoint(x: frame.midX, y: frame.maxY - 18)
+        XCTAssertTrue(
+            KenosPassthroughWindow.shouldClaimPoint(cta, interactiveFrame: frame)
+        )
+        if let window {
+            XCTAssertNotNil(window.hitTest(cta, with: nil), "CTA point must resolve to a view")
+            // Above the card must still pass through.
+            XCTAssertNil(window.hitTest(CGPoint(x: frame.midX, y: 24), with: nil))
+        }
     }
 
     func testSubmitRequiresTitle() async {

@@ -6,7 +6,7 @@ import KenosDesign
 /// Global dock — **Spaces Orb** (identity) + **destination capsule** (location).
 ///
 /// Visual hierarchy (locked):
-/// - Orb = Space identity — neutral Glass, accent **icon only**, no accent plate
+/// - Orb = Space identity — fully neutral Glass + icon (not a selected tab; no accent)
 /// - Selected tab = destination — accent icon + soft selection plate + label (primary weight)
 /// - Shelf open: Orb may densify / morph to close; capsule hides
 ///
@@ -58,7 +58,7 @@ struct KenosGlobalDock: View {
         static let tipSwipeMinDistance: CGFloat = 10
     }
 
-    /// On-glass Space accent — Orb icon + selected-tab chrome (not Orb glass fill).
+    /// On-glass Space accent — selected destination chrome only (Orb stays neutral).
     private var selectionTint: Color { model.dockSelectionAccent }
 
     private var selectionPlateOpacity: Double {
@@ -163,7 +163,7 @@ struct KenosGlobalDock: View {
     }
 
     /// Circular Spaces control — Space **identity**, not a second selected tab.
-    /// Closed: clear Glass + accent icon. Open: same Orb morphs to chevron.left (primary close).
+    /// Closed: clear Glass + neutral icon (same weight as idle capsule). Open: morphs to close.
     private var spacesOrb: some View {
         Button {
             // Chrome owns Shelf spring; Orb morph follows `spacesShelfOpen` + shelfAnimation.
@@ -175,7 +175,7 @@ struct KenosGlobalDock: View {
                 .foregroundStyle(
                     spacesShelfOpen
                         ? AnyShapeStyle(Color.primary.opacity(0.94))
-                        : AnyShapeStyle(selectionTint)
+                        : AnyShapeStyle(Color.secondary)
                 )
                 .frame(width: Metrics.orbSize, height: Metrics.orbSize)
                 .background {
@@ -187,7 +187,7 @@ struct KenosGlobalDock: View {
                                 : Color.black.opacity(reduceTransparency ? 0.72 : 0.55))
                             .accessibilityHidden(true)
                         Circle()
-                            .fill(selectionTint.opacity(orbShelfFillOpacity))
+                            .fill(Color.primary.opacity(orbShelfFillOpacity * 0.45))
                             .accessibilityHidden(true)
                     }
                 }
@@ -369,7 +369,7 @@ struct KenosGlobalDock: View {
         case "Workout", "Training": return "训练"
         case "History": return "历史"
         case "Focus": return "专注"
-        case "Ask", "Assistant": return "助手"
+        case "Ask", "Assistant": return "问答"
         case "Settings": return "设置"
         case "Home": return "家"
         case "Search": return "搜索"

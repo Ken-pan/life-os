@@ -1,3 +1,4 @@
+import AppKit
 import Combine
 import SwiftUI
 
@@ -7,8 +8,18 @@ struct KenosMacApp: App {
     @StateObject private var menuBar = MenuBarCaptureController()
 
     var body: some Scene {
-        WindowGroup {
+        // Single main window (MAC-P0-06): prefer/allow "*" so an open scene
+        // always claims kenos:// URLs. Empty sets never match (Apple docs) and
+        // caused LaunchServices to spawn duplicate windows on every open.
+        Window("Kenos", id: "main") {
+            // Owner Device Lock (Touch ID → exchange → SSO) is owned solely by
+            // KenosRootView → AppModel.unlockShellAndHydrate — do not prompt here.
             KenosRootView(model: model)
+                .handlesExternalEvents(preferring: ["*"], allowing: ["*"])
+                .background(MacSettingsOpener())
+                .onAppear {
+                    NSWindow.allowsAutomaticWindowTabbing = false
+                }
         }
         .defaultSize(width: 1180, height: 760)
         .commands {
@@ -41,14 +52,20 @@ struct KenosMacApp: App {
                 Button("Money") { model.selectMacSidebar(.domain("money")) }
                 Button("Approvals") { model.open(.approvals) }
                 Button("Capture") { model.openCapture() }
-                Button("Settings") { model.selectMacSidebar(.settings) }
-                    .keyboardShortcut(",", modifiers: [.command])
+                // ⌘, is owned by the Settings scene below (system convention).
+                Button("Settings…") { model.presentSettings() }
                 Divider()
                 Button("Start Training Focus") { model.startTrainingFocus() }
                 Button("Start Deep Work Focus") { model.startDeepWorkFocus() }
                 Button("End Focus") { model.endFocus() }
                     .disabled(!model.focusStore.isForeground && !model.focusStore.showCompletedSummary)
             }
+        }
+
+        // MAC-P1-02: system Settings window (⌘,) — not a sidebar page.
+        Settings {
+            DailyBetaSettingsView(model: model)
+                .frame(minWidth: 480, idealWidth: 520, minHeight: 420, idealHeight: 560)
         }
 
         MenuBarExtra(menuBarTitle, systemImage: menuBarSystemImage) {
@@ -164,3 +181,18 @@ struct KenosMacApp: App {
 final class MenuBarCaptureController: ObservableObject {
     @Published var draft = ""
 }
+
+/// Bridges `model.presentSettings()` → system Settings scene (⌘,).
+private struct MacSettingsOpener: View {
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Color.clear
+            .frame(width: 0, height: 0)
+            .accessibilityHidden(true)
+            .onReceive(NotificationCenter.default.publisher(for: .kenosOpenMacSettings)) { _ in
+                openSettings()
+            }
+    }
+}
+

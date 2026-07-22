@@ -7,7 +7,9 @@ import HealthKit
 final class KenosHealthKitReader {
     private let store = HKHealthStore()
 
-    static var isAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
+    static var isAvailable: Bool {
+        KenosHealthKitFeature.isEnabled && HKHealthStore.isHealthDataAvailable()
+    }
 
     func requestAuthorization(for metrics: Set<KenosHealthMetricID>) async throws {
         guard Self.isAvailable else {

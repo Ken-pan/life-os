@@ -18,7 +18,9 @@ struct KenosRootView: View {
 
     var body: some View {
         Group {
-            if model.focusStore.showCompletedSummary {
+            if !model.shellUnlocked {
+                KenosShellUnlockGate(model: model)
+            } else if model.focusStore.showCompletedSummary {
                 NavigationStack {
                     FocusSummaryView(model: model)
                 }
@@ -97,6 +99,22 @@ struct KenosRootView: View {
                         }
                     }
             }
+            #if os(macOS)
+            .frame(minWidth: 420, idealWidth: 480, minHeight: 360, idealHeight: 420)
+            #endif
+        }
+        .sheet(isPresented: $model.showApprovalsSheet) {
+            NavigationStack {
+                ApprovalsView(model: model)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Close") { model.showApprovalsSheet = false }
+                        }
+                    }
+            }
+            #if os(macOS)
+            .frame(minWidth: 420, idealWidth: 520, minHeight: 420, idealHeight: 560)
+            #endif
         }
         .sheet(isPresented: $model.showSpaceSwitcher) {
             SpaceSwitcherSheet(model: model)
@@ -125,6 +143,11 @@ struct KenosRootView: View {
         .onChange(of: model.showScreenshotBugPrompt) { _, _ in
             KenosScreenshotBugPromptPresenter.sync(model: model)
         }
+        .onChange(of: model.showBugReportSheet) { _, open in
+            // Full sheet lives in the key window; never leave alert+1 overlay above it.
+            if open { KenosScreenshotBugPromptPresenter.dismiss() }
+            else { KenosScreenshotBugPromptPresenter.sync(model: model) }
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.userDidTakeScreenshotNotification)) { _ in
             guard scenePhase == .active else { return }
             Task { @MainActor in
@@ -136,6 +159,8 @@ struct KenosRootView: View {
                 KenosScreenshotBugPromptPresenter.sync(model: model)
                 KenosWebRuntime.recoverAfterForeground()
                 model.consumeWidgetPendingDeepLink()
+                // TTL expiry → show gate again; live grant → restore shellUnlocked.
+                model.reconcileShellUnlockOnForeground()
             } else if model.showScreenshotBugPrompt {
                 // Leaving foreground cancels the quiet offer so it cannot block the next screenshot.
                 model.dismissScreenshotBugPrompt()
@@ -148,7 +173,21 @@ struct KenosRootView: View {
             KenosScreenshotBugPromptPresenter.dismiss()
         }
         #endif
-        .task { await model.bootstrap() }
+        // Unlock prompt lives on KenosShellUnlockGate only — a RootView `.task` here
+        // restarts when the gate unmounts and used to stack a second Face ID / bootstrap.
+        .onChange(of: model.shellUnlocked) { _, unlocked in
+            guard unlocked else { return }
+            Task { @MainActor in
+                await model.bootstrapIfNeeded()
+            }
+        }
+        .task {
+            // Cached grant (same process) — skip gate flash and hydrate immediately.
+            if KenosUnlockGrantStore.isShellUnlocked() {
+                _ = await model.unlockShellAndHydrate(prompt: false)
+                await model.bootstrapIfNeeded()
+            }
+        }
         .onOpenURL { url in
             model.open(urlString: url.absoluteString)
         }
@@ -188,7 +227,12 @@ struct KenosRootView: View {
                 KenosDailyBetaSurface(
                     path: model.dailyBetaPath(for: model.selectedTab == .settings ? .today : model.selectedTab),
                     isActive: model.shellMode != .domain,
-                    accessoryBottomPadPx: model.liveAccessoryWebBottomExtraPx
+                    accessoryBottomPadPx: model.hideGlobalDockForAssistantConversation
+                        ? 0
+                        : model.liveAccessoryWebBottomExtraPx,
+                    chrome: model.hideGlobalDockForAssistantConversation
+                        ? .kenosConversation
+                        : .kenosTabs
                 )
             } else {
                 kenosTabSurface(model.selectedTab == .settings ? .today : model.selectedTab)
@@ -338,7 +382,7 @@ struct KenosRootView: View {
 
     #if os(macOS)
     private var macSidebar: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $model.macSplitVisibility) {
             List(selection: Binding(
                 get: { Optional(model.macSidebarSelection) },
                 set: { if let value = $0 { model.selectMacSidebar(value) } }
@@ -383,7 +427,8 @@ struct KenosRootView: View {
                 macDetail
             }
         }
-        .navigationSplitViewStyle(.balanced)
+        // MAC-P2-02: prominentDetail avoids the empty middle column .balanced leaves.
+        .navigationSplitViewStyle(.prominentDetail)
         .frame(minWidth: 960, minHeight: 640)
         .onReceive(NotificationCenter.default.publisher(for: .kenosOpenDomainContinuity)) { note in
             guard let url = note.object as? URL else { return }
@@ -562,15 +607,30 @@ private struct KenosShellWithSpaceShelf<Content: View>: View {
 
                 // Dock above Shelf — Orb morphs to close; capsule hides inside GlobalDock.
                 // Hidden while Settings modal is up (Done is the only exit).
-                if !model.showSettingsSheet {
+                // Ask active conversation also hides dock (web liveState=conversation).
+                if !model.showSettingsSheet, !model.hideGlobalDockForAssistantConversation {
                     KenosBottomChromeBar(model: model)
                         // Match content: 1:1 while dragging; spring only on settle.
                         .animation(isDraggingShelf ? nil : openAnimation, value: shelfProgress)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                         .zIndex(5)
+                        .transition(
+                            reduceMotion
+                                ? .opacity
+                                : .move(edge: .bottom).combined(with: .opacity)
+                        )
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .animation(
+                KenosMotion.page(reduceMotion: reduceMotion),
+                value: model.hideGlobalDockForAssistantConversation
+            )
+            .onChange(of: model.hideGlobalDockForAssistantConversation) { _, hidden in
+                if hidden {
+                    model.dismissSpaceShelf()
+                }
+            }
             .sheet(isPresented: $model.showDomainMoreSheet) {
                 KenosDomainMoreSheet(model: model)
             }
@@ -926,7 +986,7 @@ struct TodayView: View {
             ToolbarItem(placement: .primaryAction) {
                 Button("Capture", systemImage: "plus") { model.openCapture() }
             }
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .automatic) {
                 Button("Settings", systemImage: "person.crop.circle") {
                     model.presentSettings()
                 }
@@ -1043,9 +1103,11 @@ struct SpacesHubView: View {
 
     private func meta(for entry: KenosAppModel.SpaceCatalogEntry) -> String {
         switch entry.kind {
-        case .hosted: return "hosted"
-        case .external: return "external"
-        case .comingSoon: return "coming soon"
+        case .hosted, .external:
+            // MAC-P1-01: Continuity opens in-app — never badge as "external".
+            return ""
+        case .comingSoon:
+            return "coming soon"
         }
     }
 }
@@ -1207,11 +1269,28 @@ struct SpaceSwitcherSheet: View {
                 }
             }
         }
+        #if os(macOS)
+        // MAC-P2-01: sidebar owns one-click Space switch; shelf is search / pin / recent.
+        if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            Section {
+                Text("Use the sidebar to open a Space. Pin favorites here, or search by name.")
+                    .font(KenosTypography.caption)
+                    .foregroundStyle(.secondary)
+            }
+        } else {
+            Section("Matches") {
+                ForEach(filteredCatalog) { entry in
+                    spaceRowWithPin(entry, meta: meta(for: entry))
+                }
+            }
+        }
+        #else
         Section("All Domains") {
             ForEach(filteredCatalog) { entry in
                 spaceRowWithPin(entry, meta: meta(for: entry))
             }
         }
+        #endif
     }
 
     @ViewBuilder
@@ -1334,9 +1413,11 @@ struct SpaceSwitcherSheet: View {
 
     private func meta(for entry: KenosAppModel.SpaceCatalogEntry) -> String {
         switch entry.kind {
-        case .hosted: return "hosted"
-        case .external: return "external"
-        case .comingSoon: return "coming soon"
+        case .hosted, .external:
+            // MAC-P1-01: Continuity opens in-app — never badge as "external".
+            return ""
+        case .comingSoon:
+            return "coming soon"
         }
     }
 }
@@ -1560,30 +1641,82 @@ struct ApprovalsView: View {
 
     var body: some View {
         List {
-            KenosStatusBanner(
-                title: "Approvals not fully enabled",
-                detail: "You can review requests; write actions stay off until enabled.",
-                tone: .warning
-            )
+            if !model.approvalsActionsEnabled {
+                KenosStatusBanner(
+                    title: "Review only for now",
+                    detail: "You can read pending requests. Approve / Reject stay off until write actions are enabled.",
+                    tone: .warning
+                )
+            }
             ForEach(model.repository.snapshot.approvals, id: \.id) { approval in
                 VStack(alignment: .leading, spacing: KenosSpacing.xs) {
                     KenosRow(
                         title: approval.safeSummary,
-                        subtitle: "\(approval.actionType) · \(approval.risk.rawValue) · \(approval.status.rawValue)",
-                        meta: "expires \(approval.expiresAt.rawValue)"
+                        subtitle: approvalHumanSubtitle(approval),
+                        meta: approvalExpiryMeta(approval.expiresAt.rawValue)
                     )
-                    HStack {
-                        Button("Approve") {}
-                            .disabled(!model.approvalsActionsEnabled)
-                        Button("Reject") {}
-                            .disabled(!model.approvalsActionsEnabled)
+                    if model.approvalsActionsEnabled {
+                        HStack {
+                            Button("Approve") {}
+                            Button("Reject") {}
+                        }
+                        .accessibilityIdentifier("kenos.approvals.actions")
+                    } else {
+                        Text("Details · \(approvalHumanAction(approval.actionType))")
+                            .font(KenosTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .accessibilityIdentifier("kenos.approvals.actions.disabled")
                     }
-                    .accessibilityIdentifier("kenos.approvals.actions.disabled")
                 }
             }
         }
         .navigationTitle("Approvals")
         .accessibilityIdentifier("kenos.approvals")
+    }
+
+    /// MAC-P1-08: hide slug · risk · ISO from the primary line.
+    private func approvalHumanSubtitle(_ approval: ApprovalRecord) -> String {
+        let risk = approvalRiskLabel(approval.risk)
+        let status = approval.status.rawValue.replacingOccurrences(of: "_", with: " ")
+        return "\(risk) · \(status)"
+    }
+
+    private func approvalHumanAction(_ actionType: String) -> String {
+        switch actionType {
+        case "plan.create_task": return "Create plan task"
+        case "plan.reschedule_task": return "Reschedule plan task"
+        case "plan.update_task": return "Update plan task"
+        case "plan.complete_task": return "Complete plan task"
+        case "capture.review": return "Review capture"
+        default:
+            let parts = actionType.split(separator: ".")
+            if parts.count == 2 {
+                let verb = parts[1].replacingOccurrences(of: "_", with: " ")
+                return verb.prefix(1).uppercased() + verb.dropFirst()
+            }
+            return actionType.replacingOccurrences(of: "_", with: " ")
+        }
+    }
+
+    private func approvalRiskLabel(_ risk: KenosRisk) -> String {
+        switch risk {
+        case .r0: return "Low risk"
+        case .r1: return "Review"
+        case .r2: return "Needs confirm"
+        case .r3: return "Strong confirm"
+        case .r4: return "Blocked"
+        }
+    }
+
+    private func approvalExpiryMeta(_ iso: String) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let date = formatter.date(from: iso)
+            ?? ISO8601DateFormatter().date(from: iso)
+        guard let date else { return "Expiry unknown" }
+        let rel = RelativeDateTimeFormatter()
+        rel.unitsStyle = .full
+        return "Expires \(rel.localizedString(for: date, relativeTo: Date()))"
     }
 }
 
@@ -1698,16 +1831,28 @@ struct CaptureView: View {
 
     var body: some View {
         Form {
-            Section("Quick Capture") {
-                TextField("Capture text", text: $model.captureText, axis: .vertical)
-                    .lineLimit(3...6)
-                    .accessibilityIdentifier("kenos.capture.input")
+            Section {
+                // MAC-P1-07: vertical label avoids macOS Form horizontal clip.
+                VStack(alignment: .leading, spacing: KenosSpacing.xs) {
+                    Text("Draft")
+                        .font(KenosTypography.caption)
+                        .foregroundStyle(.secondary)
+                    TextField("What's on your mind?", text: $model.captureText, axis: .vertical)
+                        .lineLimit(3...6)
+                        .accessibilityIdentifier("kenos.capture.input")
+                }
+                .padding(.vertical, 2)
                 Button("Save draft") {
                     model.submitCapture()
                     successPulse += 1
                 }
                 .disabled(model.captureText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 .accessibilityIdentifier("kenos.capture.submit")
+            } header: {
+                Text("Quick Capture")
+            } footer: {
+                Text("Saves a local draft only — does not create Task/Project/Decision or upload clipboard secrets.")
+                    .font(KenosTypography.caption)
             }
             if let draft = model.lastCapture {
                 Section("Review") {
@@ -1717,10 +1862,6 @@ struct CaptureView: View {
                         meta: "\(draft.queueStatus) · \(draft.correlationId.uuidString)"
                     )
                 }
-            }
-            Section("Note") {
-                Text("Does not auto-create Task/Project/Decision or upload clipboard secrets.")
-                    .font(KenosTypography.caption)
             }
         }
         .navigationTitle("Capture")
@@ -1788,13 +1929,33 @@ struct DailyBetaSettingsView: View {
                         .foregroundStyle(webSsoSignedIn ? .primary : .secondary)
                 }
                 .accessibilityIdentifier("kenos.settings.webSso")
+
+                LabeledContent(L("Device lock", "设备锁")) {
+                    Text(
+                        KenosDeviceIdentityStore.isPaired
+                            ? L("Paired — Face ID unlock", "已配对 — Face ID 解锁")
+                            : L("Not paired — sign in once", "未配对 — 登录一次以绑定")
+                    )
+                    .foregroundStyle(KenosDeviceIdentityStore.isPaired ? .primary : .secondary)
+                }
+                .accessibilityIdentifier("kenos.settings.deviceLock")
+
+                LabeledContent(L("Key storage", "密钥存储")) {
+                    Text(
+                        KenosDeviceIdentityStore.keyStorage == .secureEnclave
+                            ? L("Secure Enclave", "Secure Enclave")
+                            : L("Software Keychain", "软件钥匙串")
+                    )
+                    .foregroundStyle(.secondary)
+                }
+                .accessibilityIdentifier("kenos.settings.deviceKeyStorage")
             } header: {
                 Text(L("Account", "账户"))
             } footer: {
                 Text(
                     L(
-                        "Sign in to sync Today, Inbox, and Continuity spaces. Account signed-in is not the same as every surface synced.",
-                        "连接后可同步今日、收件箱与各空间。「已登录」不代表所有功能都已同步。"
+                        "Sign in once on this iPhone/Mac to pair. Later cold starts only need Face ID — browsers still require account login. Manage devices in Portal. Revoke requires a fresh login (15m).",
+                        "在本机 Kenos App 登录一次即可配对；之后冷启动只需 Face ID。浏览器仍需账号登录。可在 Portal 管理信任设备。撤销设备需 15 分钟内的新鲜登录。"
                     )
                 )
                 .font(KenosTypography.caption)
@@ -1867,11 +2028,13 @@ struct DailyBetaSettingsView: View {
                 ))
                 .accessibilityIdentifier("kenos.settings.askAfterScreenshot")
                 Button {
-                    Task {
+                    Task { @MainActor in
                         await model.beginBugReport(delayCapture: true)
                     }
                 } label: {
                     Label(L("Report a Bug", "报告问题"), systemImage: "ladybug")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                 }
                 .accessibilityIdentifier("kenos.settings.reportBug")
             } header: {
@@ -1881,6 +2044,40 @@ struct DailyBetaSettingsView: View {
                     L(
                         "Screenshots can quietly offer a report. Diagnostics stay optional.",
                         "截图后可安静询问是否反馈。诊断信息可按需附带。"
+                    )
+                )
+                .font(KenosTypography.caption)
+            }
+            #endif
+
+            #if os(macOS)
+            // MAC-P0-04: split account sync vs shell-origin reachability (was "Connected" vs Today CTA).
+            Section {
+                LabeledContent(L("Kenos account", "Kenos 账户")) {
+                    Text(
+                        KenosSharedWebAuth.hasSharedTokens
+                            ? L("Signed in", "已登录")
+                            : L("Not signed in", "未登录")
+                    )
+                    .foregroundStyle(KenosSharedWebAuth.hasSharedTokens ? .primary : .secondary)
+                }
+                .accessibilityIdentifier("kenos.settings.webSso")
+                LabeledContent(L("Device lock", "设备锁")) {
+                    Text(
+                        KenosDeviceIdentityStore.isPaired
+                            ? L("Paired — Touch ID unlock", "已配对 — Touch ID 解锁")
+                            : L("Not paired", "未配对")
+                    )
+                    .foregroundStyle(KenosDeviceIdentityStore.isPaired ? .primary : .secondary)
+                }
+                .accessibilityIdentifier("kenos.settings.deviceLock")
+            } header: {
+                Text(L("Account", "账户"))
+            } footer: {
+                Text(
+                    L(
+                        "Account sync powers Today summary and Inbox. Spaces still work locally without signing in.",
+                        "账户同步用于今日摘要与收件箱。未登录时各空间仍可本地使用。"
                     )
                 )
                 .font(KenosTypography.caption)
@@ -1930,23 +2127,23 @@ struct DailyBetaSettingsView: View {
             #endif
 
             Section {
-                LabeledContent(L("Connection", "连接")) {
+                LabeledContent(L("Shell origin", "壳层源")) {
                     Text(connectionLabel)
                         .foregroundStyle(.primary)
                 }
                 .accessibilityIdentifier("kenos.settings.connection")
-                LabeledContent(L("Status", "状态")) {
+                LabeledContent(L("Reachability", "可达性")) {
                     Text(connectionStatusLabel)
                         .foregroundStyle(.secondary)
                 }
                 .accessibilityIdentifier("kenos.settings.connection.status")
             } header: {
-                Text(L("Connectivity", "网络"))
+                Text(L("Shell network", "壳层网络"))
             } footer: {
                 Text(
                     L(
-                        "Everyday status only. Origin URL and LAN tools live under Advanced.",
-                        "日常状态。地址与局域网工具在「高级」中。"
+                        "Shell origin only — not Kenos account login. Origin URL and LAN tools live under Advanced.",
+                        "仅表示壳层源是否可用，不是 Kenos 账户登录。地址与局域网工具在「高级」中。"
                     )
                 )
                 .font(KenosTypography.caption)
@@ -1974,12 +2171,23 @@ struct DailyBetaSettingsView: View {
                 .font(KenosTypography.caption)
             }
 
+            #if os(macOS)
+            if KenosSharedWebAuth.hasSharedTokens {
+                Section {
+                    Button(L("Sign out", "退出登录"), role: .destructive) {
+                        Task { await model.logout() }
+                    }
+                    .accessibilityIdentifier("kenos.settings.logout")
+                }
+            }
+            #else
             Section {
                 Button(L("Sign out", "退出登录"), role: .destructive) {
                     Task { await model.logout() }
                 }
                 .accessibilityIdentifier("kenos.settings.logout")
             }
+            #endif
         }
         .navigationTitle(L("Settings", "设置"))
         .accessibilityIdentifier("kenos.settings")
@@ -2014,19 +2222,20 @@ struct DailyBetaSettingsView: View {
 
     private var connectionLabel: String {
         if KenosDailyBetaConfig.useProductionOverride {
-            return "Production"
+            return L("Production", "生产")
         }
         if KenosDailyBetaConfig.isLanDependentOrigin {
-            return "Local Mac"
+            return L("Local Mac", "本机 Mac")
         }
-        return "Configured"
+        return L("Configured", "已配置")
     }
 
     private var connectionStatusLabel: String {
         if KenosDailyBetaConfig.useProductionOverride {
-            return "Using production"
+            return L("Using production", "使用生产源")
         }
-        return "Connected"
+        // MAC-P0-04: never say "Connected" — that collided with account CTA on Today/Inbox.
+        return L("Reachable", "可达")
     }
 }
 

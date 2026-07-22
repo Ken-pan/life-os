@@ -81,6 +81,8 @@ final class KenosAppModel: ObservableObject {
     @Published var selectedTab: Tab = .today
     #if os(macOS)
     @Published var macSidebarSelection: MacSidebarItem = .today
+    /// Ask conversation immerses detail — collapse sidebar like iOS hides Global Dock.
+    @Published var macSplitVisibility: NavigationSplitViewVisibility = .all
     #endif
     @Published var route: KenosDeepLink = .today
     /// Daily Beta WKWebView path per tab (supports Continue / payload-url deep resume).
@@ -104,6 +106,8 @@ final class KenosAppModel: ObservableObject {
     @Published var streaming = false
     /// Capture sheet while Focus hides TabView/Sidebar.
     @Published var showCaptureSheet = false
+    /// Approvals sheet — Mac Daily Beta Web Inbox cannot host navigationDestination (MAC-P0-05).
+    @Published var showApprovalsSheet = false
     /// Temporary Space Switcher layer (not a 5th tab).
     @Published var showSpaceSwitcher = false
     /// Which chrome sheet is open — Continue (Recent) vs Switch Space vs Quick Switch.
@@ -144,6 +148,16 @@ final class KenosAppModel: ObservableObject {
     /// Content canvas polarity — drives `preferredColorScheme` / status-bar foreground.
     /// Light Domain content must not keep a forced dark (white) status bar.
     @Published var chromeAppearance: KenosChromeAppearance = .dark
+    /// Owner Device Lock — shell Face ID grant mirrored for SwiftUI gate.
+    @Published var shellUnlocked = false
+    @Published var shellUnlockError: String?
+    @Published var shellUnlockBusy = false
+    /// Coalesces concurrent unlock requests onto one Face ID / hydrate pass.
+    private var shellUnlockTask: Task<Bool, Never>?
+    /// Avoids double `bootstrap()` when unlock flips UI from gate → shell.
+    private var didBootstrapAfterShellUnlock = false
+    /// Gate auto Face ID runs once per lock episode (cancel → Unlock button; expiry resets).
+    private var didAutoPromptShellUnlock = false
     /// Live Accessory compact strip (scroll-down minimize · Music / iOS 26 bottomAccessory).
     @Published var liveAccessoryMinimized = false
     private var pendingDomainLeaveAction: (() -> Void)?
@@ -320,6 +334,19 @@ final class KenosAppModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+        #if os(macOS)
+        NotificationCenter.default.publisher(for: .kenosMacNavManifestDidChange)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] note in
+                guard let self else { return }
+                let live = (note.userInfo?["liveState"] as? String) ?? ""
+                if self.domainWebLiveState != live {
+                    self.domainWebLiveState = live
+                }
+                self.syncMacSplitVisibilityForAsk()
+            }
+            .store(in: &cancellables)
+        #endif
         #if os(iOS)
         NotificationCenter.default.publisher(for: .kenosNowPlayingDidChange)
             .receive(on: RunLoop.main)
@@ -387,6 +414,108 @@ final class KenosAppModel: ObservableObject {
             }
             .store(in: &cancellables)
         #endif
+    }
+
+    /// Cold-start Owner Device Lock: Face ID → optional device exchange → SSO cookie seed.
+    /// Concurrent callers (gate `.task` + Unlock button) await the same in-flight work.
+    func unlockShellAndHydrate(prompt: Bool = true) async -> Bool {
+        if let existing = shellUnlockTask {
+            return await existing.value
+        }
+        let task = Task { @MainActor in
+            await self.performUnlockShellAndHydrate(prompt: prompt)
+        }
+        shellUnlockTask = task
+        defer { shellUnlockTask = nil }
+        return await task.value
+    }
+
+    /// Gate cold-start / remount: at most one automatic Face ID per lock episode.
+    func autoPromptShellUnlockIfNeeded() async {
+        guard !shellUnlocked else { return }
+        guard !KenosUnlockGrantStore.isShellUnlocked() else {
+            _ = await unlockShellAndHydrate(prompt: false)
+            return
+        }
+        guard !didAutoPromptShellUnlock else { return }
+        didAutoPromptShellUnlock = true
+        _ = await unlockShellAndHydrate(prompt: true)
+    }
+
+    /// Foreground: restore UI from a live grant, or re-lock when the TTL expired.
+    func reconcileShellUnlockOnForeground() {
+        if KenosUnlockGrantStore.isShellUnlocked() {
+            if !shellUnlocked {
+                Task { @MainActor in
+                    _ = await self.unlockShellAndHydrate(prompt: false)
+                    await self.bootstrapIfNeeded()
+                }
+            }
+            return
+        }
+        guard shellUnlocked else { return }
+        KenosLog.notice("shell unlock expired — locking gate", category: .session)
+        shellUnlocked = false
+        shellUnlockError = nil
+        didAutoPromptShellUnlock = false
+    }
+
+    @MainActor
+    private func performUnlockShellAndHydrate(prompt: Bool) async -> Bool {
+        shellUnlockBusy = true
+        defer { shellUnlockBusy = false }
+        if KenosUnlockGrantStore.isShellUnlocked() {
+            shellUnlocked = true
+            shellUnlockError = nil
+        } else {
+            let reason = KenosShellSettingsStore.current.resolvedLocale() == "zh"
+                ? "解锁 Kenos"
+                : "Unlock Kenos"
+            let result = await KenosShellUnlock.ensure(prompt: prompt, reason: reason)
+            shellUnlocked = result.ok
+            shellUnlockError = result.ok ? nil : Self.localizedShellUnlockError(result.message)
+            guard result.ok else { return false }
+        }
+        await KenosDeviceAuthClient.bootstrapSessionAfterUnlock()
+        await KenosSharedWebAuth.seedSharedSessionCookies()
+        return true
+    }
+
+    /// After Continuity reports SSO tokens — pair this shell once (owner only; server enforces).
+    func pairDeviceIfNeeded(accessToken: String) async {
+        guard shellUnlocked || KenosUnlockGrantStore.isShellUnlocked() else { return }
+        guard !KenosDeviceIdentityStore.isPaired else { return }
+        do {
+            try await KenosDeviceAuthClient.pairWithAccessToken(accessToken)
+        } catch {
+            KenosLog.notice(
+                "device pair skipped/failed",
+                category: .session,
+                metadata: ["error": String(describing: error)]
+            )
+        }
+    }
+
+    /// First shell bootstrap after unlock (idempotent for the process lifetime).
+    func bootstrapIfNeeded() async {
+        guard !didBootstrapAfterShellUnlock else { return }
+        didBootstrapAfterShellUnlock = true
+        await bootstrap()
+    }
+
+    private static func localizedShellUnlockError(_ message: String?) -> String {
+        let zh = KenosShellSettingsStore.current.resolvedLocale() == "zh"
+        let raw = message ?? "Unlock required"
+        guard zh else { return raw }
+        switch raw {
+        case "Unlock required": return "需要解锁"
+        case "Authentication cancelled": return "已取消认证"
+        case "Authentication interrupted": return "认证被中断"
+        case "Authentication failed": return "认证失败"
+        case "Passcode fallback cancelled": return "已取消密码解锁"
+        case "Biometrics unavailable": return "无法使用生物识别"
+        default: return raw
+        }
     }
 
     func bootstrap() async {
@@ -713,6 +842,22 @@ final class KenosAppModel: ObservableObject {
 
     var hideGlobalNavForFocus: Bool { focusStore.hidesGlobalNavigation }
 
+    /// Ask active conversation — hide Kenos Global Dock (Home keeps it).
+    /// Web publishes `liveState: conversation|compose|immersive` via nav manifest.
+    var hideGlobalDockForAssistantConversation: Bool {
+        #if os(iOS)
+        guard shellMode == .kenos, selectedTab == .assistant else { return false }
+        switch domainWebLiveState.lowercased() {
+        case "conversation", "compose", "immersive":
+            return true
+        default:
+            return false
+        }
+        #else
+        return false
+        #endif
+    }
+
     func startTrainingFocus() {
         focusStore.startTrainingFocus()
     }
@@ -747,11 +892,11 @@ final class KenosAppModel: ObservableObject {
             selectedTab = .inbox
             inboxDestination = nil
         case .approvals, .approval:
-            presentInboxDestination(.approvals)
+            openApprovals()
         case .activity, .activityItem:
             presentInboxDestination(.activity)
         case .capture:
-            presentInboxDestination(.capture)
+            openCapture()
         case .system, .unknown:
             presentInboxDestination(.system)
         }
@@ -953,6 +1098,7 @@ final class KenosAppModel: ObservableObject {
         if showSpaceShelf { parts.append("shelf") }
         if showSpaceSwitcher { parts.append("spaceSwitcher") }
         if showCaptureSheet { parts.append("capture") }
+        if showApprovalsSheet { parts.append("approvals") }
         if showDomainMoreSheet { parts.append("domainMore") }
         if showDomainLeaveConfirm { parts.append("leaveConfirm") }
         if hideGlobalNavForFocus || focusStore.isPaused || focusStore.showCompletedSummary {
@@ -1011,15 +1157,20 @@ final class KenosAppModel: ObservableObject {
         ])
         cancelScreenshotPromptAutoDismiss()
         showScreenshotBugPrompt = false
+        // Force-tear the elevated UIWindow before any sheet transition — sync via
+        // onChange can lag one frame and leave alert+1 chrome eating taps.
+        KenosScreenshotBugPromptPresenter.dismiss()
         // SwiftUI cannot stack two root sheets — dismiss Settings (or other chrome)
         // before presenting the bug-report sheet.
-        let dismissedChrome = showSettingsSheet || showDomainMoreSheet || showCaptureSheet
+        let dismissedChrome = showSettingsSheet || showDomainMoreSheet || showCaptureSheet || showApprovalsSheet
         if showSettingsSheet { showSettingsSheet = false }
         if showDomainMoreSheet { showDomainMoreSheet = false }
         if showCaptureSheet { showCaptureSheet = false }
+        if showApprovalsSheet { showApprovalsSheet = false }
         if delayCapture || dismissedChrome {
-            // Brief settle so prior sheet chrome finishes dismissing before capture.
-            try? await Task.sleep(nanoseconds: 360_000_000)
+            // Settle long enough for the prior sheet dismiss animation — too short
+            // and the bug-report sheet can present non-interactive / untappable.
+            try? await Task.sleep(nanoseconds: 450_000_000)
         }
         let capture = await KenosBugReportCapture.captureKeyWindowJPEG(
             webViewFallback: KenosActiveWebRegistry.preferred(for: self)
@@ -1029,6 +1180,7 @@ final class KenosAppModel: ObservableObject {
             captureSource: "manual",
             captureMs: capture.elapsedMs
         )
+        KenosScreenshotBugPromptPresenter.dismiss()
         showBugReportSheet = true
     }
 
@@ -1036,13 +1188,25 @@ final class KenosAppModel: ObservableObject {
         cancelScreenshotPromptAutoDismiss()
         guard bugReportDraft != nil else {
             showScreenshotBugPrompt = false
+            KenosScreenshotBugPromptPresenter.dismiss()
             return
         }
-        // SwiftUI cannot stack Settings + bug-report sheets.
-        if showSettingsSheet { showSettingsSheet = false }
-        // Open sheet before dismissing the prompt so cleanup won't drop the draft.
-        showBugReportSheet = true
+        // Tear down the elevated prompt window first so it cannot cover the sheet.
         showScreenshotBugPrompt = false
+        KenosScreenshotBugPromptPresenter.dismiss()
+        // SwiftUI cannot stack Settings + bug-report sheets.
+        let dismissedSettings = showSettingsSheet
+        if showSettingsSheet { showSettingsSheet = false }
+        if dismissedSettings {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 420_000_000)
+                guard bugReportDraft != nil else { return }
+                KenosScreenshotBugPromptPresenter.dismiss()
+                showBugReportSheet = true
+            }
+        } else {
+            showBugReportSheet = true
+        }
     }
 
     func dismissScreenshotBugPrompt() {
@@ -1357,11 +1521,26 @@ final class KenosAppModel: ObservableObject {
     }
 
     func openCapture() {
+        #if os(macOS)
+        // Mac Daily Beta Inbox is a WK shell — native navigationDestination never mounts (MAC-P0-05).
+        showCaptureSheet = true
+        return
+        #else
         if hideGlobalNavForFocus || focusStore.isPaused || focusStore.showCompletedSummary {
             showCaptureSheet = true
             return
         }
         presentInboxDestination(.capture)
+        #endif
+    }
+
+    /// Approvals surface — sheet on Mac; Inbox push on iOS.
+    func openApprovals() {
+        #if os(macOS)
+        showApprovalsSheet = true
+        #else
+        presentInboxDestination(.approvals)
+        #endif
     }
 
     /// Continue = Recent resumes only (not the full domain directory).
@@ -1628,6 +1807,9 @@ final class KenosAppModel: ObservableObject {
             "space": entry.id,
             "title": entry.title,
         ])
+        #if os(iOS)
+        KenosPerfStateReporter.openSpace(entry.id)
+        #endif
         touchRecentSpace(id: entry.id)
         showSpaceSwitcher = false
         switch entry.kind {
@@ -1680,6 +1862,7 @@ final class KenosAppModel: ObservableObject {
         applyChromeAppearance(.dark, reason: "returnKenos")
         selectedTab = previousKenosTab
         #if os(iOS)
+        KenosPerfStateReporter.returnToKenos()
         KenosSystemDiscovery.resign()
         scheduleInactiveContinuityTTLRelease()
         #endif
@@ -1799,6 +1982,11 @@ final class KenosAppModel: ObservableObject {
     #if os(macOS)
     /// Select a Mac sidebar row (Kenos tab or Continuity domain).
     func selectMacSidebar(_ item: MacSidebarItem) {
+        // MAC-P1-02: Settings is a system Settings window — do not steal sidebar selection.
+        if case .settings = item {
+            NotificationCenter.default.post(name: .kenosOpenMacSettings, object: nil)
+            return
+        }
         macSidebarSelection = item
         switch item {
         case .today:
@@ -1806,22 +1994,26 @@ final class KenosAppModel: ObservableObject {
                 requestDomainLeave { self.dismissContinuity() }
             }
             selectedTab = .today
+            domainWebLiveState = ""
+            syncMacSplitVisibilityForAsk()
         case .assistant:
             if shellMode == .domain {
                 requestDomainLeave { self.dismissContinuity() }
             }
             selectedTab = .assistant
+            syncMacSplitVisibilityForAsk()
         case .inbox:
             if shellMode == .domain {
                 requestDomainLeave { self.dismissContinuity() }
             }
             selectedTab = .inbox
+            domainWebLiveState = ""
+            syncMacSplitVisibilityForAsk()
         case .settings:
-            if shellMode == .domain {
-                requestDomainLeave { self.dismissContinuity() }
-            }
-            selectedTab = .settings
+            break
         case .domain(let domainId):
+            domainWebLiveState = ""
+            syncMacSplitVisibilityForAsk()
             if let url = KenosDomainRegistry.homeURL(for: domainId) {
                 enterDomainMode(url: url)
             } else if domainId == "work" {
@@ -1882,6 +2074,23 @@ final class KenosAppModel: ObservableObject {
         case .assistant: return .assistant
         case .inbox: return .inbox
         case .settings, .domain: return nil
+        }
+    }
+
+    /// Ask conversation immerses detail (iOS hides Global Dock); restore sidebar on Home.
+    func syncMacSplitVisibilityForAsk() {
+        let immersing: Bool = {
+            guard shellMode == .kenos, macSidebarSelection == .assistant else { return false }
+            switch domainWebLiveState.lowercased() {
+            case "conversation", "compose", "immersive":
+                return true
+            default:
+                return false
+            }
+        }()
+        let next: NavigationSplitViewVisibility = immersing ? .detailOnly : .all
+        if macSplitVisibility != next {
+            macSplitVisibility = next
         }
     }
     #endif
@@ -2172,6 +2381,9 @@ final class KenosAppModel: ObservableObject {
             "path": url.path,
             "fromShell": shellMode == .domain ? "domain" : "kenos",
         ])
+        #if os(iOS)
+        KenosPerfStateReporter.enterDomain(url: url)
+        #endif
         // Already in Domain (Space↔Space): keep Kenos return tab; only swap URL.
         if shellMode != .domain {
             previousKenosTab = selectedTab
@@ -2236,7 +2448,8 @@ final class KenosAppModel: ObservableObject {
         // Do not flip selectedTab — Done must restore the prior page/scroll, not Today.
         showSettingsSheet = true
         #else
-        selectKenosDockTab(.settings)
+        // MAC-P1-02: system Settings window (not an in-sidebar page).
+        NotificationCenter.default.post(name: .kenosOpenMacSettings, object: nil)
         #endif
     }
 
@@ -2681,6 +2894,8 @@ final class KenosAppModel: ObservableObject {
         await KenosSharedWebAuth.clearSharedWebAuth()
         KenosLogCloudSync.shared.clearCachedAuth()
         #endif
+        // Keep device keypair pairing — next Face ID can exchange without re-login.
+        // Explicit revoke from Portal / Settings clears the server slot.
         showSpaceSwitcher = false
         watchCaptures = []
         notificationInbox = []

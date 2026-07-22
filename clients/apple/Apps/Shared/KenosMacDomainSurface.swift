@@ -6,6 +6,10 @@ import WebKit
 extension Notification.Name {
     /// Posted by KenosMac commands (⌘R) to reload the active shell / Continuity WK.
     static let kenosMacReloadWeb = Notification.Name("kenosMacReloadWeb")
+    /// Ask / Continuity nav manifest (liveState) — Mac bridge posts here.
+    static let kenosMacNavManifestDidChange = Notification.Name("kenosMacNavManifestDidChange")
+    /// Open the macOS Settings scene (MAC-P1-02 / presentSettings).
+    static let kenosOpenMacSettings = Notification.Name("kenosOpenMacSettings")
 }
 
 // MARK: - Shell (Today / Assistant / Inbox)
@@ -90,7 +94,8 @@ struct KenosMacShellSurface: View {
                     .frame(height: 2)
             }
         }
-        .navigationTitle(pageTitle.isEmpty ? shellTitle : pageTitle)
+        // Prefer sidebar IA labels — SPA document.title stays "Kenos Assistant".
+        .navigationTitle(shellTitle)
         .onReceive(NotificationCenter.default.publisher(for: .kenosMacReloadWeb)) { _ in
             loadError = nil
             surfaceEpoch &+= 1
@@ -112,9 +117,6 @@ struct KenosMacShellSurface: View {
 /// Mac Domain Continuity — sidebar selection + detail WKWebView (not iOS Domain Dock).
 struct KenosMacDomainSurface: View {
     @ObservedObject var model: KenosAppModel
-    @State private var pageTitle = ""
-    @State private var canGoBack = false
-    @State private var canGoForward = false
     @State private var loadProgress: Double = 0
     @State private var loadError: String?
     @State private var webViewRef: WKWebView?
@@ -139,9 +141,8 @@ struct KenosMacDomainSurface: View {
                     url: url,
                     stayInApp: true,
                     reloadToken: reloadToken,
-                    onTitle: { pageTitle = $0 },
-                    onCanGoBackChange: { canGoBack = $0 },
-                    onCanGoForwardChange: { canGoForward = $0 },
+                    // Ignore document.title (PLANNER.OS / MUSIC.OS) — sidebar IA wins (MAC-P0-02 / P1-03).
+                    onTitle: { _ in },
                     onProgress: { loadProgress = $0 },
                     onURLChange: { live in
                         model.syncDomainDockSlot(for: live)
@@ -207,54 +208,18 @@ struct KenosMacDomainSurface: View {
                     .frame(height: 2)
             }
         }
-        .navigationTitle(pageTitle.isEmpty ? domainLabel : pageTitle)
+        // Chromeless Continuity (MAC-P0-02): sidebar name only — no browser chrome.
+        .navigationTitle(domainLabel)
         .toolbar {
-            ToolbarItemGroup(placement: .navigation) {
-                Button {
-                    webViewRef?.goBack()
-                } label: {
-                    Label("Back", systemImage: "chevron.backward")
-                }
-                .disabled(!canGoBack)
-                .keyboardShortcut("[", modifiers: [.command])
-                .accessibilityIdentifier("kenos.mac.domain.back")
-
-                Button {
-                    webViewRef?.goForward()
-                } label: {
-                    Label("Forward", systemImage: "chevron.forward")
-                }
-                .disabled(!canGoForward)
-                .keyboardShortcut("]", modifiers: [.command])
-                .accessibilityIdentifier("kenos.mac.domain.forward")
-
-                Button {
-                    loadError = nil
-                    reloadToken &+= 1
-                    webViewRef?.reload()
-                } label: {
-                    Label("Reload", systemImage: "arrow.clockwise")
-                }
-                .keyboardShortcut("r", modifiers: [.command])
-                .accessibilityIdentifier("kenos.mac.domain.reload")
-
+            ToolbarItem(placement: .primaryAction) {
                 Button {
                     model.returnToKenosFromDomain()
                     model.selectMacSidebar(.today)
                 } label: {
-                    Label("Kenos", systemImage: "circle.grid.2x2.fill")
+                    Label("Today", systemImage: "sun.max")
                 }
                 .accessibilityIdentifier("kenos.mac.domain.leave")
-            }
-            ToolbarItem(placement: .primaryAction) {
-                if let url = model.continuityURL {
-                    Button {
-                        NSWorkspace.shared.open(url)
-                    } label: {
-                        Label("Open in Browser", systemImage: "safari")
-                    }
-                    .accessibilityIdentifier("kenos.mac.domain.openBrowser")
-                }
+                .help("Leave Space and return to Today")
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .kenosMacReloadWeb)) { _ in
@@ -305,6 +270,9 @@ struct KenosMacWebSurfaceView: NSViewRepresentable {
         }
 
         let userContent = config.userContentController
+        // Keep iosNativeShell=true so shared hide-bottom-nav / Ask chrome CSS apply,
+        // but pre-seed #kenos-ios-native-shell-css with Mac pads so web
+        // ensureIosNativeShellChromeCss() does not install phone 54/78 insets.
         let shellScript = WKUserScript(
             source: """
             window.__KENOS_MAC_NATIVE_SHELL__ = true;
@@ -317,6 +285,46 @@ struct KenosMacWebSurfaceView: NSViewRepresentable {
             } catch (e) {}
             \(KenosMacNativeBridge.bootstrapScript)
             (function () {
+              var top = 8;
+              var bottom = 0;
+              var ios = document.getElementById('kenos-ios-native-shell-css');
+              if (!ios) {
+                ios = document.createElement('style');
+                ios.id = 'kenos-ios-native-shell-css';
+                (document.head || document.documentElement).appendChild(ios);
+              }
+              ios.textContent = [
+                "html[data-ios-native-shell='true']{",
+                "--kenos-chrome-top-inset:" + top + "px;",
+                "--kenos-dock-scroll-end-pad:" + bottom + "px;",
+                "--kenos-native-safe-bottom:0px;",
+                "--mobile-tabbar-total-h:0px!important;",
+                "--mobile-content-inset:0px!important;",
+                "--mobile-content-inset-tabbar:0px!important;",
+                "--bottom-chrome-h:0px!important;",
+                "--safe-top-effective:0px!important;",
+                "}",
+                "html[data-ios-native-shell='true'] #main-content,",
+                "html[data-ios-native-shell='true'] .life-os-app-shell__main,",
+                "html[data-ios-native-shell='true'] .main-col{",
+                "padding-top:var(--kenos-chrome-top-inset," + top + "px)!important;",
+                "padding-bottom:calc(env(safe-area-inset-bottom,0px) + var(--kenos-dock-scroll-end-pad," + bottom + "px) + 12px)!important;",
+                "scroll-padding-bottom:calc(env(safe-area-inset-bottom,0px) + var(--kenos-dock-scroll-end-pad," + bottom + "px) + 12px)!important;",
+                "padding-left:0!important;padding-right:0!important;box-sizing:border-box!important;",
+                "}",
+                "html[data-ios-native-shell='true'] .life-os-app-shell[data-scroll-mode='locked'] #main-content,",
+                "html[data-ios-native-shell='true'] .life-os-app-shell[data-scroll-mode='locked'] .life-os-app-shell__main,",
+                "html[data-ios-native-shell='true'] .life-os-app-shell[data-scroll-mode='locked'] .main-col{",
+                "padding-bottom:0!important;scroll-padding-bottom:0!important;",
+                "}",
+                "html[data-ios-native-shell='true'] .fab,",
+                "html[data-ios-native-shell='true'] .fab-host,",
+                "html[data-ios-native-shell='true'] .lib-top-fab,",
+                "html[data-ios-native-shell='true'] [data-testid$='-fab'],",
+                "html[data-ios-native-shell='true'] button.fab{",
+                "display:none!important;visibility:hidden!important;pointer-events:none!important;",
+                "}"
+              ].join('');
               var s = document.getElementById('kenos-mac-native-shell-css');
               if (!s) {
                 s = document.createElement('style');
@@ -324,17 +332,96 @@ struct KenosMacWebSurfaceView: NSViewRepresentable {
                 (document.head || document.documentElement).appendChild(s);
               }
               s.textContent = [
+                "html[data-mac-native-shell='true']{",
+                "--kenos-chrome-top-inset:" + top + "px;",
+                "--kenos-dock-scroll-end-pad:" + bottom + "px;",
+                "--kenos-native-safe-bottom:0px;",
+                /* MAC-P0-01 / P2-02: collapse web sidebar; use full detail width. */
+                "--sidebar-w:0px!important;",
+                "--content-max:100%!important;",
+                "--maxw:100%!important;",
+                "--content-inline-pad:clamp(16px,2vw,32px)!important;",
+                "--page-gutter:clamp(16px,2vw,32px)!important;",
+                "}",
+                /* MAC-P0-01 / P0-03: single-column shell; hide web sidebars (native owns nav). */
+                "html[data-mac-native-shell='true'] .life-os-app-shell,",
+                "html[data-mac-native-shell='true'] .life-os-app-shell__body{",
+                "grid-template-columns:minmax(0,1fr)!important;",
+                "}",
+                "html[data-mac-native-shell='true'] .sidebar,",
+                "html[data-mac-native-shell='true'] aside.sidebar,",
+                "html[data-mac-native-shell='true'] .life-os-app-shell__navigation,",
+                "html[data-mac-native-shell='true'] .life-os-app-shell__navigation--desktop,",
+                "html[data-mac-native-shell='true'] [data-testid$='-shell-navigation']{",
+                "display:none!important;width:0!important;min-width:0!important;",
+                "max-width:0!important;overflow:hidden!important;pointer-events:none!important;",
+                "visibility:hidden!important;",
+                "}",
+                /* MAC-P2-02: kill centered phone/tablet max-width columns in Continuity. */
+                "html[data-mac-native-shell='true'] .today-layout,",
+                "html[data-mac-native-shell='true'] .main-col,",
+                "html[data-mac-native-shell='true'] .life-os-app-shell__main,",
+                "html[data-mac-native-shell='true'] #main-content,",
+                "html[data-mac-native-shell='true'] .wrap,",
+                "html[data-mac-native-shell='true'] .page,",
+                "html[data-mac-native-shell='true'] .page-body,",
+                "html[data-mac-native-shell='true'] .content-col,",
+                "html[data-mac-native-shell='true'] .home-shell,",
+                "html[data-mac-native-shell='true'] .finance-shell{",
+                "max-width:none!important;width:100%!important;",
+                "margin-inline:0!important;",
+                "padding-inline:var(--content-inline-pad,clamp(16px,2vw,32px))!important;",
+                "box-sizing:border-box!important;",
+                "}",
                 "html[data-mac-native-shell='true'] .bottom-nav-host,",
                 "html[data-mac-native-shell='true'] nav.bottom-nav,",
                 "html[data-mac-native-shell='true'] .bottom-shell,",
                 "html[data-mac-native-shell='true'] [data-testid='aios-shell-bottom-nav'],",
                 "html[data-mac-native-shell='true'] [data-testid='fitness-shell-bottom-nav'],",
-                "html[data-mac-native-shell='true'] .kenos-system-bar{",
+                "html[data-mac-native-shell='true'] [data-testid='music-shell-bottom-nav'],",
+                "html[data-mac-native-shell='true'] [data-testid='finance-shell-bottom-nav']{",
+                "display:none!important;height:0!important;visibility:hidden!important;pointer-events:none!important;",
+                "}",
+                /* Match iOS: KenosSystemBar keeps Music-style title; only hide legacy AppBar. */
+                "html[data-mac-native-shell='true'] .appbar,",
+                "html[data-mac-native-shell='true'] .life-os-app-bar,",
+                "html[data-mac-native-shell='true'] header.appbar,",
+                "html[data-mac-native-shell='true'] .app-bar{",
                 "display:none!important;height:0!important;visibility:hidden!important;pointer-events:none!important;",
                 "}",
                 "html[data-mac-native-shell='true'],",
                 "html[data-mac-native-shell='true'] body{",
                 "background:#08090a!important;",
+                /* MAC-P2-05: single scroll owner — avoid body+main double bars. */
+                "overflow:hidden!important;height:100%!important;",
+                "}",
+                "html[data-mac-native-shell='true'] .life-os-app-shell,",
+                "html[data-mac-native-shell='true'] .life-os-app-shell__body{",
+                "height:100%!important;min-height:0!important;overflow:hidden!important;",
+                "}",
+                "html[data-mac-native-shell='true'] .life-os-app-shell__main,",
+                "html[data-mac-native-shell='true'] #main-content{",
+                "overflow-x:hidden!important;overflow-y:auto!important;",
+                "scrollbar-gutter:stable;",
+                "}",
+                "html[data-mac-native-shell='true'] *{",
+                "scrollbar-width:thin;",
+                "}",
+                "html[data-mac-native-shell='true'] ::-webkit-scrollbar{",
+                "width:9px;height:9px;",
+                "}",
+                "html[data-mac-native-shell='true'] ::-webkit-scrollbar-thumb{",
+                "background:rgba(255,255,255,0.18);border-radius:999px;",
+                "}",
+                /* Ask Home/Conversation — no phone dock / home-indicator floor. */
+                "html[data-mac-native-shell='true'] .dock-col{",
+                "padding-bottom:max(12px,env(safe-area-inset-bottom,0px))!important;",
+                "}",
+                "html[data-mac-native-shell='true'] .hero{",
+                "padding:28px 0 16px!important;",
+                "}",
+                "html[data-mac-native-shell='true'] .thread-col{",
+                "padding-block:20px 10px!important;",
                 "}"
               ].join('');
             })();
@@ -693,13 +780,19 @@ enum KenosMacNativeBridge {
         case "openContinuity":
             openContinuity(params: params, id: id, webView: webView)
         case "publishNavManifest":
-            if let liveState = params["liveState"] as? String {
-                NotificationCenter.default.post(
-                    name: Notification.Name("kenosMacNavManifest"),
-                    object: nil,
-                    userInfo: ["liveState": liveState, "path": stringValue(params["path"])]
-                )
-            }
+            let liveState = stringValue(params["liveState"])
+            let path = stringValue(params["path"])
+            NotificationCenter.default.post(
+                name: .kenosMacNavManifestDidChange,
+                object: nil,
+                userInfo: [
+                    "liveState": liveState,
+                    "path": path,
+                    "title": stringValue(params["title"]),
+                    "activeTab": stringValue(params["activeTab"]),
+                    "domainId": stringValue(params["domainId"]),
+                ]
+            )
             resolve(id: id, webView: webView, value: ["ok": true])
         default:
             resolve(id: id, webView: webView, value: ["ok": true, "skipped": true])
