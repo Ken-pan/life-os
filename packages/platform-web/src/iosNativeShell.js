@@ -47,7 +47,7 @@ export function syncLocaleFromSystemForNativeShell(setLocale, getLocale) {
  */
 export function isIosNativeShell() {
   if (typeof window === 'undefined') return false
-  if (window.__KENOS_IOS_NATIVE_SHELL__ === true) return true
+  if (/** @type {any} */ (window).__KENOS_IOS_NATIVE_SHELL__ === true) return true
   try {
     if (
       new URLSearchParams(window.location.search).get('iosNativeShell') === '1'
@@ -150,7 +150,7 @@ export function ensureIosNativeShellChromeCss() {
 export function markIosNativeShellDom() {
   if (typeof document === 'undefined') return
   if (!isIosNativeShell()) return
-  window.__KENOS_IOS_NATIVE_SHELL__ = true
+  ;/** @type {any} */ (window).__KENOS_IOS_NATIVE_SHELL__ = true
   document.documentElement.dataset.iosNativeShell = 'true'
   try {
     sessionStorage.setItem(SESSION_KEY, '1')

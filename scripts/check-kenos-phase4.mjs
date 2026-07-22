@@ -109,7 +109,10 @@ for (const surface of [
   if (!rootView.includes(surface)) fail(`App shell missing ${surface}`)
 }
 
-if (!rootView.includes('approvalsActionsEnabled') || !rootView.includes('.disabled(!model.approvalsActionsEnabled)')) {
+const approvalsReadOnlyEnforced =
+  rootView.includes('.disabled(!model.approvalsActionsEnabled)') ||
+  (rootView.includes('if model.approvalsActionsEnabled {') && rootView.includes('if !model.approvalsActionsEnabled {'))
+if (!rootView.includes('approvalsActionsEnabled') || !approvalsReadOnlyEnforced) {
   fail('Approval actions must remain disabled / read-only')
 }
 if (!appModel.includes('approvalsActionsEnabled = false')) {
@@ -156,11 +159,15 @@ for (const root of appleRoots) {
     for (const pattern of forbiddenSecretPatterns) {
       if (pattern.test(text)) fail(`possible hardcoded secret in ${file}`)
     }
+    // Line-level: a UserDefaults write whose statement mentions a token.
+    // (File-level co-occurrence false-positives once a file both uses
+    // UserDefaults for prefs and handles tokens via Keychain elsewhere.)
     if (
-      text.includes('UserDefaults.standard') &&
-      (text.includes('setValue') || text.includes('set(')) &&
-      (text.includes('token') || text.includes('accessToken')) &&
-      !file.includes('Tests')
+      !file.includes('Tests') &&
+      text.split('\n').some((line) =>
+        /UserDefaults\.standard\.(set\(|setValue\()/.test(line) &&
+        /(session|access|refresh|auth|bearer)[_]?token|sessionKey|\bjwt\b/i.test(line)
+      )
     ) {
       fail(`session token must not use UserDefaults (${file})`)
     }

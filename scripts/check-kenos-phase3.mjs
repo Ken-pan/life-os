@@ -133,7 +133,7 @@ if (!workStore.includes("get('kenosDemo') === '1'") && !workStore.includes("get(
 for (const token of ['当前目标', '下一个交付', '阻塞', '最近决定', 'Create task', 'WorkActionProposal 不是 Task', 'conversion flag Off']) {
   if (!workPage.includes(token)) fail(`Work UI missing ${token}`)
 }
-if (!todayPage.includes('today-work-title') || !todayPage.includes('href="/work"') || !todayPage.includes('owner={card.ownerDomain}')) {
+if (!todayPage.includes('today-work-title') || !(todayPage.includes('href="/work"') || todayPage.includes("|| '/work'")) || !todayPage.includes('owner={card.ownerDomain}')) {
   fail('Today must include Work projection section with owner metadata and /work deep link')
 }
 

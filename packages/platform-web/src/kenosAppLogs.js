@@ -35,6 +35,7 @@ const SENSITIVE_KEYS = new Set([
   'anon_key',
 ])
 
+/** @type {Array<[RegExp, string]>} */
 const REDACT_PATTERNS = [
   [/\bbearer\s+\S+/gi, 'Bearer «redacted»'],
   [
@@ -346,7 +347,7 @@ export function createKenosAppLogs(options) {
   function forwardToNative(event) {
     if (typeof window === 'undefined') return
     try {
-      const handler = window.webkit?.messageHandlers?.kenosNativeLog
+      const handler = /** @type {any} */ (window).webkit?.messageHandlers?.kenosNativeLog
       if (!handler || typeof handler.postMessage !== 'function') return
       handler.postMessage({
         level: event.level,
@@ -533,13 +534,24 @@ export function createKenosAppLogs(options) {
   installGlobalHandlers()
   startAutoSync()
 
+  /** @type {(message: string, extra?: Record<string, any>) => any} */
+  const logInfo = (message, extra) => append('info', message, extra)
+  /** @type {(message: string, extra?: Record<string, any>) => any} */
+  const logNotice = (message, extra) => append('notice', message, extra)
+  /** @type {(message: string, extra?: Record<string, any>) => any} */
+  const logWarning = (message, extra) => append('warning', message, extra)
+  /** @type {(message: string, extra?: Record<string, any>) => any} */
+  const logError = (message, extra) => append('error', message, extra)
+  /** @type {(message: string, extra?: Record<string, any>) => any} */
+  const logFault = (message, extra) => append('fault', message, extra)
+
   return {
     sessionId,
-    log: (message, extra) => append('info', message, extra),
-    notice: (message, extra) => append('notice', message, extra),
-    warning: (message, extra) => append('warning', message, extra),
-    error: (message, extra) => append('error', message, extra),
-    fault: (message, extra) => append('fault', message, extra),
+    log: logInfo,
+    notice: logNotice,
+    warning: logWarning,
+    error: logError,
+    fault: logFault,
     /**
      * @param {string} message
      * @param {Record<string, unknown>} [metadata]
@@ -547,10 +559,10 @@ export function createKenosAppLogs(options) {
     breadcrumb: (message, metadata) =>
       append('notice', message, { category: 'breadcrumb', metadata }),
     flush,
-    setEnabled: (next) => {
+    setEnabled: (/** @type {unknown} */ next) => {
       enabled = Boolean(next)
     },
-    setCloudMinLevel: (level) => {
+    setCloudMinLevel: (/** @type {string} */ level) => {
       cloudMinLevel = normalizeLogLevel(level)
     },
     getStatus: () => ({
