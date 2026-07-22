@@ -31,6 +31,8 @@
     syncNow,
     getCloudAccessToken,
   } from '$lib/cloud.svelte.js'
+  import { isShellSurface } from '$lib/kenos/shellSurface.js'
+  import { createDeviceAuthGate } from '$lib/kenos/deviceAuthGate.svelte.js'
   import {
     CONTROL,
     refreshControlCenter,
@@ -275,6 +277,12 @@
     if (await signInCloud(email, cloudPassword)) cloudPassword = ''
   }
 
+  /* 壳内(Kenos iOS/Mac)设备优先登录:会话来自设备密钥 + Face ID 解锁,
+     仅已配对设备可换取(服务端 1 desktop + 1 mobile 槽位限制)。
+     未配对/离线时按状态机降级(见 deviceAuthGate)。 */
+  const shellSurface = isShellSurface()
+  const deviceGate = shellSurface ? createDeviceAuthGate() : null
+
   function lastSyncLabel(at) {
     if (!at) return t('settings.cloudNever')
     return new Date(at).toLocaleTimeString()
@@ -308,12 +316,21 @@
   let permBusy = $state('') // 正在请求的权限 key,禁用按钮防重复点
   onMount(() => {
     void refreshControlCenter()
+    // 壳内(Kenos iOS/Mac):Face ID 解锁 + 设备交换可能晚于本页挂载,
+    // 状态机挂载即静默尝试恢复会话,让「设备自动登录」不用手动刷新即可接上。
+    const disposeGate = deviceGate?.start()
     const disposeScroll = scrollToSettingsHash('cloud')
-    if (!isNative) return disposeScroll
+    if (!isNative) {
+      return () => {
+        disposeGate?.()
+        disposeScroll()
+      }
+    }
     refreshPermissions()
     const onFocus = () => refreshPermissions()
     window.addEventListener('focus', onFocus)
     return () => {
+      disposeGate?.()
       disposeScroll()
       window.removeEventListener('focus', onFocus)
     }
@@ -348,8 +365,10 @@
 <div class="wrap">
   <SettingsSyncBlock
     title={t('settings.cloud')}
-    signedOutDesc={t('settings.cloudDesc')}
-    ssoHint={t('settings.cloudSsoHint')}
+    signedOutDesc={shellSurface
+      ? t('settings.cloudDeviceDesc')
+      : t('settings.cloudDesc')}
+    ssoHint={shellSurface ? '' : t('settings.cloudSsoHint')}
     signedInDesc={accountSignedInDesc}
     email={CLOUD.user ? `${CLOUD.user.email} · ${sessionLabels.accountStatus}` : ''}
     configured={CLOUD.configured}
@@ -380,7 +399,7 @@
         <p class="block-desc cloud-error">{CLOUD.error}</p>
       {/if}
     {/snippet}
-    {#snippet signedOut()}
+    {#snippet loginForm()}
       <div class="cloud-login">
         <input
           type="email"
@@ -396,8 +415,7 @@
           autocomplete="current-password"
           placeholder={t('settings.cloudPassword')}
           bind:value={cloudPassword}
-          onkeydown={(e) =>
-            e.key === 'Enter' && !e.isComposing && cloudSignIn()}
+          onkeydown={(e) => e.key === 'Enter' && !e.isComposing && cloudSignIn()}
           aria-label={t('settings.cloudPassword')}
         />
         <button
@@ -409,6 +427,44 @@
           {t('settings.cloudSignIn')}
         </button>
       </div>
+    {/snippet}
+    {#snippet deviceRetry()}
+      <button
+        type="button"
+        class="mini-btn cloud-connect"
+        disabled={CLOUD.busy}
+        onclick={() => deviceGate?.retry()}
+      >
+        {CLOUD.busy
+          ? t('settings.cloudDeviceConnecting')
+          : t('settings.cloudDeviceRetry')}
+      </button>
+    {/snippet}
+    {#snippet signedOut()}
+      {#if shellSurface}
+        <div class="cloud-device">
+          {#if deviceGate?.state === 'offline'}
+            <p class="block-desc cloud-error">
+              {t('settings.cloudDeviceOffline')}
+            </p>
+            {@render deviceRetry()}
+          {:else if deviceGate?.state === 'needsFallback'}
+            <!-- 设备登录没成:露出账号兜底,登录一次即自动完成本机配对 -->
+            {@render deviceRetry()}
+            <p class="block-desc cloud-fallback-hint">
+              {t('settings.cloudDeviceFallbackHint')}
+            </p>
+            {@render loginForm()}
+          {:else}
+            <!-- connecting:静默尝试中,不闪登录框 -->
+            <button type="button" class="mini-btn cloud-connect" disabled>
+              {t('settings.cloudDeviceConnecting')}
+            </button>
+          {/if}
+        </div>
+      {:else}
+        {@render loginForm()}
+      {/if}
       {#if CLOUD.error}
         <p class="block-desc cloud-error">{CLOUD.error}</p>
       {/if}
@@ -1154,7 +1210,8 @@
   }
 
   /* —— 云端同步 —— */
-  .cloud-login {
+  .cloud-login,
+  .cloud-device {
     display: grid;
     gap: 8px;
   }
@@ -1177,6 +1234,9 @@
   }
   .cloud-error {
     color: var(--critical, #f85149);
+  }
+  .cloud-fallback-hint {
+    margin-top: 4px;
   }
 
   .danger-btn {

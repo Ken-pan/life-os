@@ -3,6 +3,7 @@ import {
   mapAuthErrorMessage,
   LIFE_OS_PERSONAL_OWNER_EMAIL,
   ensureLifeOsSsoReady,
+  retryLifeOsSharedSessionRestore,
 } from '@life-os/sync'
 import { t } from '$lib/i18n/index.js'
 import {
@@ -288,6 +289,28 @@ export async function signInCloud(email, password) {
       network: t('auth.errNetwork'),
       generic: t('auth.errGeneric'),
     })
+    return false
+  } finally {
+    CLOUD.busy = false
+  }
+}
+
+/**
+ * 壳内设备自动登录重试:重放共享会话恢复(SSO cookie → 原生钥匙串 vault)。
+ * Kenos iOS/Mac 壳在 Face ID 解锁 + 设备交换后才灌 vault,可能晚于 web 冷启;
+ * 登录态由 onAuthStateChange 统一落地(CLOUD.user / 舰队 / 记忆水合)。
+ * @returns {Promise<boolean>} 重试后是否已有会话
+ */
+export async function retryShellAutoSignIn() {
+  if (!browser || !CLOUD.configured) return false
+  if (CLOUD.user) return true
+  if (CLOUD.busy) return false
+  CLOUD.busy = true
+  try {
+    const ok = await retryLifeOsSharedSessionRestore(sb)
+    if (ok) syncNow()
+    return ok
+  } catch {
     return false
   } finally {
     CLOUD.busy = false

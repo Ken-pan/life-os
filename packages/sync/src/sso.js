@@ -344,6 +344,44 @@ function bindSessionWarmOnResume(supabase) {
 }
 
 /**
+ * Re-attempt shared-session restore (Cookie → native vault) after cold start.
+ * Native shells (Kenos iOS/Mac) seed the vault only after Face ID unlock +
+ * device exchange, which can land after the web app booted — this lets the
+ * signed-out UI retry without a full reload.
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @returns {Promise<boolean>} true when a session is present afterwards
+ */
+export async function retryLifeOsSharedSessionRestore(supabase) {
+  if (typeof window === 'undefined') return false
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (session) return true
+
+  const cookieTokens = getSharedCookie()
+  if (cookieTokens) {
+    const result = await restoreSessionFromTokens(
+      supabase,
+      cookieTokens,
+      'shared cookie (retry)',
+    )
+    if (result === 'ok') return true
+    if (result === 'fatal') clearSharedCookie()
+  }
+
+  const nativeTokens = await fetchNativeSharedTokens()
+  if (nativeTokens) {
+    const result = await restoreSessionFromTokens(
+      supabase,
+      nativeTokens,
+      'native vault (retry)',
+    )
+    if (result === 'ok') return true
+  }
+  return false
+}
+
+/**
  * Cross-origin SSO for Life OS apps.
  * Order: Cookie (*.kenos.space / LAN host-only) → Kenos iOS Keychain vault.
  * On SIGNED_IN, mirrors tokens to Cookie + native vault.

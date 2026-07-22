@@ -359,6 +359,14 @@ export default {
     cloudEmail: 'Email',
     cloudPassword: 'Password',
     cloudSignIn: 'Sign in',
+    cloudDeviceDesc:
+      'This device connects to your account automatically — no password needed day to day. Only your paired devices (1 computer + 1 phone) can access it.',
+    cloudDeviceAuth: 'Unlocking this device connects to the cloud automatically.',
+    cloudDeviceRetry: 'Retry device sign-in',
+    cloudDeviceConnecting: 'Connecting…',
+    cloudDeviceOffline: 'Offline right now — it will connect automatically once you are back online.',
+    cloudDeviceFallbackHint:
+      'This device is not paired yet. Sign in once and it will finish pairing automatically — no password needed after that.',
     cloudSignedInAs: 'Signed in',
     cloudNeedSignIn: 'Sign in first to upload to cloud',
     cloudSignOut: 'Sign out',

@@ -4,12 +4,27 @@
    * 未登录 → 登录表单;非本人 → 拒绝;登录态恢复中 → 占位。
    * 仅在 CLOUD_BUILD(Netlify 版)由 +layout 挂载;本地形态不经过它。
    */
+  import { onMount } from 'svelte'
   import { t } from '$lib/i18n/index.js'
-  import { CLOUD, signInCloud, signOutCloud, isCloudAuthorized } from '$lib/cloud.svelte.js'
+  import {
+    CLOUD,
+    signInCloud,
+    signOutCloud,
+    isCloudAuthorized,
+  } from '$lib/cloud.svelte.js'
+  import { isShellSurface } from '$lib/kenos/shellSurface.js'
+  import { createDeviceAuthGate } from '$lib/kenos/deviceAuthGate.svelte.js'
   import { AUTH_WALL_DOCUMENT_TITLE } from '$lib/kenos/clientSessionCleanup.core.js'
 
   let email = $state('')
   let password = $state('')
+
+  /* 壳内(Kenos iOS/Mac)设备优先:会话来自设备密钥 + Face ID 解锁,
+     仅已配对设备(1 台电脑 + 1 台手机)可换取;未配对/离线按状态机降级。 */
+  const shellSurface = isShellSurface()
+  const deviceGate = shellSurface ? createDeviceAuthGate() : null
+
+  onMount(() => deviceGate?.start())
 
   async function submit() {
     if (!email.trim() || !password || CLOUD.busy) return
@@ -37,9 +52,33 @@
       <button type="button" class="btn ghost" disabled={CLOUD.busy} onclick={signOutCloud}>
         {t('settings.cloudSignOut')}
       </button>
+    {:else if shellSurface && deviceGate?.state === 'connecting'}
+      <!-- 壳内静默尝试设备登录中,不闪登录框 -->
+      <p class="sub">{t('settings.cloudDeviceAuth')}</p>
+      <p class="sub shimmer">{t('settings.cloudDeviceConnecting')}</p>
+    {:else if shellSurface && deviceGate?.state === 'offline'}
+      <!-- 壳内离线:恢复联网后自动接上,不展示密码 -->
+      <p class="sub">{t('settings.cloudDeviceOffline')}</p>
+      <button type="button" class="btn" disabled={CLOUD.busy} onclick={() => deviceGate?.retry()}>
+        {CLOUD.busy
+          ? t('settings.cloudDeviceConnecting')
+          : t('settings.cloudDeviceRetry')}
+      </button>
+      {#if CLOUD.error}
+        <p class="err">{CLOUD.error}</p>
+      {/if}
     {:else}
-      <!-- 未登录:登录表单 -->
-      <p class="sub">{t('gate.prompt')}</p>
+      <!-- 浏览器,或壳内设备登录未成(needsFallback):账号登录兜底 -->
+      {#if shellSurface}
+        <p class="sub">{t('settings.cloudDeviceFallbackHint')}</p>
+        <button type="button" class="btn ghost" disabled={CLOUD.busy} onclick={() => deviceGate?.retry()}>
+          {CLOUD.busy
+            ? t('settings.cloudDeviceConnecting')
+            : t('settings.cloudDeviceRetry')}
+        </button>
+      {:else}
+        <p class="sub">{t('gate.prompt')}</p>
+      {/if}
       <input
         type="email"
         autocomplete="email"

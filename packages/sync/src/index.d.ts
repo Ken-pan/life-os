@@ -35,6 +35,9 @@ export function setupCrossDomainSSO(
 export function ensureLifeOsSsoReady(
   supabase: import('@supabase/supabase-js').SupabaseClient,
 ): Promise<void>
+export function retryLifeOsSharedSessionRestore(
+  supabase: import('@supabase/supabase-js').SupabaseClient,
+): Promise<boolean>
 export function parseJwtExp(token: string | null | undefined): number | null
 export function isAccessTokenFresh(
   accessToken: string | null | undefined,

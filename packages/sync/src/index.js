@@ -38,6 +38,7 @@ export {
   isAccessTokenFresh,
   normalizeSsoTokens,
   isFatalAuthRestoreError,
+  retryLifeOsSharedSessionRestore,
 } from './sso.js'
 
 export {

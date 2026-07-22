@@ -345,6 +345,14 @@ export default {
     cloudEmail: '邮箱',
     cloudPassword: '密码',
     cloudSignIn: '登录',
+    cloudDeviceDesc:
+      '这台设备会自动接上你的账户,平时无需输入密码。仅本人的已配对设备(1 台电脑 + 1 台手机)可访问。',
+    cloudDeviceAuth: '解锁本机即自动接上云端。',
+    cloudDeviceRetry: '重试设备登录',
+    cloudDeviceConnecting: '连接中…',
+    cloudDeviceOffline: '当前离线,恢复联网后会自动接上。',
+    cloudDeviceFallbackHint:
+      '本机还没完成配对。用账号登录一次即可自动完成,之后就免密了。',
     cloudSignedInAs: '已登录',
     cloudNeedSignIn: '请先登录再上传到云端',
     cloudSignOut: '退出登录',
