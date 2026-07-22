@@ -1,4 +1,8 @@
+import { paperMockDisabledResponse } from './_paperMockGuard.mjs'
+
 export default async (req) => {
+  const _disabled = paperMockDisabledResponse()
+  if (_disabled) return _disabled
   const headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
