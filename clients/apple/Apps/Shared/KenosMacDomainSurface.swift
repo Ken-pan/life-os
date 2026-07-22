@@ -91,11 +91,13 @@ struct KenosMacShellSurface: View {
             if loadProgress > 0, loadProgress < 1, loadError == nil {
                 ProgressView(value: loadProgress)
                     .progressViewStyle(.linear)
+                    .tint(KenosMacTheme.accent)
                     .frame(height: 2)
             }
         }
         // Prefer sidebar IA labels — SPA document.title stays "Kenos Assistant".
         .navigationTitle(shellTitle)
+        .kenosMacSeamlessChrome()
         .onReceive(NotificationCenter.default.publisher(for: .kenosMacReloadWeb)) { _ in
             loadError = nil
             surfaceEpoch &+= 1
@@ -121,6 +123,8 @@ struct KenosMacDomainSurface: View {
     @State private var loadError: String?
     @State private var webViewRef: WKWebView?
     @State private var reloadToken = 0
+    @State private var canGoBack = false
+    @State private var canGoForward = false
 
     private var domainId: String {
         KenosDomainRegistry.domainId(fromContinuity: model.continuityURL)
@@ -143,6 +147,8 @@ struct KenosMacDomainSurface: View {
                     reloadToken: reloadToken,
                     // Ignore document.title (PLANNER.OS / MUSIC.OS) — sidebar IA wins (MAC-P0-02 / P1-03).
                     onTitle: { _ in },
+                    onCanGoBackChange: { canGoBack = $0 },
+                    onCanGoForwardChange: { canGoForward = $0 },
                     onProgress: { loadProgress = $0 },
                     onURLChange: { live in
                         model.syncDomainDockSlot(for: live)
@@ -210,7 +216,38 @@ struct KenosMacDomainSurface: View {
         }
         // Chromeless Continuity (MAC-P0-02): sidebar name only — no browser chrome.
         .navigationTitle(domainLabel)
+        .kenosMacSeamlessChrome()
         .toolbar {
+            ToolbarItemGroup(placement: .navigation) {
+                Button {
+                    webViewRef?.goBack()
+                } label: {
+                    Label("Back", systemImage: "chevron.left")
+                }
+                .disabled(!canGoBack)
+                .keyboardShortcut("[", modifiers: [.command])
+                .help("Back (⌘[)")
+                .accessibilityIdentifier("kenos.mac.domain.back")
+
+                Button {
+                    webViewRef?.goForward()
+                } label: {
+                    Label("Forward", systemImage: "chevron.right")
+                }
+                .disabled(!canGoForward)
+                .keyboardShortcut("]", modifiers: [.command])
+                .help("Forward (⌘])")
+                .accessibilityIdentifier("kenos.mac.domain.forward")
+
+                Button {
+                    loadError = nil
+                    webViewRef?.reload()
+                } label: {
+                    Label("Reload", systemImage: "arrow.clockwise")
+                }
+                .help("Reload (⌘R)")
+                .accessibilityIdentifier("kenos.mac.domain.reload")
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     model.returnToKenosFromDomain()
@@ -336,16 +373,33 @@ struct KenosMacWebSurfaceView: NSViewRepresentable {
                 "--kenos-chrome-top-inset:" + top + "px;",
                 "--kenos-dock-scroll-end-pad:" + bottom + "px;",
                 "--kenos-native-safe-bottom:0px;",
-                /* MAC-P0-01 / P2-02: collapse web sidebar; use full detail width. */
+                /* MAC-P0-01 / P2-02: collapse web sidebar; use full detail width.
+                   content-max must stay a LENGTH — a % inside the shell-column
+                   calc((100cqw - var(--content-max))/2) resolves to 0 and pads
+                   the main column half the viewport (Planner squeeze). */
                 "--sidebar-w:0px!important;",
-                "--content-max:100%!important;",
-                "--maxw:100%!important;",
+                "--content-max:9999px!important;",
+                "--maxw:9999px!important;",
                 "--content-inline-pad:clamp(16px,2vw,32px)!important;",
                 "--page-gutter:clamp(16px,2vw,32px)!important;",
                 "}",
-                /* MAC-P0-01 / P0-03: single-column shell; hide web sidebars (native owns nav). */
+                /* Element-scoped pad — platform-web defines its own on the
+                   shell column, which beats an html-level override. */
+                "html[data-mac-native-shell='true'] .main-col,",
+                "html[data-mac-native-shell='true'] .life-os-shell-column,",
+                "html[data-mac-native-shell='true'] .life-os-page-workspace{",
+                "--content-max:9999px!important;",
+                "--content-inline-pad:clamp(16px,2vw,32px)!important;",
+                "}",
+                "html[data-mac-native-shell='true'] .life-os-page-workspace{",
+                "width:100%!important;min-width:0!important;",
+                "}",
+                /* MAC-P0-01 / P0-03: single-column shell; hide web sidebars (native owns nav).
+                   .app-shell too (Planner) — display:none on the sidebar shifts grid
+                   auto-placement into the 0px sidebar track otherwise. */
                 "html[data-mac-native-shell='true'] .life-os-app-shell,",
-                "html[data-mac-native-shell='true'] .life-os-app-shell__body{",
+                "html[data-mac-native-shell='true'] .life-os-app-shell__body,",
+                "html[data-mac-native-shell='true'] .app-shell{",
                 "grid-template-columns:minmax(0,1fr)!important;",
                 "}",
                 "html[data-mac-native-shell='true'] .sidebar,",

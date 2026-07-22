@@ -64,83 +64,18 @@ struct KenosMacApp: App {
 
         // MAC-P1-02: system Settings window (⌘,) — not a sidebar page.
         Settings {
-            DailyBetaSettingsView(model: model)
-                .frame(minWidth: 480, idealWidth: 520, minHeight: 420, idealHeight: 560)
+            // NavigationStack so the Advanced NavigationLink can push.
+            NavigationStack {
+                DailyBetaSettingsView(model: model)
+            }
+            .formStyle(.grouped)
+            .frame(minWidth: 520, idealWidth: 560, minHeight: 480, idealHeight: 600)
+            // Content canvas is dark-only on Mac (web forces #08090a) — match it.
+            .preferredColorScheme(.dark)
         }
 
         MenuBarExtra(menuBarTitle, systemImage: menuBarSystemImage) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text(focusStatusLine)
-                    .font(.headline)
-                    .accessibilityIdentifier("kenos.menubar.focus")
-
-                HStack {
-                    Text("Approvals")
-                    Spacer()
-                    Text("\(model.pendingApprovalCount)")
-                        .foregroundStyle(model.pendingApprovalCount > 0 ? Color.orange : Color.secondary)
-                        .monospacedDigit()
-                }
-                .font(.subheadline)
-                .accessibilityIdentifier("kenos.menubar.approvals")
-
-                if model.shellMode == .domain {
-                    Text("In \(model.domainDisplayTitle)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .accessibilityIdentifier("kenos.menubar.domain")
-                }
-
-                Divider()
-
-                Text("Quick Capture")
-                    .font(.subheadline.weight(.semibold))
-                TextField("Draft only", text: $menuBar.draft)
-                    .onSubmit {
-                        guard !menuBar.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-                        model.captureText = menuBar.draft
-                        model.submitCapture()
-                        menuBar.draft = ""
-                        model.openCapture()
-                    }
-                Button("Save local draft") {
-                    model.captureText = menuBar.draft
-                    model.submitCapture()
-                    menuBar.draft = ""
-                    model.openCapture()
-                }
-                .disabled(menuBar.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .keyboardShortcut(.defaultAction)
-
-                Text("Local draft only · no Space write")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Divider()
-
-                Button("Open Today") {
-                    model.selectMacSidebar(.today)
-                }
-                Button("Open Inbox") {
-                    model.selectMacSidebar(.inbox)
-                }
-                Button("Spaces…") {
-                    model.openSpaceShelf()
-                }
-                if model.shellMode == .domain {
-                    Button("Leave Space") {
-                        model.returnToKenosFromDomain()
-                        model.selectMacSidebar(.today)
-                    }
-                }
-                if model.focusStore.isForeground || model.focusStore.isPaused {
-                    Button("End Focus", role: .destructive) {
-                        model.endFocus()
-                    }
-                }
-            }
-            .padding(12)
-            .frame(width: 300)
+            KenosMenuBarPanel(model: model, menuBar: menuBar)
         }
         .menuBarExtraStyle(.window)
     }
@@ -165,16 +100,6 @@ struct KenosMacApp: App {
         return "tray.and.arrow.down"
     }
 
-    private var focusStatusLine: String {
-        if let focus = model.focusStore.focus, model.focusStore.isForeground || model.focusStore.isPaused {
-            let state = model.focusStore.isPaused ? "Paused" : "Focus"
-            return "\(state) · \(focus.title)"
-        }
-        if model.focusStore.showCompletedSummary {
-            return "Focus complete"
-        }
-        return "Focus idle"
-    }
 }
 
 @MainActor

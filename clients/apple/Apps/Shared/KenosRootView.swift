@@ -91,6 +91,10 @@ struct KenosRootView: View {
             }
         }
         .sheet(isPresented: $model.showCaptureSheet) {
+            #if os(macOS)
+            // Quick-entry panel — not a settings Form (macOS Form clips labels in sheets).
+            KenosMacCapturePanel(model: model)
+            #else
             NavigationStack {
                 CaptureView(model: model)
                     .toolbar {
@@ -99,8 +103,6 @@ struct KenosRootView: View {
                         }
                     }
             }
-            #if os(macOS)
-            .frame(minWidth: 420, idealWidth: 480, minHeight: 360, idealHeight: 420)
             #endif
         }
         .sheet(isPresented: $model.showApprovalsSheet) {
@@ -117,10 +119,11 @@ struct KenosRootView: View {
             #endif
         }
         .sheet(isPresented: $model.showSpaceSwitcher) {
+            #if os(macOS)
+            KenosMacSpaceSwitcherPanel(model: model)
+            #else
             SpaceSwitcherSheet(model: model)
-                #if os(macOS)
-                .frame(minWidth: 420, idealWidth: 480, minHeight: 520, idealHeight: 640)
-                #endif
+            #endif
         }
         #if os(iOS)
         .sheet(isPresented: $model.showSettingsSheet) {
@@ -212,6 +215,11 @@ struct KenosRootView: View {
             guard let raw = note.object as? String else { return }
             model.open(urlString: raw)
         }
+        #endif
+        #if os(macOS)
+        // Mac content canvas is dark-only (web shell forces #08090a) — keep native
+        // chrome, sheets and the unlock gate on the same dark language.
+        .preferredColorScheme(.dark)
         #endif
     }
     #if os(iOS)
@@ -391,20 +399,38 @@ struct KenosRootView: View {
                     macSidebarRow(.today)
                     macSidebarRow(.assistant)
                     macSidebarRow(.inbox)
+                        .badge(model.pendingApprovalCount)
                 }
                 Section("Spaces") {
                     ForEach(KenosAppModel.macSidebarDomainOrder, id: \.self) { domainId in
                         macSidebarRow(.domain(domainId))
                     }
                 }
-                Section("System") {
-                    macSidebarRow(.settings)
-                }
             }
             .listStyle(.sidebar)
             .navigationSplitViewColumnWidth(min: 200, ideal: 240, max: 320)
             .navigationTitle("Kenos")
             .accessibilityIdentifier("kenos.mac.sidebar")
+            // Settings opens a window (⌘,) — a pinned footer button avoids the
+            // fake List-selection flash a sidebar row caused.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                VStack(spacing: 0) {
+                    Divider()
+                    Button {
+                        model.presentSettings()
+                    } label: {
+                        Label("Settings", systemImage: "gearshape")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .padding(6)
+                    .accessibilityIdentifier("kenos.mac.sidebar.tab.settings")
+                }
+            }
             .toolbar {
                 ToolbarItem {
                     Button("Spaces", systemImage: "square.grid.2x2.fill") {
@@ -480,7 +506,7 @@ struct KenosRootView: View {
             case .today: TodayView(model: model)
             case .assistant: AssistantView(model: model)
             case .inbox: InboxView(model: model)
-            case .settings: DailyBetaSettingsView(model: model)
+            case .settings: DailyBetaSettingsView(model: model).formStyle(.grouped)
             case .domain:
                 // Selection already triggers enterDomainMode; show hub while URL settles.
                 SpacesHubView(model: model)

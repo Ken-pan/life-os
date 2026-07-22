@@ -24,7 +24,7 @@ KenosMac is a **sidebar + detail** shell (not an iOS Dock clone):
 
 | Surface             | Behavior                                                                   |
 | ------------------- | -------------------------------------------------------------------------- |
-| Sidebar             | Kenos / Spaces / System; domain accent icons; balanced split columns       |
+| Sidebar             | Kenos / Spaces; domain accent icons; Inbox approvals badge; Settings footer button |
 | Kenos Mode          | Daily Beta ON → AIOS shell WK (`KenosMacShellSurface`); OFF → native pages |
 | Spaces / Continuity | In-app Domain WK; Back ⌘[ · Forward ⌘] · Reload ⌘R · unreachable recovery  |
 | Switch Space        | Toolbar Spaces / ⌘⇧S → `SpaceSwitcherSheet`                                |
