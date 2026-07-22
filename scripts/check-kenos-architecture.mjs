@@ -51,6 +51,15 @@ const LEGACY_LIFE_EVENTS_ALLOW = new Set(['apps/aios/src/lib/lifeos.js'])
 
 const SERVICE_ROLE_RE = /service_role|SUPABASE_SERVICE_ROLE_KEY|SERVICE_ROLE_KEY/
 
+// Server code that writes planner_tasks directly (bypassing the Kenos command
+// boundary). Two known writers are tracked convergence targets; NO new one may
+// appear. repo.js is client-side (legacy full-state sync, KR-P1-001A cutover).
+const SERVER_ROOTS = ['apps/planner/server', 'apps/planner/netlify/functions']
+const PLANNER_TASKS_WRITE_RE = /\.from\(['"]planner_tasks['"]\)\s*\.\s*(insert|upsert|update|delete)/
+const SERVER_PLANNER_WRITER_ALLOW = new Set([
+  'apps/planner/server/paperService.mjs', // paper e-ink device sync — converge to Kenos RPC (ledger)
+])
+
 const failures = []
 const fail = (m) => failures.push(m)
 
@@ -84,6 +93,22 @@ for (const rootRel of CLIENT_SRC_ROOTS) {
       if (!LEGACY_LIFE_EVENTS_ALLOW.has(rel)) {
         fail(`new client-side life_events core.* writer (converge to canonical RPC): ${rel}`)
       }
+    }
+  }
+}
+
+// Server-side planner_tasks writers: only the pinned allowlist may exist.
+for (const rootRel of SERVER_ROOTS) {
+  for (const file of walk(join(ROOT, rootRel))) {
+    const rel = relative(ROOT, file)
+    if (/\.test\.|\.spec\./.test(rel)) continue
+    const text = readFileSync(file, 'utf8')
+    if (PLANNER_TASKS_WRITE_RE.test(text) && !SERVER_PLANNER_WRITER_ALLOW.has(rel)) {
+      fail(`new server-side planner_tasks writer bypasses the Kenos command boundary: ${rel}`)
+    }
+    if (SERVICE_ROLE_RE.test(text) && /role["']?\s*:\s*["']service_role/.test(text)) {
+      // service-role key VALUE embedded in server source (env read is fine)
+      fail(`service-role key value in server source: ${rel}`)
     }
   }
 }

@@ -59,16 +59,33 @@ the daily-beta (all in-app web → same Supabase).
 
 ## 4. Duplicate write paths (honest status)
 
-**Plan Task — two mechanisms to the SAME canonical table (documented migration
-KR-P1-001A, not a second truth source):**
-- Legacy: `apps/planner/src/lib/repo.js` full-state upsert of `planner_tasks`
-  (bidirectional LWW sync). This is the established canonical writer.
-- Kenos: `kenos_create_plan_task_action` + update/complete RPCs (atomic +
-  outbox + activity). Cohort/flag-gated.
-- Both write `planner_tasks`; only the RPC emits Activity, so there is **no
-  double Activity**. Writer cutover (route all callers through the RPC, freeze
-  the Legacy direct writer) is explicitly owner-gated per KR-P1-001A. Not a
-  permanent dual-write; a migration-in-progress with a defined cutover.
+**Activation reality:** no `.env`/`netlify.toml` sets any `VITE_KENOS_*` flag, so
+in default + production builds every Kenos writer flag is OFF — the Legacy
+`repo.js` upsert is the **sole** prod writer (no dual-write in prod). Flags flip
+on only in the owner canary (`kenos-daily-beta`, cohort = single owner email).
+
+**Plan Task — THREE write mechanisms to `planner_tasks`:**
+1. Legacy full-state sync: `apps/planner/src/lib/repo.js:164` upsert (LWW). The
+   established, sole prod writer. Delete-tombstone at `:143`.
+2. Kenos RPCs: `kenos_create/update/complete_*` (atomic + outbox + activity),
+   cohort/flag-gated. In the owner canary, a create is de-duped and dedicated-
+   field edits route to RPCs, but any **non-dedicated-field edit** (priority/
+   tags/subtasks/notes) sets `legacyDirty` → `repo.js` re-upserts the whole row
+   → a **real row-level dual-write in the canary only**, coordinated by
+   `legacyDirty` + LWW; the RPC-owned outbox/activity are not re-emitted. This
+   is the KR-P1-001A migration-in-progress; cutover (freeze the direct writer)
+   is owner-gated and blocked because
+   `apps/planner/supabase/review/20260719100000_kenos_revoke_planner_tasks_direct_write.sql`
+   is unapplied review-only.
+3. **`apps/planner/server/paperService.mjs` (paper e-ink device sync,
+   `/api/paper/actions`) writes `planner_tasks` directly (`:805`, `:420`…),
+   unconditional — no flag, no cohort, bypasses the command boundary → no
+   `kenos_plan_activity`/outbox row.** This is the established paper provider
+   path (per AGENTS, paper functions stay Planner-side), not a new dual-write,
+   but it is a genuine parallel writer. Pinned in the architecture guard's
+   server allowlist; convergence target: route through the Kenos RPC. Owner-gated.
+
+Only the RPC emits Activity, so there is **no double Activity** from any of the three.
 
 **Capture — one tracked competing writer, flag-gated OFF in prod:**
 - Canonical: `kenos_ingest_capture_envelope_action` → `kenos_capture_envelopes`
@@ -88,10 +105,17 @@ KR-P1-001A, not a second truth source):**
   reads canonical `kenos_list_plan_activity` (dedup vs life_events compat).
 - Demo data (`apps/aios/src/lib/demoMode.js` / `demoData.js`) is localhost-only
   and opt-in (`?kenosDemo=1`), never in `CLOUD_BUILD` — not a production fake path.
+- **FIXED this milestone**: `/api/paper/mock/*` endpoints returned
+  `batchStatus:"applied"` with zero persistence and were deployed unguarded — a
+  fake-success path reachable in production. Now 404 unless `PAPER_MOCK_ENABLED=1`
+  (`_paperMockGuard.mjs`, dev/test only).
 - No silently-swallowed mutation failure in the verified loop: writers are
   fail-closed (`prodWriteGuard`), RPCs raise deterministic errors, offline
-  intents dead-letter after retries.
-- Apple `FakeActionExecutor` throws on `productionWrite` and is dev/local only.
+  intents dead-letter after retries. The only fail-open swallow is a READ-side
+  path (`readSources.js` keeps the legacy feed if the Kenos read errors) — by design.
+- Apple `FakeActionExecutor` throws on `productionWrite` and is dev/local only;
+  never wired to canonical tables (verified — Apple client never writes
+  `planner_tasks`/`kenos_capture_envelopes`).
 
 ## 6. Contract / error / Activity / Continue consolidation
 
@@ -115,9 +139,14 @@ KR-P1-001A, not a second truth source):**
 No legacy code deleted in this milestone (per protocol: prove zero callers first).
 Tracked for removal with owner + prerequisite:
 - Legacy Planner `repo.js` direct `planner_tasks` writer → remove after RPC
-  writer cutover (KR-P1-001A, owner-gated).
+  writer cutover (KR-P1-001A); blocked because the revoke migration
+  `review/20260719100000_kenos_revoke_planner_tasks_direct_write.sql` is
+  unapplied review-only.
+- `paperService.mjs` direct `planner_tasks` writer → route through the Kenos RPC.
 - AIOS `plannerAddTask` life_events capture → converge to canonical RPC, then remove.
-Both have runtime callers today, so both remain until migrated.
+- `mcpTasks.mjs` `createMemoryCreateTaskDatabase` — **zero prod callers** (prod
+  `mcp.mjs` uses the RPC directly) → safe removal candidate (test-only helper).
+All except the last have runtime callers today, so they remain until migrated.
 
 ## 8. Architecture regression tests
 
