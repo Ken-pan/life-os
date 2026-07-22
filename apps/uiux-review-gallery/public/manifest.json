@@ -25,7 +25,7 @@
     "ios",
     "mac"
   ],
-  "count": 11,
+  "count": 16,
   "apps": [
     {
       "id": "planner",
@@ -969,7 +969,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/kenos-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T15:50:26.947Z",
+          "generatedAt": "2026-07-22T15:59:26.933Z",
           "screens": 6,
           "capture": {
             "ok": 6,
@@ -1008,8 +1008,8 @@
         }
       ],
       "git": {
-        "sha": "483a8904d",
-        "subject": "fix(uiux-gallery): skip native capture on non-macOS (CI keeps committed shots)",
+        "sha": "fcb8b9bbf",
+        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
         "branch": "master"
       },
       "metrics": {
@@ -1025,7 +1025,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/plan-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T15:50:27.369Z",
+          "generatedAt": "2026-07-22T15:59:27.353Z",
           "screens": 2,
           "capture": {
             "ok": 2,
@@ -1048,8 +1048,8 @@
         }
       ],
       "git": {
-        "sha": "483a8904d",
-        "subject": "fix(uiux-gallery): skip native capture on non-macOS (CI keeps committed shots)",
+        "sha": "fcb8b9bbf",
+        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
         "branch": "master"
       },
       "metrics": {
@@ -1065,7 +1065,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/training-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T15:50:28.072Z",
+          "generatedAt": "2026-07-22T15:59:28.038Z",
           "screens": 3,
           "capture": {
             "ok": 3,
@@ -1092,14 +1092,210 @@
         }
       ],
       "git": {
-        "sha": "483a8904d",
-        "subject": "fix(uiux-gallery): skip native capture on non-macOS (CI keeps committed shots)",
+        "sha": "fcb8b9bbf",
+        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
         "branch": "master"
       },
       "metrics": {
         "coverage": {
           "ok": 3,
           "total": 3,
+          "pct": 100
+        }
+      }
+    },
+    {
+      "id": "music-ios",
+      "variants": {
+        "dark-ios": {
+          "file": "shots/music-ios-dark-ios.jpg",
+          "generatedAt": "2026-07-22T15:59:28.453Z",
+          "screens": 2,
+          "capture": {
+            "ok": 2,
+            "total": 2
+          }
+        }
+      },
+      "native": true,
+      "name": "音乐 · iOS",
+      "description": "Music 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：播放 · 音乐库",
+      "screens": 2,
+      "pages": [
+        {
+          "path": "kenos://domain/music",
+          "title": "播放"
+        },
+        {
+          "path": "kenos://domain/music?path=/library",
+          "title": "音乐库"
+        }
+      ],
+      "git": {
+        "sha": "fcb8b9bbf",
+        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "branch": "master"
+      },
+      "metrics": {
+        "coverage": {
+          "ok": 2,
+          "total": 2,
+          "pct": 100
+        }
+      }
+    },
+    {
+      "id": "money-ios",
+      "variants": {
+        "dark-ios": {
+          "file": "shots/money-ios-dark-ios.jpg",
+          "generatedAt": "2026-07-22T15:59:28.858Z",
+          "screens": 1,
+          "capture": {
+            "ok": 1,
+            "total": 1
+          }
+        }
+      },
+      "native": true,
+      "name": "财务 · iOS",
+      "description": "Finance 在 Kenos iOS Domain 模式：敏感域 Face ID 锁定门（未解锁设备的真实首态）",
+      "screens": 1,
+      "pages": [
+        {
+          "path": "kenos://domain/money",
+          "title": "锁定门（Face ID）"
+        }
+      ],
+      "git": {
+        "sha": "fcb8b9bbf",
+        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "branch": "master"
+      },
+      "metrics": {
+        "coverage": {
+          "ok": 1,
+          "total": 1,
+          "pct": 100
+        }
+      }
+    },
+    {
+      "id": "home-ios",
+      "variants": {
+        "dark-ios": {
+          "file": "shots/home-ios-dark-ios.jpg",
+          "generatedAt": "2026-07-22T15:59:29.311Z",
+          "screens": 2,
+          "capture": {
+            "ok": 2,
+            "total": 2
+          }
+        }
+      },
+      "native": true,
+      "name": "家 · iOS",
+      "description": "Home 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：户型 · 储物",
+      "screens": 2,
+      "pages": [
+        {
+          "path": "kenos://domain/home",
+          "title": "户型规划"
+        },
+        {
+          "path": "kenos://domain/home?path=/storage",
+          "title": "储物"
+        }
+      ],
+      "git": {
+        "sha": "fcb8b9bbf",
+        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "branch": "master"
+      },
+      "metrics": {
+        "coverage": {
+          "ok": 2,
+          "total": 2,
+          "pct": 100
+        }
+      }
+    },
+    {
+      "id": "library-ios",
+      "variants": {
+        "dark-ios": {
+          "file": "shots/library-ios-dark-ios.jpg",
+          "generatedAt": "2026-07-22T15:59:29.719Z",
+          "screens": 2,
+          "capture": {
+            "ok": 2,
+            "total": 2
+          }
+        }
+      },
+      "native": true,
+      "name": "知识库 · iOS",
+      "description": "Knowledge 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：书库 · 项目",
+      "screens": 2,
+      "pages": [
+        {
+          "path": "kenos://domain/library",
+          "title": "书库"
+        },
+        {
+          "path": "kenos://domain/library?path=/projects",
+          "title": "项目现状"
+        }
+      ],
+      "git": {
+        "sha": "fcb8b9bbf",
+        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "branch": "master"
+      },
+      "metrics": {
+        "coverage": {
+          "ok": 2,
+          "total": 2,
+          "pct": 100
+        }
+      }
+    },
+    {
+      "id": "health-ios",
+      "variants": {
+        "dark-ios": {
+          "file": "shots/health-ios-dark-ios.jpg",
+          "generatedAt": "2026-07-22T15:59:30.135Z",
+          "screens": 2,
+          "capture": {
+            "ok": 2,
+            "total": 2
+          }
+        }
+      },
+      "native": true,
+      "name": "健康 · iOS",
+      "description": "Health 在 Kenos iOS Domain 模式（Daily Beta 伴侣实截）：状态 · 趋势",
+      "screens": 2,
+      "pages": [
+        {
+          "path": "kenos://domain/health",
+          "title": "状态"
+        },
+        {
+          "path": "kenos://domain/health?path=/trends",
+          "title": "趋势"
+        }
+      ],
+      "git": {
+        "sha": "fcb8b9bbf",
+        "subject": "feat(uiux-gallery): per-domain native entries + native-coverage budget",
+        "branch": "master"
+      },
+      "metrics": {
+        "coverage": {
+          "ok": 2,
+          "total": 2,
           "pct": 100
         }
       }

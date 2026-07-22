@@ -109,6 +109,60 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       ],
       leave: 'kenos://return',
     },
+    {
+      id: `music-${V}`,
+      name: `音乐 · ${L}`,
+      accentId: 'music',
+      description: `Music 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：播放 · 音乐库`,
+      screens: [
+        { link: 'kenos://domain/music', title: '播放', path: 'kenos://domain/music', settle: 7000 },
+        { link: 'kenos://domain/music?path=/library', title: '音乐库', path: 'kenos://domain/music?path=/library', settle: 4000 },
+      ],
+      leave: 'kenos://return',
+    },
+    {
+      id: `money-${V}`,
+      name: `财务 · ${L}`,
+      accentId: 'finance',
+      description: `Finance 在 Kenos ${L} Domain 模式：敏感域 Face ID 锁定门（未解锁设备的真实首态）`,
+      screens: [
+        { link: 'kenos://domain/money', title: '锁定门（Face ID）', path: 'kenos://domain/money', settle: 7000 },
+      ],
+      leave: 'kenos://return',
+    },
+    {
+      id: `home-${V}`,
+      name: `家 · ${L}`,
+      accentId: 'home',
+      description: `Home 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：户型 · 储物`,
+      screens: [
+        { link: 'kenos://domain/home', title: '户型规划', path: 'kenos://domain/home', settle: 7000 },
+        { link: 'kenos://domain/home?path=/storage', title: '储物', path: 'kenos://domain/home?path=/storage', settle: 4000 },
+      ],
+      leave: 'kenos://return',
+    },
+    {
+      id: `library-${V}`,
+      name: `知识库 · ${L}`,
+      accentId: 'knowledge',
+      description: `Knowledge 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：书库 · 项目`,
+      screens: [
+        { link: 'kenos://domain/library', title: '书库', path: 'kenos://domain/library', settle: 7000 },
+        { link: 'kenos://domain/library?path=/projects', title: '项目现状', path: 'kenos://domain/library?path=/projects', settle: 4000 },
+      ],
+      leave: 'kenos://return',
+    },
+    {
+      id: `health-${V}`,
+      name: `健康 · ${L}`,
+      accentId: 'health',
+      description: `Health 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：状态 · 趋势`,
+      screens: [
+        { link: 'kenos://domain/health', title: '状态', path: 'kenos://domain/health', settle: 7000 },
+        { link: 'kenos://domain/health?path=/trends', title: '趋势', path: 'kenos://domain/health?path=/trends', settle: 4000 },
+      ],
+      leave: 'kenos://return',
+    },
   ]
 }
 
