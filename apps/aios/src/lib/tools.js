@@ -1,4 +1,5 @@
 import { GATEWAY, tinyComplete } from '$lib/localai.js'
+import { evaluateEgressUrl, EGRESS_BLOCK_MESSAGE } from '$lib/toolEgressGuard.core.js'
 import { addMemory, searchMemories } from '$lib/memory.svelte.js'
 import {
   startImageProgress,
@@ -835,6 +836,11 @@ export async function fetchUrl(url) {
   const target = String(url).trim()
   if (!/^https?:\/\//i.test(target))
     throw new Error('URL 必须以 http(s):// 开头')
+
+  // F5-03.7: block the prompt-injection exfiltration signature (private data
+  // packed into an outbound URL to an untrusted host) before any request fires.
+  const egress = evaluateEgressUrl(target)
+  if (!egress.allow) throw new Error(`${EGRESS_BLOCK_MESSAGE} [${egress.reason}]`)
 
   const get = async (u, ms) => {
     const res = await fetch(u, { signal: AbortSignal.timeout(ms) })
