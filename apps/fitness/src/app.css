@@ -647,6 +647,52 @@ p {
   margin-top: 20px;
 }
 
+/* 「刚练完」态:hero 的完成徽标 */
+.rested-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 10px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 32%, var(--border-l));
+  font-family: var(--button);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* 已练完态的今日卡动作区:主(查看总结)+次(提前开始下一天) */
+.tc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-top: 20px;
+}
+.tc-actions .btn-start {
+  margin-top: 0;
+}
+.tc-actions .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  color: var(--t2);
+  font-family: var(--button);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+.tc-actions .btn-ghost:hover {
+  color: var(--accent);
+}
+
 .btn-complete {
   width: 100%;
   margin-top: 26px;

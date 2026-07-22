@@ -111,6 +111,7 @@
             <TaskGroup
               title={t('home.overdue')}
               tasks={groups.overdue}
+              collapseAfter={4}
               compactRows
               ritualComplete
               showScheduleAction

@@ -100,8 +100,16 @@ export default {
     setsDone: '{done}/{total} sets · {pct}%',
     reasonRotated:
       'Last session: <b>{lastDay}</b> ({when}). {rotLabel} — today: <b>{todayDay}</b>.',
+    reasonRested:
+      'You already trained <b>{trainedDay}</b> today — recover well. Next up in the {rotLabel} rotation: <b>{nextDay}</b>.',
     reasonFresh:
       'Starting with <b>{todayDay}</b>. Tap "Finish workout" on the summary page to advance the rotation.',
+    restedToday: 'Trained {day} today',
+    heroDoneMeta: 'Done today · recover well',
+    cycleNext: 'Next · {day}',
+    nextTrainingDetail: 'Next workout',
+    viewTodaySummary: "View today's summary",
+    startNextEarly: 'Train {day} early',
     lastLabel: '{day} · {when}',
     trainingCoverAlt: '{day} workout',
     appBarToday: 'Today · {day}',

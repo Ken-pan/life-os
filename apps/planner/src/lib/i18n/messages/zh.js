@@ -38,6 +38,8 @@ export default {
     done: '完成',
     close: '关闭',
     more: '更多',
+    showMore: '展开其余 {count} 项',
+    collapse: '收起',
     empty: '暂无任务',
     tasks: '{count} 项',
   },

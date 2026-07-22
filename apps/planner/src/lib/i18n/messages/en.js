@@ -38,6 +38,8 @@ export default {
     done: 'Done',
     close: 'Close',
     more: 'More',
+    showMore: 'Show {count} more',
+    collapse: 'Collapse',
     empty: 'No tasks yet',
     tasks: '{count} tasks',
   },

@@ -448,6 +448,21 @@ export function todayDayId() {
 }
 
 /**
+ * 今天是否已经走完成流练完一次轮换日。用于「刚练完」场景:练完某天后 todayDayId
+ * 会立刻翻到下一天,主视图不应催用户「今天再练下一天」,而应显示恢复态、把下一天标为「下次」。
+ * 只认 rotation.history(完成流的权威信号);仅有组数记录但没点完成的进行中 session 不算。
+ * @returns {string | null} 今天已练完的轮换 dayId,或 null
+ */
+export function trainedTodayRotationDay() {
+  const order = ORDER()
+  const today = todayKey()
+  for (const h of S.rotation.history || []) {
+    if (h.date === today && order.includes(h.dayId)) return h.dayId
+  }
+  return null
+}
+
+/**
  * 某日完成度。跳过的动作按「实际做过的组」中性计入（done 与 total 同加），
  * 既不拉低完成率，也不虚报成满组。
  */

@@ -100,8 +100,16 @@ export default {
     setsDone: '完成 {done}/{total} 组 · {pct}%',
     reasonRotated:
       '上次练的是 <b>{lastDay}</b>（{when}），按 {rotLabel} 轮换，今天建议练 <b>{todayDay}</b>。',
+    reasonRested:
+      '今天已练完 <b>{trainedDay}</b>，好好恢复。下次按 {rotLabel} 轮换练 <b>{nextDay}</b>。',
     reasonFresh:
       '从 <b>{todayDay}</b> 日开始。练完后在总结页点「完成训练」，下次会自动推荐下一天。',
+    restedToday: '今天练了 {day}',
+    heroDoneMeta: '今日已完成 · 注意恢复',
+    cycleNext: '下次建议练 · {day}',
+    nextTrainingDetail: '下次训练',
+    viewTodaySummary: '查看今日总结',
+    startNextEarly: '提前练 {day}',
     lastLabel: '{day} · {when}',
     trainingCoverAlt: '{day}训练',
     appBarToday: '今天 · {day}',

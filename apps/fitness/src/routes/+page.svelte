@@ -6,6 +6,7 @@
     S,
     todayKey,
     todayDayId,
+    trainedTodayRotationDay,
     dayDone,
     lastSessionForDay,
     sessionStats,
@@ -30,6 +31,18 @@
   const program = $derived(getProgram())
   const recId = $derived(todayDayId())
   const day = $derived(program.days[recId])
+  // 「刚练完」:今天已走完成流练完一天,recId 已翻到下一天。此时主视图转为恢复态,
+  // 把 recId 展示为「下次」而非「今天」,不再催用户当天再练。
+  const trainedTodayId = $derived(trainedTodayRotationDay())
+  const trainedToday = $derived(
+    trainedTodayId ? program.days[trainedTodayId] : null,
+  )
+  const restedToday = $derived(
+    !!trainedToday && trainedTodayId !== recId,
+  )
+  // 已练完态:hero 展示「你刚练完的那天」(成就 + 恢复),而非继续大图推下一天。
+  const heroId = $derived(restedToday && trainedTodayId ? trainedTodayId : recId)
+  const heroDay = $derived(program.days[heroId])
   const m = $derived(program.meta)
   const rotLabel = $derived(rotationLabel(program))
   const stats = $derived(sessionStats())
@@ -75,6 +88,13 @@
   )
 
   const reason = $derived.by(() => {
+    if (restedToday && trainedToday) {
+      return t('home.reasonRested', {
+        trainedDay: trainedToday.cn,
+        rotLabel,
+        nextDay: day.cn,
+      })
+    }
     if (lastHist) {
       return t('home.reasonRotated', {
         lastDay: program.days[lastHist.dayId].cn,
@@ -97,8 +117,13 @@
   const extras = $derived(
     Object.keys(program.days).filter((id) => program.days[id].supp),
   )
+  // 加练配对的是「刚练完的那天」(练完胸接三角肌…)。已练完态按 trainedTodayId 算,
+  // 否则会用翻页后的 recId 去推「下一天之后的加练」,与实际训练错位。
+  const addonBaseDay = $derived(
+    restedToday && trainedTodayId ? trainedTodayId : recId,
+  )
   const todayAddons = $derived(
-    suggestedSuppAfter(program, recId)
+    suggestedSuppAfter(program, addonBaseDay)
       .map((id) => program.days[id])
       .filter(Boolean),
   )
@@ -146,8 +171,14 @@
   <div class="wrap">
     <div class="life-os-grid life-os-grid--split hero">
       <div class="life-os-grid__main hero-copy" use:reveal>
-        <h1 class="sr-only">{dayDisplayName(day)}</h1>
+        <h1 class="sr-only">{dayDisplayName(heroDay)}</h1>
         <p class="eyebrow">{dateLabel}</p>
+        {#if restedToday && trainedToday}
+          <div class="rested-pill">
+            <Icon name="check" size={13} strokeWidth={2.5} />
+            {t('home.restedToday', { day: trainedToday.cn })}
+          </div>
+        {/if}
         <div class="hero-status">
           {t('home.lastSession')} <b>{lastLabel}</b> · {t('home.weekCount', {
             n: stats.week7,
@@ -157,17 +188,21 @@
       </div>
       <div class="life-os-grid__aside hero-media" use:reveal={{ delay: 60 }}>
         <CoverMedia
-          src={dayImage(recId)}
-          alt={t('home.trainingCoverAlt', { day: day.cn })}
+          src={dayImage(heroId)}
+          alt={t('home.trainingCoverAlt', { day: heroDay.cn })}
           loading="eager"
           size="lg"
         />
         <div class="hm-label">
           <div>
-            <div class="hm-title">{dayDisplayName(day)}</div>
+            <div class="hm-title">{dayDisplayName(heroDay)}</div>
             <div class="hm-meta">
-              {t('home.exercisesCount', { n: day.ex.length })} · ≈ {estMinutes(day)}
-              {t('common.min')}
+              {#if restedToday}
+                {t('home.heroDoneMeta')}
+              {:else}
+                {t('home.exercisesCount', { n: heroDay.ex.length })} · ≈ {estMinutes(heroDay)}
+                {t('common.min')}
+              {/if}
             </div>
           </div>
         </div>
@@ -227,7 +262,11 @@
           {t('home.cycleOrder')}
           <KnowledgeTrigger entryId="rotation" iconOnly />
         </div>
-        <div class="cycle-next">{t('home.cycleToday', { day: day.cn })}</div>
+        <div class="cycle-next">
+          {restedToday
+            ? t('home.cycleNext', { day: day.cn })
+            : t('home.cycleToday', { day: day.cn })}
+        </div>
       </div>
       <div class="cycle-track">
         {#each ORDER() as did (did)}
@@ -256,7 +295,9 @@
 
     <div class="today-card" use:reveal>
       <div class="tc-content">
-        <div class="tc-label">{t('home.trainingDetail')}</div>
+        <div class="tc-label">
+          {restedToday ? t('home.nextTrainingDetail') : t('home.trainingDetail')}
+        </div>
         <div class="callout" style="margin:0 0 14px">
           {@html reason}
           <KnowledgeTrigger entryId="frequency" class="knowledge-inline" />
@@ -270,20 +311,34 @@
             <KnowledgeTrigger entryId="volume-landmarks" />
           </span>
         </div>
-        <div class="tc-progress">
-          <div class="tc-bar"><div style="width:{dd.pct}%"></div></div>
-          <div class="tc-pct">
-            {t('home.todayProgress', {
-              done: dd.done,
-              total: dd.total,
-              pct: dd.pct,
-            })}
+        {#if !restedToday}
+          <div class="tc-progress">
+            <div class="tc-bar"><div style="width:{dd.pct}%"></div></div>
+            <div class="tc-pct">
+              {t('home.todayProgress', {
+                done: dd.done,
+                total: dd.total,
+                pct: dd.pct,
+              })}
+            </div>
           </div>
-        </div>
-        <a class="btn-start" href={primaryCta.href}
-          ><Icon name="play" size={14} />
-          {primaryCta.label}</a
-        >
+        {/if}
+        {#if restedToday && trainedTodayId}
+          <div class="tc-actions">
+            <a class="btn-start" href="/day/{trainedTodayId}/summary"
+              ><Icon name="check" size={14} />
+              {t('home.viewTodaySummary')}</a
+            >
+            <a class="btn-ghost" href="/day/{recId}/focus"
+              >{t('home.startNextEarly', { day: day.cn })}</a
+            >
+          </div>
+        {:else}
+          <a class="btn-start" href={primaryCta.href}
+            ><Icon name="play" size={14} />
+            {primaryCta.label}</a
+          >
+        {/if}
       </div>
     </div>
 
