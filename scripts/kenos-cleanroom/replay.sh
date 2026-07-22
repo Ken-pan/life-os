@@ -52,4 +52,7 @@ psql "$DBURL" -q -f "$HERE/rls_security_tests.sql" 2>&1 | grep -E "T[0-9]+[ab]? 
 echo "==> RPC integrity suite (F5-02.7)"
 psql "$DBURL" -q -f "$HERE/rpc_integrity_tests.sql" 2>&1 | grep -E "R[0-9] PASS|ALL RPC"
 
-echo "==> CLEAN-ROOM REPLAY + SECURITY SUITE: PASS"
+echo "==> Sync failure-injection suite (F5-05)"
+psql "$DBURL" -q -f "$HERE/failure_injection_tests.sql" 2>&1 | grep -E "FI-[0-9] PASS|ALL F5-05"
+
+echo "==> CLEAN-ROOM REPLAY + SECURITY + FAILURE-INJECTION SUITE: PASS"
