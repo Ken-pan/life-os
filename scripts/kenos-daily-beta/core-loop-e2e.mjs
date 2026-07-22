@@ -19,6 +19,7 @@ import { chromium } from 'playwright'
 import { createClient } from '@supabase/supabase-js'
 import { execSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
+import { assertTestWriteAllowed } from '../lib/testProductionGuard.mjs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -88,6 +89,8 @@ async function main() {
   const sha = execSync('git rev-parse HEAD', { cwd: ROOT, encoding: 'utf8' }).trim()
   const serviceKey = getKey('service_role')
   const anonKey = getKey('anon')
+  // Default-DENY production for test writes (scoped G2 authorization + KENOS_PROD_TEST_AUTHORIZED=1 required).
+  assertTestWriteAllowed({ url: SUPABASE_URL })
   const admin = createClient(SUPABASE_URL, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   })

@@ -19,6 +19,7 @@ import {
 import { join } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'node:crypto'
+import { assertTestWriteAllowed, buildTestProvenance, assertTeardownClean } from '../lib/testProductionGuard.mjs'
 
 const DEVICE = process.env.KENOS_IOS_DEVICE || '8097F071-CAB6-5AF0-8258-BCD985E9D79E'
 const REF = 'iueozzuctstwvzbcxcyh'
@@ -102,6 +103,9 @@ function scrub(...ps) {
   }
 }
 
+// Default-DENY production for test writes. Refuses unless a scoped G2 authorization is
+// present AND KENOS_PROD_TEST_AUTHORIZED=1. Prefer a local Supabase / dedicated test user.
+assertTestWriteAllowed({ ref: REF })
 const keys = JSON.parse(
   execSync(`supabase projects api-keys --project-ref ${REF} -o json`, { encoding: 'utf8' }),
 )
@@ -139,7 +143,7 @@ const task = {
   urgency: 'normal',
   tags: ['kenos-fa'],
   subtasks: [],
-  meta: {},
+  meta: { provenance: buildTestProvenance({ harness: 'ios-flow-a-final', runId: RUN, nowMs: Date.now() }) },
 }
 await admin.from('planner_tasks').upsert({
   user_id: OWNER.id,
@@ -389,6 +393,14 @@ const flowA = {
   networkScope: 'LAN-DEPENDENT',
 }
 log('flowA.done', flowA)
+
+// Teardown: remove this run's seeded test task; fail loudly if it leaks.
+await admin.from('planner_tasks').delete().eq('id', TASK_ID).eq('user_id', OWNER.id)
+{
+  const { data: leftover } = await admin.from('planner_tasks').select('id').eq('id', TASK_ID).eq('user_id', OWNER.id)
+  assertTeardownClean({ remaining: leftover || [], runId: RUN })
+}
+
 writeFileSync(join(LOG, 'report.json'), JSON.stringify({ runId: RUN, flowA }, null, 2))
 writeFileSync(join(EVID, 'logs', 'ios-flow-a-final.json'), JSON.stringify({ runId: RUN, flowA }, null, 2))
 console.log(JSON.stringify({ runId: RUN, flowA }, null, 2))

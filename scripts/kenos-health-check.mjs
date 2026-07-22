@@ -71,7 +71,39 @@ if (ping === '1') {
   )
   add('rls_enabled', !noRls || noRls === '', noRls ? `RLS OFF: ${noRls}` : 'all core tables')
 
-  // 5. schema/migration tip (informational only — absent in a manual clean-room)
+  // 5. outbox queue health — quarantined history reported SEPARATELY from actionable backlog.
+  //    OUTBOX_WORKER_EPOCH is the isolation line (source of truth:
+  //    packages/contracts/src/kenos-actions.mjs); rows created before it are frozen by
+  //    design and the worker never claims them, so they must not read as queue backlog.
+  const OUTBOX_WORKER_EPOCH = '2026-07-22T17:00:00Z'
+  const STUCK_THRESHOLD_S = 900 // a post-epoch due row aged past 15m => worker not draining
+  const outboxRow = q(
+    `select
+       coalesce(sum(case when created_at >= '${OUTBOX_WORKER_EPOCH}' and status in ('pending','retry') and next_attempt_at <= now() then 1 else 0 end),0),
+       coalesce(floor(extract(epoch from (now() - min(case when created_at >= '${OUTBOX_WORKER_EPOCH}' and status in ('pending','retry') and next_attempt_at <= now() then next_attempt_at end)))),0),
+       coalesce(sum(case when created_at < '${OUTBOX_WORKER_EPOCH}' then 1 else 0 end),0)
+     from public.kenos_plan_outbox`,
+  )
+  if (outboxRow.startsWith('__ERR__')) {
+    console.log(`  [INFO] outbox_health: n/a (${outboxRow.replace('__ERR__:', '')})`)
+  } else {
+    const [backlogStr, ageStr, quarantinedStr] = outboxRow.split('|')
+    const backlog = Number(backlogStr) || 0
+    const ageS = Number(ageStr) || 0
+    const quarantined = Number(quarantinedStr) || 0
+    const stuck = backlog > 0 && ageS > STUCK_THRESHOLD_S
+    // Only a stuck ACTIONABLE queue is a failure. Quarantined history is visibility-only.
+    add(
+      'outbox_actionable_queue',
+      !stuck,
+      stuck
+        ? `${backlog} actionable row(s) stuck (oldest ${ageS}s > ${STUCK_THRESHOLD_S}s) — worker not draining`
+        : `backlog=${backlog} (oldest ${ageS}s), draining`,
+    )
+    console.log(`  [INFO] outbox_historical_quarantined: ${quarantined} row(s) (frozen pre-epoch, not actionable, replay_eligible=0)`)
+  }
+
+  // 6. schema/migration tip (informational only — absent in a manual clean-room)
   const tip = q("select max(version) from supabase_migrations.schema_migrations")
   const tipVal = tip.startsWith('__ERR__') ? 'n/a (manual clean-room)' : tip || 'none'
   console.log(`  [INFO] migration_tip: ${tipVal}`)

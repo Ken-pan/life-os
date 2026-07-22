@@ -9,6 +9,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'node:crypto'
+import { assertTestWriteAllowed, buildTestProvenance, assertTeardownClean } from '../lib/testProductionGuard.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '../..')
@@ -81,6 +82,8 @@ async function main() {
   const TODAY = localDateISO()
   const keys = getKeys()
   const url = `https://${REF}.supabase.co`
+  // Default-DENY production for test writes (scoped G2 authorization + KENOS_PROD_TEST_AUTHORIZED=1 required).
+  assertTestWriteAllowed({ url })
   const admin = createClient(url, keys.service_role, { auth: { persistSession: false, autoRefreshToken: false } })
   const anon = createClient(url, keys.anon, { auth: { persistSession: false, autoRefreshToken: false } })
   const fitnessAdmin = createClient(url, keys.service_role, { auth: { persistSession: false, autoRefreshToken: false }, db: { schema: 'fitness' } })
@@ -93,7 +96,8 @@ async function main() {
   const taskObj = {
     id: TASK_ID, title: SEED, notes: 'strict ui', completed: false, deletedAt: null,
     createdAt: now, updatedAt: Date.now(), dueDate: TODAY, listId: null, projectId: null,
-    priority: 'normal', urgency: 'normal', tags: ['kenos-ui'], subtasks: [], meta: {},
+    priority: 'normal', urgency: 'normal', tags: ['kenos-ui'], subtasks: [],
+    meta: { provenance: buildTestProvenance({ harness: 'ios-flow-ab-ui-rerun', runId: RUN_ID, nowMs: Date.now() }) },
   }
   await admin.from('planner_tasks').upsert({
     user_id: OWNER.id, id: TASK_ID, data: taskObj, updated_at: now, os_module: 'planner',
@@ -360,6 +364,13 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
     buildSha: BUILD_SHA,
     networkScope: 'LAN-DEPENDENT',
   }
+  // Teardown: remove this run's seeded test task; fail loudly if it leaks.
+  await admin.from('planner_tasks').delete().eq('id', TASK_ID).eq('user_id', OWNER.id)
+  {
+    const { data: leftover } = await admin.from('planner_tasks').select('id').eq('id', TASK_ID).eq('user_id', OWNER.id)
+    assertTeardownClean({ remaining: leftover || [], runId: RUN_ID })
+  }
+
   writeFileSync(join(LOG_DIR, 'report.json'), JSON.stringify(report, null, 2))
   writeFileSync(join(EVID, 'logs', 'ios-flow-ab-ui-latest.json'), JSON.stringify(report, null, 2))
   console.log('\n=== RERUN REPORT ===')

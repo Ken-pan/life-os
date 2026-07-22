@@ -18,6 +18,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'node:crypto'
+import { assertTestWriteAllowed, assertTeardownClean } from '../lib/testProductionGuard.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '../..')
@@ -141,6 +142,8 @@ async function main() {
   const TODAY = localDateISO()
   const keys = getKeys()
   const url = `https://${REF}.supabase.co`
+  // Default-DENY production for test writes (scoped G2 authorization + KENOS_PROD_TEST_AUTHORIZED=1 required).
+  assertTestWriteAllowed({ url })
   const admin = createClient(url, keys.service_role, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
@@ -533,6 +536,17 @@ async function beacon(o){try{await fetch('/__health?kenos_flow_b_assert='+encode
     overallPersonalDailyBeta: hardPass ? 'READY' : 'HOLD',
     phase4: 'EXIT_OPEN',
   }
+  // Teardown: remove this run's fitness fixture logs; fail loudly if they leak.
+  if (sessionId) {
+    await fitnessAdmin.from('fitness_exercise_logs').delete().eq('session_id', sessionId).eq('exercise_id', EXERCISE_ID)
+    const { data: leftover } = await fitnessAdmin
+      .from('fitness_exercise_logs')
+      .select('session_id')
+      .eq('session_id', sessionId)
+      .eq('exercise_id', EXERCISE_ID)
+    assertTeardownClean({ remaining: (leftover || []).map((r) => ({ id: `${r.session_id}:${EXERCISE_ID}` })), runId: RUN_ID })
+  }
+
   writeFileSync(join(LOG_DIR, 'report.json'), JSON.stringify(report, null, 2))
   writeFileSync(join(EVID, 'logs', 'ios-matrix-close-latest.json'), JSON.stringify(report, null, 2))
   writeFileSync(join(EVID, 'ios-daily-beta-results.json'), JSON.stringify(report, null, 2))

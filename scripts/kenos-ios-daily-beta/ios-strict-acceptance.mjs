@@ -18,6 +18,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'node:crypto'
+import { assertTestWriteAllowed, buildTestProvenance, assertTeardownClean } from '../lib/testProductionGuard.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '../..')
@@ -268,6 +269,8 @@ async function main() {
 
   const keys = getKeys()
   const url = `https://${REF}.supabase.co`
+  // Default-DENY production for test writes (scoped G2 authorization + KENOS_PROD_TEST_AUTHORIZED=1 required).
+  assertTestWriteAllowed({ url })
   const admin = createClient(url, keys.service_role, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
@@ -365,7 +368,7 @@ async function main() {
         urgency: 'normal',
         tags: ['kenos-ios-strict'],
         subtasks: [],
-        meta: { iosStrictRunId: RUN_ID },
+        meta: { iosStrictRunId: RUN_ID, provenance: buildTestProvenance({ harness: 'ios-strict-acceptance', runId: RUN_ID, nowMs: Date.now() }) },
         updatedAt: now,
       },
       updated_at: now,
@@ -1124,6 +1127,13 @@ document.addEventListener('sveltekit:navigationend',()=>setTimeout(run,800));
       2,
     ),
   )
+
+  // Teardown: remove this run's seeded test task; fail loudly if it leaks.
+  await admin.from('planner_tasks').delete().eq('id', TASK_ID).eq('user_id', OWNER.id)
+  {
+    const { data: leftover } = await admin.from('planner_tasks').select('id').eq('id', TASK_ID).eq('user_id', OWNER.id)
+    assertTeardownClean({ remaining: leftover || [], runId: RUN_ID })
+  }
 
   console.log('\n=== STRICT REPORT ===')
   console.log(JSON.stringify(report, null, 2))

@@ -106,6 +106,72 @@ export function resolveCredentialContract({ env = {}, argv = [], envFileMode = n
   return { ok: false, reason: 'no_credential' }
 }
 
+/**
+ * Split outbox rows into ACTIONABLE queue health vs. intentionally-QUARANTINED history.
+ *
+ * The worker only ever claims rows with `created_at >= epoch` (SQL claim predicate +
+ * shouldProcessRow both enforce it). Pre-epoch rows are frozen by design (never replayed;
+ * see docs/productivity/OUTBOX_SEMANTICS.md) — counting them as "pending backlog" is a
+ * false alarm. This reports the two populations in separate buckets so a health surface
+ * never conflates 149 quarantined historical rows with actionable queue depth.
+ *
+ * Pure: takes rows + epoch + now explicitly, no I/O.
+ *
+ * @param {Array<{status:string, created_at:string, next_attempt_at?:string}>} rows
+ * @param {{ epoch?: string, nowMs?: number, stuckThresholdSeconds?: number }} [opts]
+ */
+export function summarizeOutboxHealth(rows = [], { epoch = OUTBOX_WORKER_EPOCH, nowMs = Date.now(), stuckThresholdSeconds = 900 } = {}) {
+  const epochMs = Date.parse(epoch)
+  const actionable = { pending: 0, retry: 0, processing: 0, published: 0, dead_letter: 0 }
+  const quarantined = { pending: 0, retry: 0, processing: 0, published: 0, dead_letter: 0 }
+  let invalid = 0
+  let backlogDepth = 0 // actionable pending/retry that are due now
+  let oldestDueMs = null // oldest due next_attempt_at among actionable pending/retry
+
+  for (const row of rows) {
+    const created = Date.parse(row?.created_at || '')
+    if (!Number.isFinite(created)) {
+      invalid += 1
+      continue
+    }
+    const bucket = created >= epochMs ? actionable : quarantined
+    const status = row?.status
+    if (status && status in bucket) bucket[status] += 1
+    if (bucket === actionable && (status === 'pending' || status === 'retry')) {
+      const due = Date.parse(row?.next_attempt_at || '')
+      if (!Number.isFinite(due) || due <= nowMs) {
+        backlogDepth += 1
+        const at = Number.isFinite(due) ? due : created
+        if (oldestDueMs == null || at < oldestDueMs) oldestDueMs = at
+      }
+    }
+  }
+
+  const oldestBacklogAgeSeconds = oldestDueMs == null ? 0 : Math.max(0, Math.floor((nowMs - oldestDueMs) / 1000))
+  const quarantinedTotal = Object.values(quarantined).reduce((a, b) => a + b, 0)
+
+  return {
+    epoch,
+    asOfMs: nowMs,
+    // Actionable = the live queue the worker is responsible for.
+    actionable: {
+      byStatus: actionable,
+      backlogDepth,
+      oldestBacklogAgeSeconds,
+      // A post-epoch row that is due but has aged past the threshold means the worker
+      // is not draining — this is the only condition that should raise a queue alarm.
+      stuck: backlogDepth > 0 && oldestBacklogAgeSeconds > stuckThresholdSeconds,
+    },
+    // Quarantined history is reported for visibility only — NEVER as actionable backlog.
+    historicalQuarantined: {
+      byStatus: quarantined,
+      total: quarantinedTotal,
+      replayEligible: 0, // pre-epoch rows are never auto-replayed (frozen by design)
+    },
+    invalid,
+  }
+}
+
 /** Compact one poll cycle's outcomes for the structured log line. */
 export function summarizeCycle(outcomes) {
   const summary = { claimed: outcomes.length, delivered: 0, duplicates: 0, retried: 0, deadLettered: 0, skipped: 0 }

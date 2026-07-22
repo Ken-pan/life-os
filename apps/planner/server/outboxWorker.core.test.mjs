@@ -7,6 +7,7 @@ import {
   resolveCredentialContract,
   shouldProcessRow,
   summarizeCycle,
+  summarizeOutboxHealth,
 } from './outboxWorker.core.mjs'
 
 const baseRow = {
@@ -127,5 +128,67 @@ assert.equal(resolveCredentialContract({ env: { KENOS_WORKER_JWT: JWT }, argv: [
 assert.equal(resolveCredentialContract({ env: { KENOS_WORKER_JWT: 'not-a-jwt' }, argv: [], envFileMode: MODE_600 }).reason, 'malformed_worker_jwt')
 // no file (env-injected credential, e.g. launchd/CI) is allowed when perms n/a
 assert.equal(resolveCredentialContract({ env: { KENOS_WORKER_JWT: JWT }, argv: [], envFileMode: null }).ok, true)
+
+// --- summarizeOutboxHealth: quarantined history reported separately from backlog --------
+{
+  const EPOCH = '2026-07-22T17:00:00Z'
+  const NOW = Date.parse('2026-07-22T23:10:00Z')
+  // Reproduce the real production shape: 149 pre-epoch pending + 1 pre-epoch dead_letter
+  // + 25 post-epoch published (all delivered, none stuck).
+  const rows = []
+  for (let i = 0; i < 149; i += 1) {
+    rows.push({ status: 'pending', created_at: '2026-07-20T05:00:00Z', next_attempt_at: '2026-07-20T05:00:00Z' })
+  }
+  rows.push({ status: 'dead_letter', created_at: '2026-07-20T14:41:48Z' })
+  for (let i = 0; i < 25; i += 1) {
+    rows.push({ status: 'published', created_at: '2026-07-22T18:00:00Z' })
+  }
+
+  const h = summarizeOutboxHealth(rows, { epoch: EPOCH, nowMs: NOW })
+  // The 149 pending + 1 dead_letter are quarantined — NOT actionable backlog.
+  assert.equal(h.historicalQuarantined.total, 150)
+  assert.equal(h.historicalQuarantined.byStatus.pending, 149)
+  assert.equal(h.historicalQuarantined.byStatus.dead_letter, 1)
+  assert.equal(h.historicalQuarantined.replayEligible, 0)
+  // Actionable queue is healthy: 25 published, zero backlog, not stuck.
+  assert.equal(h.actionable.byStatus.published, 25)
+  assert.equal(h.actionable.backlogDepth, 0)
+  assert.equal(h.actionable.stuck, false)
+  assert.equal(h.invalid, 0)
+}
+
+// A genuinely stuck ACTIONABLE row (post-epoch, due, aged past threshold) raises the alarm —
+// and it does so without the quarantined history inflating the count.
+{
+  const EPOCH = '2026-07-22T17:00:00Z'
+  const NOW = Date.parse('2026-07-22T23:10:00Z')
+  const rows = [
+    { status: 'pending', created_at: '2026-07-22T18:00:00Z', next_attempt_at: '2026-07-22T18:05:00Z' }, // ~5h overdue
+    ...Array.from({ length: 149 }, () => ({ status: 'pending', created_at: '2026-07-20T05:00:00Z', next_attempt_at: '2026-07-20T05:00:00Z' })),
+  ]
+  const h = summarizeOutboxHealth(rows, { epoch: EPOCH, nowMs: NOW, stuckThresholdSeconds: 900 })
+  assert.equal(h.actionable.backlogDepth, 1) // only the post-epoch row counts as backlog
+  assert.equal(h.actionable.stuck, true)
+  assert.ok(h.actionable.oldestBacklogAgeSeconds > 900)
+  assert.equal(h.historicalQuarantined.byStatus.pending, 149) // history stays in its own bucket
+}
+
+// A post-epoch pending row not yet due is not counted as backlog.
+{
+  const NOW = Date.parse('2026-07-22T20:00:00Z')
+  const h = summarizeOutboxHealth(
+    [{ status: 'retry', created_at: '2026-07-22T19:00:00Z', next_attempt_at: '2026-07-22T20:30:00Z' }],
+    { nowMs: NOW },
+  )
+  assert.equal(h.actionable.backlogDepth, 0)
+  assert.equal(h.actionable.stuck, false)
+}
+
+// Invalid created_at is fail-closed into `invalid`, never actionable.
+{
+  const h = summarizeOutboxHealth([{ status: 'pending', created_at: 'not-a-date' }], { nowMs: Date.now() })
+  assert.equal(h.invalid, 1)
+  assert.equal(h.actionable.backlogDepth, 0)
+}
 
 console.log('outboxWorker.core.test.mjs OK')

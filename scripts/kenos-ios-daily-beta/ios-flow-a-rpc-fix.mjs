@@ -3,6 +3,7 @@ import { execSync, spawnSync } from 'node:child_process'
 import { writeFileSync, readFileSync, mkdirSync, rmSync, existsSync, appendFileSync, copyFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
+import { assertTestWriteAllowed, buildTestProvenance, assertTeardownClean } from '../lib/testProductionGuard.mjs'
 
 const ROOT = process.cwd()
 const DEVICE = '8097F071-CAB6-5AF0-8258-BCD985E9D79E'
@@ -73,6 +74,8 @@ function today() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+// Default-DENY production for test writes (scoped G2 authorization + KENOS_PROD_TEST_AUTHORIZED=1 required).
+assertTestWriteAllowed({ ref: REF })
 const keys = JSON.parse(
   execSync(`supabase projects api-keys --project-ref ${REF} -o json`, { encoding: 'utf8' }),
 )
@@ -112,7 +115,7 @@ const task = {
   urgency: 'normal',
   tags: ['kenos'],
   subtasks: [],
-  meta: {},
+  meta: { provenance: buildTestProvenance({ harness: 'ios-flow-a-rpc-fix', runId: RUN, nowMs: Date.now() }) },
 }
 await admin.from('planner_tasks').upsert({
   user_id: OWNER.id,
@@ -272,6 +275,13 @@ const verifyOk = vb.some((l) => {
   const d = decodeURIComponent(l)
   return d.includes(`"title":"${MUT}"`) && d.includes('"status":"ok"')
 })
+
+// Teardown: remove this run's seeded test task; fail loudly if it leaks.
+await admin.from('planner_tasks').delete().eq('id', TASK_ID).eq('user_id', OWNER.id)
+{
+  const { data: leftover } = await admin.from('planner_tasks').select('id').eq('id', TASK_ID).eq('user_id', OWNER.id)
+  assertTeardownClean({ remaining: leftover || [], runId: RUN })
+}
 
 const report = {
   runId: RUN,

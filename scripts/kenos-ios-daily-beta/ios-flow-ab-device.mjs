@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { tmpdir } from 'node:os'
 import { createHash } from 'node:crypto'
+import { assertTestWriteAllowed, buildTestProvenance, assertTeardownClean } from '../lib/testProductionGuard.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '../..')
@@ -235,6 +236,8 @@ async function main() {
 
   const keys = getKeys()
   const url = `https://${REF}.supabase.co`
+  // Default-DENY production for test writes (scoped G2 authorization + KENOS_PROD_TEST_AUTHORIZED=1 required).
+  assertTestWriteAllowed({ url })
   const admin = createClient(url, keys.service_role, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
@@ -265,7 +268,7 @@ async function main() {
     urgency: 'normal',
     tags: ['kenos-ios-daily-beta'],
     subtasks: [],
-    meta: { iosFlowRunId: RUN_ID },
+    meta: { iosFlowRunId: RUN_ID, provenance: buildTestProvenance({ harness: 'ios-flow-ab-device', runId: RUN_ID, nowMs: Date.now() }) },
   }
   const { error: upsertErr } = await admin.from('planner_tasks').upsert({
     user_id: OWNER.id,
@@ -689,6 +692,13 @@ async function main() {
   // Final Today home
   launch(`${AIOS}/?iosNativeShell=1`)
   sleep(2000)
+
+  // Teardown: remove this run's seeded test task; fail loudly if it leaks.
+  await admin.from('planner_tasks').delete().eq('id', TASK_ID).eq('user_id', OWNER.id)
+  {
+    const { data: leftover } = await admin.from('planner_tasks').select('id').eq('id', TASK_ID).eq('user_id', OWNER.id)
+    assertTeardownClean({ remaining: leftover || [], runId: RUN_ID })
+  }
 
   writeFileSync(join(LOG_DIR, 'report.json'), JSON.stringify(report, null, 2))
   writeFileSync(

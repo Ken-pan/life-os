@@ -53,6 +53,40 @@ export function resolvePlanCreateDeviceId(storage = globalThis.localStorage) {
   }
 }
 
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * Derive ONE stable, semantic idempotency key for a Fitness "program" seed task.
+ *
+ * Root cause of the 2026-07-22 triplicate `健身 · <muscle>` pollution: the create-task
+ * writer defaults `idempotencyKey` to `plan_ui:${randomUuid}`, so three seed runs for the
+ * same (program, version, user, dueDate, muscle) produced three DIFFERENT keys and the
+ * governed ledger (unique on user_id+action_type+idempotency_key) could not dedupe them.
+ *
+ * By deriving the key deterministically from the program identity, every retry/re-run
+ * reuses the SAME key, so the RPC's `on conflict do nothing` returns the existing task
+ * instead of creating a second one. This function is pure and side-effect-free.
+ *
+ * @param {{ program: string, version: string|number, userId: string, dueDate: string, muscle: string }} p
+ * @returns {string} e.g. "fitness_program:v6:bro-split:c2831538-…:2026-06-30:legs"
+ */
+export function fitnessProgramTaskIdempotencyKey({ program, version, userId, dueDate, muscle } = {}) {
+  const prog = String(program ?? '').trim()
+  if (!prog) throw new Error('fitnessProgramTaskIdempotencyKey requires program')
+  const ver = String(version ?? '').trim()
+  if (!ver) throw new Error('fitnessProgramTaskIdempotencyKey requires version')
+  if (!userId || !UUID_PATTERN.test(String(userId))) {
+    throw new Error('fitnessProgramTaskIdempotencyKey requires userId UUID')
+  }
+  const due = String(dueDate ?? '').trim()
+  if (!ISO_DATE_PATTERN.test(due)) {
+    throw new Error('fitnessProgramTaskIdempotencyKey requires dueDate YYYY-MM-DD')
+  }
+  const mus = String(muscle ?? '').trim().toLowerCase()
+  if (!mus) throw new Error('fitnessProgramTaskIdempotencyKey requires muscle')
+  return `fitness_program:v${ver}:${prog}:${userId}:${due}:${mus}`
+}
+
 /**
  * Build hosted action_request for plan UI create (producer=plan, actor=user).
  * @param {object} input
