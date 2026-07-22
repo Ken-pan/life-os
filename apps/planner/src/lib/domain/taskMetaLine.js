@@ -38,10 +38,10 @@ export function buildTaskMetaLine(task, t, opts = {}) {
 
   if (minimal) {
     if (task.scheduledStart) {
-      return t('schedule.scheduledShort', { start: task.scheduledStart })
+      return withOfflineQueued(t('schedule.scheduledShort', { start: task.scheduledStart }), task, t)
     }
-    if (task.dueTime) return t('schedule.dueShort', { time: task.dueTime })
-    return ''
+    if (task.dueTime) return withOfflineQueued(t('schedule.dueShort', { time: task.dueTime }), task, t)
+    return withOfflineQueued('', task, t)
   }
 
   /** @type {string[]} */
@@ -51,7 +51,7 @@ export function buildTaskMetaLine(task, t, opts = {}) {
   if (urgencyTier === 'overdue' && task.dueDate) {
     parts.push(t('task.overdueShort', { date: formatDateShort(task.dueDate) }))
     appendSubtaskProgress(task, parts)
-    return parts.join(' · ')
+    return withOfflineQueued(parts.join(' · '), task, t)
   }
 
   // Missed-today time: gutter owns the red signal; meta stays contextual/neutral.
@@ -62,7 +62,7 @@ export function buildTaskMetaLine(task, t, opts = {}) {
       parts.push(formatDateShort(task.dueDate))
     }
     appendSubtaskProgress(task, parts)
-    return parts.join(' · ')
+    return withOfflineQueued(parts.join(' · '), task, t)
   }
 
   if (task.scheduledStart && !omitScheduleTime) {
@@ -107,8 +107,14 @@ export function buildTaskMetaLine(task, t, opts = {}) {
   }
 
   appendSubtaskProgress(task, parts)
+  return withOfflineQueued(parts.join(' · '), task, t)
+}
 
-  return parts.join(' · ')
+/** @param {string} line @param {import('../types.js').Task} task @param {(key: string) => string} t */
+function withOfflineQueued(line, task, t) {
+  if (!task.meta?.offlineQueued) return line
+  const pending = t('task.offlineQueuedShort')
+  return line ? `${line} · ${pending}` : pending
 }
 
 /** @param {import('../types.js').Task} task @param {string[]} parts */

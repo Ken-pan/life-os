@@ -6,6 +6,9 @@
 
 export const KENOS_OFFLINE_QUEUE_STORAGE_KEY = 'kenos.plan.offlineIntentQueue.v1'
 
+/** Failed flushes beyond this become dead_letter (skipped until explicit retry). */
+export const OFFLINE_INTENT_MAX_ATTEMPTS = 5
+
 /**
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
  */
@@ -62,33 +65,43 @@ export function enqueueOfflineIntent(state, intent) {
 }
 
 /**
- * Exactly-once drain: mark succeeded intents removed; leave failed for retry.
+ * Exactly-once drain: succeeded intents removed; failed retry; dead_letter after max attempts.
  * @param {object} state
  * @param {(intent: object) => Promise<{ ok: boolean, duplicate?: boolean, error?: string }>} flushOne
- * @param {{ authUserId?: string | null }} opts
+ * @param {{ authUserId?: string | null, maxAttempts?: number }} opts
  */
 export async function flushOfflineIntentQueue(state, flushOne, opts = {}) {
   if (!opts.authUserId || opts.authUserId !== state.userId) {
     return { state, flushed: 0, blocked: 'auth_mismatch_or_missing', remaining: state.intents?.length || 0 }
   }
+  const maxAttempts = opts.maxAttempts ?? OFFLINE_INTENT_MAX_ATTEMPTS
   const remaining = []
   let flushed = 0
+  let deadLettered = 0
   for (const intent of state.intents || []) {
+    if (intent.status === 'dead_letter') {
+      remaining.push(intent)
+      continue
+    }
     const result = await flushOne(intent)
     if (result?.ok) {
       flushed += 1
       continue
     }
+    const attempts = (intent.attempts || 0) + 1
+    const dead = attempts >= maxAttempts
+    if (dead) deadLettered += 1
     remaining.push({
       ...intent,
-      status: 'failed',
-      attempts: (intent.attempts || 0) + 1,
+      status: dead ? 'dead_letter' : 'failed',
+      attempts,
       lastError: result?.error || 'flush_failed',
     })
   }
   return {
     state: { ...state, intents: remaining },
     flushed,
+    deadLettered,
     blocked: null,
     remaining: remaining.length,
   }
@@ -121,4 +134,91 @@ export function loadOfflineQueue(storage) {
 export function clearOfflineQueue(storage) {
   if (!storage) return
   storage.removeItem(KENOS_OFFLINE_QUEUE_STORAGE_KEY)
+}
+
+/**
+ * Bind queue to the active session user; clears intents on account switch.
+ * @param {Storage | undefined} storage
+ * @param {string | null | undefined} userId
+ */
+export function rebindOfflineQueueForSession(storage, userId) {
+  const next = bindOfflineQueueToUser(loadOfflineQueue(storage), userId || null)
+  persistOfflineQueue(storage, next)
+  return next
+}
+
+/**
+ * @param {object} state
+ */
+export function countPendingOfflineIntents(state) {
+  return (state?.intents || []).filter(
+    (intent) => intent.status === 'pending' || intent.status === 'failed' || !intent.status,
+  ).length
+}
+
+/**
+ * @param {object} state
+ */
+export function listDeadLetterOfflineIntents(state) {
+  return (state?.intents || []).filter((intent) => intent.status === 'dead_letter')
+}
+
+/**
+ * @param {object} state
+ * @param {string} intentId
+ */
+export function discardOfflineIntent(state, intentId) {
+  const id = String(intentId || '')
+  return {
+    ...state,
+    intents: (state?.intents || []).filter((intent) => intent.id !== id),
+  }
+}
+
+/**
+ * Move a dead_letter intent back to pending for another flush cycle.
+ * @param {object} state
+ * @param {string} intentId
+ */
+export function retryDeadLetterOfflineIntent(state, intentId) {
+  const id = String(intentId || '')
+  return {
+    ...state,
+    intents: (state?.intents || []).map((intent) => {
+      if (intent.id !== id || intent.status !== 'dead_letter') return intent
+      return { ...intent, status: 'pending', lastError: undefined }
+    }),
+  }
+}
+
+/**
+ * Remap task ids inside a queued mutation after create flush (provisional → server).
+ * @param {object} intent
+ * @param {Map<string, string> | Record<string, string>} idMap
+ */
+export function remapOfflineIntentTaskIds(intent, idMap) {
+  if (!intent || !idMap) return intent
+  const lookup = (key) => {
+    if (!key) return null
+    if (idMap instanceof Map) return idMap.get(key) || null
+    return idMap[key] || null
+  }
+  const current =
+    intent.taskId || intent.provisionalTaskId || intent.actionRequest?.payload?.taskId || null
+  const mapped = lookup(current)
+  if (!mapped) return intent
+  const actionRequest = intent.actionRequest
+    ? {
+        ...intent.actionRequest,
+        payload: {
+          ...(intent.actionRequest.payload || {}),
+          taskId: mapped,
+        },
+      }
+    : intent.actionRequest
+  return {
+    ...intent,
+    taskId: mapped,
+    actionRequest,
+  }
 }

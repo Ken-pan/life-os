@@ -13,6 +13,11 @@ import {
   isPlanReopenTaskWriterEnabled,
 } from './planCompleteReopenTaskWriter.core.js'
 import { markKenosCreatedTaskLegacyDirty } from './planCreateTaskWriter.core.js'
+import {
+  enqueuePlanOfflineIntent,
+  shouldEnqueuePlanOfflineMutation,
+  withOfflineQueuedMeta,
+} from './planOfflineIntentQueue.host.js'
 
 async function runLifecycle(rpcName, actionBuilder, taskId, patch, opts = {}) {
   if (!supabase) throw new Error('Supabase is not configured for hosted Plan lifecycle writer')
@@ -28,6 +33,37 @@ async function runLifecycle(rpcName, actionBuilder, taskId, patch, opts = {}) {
   }
 
   const action = actionBuilder({ taskId }, { authUserId, ...opts })
+
+  if (shouldEnqueuePlanOfflineMutation()) {
+    enqueuePlanOfflineIntent({ authUserId, action, taskId })
+    const idx = S.tasks.findIndex((t) => t.id === taskId)
+    if (idx >= 0) {
+      const prev = markKenosCreatedTaskLegacyDirty(S.tasks[idx])
+      const next = withOfflineQueuedMeta(
+        {
+          ...prev,
+          ...patch,
+          updatedAt: Date.now(),
+          meta: {
+            ...(prev.meta || {}),
+            kenosWriterLifecycle: true,
+            command: {
+              ...(prev.meta?.command || {}),
+              actionType: action.actionType,
+              idempotencyKey: action.idempotencyKey,
+              correlationId: action.correlationId,
+            },
+          },
+        },
+        { kenosWriterLifecycle: true },
+      )
+      S.tasks = S.tasks.map((t) => (t.id === taskId ? next : t))
+      save()
+      return next
+    }
+    return withOfflineQueuedMeta({ id: taskId, ...patch, meta: { kenosWriterLifecycle: true } })
+  }
+
   const { data, error } = await supabase.rpc(rpcName, { action_request: action })
   if (error) {
     const err = new Error(error.message || `${rpcName} failed`)

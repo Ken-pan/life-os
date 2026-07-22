@@ -467,6 +467,7 @@ export default {
     unscheduledOnly: 'Unscheduled',
     overdueDue: 'Overdue · due {date}',
     overdueShort: 'Overdue · {date}',
+    offlineQueuedShort: 'Pending sync',
     recurring: 'Recurring',
     actionToday: 'Today',
     actionTomorrow: 'Tomorrow',

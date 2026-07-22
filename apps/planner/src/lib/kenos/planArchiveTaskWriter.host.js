@@ -12,6 +12,11 @@ import {
   isPlanArchiveTaskWriterEnabled,
 } from './planArchiveTaskWriter.core.js'
 import { markKenosCreatedTaskLegacyDirty } from './planCreateTaskWriter.core.js'
+import {
+  enqueuePlanOfflineIntent,
+  shouldEnqueuePlanOfflineMutation,
+  withOfflineQueuedMeta,
+} from './planOfflineIntentQueue.host.js'
 
 export async function archiveTaskViaHostedKenosWriter(taskId, opts = {}) {
   if (!isPlanArchiveTaskWriterEnabled()) {
@@ -34,6 +39,33 @@ export async function archiveTaskViaHostedKenosWriter(taskId, opts = {}) {
     { taskId },
     { authUserId, idempotencyKey: opts.idempotencyKey, correlationId: opts.correlationId },
   )
+
+  if (shouldEnqueuePlanOfflineMutation()) {
+    enqueuePlanOfflineIntent({ authUserId, action, taskId })
+    const now = Date.now()
+    S.tasks = S.tasks.map((t) => {
+      if (t.id !== taskId) return t
+      const base = markKenosCreatedTaskLegacyDirty(t)
+      return withOfflineQueuedMeta({
+        ...base,
+        deletedAt: now,
+        updatedAt: now,
+        meta: {
+          ...(base.meta || {}),
+          kenosWriterArchive: true,
+          command: {
+            ...(base.meta?.command || {}),
+            actionType: 'plan.archive_task',
+            idempotencyKey: action.idempotencyKey,
+            correlationId: action.correlationId,
+          },
+        },
+      })
+    })
+    softDeleteAttachmentsForOwner('task', taskId)
+    save()
+    return S.tasks.find((t) => t.id === taskId) || { id: taskId, deletedAt: now }
+  }
 
   const { data, error } = await supabase.rpc('kenos_archive_plan_task_action', {
     action_request: action,

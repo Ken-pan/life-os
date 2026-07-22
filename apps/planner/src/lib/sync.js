@@ -330,9 +330,9 @@ export function initAutoSync({ isSignedIn }) {
   const onOnline = () => {
     if (!signedInCheck()) return;
     if (syncState.phase === 'offline') syncState.phase = 'idle';
-    // Track C: flush Kenos offline create queue (flag-gated inside; no Legacy dual-write).
-    void import('./kenos/planCreateTaskWriter.host.js')
-      .then((mod) => mod.flushOfflineCreateTaskQueue?.())
+    // Track C / Phase 3: flush Kenos offline Plan intents (create + mutations; flag-gated).
+    void import('./kenos/planOfflineIntentQueue.host.js')
+      .then((mod) => mod.flushOfflinePlanIntentQueue?.())
       .catch(() => {})
     // 恢复在线：无论有无待传改动都做一次双向同步，顺带拉取云端新数据
     scheduleBidirectionalSync();

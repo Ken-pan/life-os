@@ -4,7 +4,10 @@ import { clearAllCache } from './localCache.js'
 import { syncBidirectional, resetSyncCooldown } from './sync.js'
 import { clearSessionUserData } from './state.svelte.js'
 import { buildSignedOutState } from './kenos/sessionCleanup.core.js'
-import { clearOfflineQueue } from './kenos/planOfflineIntentQueue.core.js'
+import {
+  clearOfflineQueue,
+  rebindOfflineQueueForSession,
+} from './kenos/planOfflineIntentQueue.core.js'
 import { t } from './i18n/index.js'
 
 /** Tracks whether this tab ever held an authenticated session (avoid wiping local-first cold start). */
@@ -35,6 +38,9 @@ export const { auth, initAuth, authErrorMessage, signUp, signIn, signOut } =
     }),
     onSessionChange: (session) => {
       if (session?.user) {
+        if (typeof localStorage !== 'undefined') {
+          rebindOfflineQueueForSession(localStorage, session.user.id)
+        }
         hadAuthenticatedSession = true
         return
       }

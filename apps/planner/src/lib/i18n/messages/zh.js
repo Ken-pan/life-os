@@ -454,6 +454,7 @@ export default {
     unscheduledOnly: '未排程',
     overdueDue: '已逾期 · 截止 {date}',
     overdueShort: '逾期 · {date}',
+    offlineQueuedShort: '待同步',
     recurring: '循环任务',
     actionToday: '今天',
     actionTomorrow: '明天',

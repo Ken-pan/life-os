@@ -12,6 +12,11 @@ import {
   normalizePlanSchedulePayload,
 } from './planUpdateTaskScheduleWriter.core.js'
 import { markKenosCreatedTaskLegacyDirty } from './planCreateTaskWriter.core.js'
+import {
+  enqueuePlanOfflineIntent,
+  shouldEnqueuePlanOfflineMutation,
+  withOfflineQueuedMeta,
+} from './planOfflineIntentQueue.host.js'
 
 /**
  * @param {string} taskId
@@ -44,6 +49,33 @@ export async function updateTaskScheduleViaHostedKenosWriter(taskId, schedule, o
       correlationId: opts.correlationId,
     },
   )
+
+  if (shouldEnqueuePlanOfflineMutation()) {
+    enqueuePlanOfflineIntent({ authUserId, action, taskId })
+    const idx = S.tasks.findIndex((t) => t.id === taskId)
+    if (idx >= 0) {
+      const prev = markKenosCreatedTaskLegacyDirty(S.tasks[idx])
+      const next = withOfflineQueuedMeta({
+        ...prev,
+        ...normalized,
+        updatedAt: Date.now(),
+        meta: {
+          ...(prev.meta || {}),
+          kenosWriterScheduleEdit: true,
+          command: {
+            ...(prev.meta?.command || {}),
+            actionType: 'plan.update_task_schedule',
+            idempotencyKey: action.idempotencyKey,
+            correlationId: action.correlationId,
+          },
+        },
+      })
+      S.tasks = S.tasks.map((t) => (t.id === taskId ? next : t))
+      save()
+      return next
+    }
+    return withOfflineQueuedMeta({ id: taskId, ...normalized, meta: { kenosWriterScheduleEdit: true } })
+  }
 
   const { data, error } = await supabase.rpc('kenos_update_plan_task_schedule_action', {
     action_request: action,
