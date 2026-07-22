@@ -337,10 +337,10 @@ export function buildCapabilityRegistry(options = {}) {
       id: 'outbox.delivery',
       domain: 'plan',
       operation: 'delivery',
-      surface: 'unavailable',
+      surface: 'available',
       sourceOfTruth: 'kenos_outbox_worker',
-      userSafeLabel: '投递未开启',
-      userSafeDetail: 'Worker 仍为 nologin；无生产投递。',
+      userSafeLabel: '投递运行中',
+      userSafeDetail: 'canary worker(launchd space.kenos.outbox-worker)投递到 life_events;历史行按 epoch 隔离。',
     }),
     entry({
       id: 'assistant.action',

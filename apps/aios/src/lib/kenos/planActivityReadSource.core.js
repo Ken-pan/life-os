@@ -4,10 +4,10 @@
  *
  * Read projection only: Activity append stays inside the Plan command RPCs.
  * Flag default Off (`VITE_KENOS_PROD_READ_PLAN_ACTIVITY`); when On the records
- * are merged with the legacy `life_events` compat feed — the two sources do not
- * overlap today (outbox delivery to life_events is not running), but merge
- * still dedupes by correlation defensively so enabling delivery later cannot
- * double-render one action.
+ * are merged with the legacy `life_events` compat feed — since 2026-07-22 the
+ * outbox canary worker DOES deliver actions onto life_events, so the
+ * correlation-based dedupe in the merge is load-bearing (one action must not
+ * double-render from activity + delivered event).
  */
 
 import { isProdPlanActivityReadEnabled } from './prodReadFlags.core.js'

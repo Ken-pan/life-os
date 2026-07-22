@@ -14,6 +14,7 @@ import Home from '@lucide/svelte/icons/home'
 import Music from '@lucide/svelte/icons/music'
 import Pencil from '@lucide/svelte/icons/pencil'
 import Search from '@lucide/svelte/icons/search'
+import Target from '@lucide/svelte/icons/target'
 import Volume2 from '@lucide/svelte/icons/volume-2'
 import Calculator from '@lucide/svelte/icons/calculator'
 import Check from '@lucide/svelte/icons/check'
@@ -86,6 +87,7 @@ export const ICONS = {
   'cloud-upload': CloudUpload,
   'cloud-check': CloudCheck,
   code: Code,
+  target: Target,
   copy: Copy,
   globe: Globe,
   history: History,

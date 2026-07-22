@@ -17,10 +17,8 @@ import {
   plannerTasks,
   plannerAddTask,
 } from '$lib/lifeos.js'
-import {
-  areProductionWritesBlocked,
-  assertDispatcherWriteAllowed,
-} from '$lib/kenos/prodWriteGuard.core.js'
+import { areProductionWritesBlocked } from '$lib/kenos/prodWriteGuard.core.js'
+import { guardToolAction } from '$lib/kenos/actionPipeline.core.js'
 import { mcpToolDefinitions, isMcpTool, executeMcpTool } from '$lib/mcp.js'
 import {
   filterBuiltinToolEntries,
@@ -1777,6 +1775,8 @@ export async function executeTool(name, argsJson, opts = {}) {
         return parts.join('\n\n') || '(无输出)'
       }
       case 'save_memory': {
+        const memoryGate = guardToolAction('save_memory', args, import.meta.env)
+        if (!memoryGate.ok) return memoryGate.error
         // 小模型常忘记用第三人称,代码兜底:没有主语就补"用户",保证召回时无歧义
         const raw = String(args.content ?? '').trim()
         if (!raw) return '错误:记忆内容为空'
@@ -1813,19 +1813,23 @@ export async function executeTool(name, argsJson, opts = {}) {
       case 'planner_tasks':
         return await plannerTasks(args)
       case 'planner_add_task': {
-        const writeGate = assertDispatcherWriteAllowed(
-          'planner_add_task',
-          import.meta.env,
-        )
+        // Action 管线: normalize → registry → policy → (approval) → executor
+        const writeGate = guardToolAction('planner_add_task', args, import.meta.env)
         if (!writeGate.ok) return writeGate.error
         return await plannerAddTask(args)
       }
       case 'focus_status':
         return await runFocusStatusTool()
-      case 'start_focus':
+      case 'start_focus': {
+        const focusGate = guardToolAction('start_focus', args, import.meta.env)
+        if (!focusGate.ok) return focusGate.error
         return await runStartFocusTool(args)
-      case 'end_focus':
+      }
+      case 'end_focus': {
+        const focusEndGate = guardToolAction('end_focus', args, import.meta.env)
+        if (!focusEndGate.ok) return focusEndGate.error
         return await runEndFocusTool(args)
+      }
       case 'open_space':
         return await runOpenSpaceTool(args)
       case 'compose_library_note':

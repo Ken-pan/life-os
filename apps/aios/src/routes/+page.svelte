@@ -40,6 +40,7 @@
   import { CLOUD, isCloudAuthorized } from '$lib/cloud.svelte.js'
   import { requestNativeSpaceShelf } from '$lib/kenos/iosNativeShell.js'
   import { loadHealthReadiness } from '$lib/kenos/healthReadiness.host.js'
+  import ProjectSpineToday from '$lib/components/ProjectSpineToday.svelte'
 
   function onAllSpacesClick(event) {
     if (requestNativeSpaceShelf()) {
@@ -424,6 +425,7 @@
     </div>
 
     <div class="today-level-2">
+      <ProjectSpineToday />
       {#if workCapabilityCopy.kind === 'unauthorized'}
         <section
           class="kenos-anim-chrome-enter"
