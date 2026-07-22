@@ -367,8 +367,6 @@
                     <a
                       class="control-button control-button--primary control-button--link"
                       href={item.deepLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
                     >
                       {item.actionHints?.includes('open_owner')
                         ? '查看详情'

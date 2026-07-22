@@ -75,14 +75,13 @@
     ) {
       return sessionLabels.todayOverview
     }
-    return (
-      today.overview ||
-      buildTodayOverviewLine({
-        priorities: today.priorities,
-        signals: today.signals,
-        queue,
-      })
-    )
+    // Skip the hero row's own item — the overview must aggregate what the hero
+    // does NOT show (second priorities + inbox/approvals counts), not repeat it.
+    return buildTodayOverviewLine({
+      priorities: today.priorities.slice(1),
+      signals: today.signals,
+      queue,
+    })
   })
   const TODAY_SPACES_PREVIEW = 4
   const WORK_CARDS_PREVIEW = 6
@@ -198,11 +197,16 @@
       <button
         type="button"
         class="quiet-button"
-        aria-label="刷新 Today"
+        aria-label="刷新今日"
         disabled={CONTROL.loading}
-        onclick={() => refreshControlCenter({ force: true })}
+        onclick={() => {
+          refreshControlCenter({ force: true })
+          refreshWorkSurface()
+        }}
       >
-        <Icon name="refresh" size={14} strokeWidth={1.75} />
+        <span class={['refresh-icon', CONTROL.loading && 'refresh-icon--busy']}>
+          <Icon name="refresh" size={14} strokeWidth={1.75} />
+        </span>
         <span class="quiet-button-label">刷新</span>
       </button>
     </div>
@@ -259,11 +263,10 @@
                   'kenos-anim-list-enter',
                   `priority-row--${item.tone}`,
                   (index === 0 || item.tone === 'critical') &&
+                    item.tone !== 'calm' &&
                     'priority-row--hero',
                 ]}
                 href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
                 onclick={() => {
                   const listKey = listKeyForDomainHref(item.href)
                   if (listKey) {
@@ -286,8 +289,12 @@
                 <span class="priority-copy">
                   <span class="row-eyebrow">{item.eyebrow}</span>
                   <strong>{item.title}</strong>
-                  {#if item.detail}
-                    <span class="row-detail">{item.detail}</span>
+                  {#if item.detail || item.stale}
+                    <span class="row-detail"
+                      >{item.detail}{item.stale
+                        ? `${item.detail ? ' · ' : ''}数据陈旧，刷新后确认`
+                        : ''}</span
+                    >
                   {/if}
                 </span>
                 <span class="row-action" aria-hidden="true">
@@ -360,30 +367,22 @@
               </div>
             </div>
           {:else if session.inboxSyncState === 'locked' || todayNeedsSignIn}
-            {#if todayNeedsSignIn}
-              <div class="queue-row queue-row--primary kenos-anim-list-enter" role="status">
-                <div class="queue-copy">
-                  <span class="queue-label">收件箱待同步</span>
-                  <small>连接账户后会显示待处理事项</small>
-                </div>
-              </div>
-            {:else}
-              <a
-                href="/settings#cloud"
-                class="queue-row queue-row--primary kenos-anim-list-enter"
-              >
-                <div class="queue-copy">
-                  <span class="queue-label"
-                    >{PRODUCT_COPY.todayInboxUnavailable.title}</span
-                  >
-                  <small>{PRODUCT_COPY.todayInboxUnavailable.detail}</small>
-                </div>
-                <span class="queue-action-label"
-                  >{PRODUCT_COPY.todayInboxUnavailable.action}</span
+            <!-- needsSignIn implies locked — one actionable card, never a dead status div. -->
+            <a
+              href="/settings#cloud"
+              class="queue-row queue-row--primary kenos-anim-list-enter"
+            >
+              <div class="queue-copy">
+                <span class="queue-label"
+                  >{PRODUCT_COPY.todayInboxUnavailable.title}</span
                 >
-                <Icon name="chevron-right" size={16} strokeWidth={1.75} />
-              </a>
-            {/if}
+                <small>{PRODUCT_COPY.todayInboxUnavailable.detail}</small>
+              </div>
+              <span class="queue-action-label"
+                >{PRODUCT_COPY.todayInboxUnavailable.action}</span
+              >
+              <Icon name="chevron-right" size={16} strokeWidth={1.75} />
+            </a>
           {:else if !queue.inboxAvailable}
             <div class="queue-row queue-row--primary kenos-anim-list-enter" role="status">
               <div class="queue-copy">
@@ -451,7 +450,8 @@
         <div class="section-heading section-heading--meta">
           <h2 id="today-work-title">{t('nav.work')}</h2>
           {#if showWorkAll}
-            <a href="/spaces" class="text-action" onclick={onAllSpacesClick}>
+            <!-- Work 的「全部」进 Work 全量，而非所有空间列表。 -->
+            <a href="/work" class="text-action">
               全部
               <Icon name="chevron-right" size={15} strokeWidth={1.75} />
             </a>
@@ -510,8 +510,6 @@
             {#each today.signals as signal (signal.id)}
               <a
                 href={signal.href}
-                target="_blank"
-                rel="noopener noreferrer"
                 class="signal-row kenos-anim-list-enter"
                 onclick={() => {
                   const listKey = listKeyForDomainHref(signal.href)
@@ -530,7 +528,7 @@
                     >{signal.detail}{signal.stale ? ' · 数据陈旧' : ''}</span
                   >
                 </span>
-                <Icon name="external" size={14} strokeWidth={1.75} />
+                <Icon name="chevron-right" size={14} strokeWidth={1.75} />
               </a>
             {/each}
           </div>
@@ -651,8 +649,9 @@
     display: none;
   }
   :global(html[data-ios-native-shell='true'] .today-actions .quiet-button) {
-    width: 32px;
-    min-height: 32px;
+    /* 40pt 触达目标 — 32px 低于 HIG 且是唯一的刷新入口。 */
+    width: 40px;
+    min-height: 40px;
     padding: 0;
     justify-content: center;
     opacity: 0.5;
@@ -795,6 +794,9 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    /* 32px min hit area — these are small but frequent controls (继续/全部/刷新). */
+    min-height: 32px;
+    padding-block: 4px;
     border: 0;
     background: transparent;
     color: var(--t2);
@@ -807,6 +809,22 @@
     color: var(--t3);
     font-size: 12px;
     opacity: 0.65;
+  }
+  .refresh-icon {
+    display: inline-flex;
+  }
+  .refresh-icon--busy {
+    animation: today-refresh-spin 0.9s linear infinite;
+  }
+  @keyframes today-refresh-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .refresh-icon--busy {
+      animation: none;
+    }
   }
   .quiet-button:hover,
   .text-action:hover {

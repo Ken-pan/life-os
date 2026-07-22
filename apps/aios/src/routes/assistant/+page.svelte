@@ -133,6 +133,7 @@
       summary: CONTROL.summary,
       queue,
       session,
+      localMode: localModeAccepted,
     }),
   )
 
@@ -171,19 +172,22 @@
     })
   })
   const suggestions = $derived.by(() => {
-    if (attention.prompts.length) {
-      return attention.prompts.map((text, i) => ({
-        icon: DYN_ICONS[i % DYN_ICONS.length],
-        text,
-      }))
-    }
-    if (dynamicSuggestions?.length) {
-      return dynamicSuggestions.slice(0, 3).map((text, i) => ({
-        icon: DYN_ICONS[i % DYN_ICONS.length],
-        text,
-      }))
-    }
-    return STATIC_SUGGESTIONS.slice(0, 3)
+    // attention prompts always exist (every brief branch pushes ≥1), so merge with
+    // daily/static fillers instead of gating on them — otherwise the fillers are dead
+    // code and locked/empty states strand the user with a single chip.
+    const connectPrompt = attention.availability !== 'ready'
+    // Local mode: the user declined cloud — don't keep pitching "连接账户".
+    const base =
+      localModeAccepted && connectPrompt ? [] : attention.prompts.slice(0, 3)
+    const fillers = (
+      dynamicSuggestions?.length
+        ? dynamicSuggestions
+        : STATIC_SUGGESTIONS.map((s) => s.text)
+    ).filter((text) => !base.includes(text))
+    return [...base, ...fillers].slice(0, 3).map((text, i) => ({
+      icon: DYN_ICONS[i % DYN_ICONS.length],
+      text,
+    }))
   })
 
   const followUps = $derived.by(() => {
@@ -690,8 +694,10 @@
               </ul>
             {/if}
           </section>
-          <div class="suggestions" aria-label={t('chat.suggestionsLabel')}>
-            <p class="suggestions-label">{t('chat.suggestionsLabel')}</p>
+          <div class="suggestions" aria-labelledby="assistant-suggestions-label">
+            <p class="suggestions-label" id="assistant-suggestions-label">
+              {t('chat.suggestionsLabel')}
+            </p>
             {#each suggestions as item (item.text)}
               <button
                 type="button"
@@ -706,10 +712,12 @@
           {#if recentChats.length}
             <section
               class="recent"
-              aria-label={t('chat.recentChats')}
+              aria-labelledby="assistant-recent-label"
               data-testid="assistant-recent"
             >
-              <p class="suggestions-label">{t('chat.recentChats')}</p>
+              <p class="suggestions-label" id="assistant-recent-label">
+                {t('chat.recentChats')}
+              </p>
               {#each recentChats as item (item.id)}
                 <button
                   type="button"

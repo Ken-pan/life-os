@@ -412,6 +412,7 @@ export function buildAssistantAttentionBrief({
   summary = null,
   queue = null,
   session = null,
+  localMode = false,
 } = {}) {
   if (
     session?.crossSpaceSummaryState === 'syncing' ||
@@ -430,6 +431,15 @@ export function buildAssistantAttentionBrief({
       session?.needsSignIn ||
       session?.crossSpaceSummaryState === 'locked' ||
       session?.inboxSyncState === 'locked'
+    // The user chose local mode — respect that instead of re-pitching "连接账户".
+    if (locked && localMode) {
+      return {
+        bullets: ['本地模式：数据不出这台设备。想同步各空间时可随时连接账户。'],
+        prompts: [],
+        ask: '想从哪里开始？',
+        availability: 'local',
+      }
+    }
     return {
       bullets: [ASK_SESSION_COPY.unavailable],
       prompts: locked
