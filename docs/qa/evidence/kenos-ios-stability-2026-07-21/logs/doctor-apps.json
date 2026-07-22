@@ -12,7 +12,7 @@
     ],
     "commandType" : "devicectl.device.info.apps",
     "environment" : {
-      "TERM" : "dumb"
+
     },
     "jsonVersion" : 3,
     "outcome" : "success",
@@ -24,13 +24,13 @@
         "appClip" : false,
         "builtByDeveloper" : true,
         "bundleIdentifier" : "space.kenos.app.ios",
-        "bundleVersion" : "202607211735",
+        "bundleVersion" : "202607220250",
         "defaultApp" : false,
         "hidden" : false,
         "internalApp" : false,
         "name" : "Kenos",
         "removable" : true,
-        "url" : "file:///private/var/containers/Bundle/Application/778647D0-E617-4AAF-85D6-BE3DBA49FBD7/KenosIOS.app/",
+        "url" : "file:///private/var/containers/Bundle/Application/CC1055D6-BEA8-4FFD-97CF-E19E17B45041/KenosIOS.app/",
         "version" : "1.0.0"
       },
       {

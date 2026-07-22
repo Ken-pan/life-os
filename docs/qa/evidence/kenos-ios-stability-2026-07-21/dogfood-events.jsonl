@@ -251,3 +251,96 @@
 {"ts":"2026-07-21T17:37:26.473Z","type":"hostname_case","id":"CASE_C_wifi_toggle","result":"OWNER_OPEN"}
 {"ts":"2026-07-21T17:37:30.200Z","type":"hostname_case","id":"CASE_D_service_restart","result":"PASS"}
 {"ts":"2026-07-21T17:37:30.201Z","type":"hostname_case","id":"CASE_E_mac_reboot","result":"OWNER_OPEN"}
+{"ts":"2026-07-22T04:33:02.261Z","type":"preflight_check","name":"17_pro_connected","ok":true,"class":"device","reason":"online"}
+{"ts":"2026-07-22T04:33:03.809Z","type":"preflight_check","name":"app_installed","ok":true,"class":"product","reason":"installed"}
+{"ts":"2026-07-22T04:33:03.839Z","type":"preflight_check","name":"lan_origin_reachable","ok":true,"class":"service","reason":"health_200"}
+{"ts":"2026-07-22T04:33:03.861Z","type":"preflight_check","name":"service_aios","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:03.879Z","type":"preflight_check","name":"service_planner","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:03.893Z","type":"preflight_check","name":"service_fitness","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:03.907Z","type":"preflight_check","name":"service_finance","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:03.920Z","type":"preflight_check","name":"service_knowledge","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:03.932Z","type":"preflight_check","name":"service_music","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:03.944Z","type":"preflight_check","name":"service_home","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:03.956Z","type":"preflight_check","name":"service_health","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:03.956Z","type":"preflight_check","name":"build_sha_recorded","ok":true,"class":"product","reason":"ios=05930e624 release=4b590f2cb"}
+{"ts":"2026-07-22T04:33:03.956Z","type":"preflight_check","name":"head_vs_installed_drift","ok":false,"class":"environment","reason":"HEAD≠installed (need rebuild). head= installed=05930e624"}
+{"ts":"2026-07-22T04:33:03.957Z","type":"preflight_check","name":"stable_hostname_origin","ok":false,"class":"product","reason":"not_stable host=http://kens-m5-max-macbook-pro.tail04e0e6.ts.net:5219"}
+{"ts":"2026-07-22T04:33:04.393Z","type":"preflight_check","name":"app_launchable","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-22T04:33:04.394Z","type":"preflight_check","name":"wkwebview_payload","ok":true,"class":"product","reason":"payload_launch_accepted"}
+{"ts":"2026-07-22T04:33:04.394Z","type":"preflight_check","name":"auth_bootstrap_surface","ok":true,"class":"product","reason":"deferred_to_smoke_flow_a (no token in preflight)"}
+{"ts":"2026-07-22T04:33:04.395Z","type":"preflight_check","name":"continue_store_readable","ok":true,"class":"product","reason":"native_store_assumed; verified in continuity soak"}
+{"ts":"2026-07-22T04:33:04.395Z","type":"preflight_check","name":"app_log_path","ok":true,"class":"product","reason":"kenos_app_logs schema exists; export in log-export"}
+{"ts":"2026-07-22T04:33:04.395Z","type":"preflight_check","name":"legacy_fallback_available","ok":true,"class":"product","reason":"production_fallback_retained_in_settings"}
+{"ts":"2026-07-22T04:33:04.395Z","type":"preflight_check","name":"rollback_target","ok":true,"class":"service","reason":"previous_release_present"}
+{"ts":"2026-07-22T04:33:04.396Z","type":"preflight_end","verdict":"PASS_WITH_REBUILD_REQUIRED"}
+{"ts":"2026-07-22T04:33:16.659Z","type":"preflight_check","name":"17_pro_connected","ok":true,"class":"device","reason":"online"}
+{"ts":"2026-07-22T04:33:18.251Z","type":"preflight_check","name":"app_installed","ok":true,"class":"product","reason":"installed"}
+{"ts":"2026-07-22T04:33:18.266Z","type":"preflight_check","name":"lan_origin_reachable","ok":true,"class":"service","reason":"health_200"}
+{"ts":"2026-07-22T04:33:18.281Z","type":"preflight_check","name":"service_aios","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:18.294Z","type":"preflight_check","name":"service_planner","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:18.307Z","type":"preflight_check","name":"service_fitness","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:18.322Z","type":"preflight_check","name":"service_finance","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:18.336Z","type":"preflight_check","name":"service_knowledge","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:18.350Z","type":"preflight_check","name":"service_music","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:18.363Z","type":"preflight_check","name":"service_home","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:18.375Z","type":"preflight_check","name":"service_health","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:18.375Z","type":"preflight_check","name":"build_sha_recorded","ok":true,"class":"product","reason":"ios=05930e624 release=4b590f2cb"}
+{"ts":"2026-07-22T04:33:18.375Z","type":"preflight_check","name":"head_vs_installed_drift","ok":false,"class":"environment","reason":"HEAD≠installed (need rebuild). head= installed=05930e624"}
+{"ts":"2026-07-22T04:33:18.375Z","type":"preflight_check","name":"stable_hostname_origin","ok":false,"class":"product","reason":"not_stable host=http://kens-m5-max-macbook-pro.tail04e0e6.ts.net:5219"}
+{"ts":"2026-07-22T04:33:19.225Z","type":"preflight_check","name":"app_launchable","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-22T04:33:19.225Z","type":"preflight_check","name":"wkwebview_payload","ok":true,"class":"product","reason":"payload_launch_accepted"}
+{"ts":"2026-07-22T04:33:19.226Z","type":"preflight_check","name":"auth_bootstrap_surface","ok":true,"class":"product","reason":"deferred_to_smoke_flow_a (no token in preflight)"}
+{"ts":"2026-07-22T04:33:19.226Z","type":"preflight_check","name":"continue_store_readable","ok":true,"class":"product","reason":"native_store_assumed; verified in continuity soak"}
+{"ts":"2026-07-22T04:33:19.226Z","type":"preflight_check","name":"app_log_path","ok":true,"class":"product","reason":"kenos_app_logs schema exists; export in log-export"}
+{"ts":"2026-07-22T04:33:19.226Z","type":"preflight_check","name":"legacy_fallback_available","ok":true,"class":"product","reason":"production_fallback_retained_in_settings"}
+{"ts":"2026-07-22T04:33:19.226Z","type":"preflight_check","name":"rollback_target","ok":true,"class":"service","reason":"previous_release_present"}
+{"ts":"2026-07-22T04:33:19.227Z","type":"preflight_end","verdict":"PASS_WITH_REBUILD_REQUIRED"}
+{"ts":"2026-07-22T04:33:38.184Z","type":"preflight_check","name":"17_pro_connected","ok":true,"class":"device","reason":"online"}
+{"ts":"2026-07-22T04:33:39.099Z","type":"preflight_check","name":"app_installed","ok":true,"class":"product","reason":"installed"}
+{"ts":"2026-07-22T04:33:39.114Z","type":"preflight_check","name":"lan_origin_reachable","ok":true,"class":"service","reason":"health_200"}
+{"ts":"2026-07-22T04:33:39.127Z","type":"preflight_check","name":"service_aios","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:39.142Z","type":"preflight_check","name":"service_planner","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:39.157Z","type":"preflight_check","name":"service_fitness","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:39.171Z","type":"preflight_check","name":"service_finance","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:39.185Z","type":"preflight_check","name":"service_knowledge","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:39.199Z","type":"preflight_check","name":"service_music","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:39.215Z","type":"preflight_check","name":"service_home","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:39.229Z","type":"preflight_check","name":"service_health","ok":true,"class":"service","reason":"up"}
+{"ts":"2026-07-22T04:33:39.229Z","type":"preflight_check","name":"build_sha_recorded","ok":true,"class":"product","reason":"ios=05930e624 release=4b590f2cb"}
+{"ts":"2026-07-22T04:33:39.229Z","type":"preflight_check","name":"head_vs_installed_drift","ok":false,"class":"environment","reason":"HEAD≠installed (need rebuild). head= installed=05930e624"}
+{"ts":"2026-07-22T04:33:39.229Z","type":"preflight_check","name":"stable_hostname_origin","ok":true,"class":"product","reason":"mdns=kens-m5-max-macbook-pro.tail04e0e6.ts.net"}
+{"ts":"2026-07-22T04:33:39.608Z","type":"preflight_check","name":"app_launchable","ok":true,"class":"product","reason":"launched"}
+{"ts":"2026-07-22T04:33:39.608Z","type":"preflight_check","name":"wkwebview_payload","ok":true,"class":"product","reason":"payload_launch_accepted"}
+{"ts":"2026-07-22T04:33:39.608Z","type":"preflight_check","name":"auth_bootstrap_surface","ok":true,"class":"product","reason":"deferred_to_smoke_flow_a (no token in preflight)"}
+{"ts":"2026-07-22T04:33:39.608Z","type":"preflight_check","name":"continue_store_readable","ok":true,"class":"product","reason":"native_store_assumed; verified in continuity soak"}
+{"ts":"2026-07-22T04:33:39.608Z","type":"preflight_check","name":"app_log_path","ok":true,"class":"product","reason":"kenos_app_logs schema exists; export in log-export"}
+{"ts":"2026-07-22T04:33:39.608Z","type":"preflight_check","name":"legacy_fallback_available","ok":true,"class":"product","reason":"production_fallback_retained_in_settings"}
+{"ts":"2026-07-22T04:33:39.609Z","type":"preflight_check","name":"rollback_target","ok":true,"class":"service","reason":"previous_release_present"}
+{"ts":"2026-07-22T04:33:39.609Z","type":"preflight_end","verdict":"PASS_WITH_REBUILD_REQUIRED"}
+{"ts":"2026-07-22T04:34:02.830Z","type":"smoke_case","loop":"A_cold_launch","name":"home_screen_relaunch","ok":true,"reason":"launched","ms":1461}
+{"ts":"2026-07-22T04:34:05.272Z","type":"smoke_case","loop":"A_cold_launch","name":"second_cold","ok":true,"reason":"launched","ms":435}
+{"ts":"2026-07-22T04:34:05.273Z","type":"smoke_case","loop":"A_cold_launch","name":"no_external_safari_claim","ok":true,"reason":"launch_stays_in_bundle (Safari escape requires visual Owner confirm)","ms":null}
+{"ts":"2026-07-22T04:34:05.307Z","type":"smoke_case","loop":"B_plan","name":"planner_service","ok":true,"reason":null,"ms":18}
+{"ts":"2026-07-22T04:34:05.762Z","type":"smoke_case","loop":"B_plan","name":"continue_plan_launch","ok":true,"reason":"launched","ms":454}
+{"ts":"2026-07-22T04:34:07.675Z","type":"smoke_case","loop":"B_plan","name":"return_kenos","ok":true,"reason":"launched","ms":406}
+{"ts":"2026-07-22T04:34:07.704Z","type":"smoke_case","loop":"C_training","name":"fitness_service","ok":true,"reason":null,"ms":20}
+{"ts":"2026-07-22T04:34:08.159Z","type":"smoke_case","loop":"C_training","name":"continue_training_launch","ok":true,"reason":"launched","ms":455}
+{"ts":"2026-07-22T04:34:10.080Z","type":"smoke_case","loop":"C_training","name":"return_kenos","ok":true,"reason":"launched","ms":410}
+{"ts":"2026-07-22T04:34:10.556Z","type":"smoke_case","loop":"D_domains","name":"work","ok":true,"reason":"launched","ms":475}
+{"ts":"2026-07-22T04:34:11.848Z","type":"smoke_case","loop":"D_domains","name":"work_return_kenos","ok":true,"reason":"launched","ms":485}
+{"ts":"2026-07-22T04:34:12.908Z","type":"smoke_case","loop":"D_domains","name":"money","ok":true,"reason":"launched","ms":456}
+{"ts":"2026-07-22T04:34:14.112Z","type":"smoke_case","loop":"D_domains","name":"money_return_kenos","ok":true,"reason":"launched","ms":398}
+{"ts":"2026-07-22T04:34:15.113Z","type":"smoke_case","loop":"D_domains","name":"library","ok":true,"reason":"launched","ms":396}
+{"ts":"2026-07-22T04:34:17.081Z","type":"smoke_case","loop":"D_domains","name":"library_return_kenos","ok":true,"reason":"launched","ms":1160}
+{"ts":"2026-07-22T04:34:18.138Z","type":"smoke_case","loop":"D_domains","name":"music","ok":true,"reason":"launched","ms":450}
+{"ts":"2026-07-22T04:34:19.365Z","type":"smoke_case","loop":"D_domains","name":"music_return_kenos","ok":true,"reason":"launched","ms":415}
+{"ts":"2026-07-22T04:34:20.383Z","type":"smoke_case","loop":"D_domains","name":"home","ok":true,"reason":"launched","ms":408}
+{"ts":"2026-07-22T04:34:21.658Z","type":"smoke_case","loop":"D_domains","name":"home_return_kenos","ok":true,"reason":"launched","ms":468}
+{"ts":"2026-07-22T04:34:22.669Z","type":"smoke_case","loop":"D_domains","name":"health","ok":true,"reason":"launched","ms":400}
+{"ts":"2026-07-22T04:34:23.971Z","type":"smoke_case","loop":"D_domains","name":"health_return_kenos","ok":true,"reason":"launched","ms":495}
+{"ts":"2026-07-22T04:34:24.969Z","type":"smoke_case","loop":"D_domains","name":"paper","ok":true,"reason":"partial_ok_not_fully_integrated","ms":389}
+{"ts":"2026-07-22T04:34:26.239Z","type":"smoke_case","loop":"D_domains","name":"paper_return_kenos","ok":true,"reason":"launched","ms":462}
+{"ts":"2026-07-22T04:34:28.726Z","type":"smoke_case","loop":"E_assistant_inbox","name":"assistant_in_app","ok":true,"reason":"in_app_webview_payload (Safari chrome = Owner visual)","ms":370}
+{"ts":"2026-07-22T04:34:31.181Z","type":"smoke_case","loop":"E_assistant_inbox","name":"inbox","ok":true,"reason":"launched","ms":447}
+{"ts":"2026-07-22T04:34:33.154Z","type":"smoke_case","loop":"E_assistant_inbox","name":"spaces","ok":true,"reason":"launched","ms":464}
+{"ts":"2026-07-22T04:34:33.156Z","type":"smoke_end","verdict":"PASS","attempts":26,"passed":26,"failed":0,"recovered":0,"latency":{"count":25,"median":447,"p50":447,"p95":1160,"min":18,"max":1461},"p0":0,"p1":0}

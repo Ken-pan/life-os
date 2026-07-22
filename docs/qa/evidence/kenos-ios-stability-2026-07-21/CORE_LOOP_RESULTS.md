@@ -1,20 +1,20 @@
 # CORE_LOOP_RESULTS
 
-**kind:** AUTOMATED
-**run:** `smoke-2026-07-21T17-36-09-337Z`
-**HEAD:** `de41869aecbce0201036288bba49ebdd4b59c208`
-**build:** `202607211735 / de41869ae`
+**kind:** AUTOMATED  
+**run:** `smoke-2026-07-22T04-33-48-905Z`  
+**HEAD:** `4a4e9821ffc8a4adabc33c480ee0a98914a810ff`  
+**build:** `202607220250 / 05930e624`  
 **verdict:** `PASS`
 
 ## Cumulative
 
 | Loop | Attempts | Passed | Failed | Recovered | P50 ms | P95 ms |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| A_cold_launch | 3 | 3 | 0 | 0 | 235 | 1068 |
-| B_plan | 3 | 3 | 0 | 0 | 269 | 505 |
-| C_training | 3 | 3 | 0 | 0 | 259 | 481 |
-| D_domains | 14 | 14 | 0 | 0 | 222 | 529 |
-| E_assistant_inbox | 3 | 3 | 0 | 0 | 292 | 312 |
+| A_cold_launch | 3 | 3 | 0 | 0 | 435 | 1461 |
+| B_plan | 3 | 3 | 0 | 0 | 406 | 454 |
+| C_training | 3 | 3 | 0 | 0 | 410 | 455 |
+| D_domains | 14 | 14 | 0 | 0 | 450 | 1160 |
+| E_assistant_inbox | 3 | 3 | 0 | 0 | 447 | 464 |
 
 ## Honesty
 

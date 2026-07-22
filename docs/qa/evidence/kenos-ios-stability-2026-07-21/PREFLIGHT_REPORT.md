@@ -1,9 +1,9 @@
 # PREFLIGHT_REPORT
 
-**ts:** 2026-07-21T17:36:08.665Z
-**HEAD:** `de41869aecbce0201036288bba49ebdd4b59c208`
+**ts:** 2026-07-22T04:33:38.089Z
+**HEAD:** `4a4e9821ffc8a4adabc33c480ee0a98914a810ff`
 **formal baseline:** `502d805c28b29d3d50c0efa2699ab717a301ac45`
-**verdict:** `PASS`
+**verdict:** `PASS_WITH_REBUILD_REQUIRED`
 
 ## Checks
 
@@ -20,9 +20,9 @@
 | service_music | true | service | up |
 | service_home | true | service | up |
 | service_health | true | service | up |
-| build_sha_recorded | true | product | ios=de41869ae release=71ad6d5f3 |
-| head_vs_installed_drift | true | product | aligned |
-| stable_hostname_origin | true | product | mdns=kens-m5-max-macbook-pro.local |
+| build_sha_recorded | true | product | ios=05930e624 release=4b590f2cb |
+| head_vs_installed_drift | false | product | HEAD≠installed (need rebuild). head= installed=05930e624 |
+| stable_hostname_origin | true | product | mdns=kens-m5-max-macbook-pro.tail04e0e6.ts.net |
 | app_launchable | true | product | launched |
 | wkwebview_payload | true | product | payload_launch_accepted |
 | auth_bootstrap_surface | true | product | deferred_to_smoke_flow_a (no token in preflight) |
