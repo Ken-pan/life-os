@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import {
   redactLogText,
+  safeRoute,
   redactLogMetadata,
   normalizeLogLevel,
   levelMeetsMinimum,
@@ -144,6 +145,27 @@ api2.dispose()
     if (prevWindow === undefined) delete g.window
     else g.window = prevWindow
   }
+}
+
+
+// F5-06.6: safeRoute strips query VALUES (note titles / search terms / resume
+// payloads) while keeping param keys for diagnosis.
+{
+  assert.equal(safeRoute({ pathname: '/inbox', search: '' }), '/inbox')
+  assert.equal(safeRoute({ pathname: '/today' }), '/today')
+  const r = safeRoute({ pathname: '/library', search: '?title=my+secret+note&q=passwd' })
+  assert.equal(r, '/library?title=«redacted»&q=«redacted»')
+  assert.ok(!/secret|passwd/.test(r))
+  const rr = safeRoute({ pathname: '/plan', search: '?kenosResume=eyJhbGc.secret' })
+  assert.ok(!/secret/.test(rr))
+}
+
+// F5-06.6: content-bearing tokens are redacted from free text.
+{
+  const red = redactLogText('login user@example.com bearer abc.def sb_secret_xyz sk-ABCDEF1234567890AB')
+  assert.ok(!/user@example\.com/.test(red))
+  assert.ok(!/sb_secret_xyz/.test(red))
+  assert.ok(!/abc\.def/.test(red) || /«redacted»/.test(red))
 }
 
 console.log('kenosAppLogs.test.mjs: ok')

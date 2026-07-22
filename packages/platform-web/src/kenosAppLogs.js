@@ -35,6 +35,28 @@ const SENSITIVE_KEYS = new Set([
   'anon_key',
 ])
 
+/**
+ * A route safe to log: pathname + query PARAM KEYS only (values stripped).
+ * Query strings routinely carry note/task titles, search terms and resume
+ * payloads (?title=…, ?q=…, ?kenosResume=…); logging them verbatim leaks
+ * private content. We keep the shape (which params were present) for diagnosis
+ * without the values. (F5-06.6)
+ * @param {{ pathname?: string, search?: string } | undefined} loc
+ */
+export function safeRoute(loc) {
+  try {
+    const pathname = loc?.pathname ?? ''
+    const search = loc?.search ?? ''
+    if (!search) return pathname
+    const params = new URLSearchParams(search)
+    const keys = [...params.keys()]
+    if (!keys.length) return pathname
+    return `${pathname}?${keys.map((k) => `${k}=«redacted»`).join('&')}`
+  } catch {
+    return loc?.pathname ?? ''
+  }
+}
+
 /** @type {Array<[RegExp, string]>} */
 const REDACT_PATTERNS = [
   [/\bbearer\s+\S+/gi, 'Bearer «redacted»'],
@@ -320,10 +342,7 @@ export function createKenosAppLogs(options) {
       category: String(extra.category || 'app').slice(0, 64),
       message: redactLogText(message),
       metadata: redactLogMetadata({
-        route:
-          typeof window !== 'undefined'
-            ? `${window.location.pathname}${window.location.search}`
-            : '',
+        route: typeof window !== 'undefined' ? safeRoute(window.location) : '',
         ...extra.metadata,
       }),
       file: extra.file ? String(extra.file).slice(0, 200) : undefined,
@@ -611,7 +630,7 @@ export function installKenosAppLogs(options) {
   host.__KENOS_APP_LOGS__ = api
   api.notice(`${options.app} web log session started`, {
     category: 'lifecycle',
-    metadata: { href: window.location.href },
+    metadata: { route: safeRoute(window.location) },
   })
   return () => api.dispose()
 }
