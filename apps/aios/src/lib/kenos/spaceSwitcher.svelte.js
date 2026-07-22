@@ -15,6 +15,7 @@ import {
   forgetSpaceResume,
   loadSpaceSwitcherState,
   normalizeSpaceChromeMode,
+  normalizeSpaceSwitcherState,
   rememberSpaceRoute,
   resolveSpaceOpenHref,
   saveSpaceSwitcherState,
@@ -29,6 +30,13 @@ import {
 import {
   decodeResumeHandoff,
 } from '@life-os/platform-web/kenos-space-continuity'
+import {
+  applyShellRows,
+  bumpShellSyncMeta,
+  emptyShellSyncMeta,
+  normalizeShellSyncMeta,
+} from './shellStateSync.core.js'
+import { dataChanged } from '$lib/syncBus.js'
 
 /** @type {import('./spaceSwitcher.core.js').SpaceSwitcherState} */
 let state = $state(emptySpaceSwitcherState())
@@ -170,7 +178,70 @@ export function consumeSpaceSwitcherTrigger() {
   return el?.isConnected ? el : null
 }
 
+/* —— shell_state 云同步记账(per-key LWW 时间戳/墓碑,见 shellStateSync.core.js)—— */
+
+const SHELL_META_STORAGE_KEY = 'kenos.shellStateMeta.v1'
+
+/** @type {import('./shellStateSync.core.js').ShellSyncMeta} */
+let shellSyncMeta = emptyShellSyncMeta()
+/** 上次持久化的状态快照 —— persist 时 diff 出「本地真的改了什么」 */
+/** @type {import('./spaceSwitcher.core.js').SpaceSwitcherState | null} */
+let lastPersisted = null
+
+function loadShellSyncMeta() {
+  if (typeof localStorage === 'undefined') return emptyShellSyncMeta()
+  try {
+    return normalizeShellSyncMeta(
+      JSON.parse(localStorage.getItem(SHELL_META_STORAGE_KEY) ?? 'null'),
+    )
+  } catch {
+    return emptyShellSyncMeta()
+  }
+}
+
+function saveShellSyncMeta() {
+  if (typeof localStorage === 'undefined') return
+  try {
+    localStorage.setItem(SHELL_META_STORAGE_KEY, JSON.stringify(shellSyncMeta))
+  } catch {
+    /* 存不下就下次全量对账,不致错 */
+  }
+}
+
+function snapshotState() {
+  return /** @type {import('./spaceSwitcher.core.js').SpaceSwitcherState} */ (
+    $state.snapshot(state)
+  )
+}
+
 function persist() {
+  shellSyncMeta = bumpShellSyncMeta(lastPersisted, state, shellSyncMeta)
+  lastPersisted = snapshotState()
+  saveShellSyncMeta()
+  saveSpaceSwitcherState(state)
+  // 云同步防抖推送(cloud.svelte.js 订阅;未登录时是 no-op)
+  dataChanged()
+}
+
+/** 云同步读侧:当前状态 + LWW 记账(cloud.svelte.js 经动态 import 调用) */
+export function getShellSyncSnapshot() {
+  return { hydrated, state, meta: shellSyncMeta }
+}
+
+/**
+ * 云同步写侧:把远端赢家行合入本地(采信远端时间戳,不当作本地变更)。
+ * @param {import('./shellStateSync.core.js').ShellRow[]} rows
+ */
+export function applyRemoteShellRows(rows) {
+  if (!rows?.length) return
+  const applied = applyShellRows(state, shellSyncMeta, rows)
+  state = bindSpaceSwitcherOwner(
+    normalizeSpaceSwitcherState(applied.state, { userId: CLOUD.user?.id ?? null }),
+    CLOUD.user?.id ?? null,
+  )
+  shellSyncMeta = applied.meta
+  lastPersisted = snapshotState()
+  saveShellSyncMeta()
   saveSpaceSwitcherState(state)
 }
 
@@ -300,6 +371,8 @@ export function hydrateSpaceSwitcher() {
     loadSpaceSwitcherState(),
     CLOUD.user?.id ?? null,
   )
+  shellSyncMeta = loadShellSyncMeta()
+  lastPersisted = snapshotState()
   seedDemoRecentIfNeeded()
   consumeContinueHandoffFromUrl()
   hydrated = true
@@ -313,6 +386,14 @@ export function syncSpaceSwitcherOwner() {
 export function clearSpaceSwitcherOnLogout() {
   clearSpaceSwitcherState()
   state = emptySpaceSwitcherState()
+  shellSyncMeta = emptyShellSyncMeta()
+  lastPersisted = null
+  try {
+    if (typeof localStorage !== 'undefined')
+      localStorage.removeItem(SHELL_META_STORAGE_KEY)
+  } catch {
+    /* ignore */
+  }
 }
 
 /**

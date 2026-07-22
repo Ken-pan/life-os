@@ -120,6 +120,28 @@ export function applyDeviceOnlySettings(nextSettings) {
   applyTheme()
 }
 
+/**
+ * iOS 壳设置静默落地(shellSettingsSync 对账用)。
+ * 与 applyCloudSettings 同理不 bump 时间戳、不触发云推送:
+ * 对账应用不算「用户主动改设置」,云端 LWW 仍按原时间戳裁决。
+ * @param {{ theme?: string, locale?: string }} partial
+ */
+export function applyShellSettingsSilently(partial) {
+  if (!browser || !partial || typeof partial !== 'object') return
+  let changed = false
+  if (partial.theme != null && partial.theme !== S.settings.theme) {
+    S.settings.theme = String(partial.theme)
+    changed = true
+  }
+  if (partial.locale != null && partial.locale !== S.settings.locale) {
+    S.settings.locale = String(partial.locale)
+    changed = true
+  }
+  if (!changed) return
+  persistence.save(S)
+  applyTheme()
+}
+
 const THEME_APPLY_OPTIONS = {
   themeColorFallback: { light: '#f5f3f0', dark: '#08090a' },
 }

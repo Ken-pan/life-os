@@ -52,6 +52,7 @@ export function resolveShellLocale(mode = 'system', language = '') {
  *   resolvedLocale?: string,
  *   hasTheme?: boolean,
  *   hasLocale?: boolean,
+ *   updatedAt?: number,
  * }>}
  */
 export async function pullKenosShellSettings() {
@@ -77,6 +78,8 @@ export async function pullKenosShellSettings() {
     resolvedLocale,
     hasTheme: settings.hasTheme === true,
     hasLocale: settings.hasLocale === true,
+    // 原生壳最后一次真实变更的毫秒时间戳(旧壳无此字段 → 0),供 LWW 对账。
+    updatedAt: Number(settings.updatedAt) > 0 ? Number(settings.updatedAt) : 0,
   }
 }
 

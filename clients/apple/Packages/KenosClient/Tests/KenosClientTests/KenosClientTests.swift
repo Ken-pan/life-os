@@ -358,3 +358,80 @@ func runtimeHealthRoundTrip() {
     #expect(KenosRuntimeHealth.host(from: URL(string: "http://10.20.202.15:5219/assistant?x=1")!) == "10.20.202.15:5219")
 }
 
+
+@Test("Shell sync meta tracks local mutations and remote apply keeps remote timestamps")
+@MainActor
+func spaceSwitcherShellSyncMeta() throws {
+    let owner = UUID(uuidString: "20000000-0000-4000-8000-000000000001")!
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("kenos-shell-sync-\(UUID().uuidString)")
+    defer { try? FileManager.default.removeItem(at: dir) }
+
+    let store = KenosSpaceSwitcherStore(ownerId: owner, directory: dir)
+    #expect(store.syncMeta == .empty)
+
+    var localChanges = 0
+    store.onLocalChange = { localChanges += 1 }
+
+    store.togglePinnedSpace(id: "plan")
+    #expect(store.syncMeta.pinnedAt > 0)
+    #expect(store.syncMeta.recentAt == 0)
+    store.touchRecentSpace(id: "hosted:money")
+    #expect(store.syncMeta.recentAt > 0)
+    #expect(localChanges == 2)
+
+    // forgetResume drops entry + records tombstone
+    store.rememberResume(
+        .init(
+            userId: owner.uuidString.lowercased(),
+            spaceId: "plan",
+            route: "/upcoming",
+            displayTitle: "Plan"
+        ),
+        listKey: "hosted:plan"
+    )
+    #expect(store.syncMeta.tombstones["hosted:plan"] == nil)
+    store.forgetResume(listKey: "hosted:plan")
+    #expect(store.resumeByListKey["hosted:plan"] == nil)
+    #expect((store.syncMeta.tombstones["hosted:plan"] ?? 0) > 0)
+
+    // Remote apply adopts remote timestamps, rebinds descriptor owner, no local-change ping
+    let before = localChanges
+    store.applyRemoteShellState(.init(
+        pinned: ["music", "home"],
+        pinnedAt: 12345,
+        recent: ["music"],
+        recentAt: 23456,
+        resumeUpserts: [
+            "hosted:music": .init(
+                userId: "cloud-user-uuid",
+                spaceId: "music",
+                route: "/library",
+                displayTitle: "Music"
+            ),
+        ],
+        resumeDeletes: ["hosted:plan"]
+    ))
+    #expect(localChanges == before)
+    #expect(store.pinnedSpaceIds == ["music", "home"])
+    #expect(store.syncMeta.pinnedAt == 12345)
+    #expect(store.syncMeta.recentAt == 23456)
+    #expect(store.resumeByListKey["hosted:music"]?.userId == owner.uuidString.lowercased())
+    #expect(store.syncMeta.tombstones["hosted:plan"] == nil)
+
+    // Meta round-trips via disk (v3 file)
+    let restored = KenosSpaceSwitcherStore(ownerId: owner, directory: dir)
+    #expect(restored.syncMeta.pinnedAt == 12345)
+    #expect(restored.syncMeta.recentAt == 23456)
+
+    // Logout wipes bookkeeping
+    restored.logoutClear()
+    #expect(restored.syncMeta == .empty)
+}
+
+@Test("parseIsoDate accepts web fractional-second ISO and plain ISO")
+func parseIsoTolerance() {
+    #expect(KenosSpaceSwitcherStore.parseIsoDate("2026-07-22T10:00:00.123Z") != nil)
+    #expect(KenosSpaceSwitcherStore.parseIsoDate("2026-07-22T10:00:00Z") != nil)
+    #expect(KenosSpaceSwitcherStore.parseIsoDate("not-a-date") == nil)
+    #expect(KenosSpaceSwitcherStore.parseIsoDate(nil) == nil)
+}

@@ -568,6 +568,10 @@ enum KenosNativeCapabilityBridge {
             refreshToken: refresh,
             userId: userId.isEmpty ? nil : userId
         )
+        // 新 token 落库 → 壳偏好同步补一轮(首登/刷新后都可能有增量)
+        Task { @MainActor in
+            KenosShellStateSync.shared.scheduleSync(after: 2)
+        }
         // Owner Device Lock: one-time shell pairing after SSO (server rejects non-owner).
         // Requires shell unlock; concurrent SSO token writes coalesce inside DeviceAuthClient.
         Task { @MainActor in

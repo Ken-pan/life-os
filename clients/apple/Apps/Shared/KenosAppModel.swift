@@ -318,6 +318,8 @@ final class KenosAppModel: ObservableObject {
             directory: cacheDirectory.appendingPathComponent("spaceSwitcher")
         )
         self.spaceSwitcherStore = spaceSwitcherStore
+        // aios.shell_state 云同步:pin/最近使用/续播跨设备汇合(本地变更防抖推送)
+        KenosShellStateSync.shared.attach(store: spaceSwitcherStore)
         focusStore.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
@@ -450,6 +452,9 @@ final class KenosAppModel: ObservableObject {
                     _ = await self.unlockShellAndHydrate(prompt: false)
                     await self.bootstrapIfNeeded()
                 }
+            } else {
+                // 回前台顺手对账一轮壳偏好(别的设备可能改过)
+                KenosShellStateSync.shared.scheduleSync(after: 1)
             }
             return
         }
@@ -478,6 +483,8 @@ final class KenosAppModel: ObservableObject {
         }
         await KenosDeviceAuthClient.bootstrapSessionAfterUnlock()
         await KenosSharedWebAuth.seedSharedSessionCookies()
+        // 解锁 + 会话就绪后拉一轮壳偏好(pin/最近使用/续播)
+        KenosShellStateSync.shared.scheduleSync(after: 1)
         return true
     }
 

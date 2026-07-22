@@ -40,6 +40,7 @@ export const KENOS_WRITE_TABLE_DENYLIST = Object.freeze([
   'conversations',
   'memories',
   'user_state',
+  'shell_state',
 ])
 
 /**
@@ -64,7 +65,7 @@ export function classifyMutationKind(input = {}) {
   ) {
     return 'conversation_persistence'
   }
-  if (table === 'memories' || table === 'user_state')
+  if (table === 'memories' || table === 'user_state' || table === 'shell_state')
     return 'conversation_persistence'
 
   const rpc = String(input.rpc || '')
@@ -136,6 +137,7 @@ const AIOS_CLOUD_SYNC_TABLES = Object.freeze([
   'conversations',
   'memories',
   'user_state',
+  'shell_state',
 ])
 
 export function assertTableMutationAllowed(

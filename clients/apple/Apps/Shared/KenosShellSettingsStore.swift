@@ -14,6 +14,9 @@ extension Notification.Name {
 enum KenosShellSettingsStore {
     static let themeKey = "kenos.shell.theme"
     static let localeKey = "kenos.shell.locale"
+    /// 最后一次真实变更的毫秒时间戳 — AIOS web 用它与云端设置做 LWW 对账
+    /// (shellSettingsSync.svelte.js);0 = 从未显式改过。
+    static let updatedAtKey = "kenos.shell.updatedAt"
 
     struct Snapshot: Equatable, Sendable {
         /// `light` | `dark` | `auto`
@@ -71,6 +74,7 @@ enum KenosShellSettingsStore {
             }
         }
         if changed {
+            defaults.set(Int64(Date().timeIntervalSince1970 * 1000), forKey: updatedAtKey)
             NotificationCenter.default.post(
                 name: .kenosShellSettingsDidChange,
                 object: nil,
@@ -80,6 +84,11 @@ enum KenosShellSettingsStore {
         return next
     }
 
+    /// 毫秒时间戳;0 = 从未显式变更。
+    static var updatedAtMs: Int64 {
+        Int64(defaults.object(forKey: updatedAtKey) as? Int64 ?? 0)
+    }
+
     static func encode(_ snapshot: Snapshot = current) -> [String: Any] {
         [
             "theme": snapshot.theme,
@@ -87,6 +96,7 @@ enum KenosShellSettingsStore {
             "resolvedLocale": snapshot.resolvedLocale(),
             "hasTheme": hasStoredTheme,
             "hasLocale": hasStoredLocale,
+            "updatedAt": updatedAtMs,
         ]
     }
 
@@ -100,6 +110,7 @@ enum KenosShellSettingsStore {
     static func resetForTests() {
         defaults.removeObject(forKey: themeKey)
         defaults.removeObject(forKey: localeKey)
+        defaults.removeObject(forKey: updatedAtKey)
     }
 
     private static func normalizeTheme(_ raw: String?) -> String {

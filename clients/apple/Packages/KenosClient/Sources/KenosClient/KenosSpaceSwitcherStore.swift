@@ -10,6 +10,51 @@ public final class KenosSpaceSwitcherStore: ObservableObject {
     public static let maxRecent = 6
     nonisolated public static let resumeDescriptorVersion = 1
 
+    /// aios.shell_state 云同步的 per-key LWW 记账 — 语义镜像
+    /// apps/aios/src/lib/kenos/shellStateSync.core.js(改契约两处同步)。
+    /// pinnedAt/recentAt:本地最后一次真实变更的毫秒时间戳(0 = 从未改过,
+    /// 不参与推送竞争,新设备默认不会覆盖云端)。tombstones:本地删除的
+    /// 续播 listKey → 删除时间戳(wire 前缀 spaces.resume. 由同步引擎加)。
+    public struct ShellSyncMeta: Codable, Equatable, Sendable {
+        public var pinnedAt: Int64
+        public var recentAt: Int64
+        public var tombstones: [String: Int64]
+
+        public static let empty = ShellSyncMeta(pinnedAt: 0, recentAt: 0, tombstones: [:])
+
+        public init(pinnedAt: Int64 = 0, recentAt: Int64 = 0, tombstones: [String: Int64] = [:]) {
+            self.pinnedAt = pinnedAt
+            self.recentAt = recentAt
+            self.tombstones = tombstones
+        }
+    }
+
+    /// 远端赢家行的落地载荷(KenosShellStateSync 翻译好 id 命名空间后调用)。
+    public struct RemoteShellApplication: Sendable {
+        public var pinned: [String]?
+        public var pinnedAt: Int64?
+        public var recent: [String]?
+        public var recentAt: Int64?
+        public var resumeUpserts: [String: ResumeDescriptor]
+        public var resumeDeletes: [String]
+
+        public init(
+            pinned: [String]? = nil,
+            pinnedAt: Int64? = nil,
+            recent: [String]? = nil,
+            recentAt: Int64? = nil,
+            resumeUpserts: [String: ResumeDescriptor] = [:],
+            resumeDeletes: [String] = []
+        ) {
+            self.pinned = pinned
+            self.pinnedAt = pinnedAt
+            self.recent = recent
+            self.recentAt = recentAt
+            self.resumeUpserts = resumeUpserts
+            self.resumeDeletes = resumeDeletes
+        }
+    }
+
     public struct ResumeDescriptor: Codable, Equatable, Sendable {
         public var version: Int
         public var userId: String
@@ -48,7 +93,7 @@ public final class KenosSpaceSwitcherStore: ObservableObject {
 
         public var isExpired: Bool {
             guard let expiresAt,
-                  let exp = ISO8601DateFormatter().date(from: expiresAt)
+                  let exp = KenosSpaceSwitcherStore.parseIsoDate(expiresAt)
             else { return false }
             return exp < Date()
         }
@@ -61,6 +106,8 @@ public final class KenosSpaceSwitcherStore: ObservableObject {
         var pinned: [String]
         var resume: [String: ResumeDescriptor]
         var currentListKey: String?
+        // v3:云同步记账(v2 旧文件缺省 → empty)
+        var syncMeta: ShellSyncMeta?
     }
 
     @Published public private(set) var ownerId: UUID
@@ -68,8 +115,26 @@ public final class KenosSpaceSwitcherStore: ObservableObject {
     @Published public private(set) var pinnedSpaceIds: [String] = []
     @Published public private(set) var resumeByListKey: [String: ResumeDescriptor] = [:]
     @Published public private(set) var currentListKey: String?
+    @Published public private(set) var syncMeta: ShellSyncMeta = .empty
+
+    /// 本地变更持久化后触发(KenosShellStateSync 订阅做防抖推送)。
+    /// 远端落地(applyRemoteShellState)不触发,避免拉→推乒乓。
+    public var onLocalChange: (() -> Void)?
 
     private let fileURL: URL
+
+    nonisolated private static func nowMs() -> Int64 {
+        Int64(Date().timeIntervalSince1970 * 1000)
+    }
+
+    /// Web `toIso` 带毫秒(fractional seconds),系统 ISO8601 默认解析不了 — 两档都试。
+    nonisolated public static func parseIsoDate(_ raw: String?) -> Date? {
+        guard let raw, !raw.isEmpty else { return nil }
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = fractional.date(from: raw) { return date }
+        return ISO8601DateFormatter().date(from: raw)
+    }
 
     public init(
         ownerId: UUID = KenosSpaceSwitcherStore.defaultOwnerId,
@@ -95,6 +160,7 @@ public final class KenosSpaceSwitcherStore: ObservableObject {
             existing.updatedAt = ISO8601DateFormatter().string(from: Date())
             resumeByListKey[key] = existing
         }
+        syncMeta.recentAt = Self.nowMs()
         persist()
     }
 
@@ -107,6 +173,7 @@ public final class KenosSpaceSwitcherStore: ObservableObject {
         next.userId = ownerId.uuidString.lowercased()
         next.version = Self.resumeDescriptorVersion
         resumeByListKey[key] = next
+        syncMeta.tombstones[key] = nil
         touchRecentSpace(id: key)
     }
 
@@ -130,7 +197,63 @@ public final class KenosSpaceSwitcherStore: ObservableObject {
         } else {
             pinnedSpaceIds.append(key)
         }
+        syncMeta.pinnedAt = Self.nowMs()
         persist()
+    }
+
+    /// Drop a resume entry locally (user dismiss / remote target gone) — records
+    /// a tombstone so other devices drop it too on next sync.
+    public func forgetResume(listKey: String) {
+        let key = listKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !key.isEmpty else { return }
+        var changed = false
+        if resumeByListKey.removeValue(forKey: key) != nil {
+            syncMeta.tombstones[key] = Self.nowMs()
+            changed = true
+        }
+        if recentSpaceIds.contains(key) {
+            recentSpaceIds.removeAll { $0 == key }
+            syncMeta.recentAt = Self.nowMs()
+            changed = true
+        }
+        if pinnedSpaceIds.contains(key) {
+            pinnedSpaceIds.removeAll { $0 == key }
+            syncMeta.pinnedAt = Self.nowMs()
+            changed = true
+        }
+        if currentListKey == key { currentListKey = nil }
+        if changed { persist() }
+    }
+
+    /// 远端赢家落地:采信远端时间戳写回记账,不触发 onLocalChange(防乒乓)。
+    public func applyRemoteShellState(_ application: RemoteShellApplication) {
+        if let pinned = application.pinned {
+            pinnedSpaceIds = normalizedPinned(pinned)
+            if let at = application.pinnedAt { syncMeta.pinnedAt = at }
+        }
+        if let recent = application.recent {
+            var seen = Set<String>()
+            recentSpaceIds = recent
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty && seen.insert($0).inserted }
+            recentSpaceIds = Array(recentSpaceIds.prefix(Self.maxRecent))
+            if let at = application.recentAt { syncMeta.recentAt = at }
+        }
+        for (listKey, descriptor) in application.resumeUpserts {
+            var next = descriptor
+            next.version = Self.resumeDescriptorVersion
+            // 绑定本地 owner:load() 会按 ownerId 过滤,远端 descriptor 带的是
+            // Supabase userId,不重绑会在下次冷启动被整批丢掉。
+            next.userId = ownerId.uuidString.lowercased()
+            resumeByListKey[listKey] = next
+            syncMeta.tombstones[listKey] = nil
+        }
+        for listKey in application.resumeDeletes {
+            resumeByListKey.removeValue(forKey: listKey)
+            syncMeta.tombstones[listKey] = nil
+            if currentListKey == listKey { currentListKey = nil }
+        }
+        persist(notifyLocalChange: false)
     }
 
     /// Bind to session owner; clears persisted state when owner changes or logs out.
@@ -159,16 +282,18 @@ public final class KenosSpaceSwitcherStore: ObservableObject {
         pinnedSpaceIds = []
         resumeByListKey = [:]
         currentListKey = nil
+        syncMeta = .empty
     }
 
-    private func persist() {
+    private func persist(notifyLocalChange: Bool = true) {
         let state = PersistableState(
-            version: 2,
+            version: 3,
             ownerId: ownerId,
             recent: Array(recentSpaceIds.prefix(Self.maxRecent)),
             pinned: normalizedPinned(pinnedSpaceIds),
             resume: resumeByListKey,
-            currentListKey: currentListKey
+            currentListKey: currentListKey,
+            syncMeta: syncMeta
         )
         do {
             let data = try JSONEncoder().encode(state)
@@ -176,6 +301,7 @@ public final class KenosSpaceSwitcherStore: ObservableObject {
         } catch {
             // Quota / disk — ignore for local foundation
         }
+        if notifyLocalChange { onLocalChange?() }
     }
 
     private func load() {
@@ -192,6 +318,7 @@ public final class KenosSpaceSwitcherStore: ObservableObject {
                 || $0.value.userId == state.ownerId.uuidString
                 || $0.value.userId == "anonymous" }
             currentListKey = state.currentListKey
+            syncMeta = state.syncMeta ?? .empty
             return
         }
         struct LegacyState: Codable {

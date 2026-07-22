@@ -28,6 +28,10 @@ import {
   planMemorySync,
   planSettingsLww,
 } from '$lib/cloud-sync.core.js'
+import {
+  buildLocalShellRows,
+  planShellStateSync,
+} from '$lib/kenos/shellStateSync.core.js'
 import { isConversationPersistenceBlocked } from '$lib/kenos/conversationPersist.core.js'
 import { clearAssistantContext } from '$lib/kenos/assistantContext.svelte.js'
 import {
@@ -183,6 +187,13 @@ function refreshReadProjectionsAfterAuth() {
 }
 
 export async function initCloud() {
+  if (browser) {
+    // iOS 壳 ↔ web 主题/语言双向同步(非壳环境 no-op)。
+    // 动态 import:shellSettingsSync 依赖 state.svelte.js,避免加重首包。
+    void import('$lib/kenos/shellSettingsSync.svelte.js')
+      .then((m) => m.installShellSettingsSync())
+      .catch(() => {})
+  }
   if (!browser || !CLOUD.configured) {
     CLOUD.ready = true
     if (!CLOUD_BUILD) hydrateMemoryFromLocalStorage()
@@ -333,6 +344,7 @@ export async function syncNow() {
   try {
     const snap = loadSnapshot()
     await syncUserState()
+    await syncShellState()
     await syncConversations(snap)
     await syncMemories(snap)
     saveSnapshot(snap)
@@ -373,6 +385,43 @@ async function syncUserState() {
         { settings: $state.snapshot(S.settings), updated_at: localAt },
         { onConflict: 'user_id' },
       )
+    if (e) throw e
+  }
+}
+
+/**
+ * 壳偏好 / 空间连续性同步(aios.shell_state,per-key LWW)。
+ * domain pin/最近使用/续播描述符跨设备汇合;iOS 原生镜像
+ * KenosShellStateSync.swift 走同一张表、同一套语义。
+ * 状态与记账在 spaceSwitcher.svelte.js(动态 import 避免静态环)。
+ */
+async function syncShellState() {
+  const switcher = await import('$lib/kenos/spaceSwitcher.svelte.js')
+  const local = switcher.getShellSyncSnapshot()
+  if (!local.hydrated) return
+
+  const { data: remote, error } = await sb
+    .from('shell_state')
+    .select('key, value, updated_at, deleted')
+  if (error) throw error
+
+  const localRows = buildLocalShellRows(
+    $state.snapshot(local.state),
+    local.meta,
+  )
+  const { toPush, toApply } = planShellStateSync(localRows, remote ?? [])
+
+  if (toApply.length) switcher.applyRemoteShellRows(toApply)
+  if (toPush.length && !isConversationPersistenceBlocked()) {
+    const rows = toPush.map((r) => ({
+      key: r.key,
+      value: r.value ?? null,
+      updated_at: r.updated_at,
+      deleted: Boolean(r.deleted),
+    }))
+    const { error: e } = await sb
+      .from('shell_state')
+      .upsert(rows, { onConflict: 'user_id,key' })
     if (e) throw e
   }
 }

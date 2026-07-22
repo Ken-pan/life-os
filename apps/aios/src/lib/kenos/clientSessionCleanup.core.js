@@ -101,6 +101,12 @@ export const AIOS_CLIENT_STORAGE_INVENTORY = Object.freeze([
     notes: 'Recent/pinned Spaces + resume routes (user-scoped)',
   },
   {
+    key: 'kenos.shellStateMeta.v1',
+    classification: 'USER_SCOPED_CACHE',
+    containsUserContent: false,
+    notes: 'shell_state 云同步 per-key LWW 时间戳/墓碑记账',
+  },
+  {
     key: 'aios_gateway_url_v1',
     classification: 'DEVICE_GENERIC_SETTING',
     containsUserContent: false,
