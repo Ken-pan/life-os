@@ -423,6 +423,11 @@ function mergeGalleryManifest(/** @type {object[]} */ entries) {
 
 // ── main ──────────────────────────────────────────────────────────────────
 async function main() {
+  // CI（Linux Playwright 镜像）没有 Xcode/模拟器——静默跳过，保留上次提交的原生截图。
+  if (process.platform !== 'darwin') {
+    console.log('原生壳 UI/UX 审核跳过：非 macOS（沿用已提交的 kenos-ios/kenos-mac 截图）。')
+    return
+  }
   console.log(`原生壳 UI/UX 审核: ${PLATFORMS.join(', ')}`)
   const browser = await chromium.launch()
   const entries = []
