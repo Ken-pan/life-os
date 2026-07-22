@@ -226,10 +226,17 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .default()
         config.defaultWebpagePreferences.allowsContentJavaScript = true
-        // App-Bound Domains + SW cache — production HTTPS only; LAN HTTP dogfood stays open.
-        if KenosAppBoundDomains.shouldLimitNavigations(for: url) {
-            config.limitsNavigationsToAppBoundDomains = true
-        }
+        // NOTE: We intentionally do NOT set `limitsNavigationsToAppBoundDomains`.
+        // Enabling it requires a `WKAppBoundDomains` array in Info.plist; without one
+        // WebKit rejects *every* origin as non-app-bound and the whole process (the
+        // flag is process-sticky once any WKWebView sets it) fails Service Worker /
+        // module-script / CSS-preload jobs — observed as "Job rejected for non
+        // app-bound domain" + "Importing a module script failed" across LAN
+        // companions. Service Workers work in WKWebView without app-bound domains
+        // since iOS 16.4 (min target here is iOS 17), so the flag is all cost, no
+        // benefit for a shell that loads many production + LAN origins.
+        // `KenosAppBoundDomains.shouldLimitNavigations` stays as a pure predicate
+        // (unit-tested) but is no longer wired to the config.
         // Domain Continuity may host Music — allow remote/lock-screen resume without a
         // fresh user gesture. Kenos shell tabs stay gesture-gated to avoid autoplay noise.
         if stayInApp {

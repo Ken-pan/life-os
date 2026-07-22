@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict/>
+<dict>
+	<!-- HealthKit: KenosHealthKitReader uses HKHealthStore. Without this entitlement
+	     every authorization/read fails with "Missing com.apple.developer.healthkit
+	     entitlement" (observed 195x in kenos_app_logs). Device builds sign with
+	     -allowProvisioningUpdates, which adds the capability to the App ID automatically. -->
+	<key>com.apple.developer.healthkit</key>
+	<true/>
+	<key>com.apple.developer.healthkit.access</key>
+	<array/>
+</dict>
 </plist>

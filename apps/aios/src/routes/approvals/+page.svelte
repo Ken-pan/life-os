@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte'
+  import { t } from '$lib/i18n/index.js'
   import { CLOUD } from '$lib/cloud.svelte.js'
   import {
     CONTROL,
@@ -87,18 +88,18 @@
 <div class="control-page">
   <header class="control-page-header">
     <div>
-      <p class="control-page-kicker">Inbox</p>
-      <h1>Approvals</h1>
+      <p class="control-page-kicker">{t('nav.inbox')}</p>
+      <h1>{t('nav.approvals')}</h1>
       <p class="control-page-intro">
         先看风险、范围和影响，再确认。批准只针对当前请求。
       </p>
     </div>
   </header>
 
-  <nav class="inbox-subnav" aria-label="Inbox sections">
-    <a href="/inbox">Captured</a>
-    <a href="/approvals" aria-current="page">Approvals</a>
-    <a href="/activity">Activity</a>
+  <nav class="inbox-subnav" aria-label={t('nav.inbox')}>
+    <a href="/inbox">{t('nav.inboxCaptured')}</a>
+    <a href="/approvals" aria-current="page">{t('nav.approvals')}</a>
+    <a href="/activity">{t('nav.activity')}</a>
   </nav>
 
   <ReadSourceState
