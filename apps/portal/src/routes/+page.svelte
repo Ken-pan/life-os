@@ -11,6 +11,7 @@
   } from '$lib/keyboardShortcut.js'
   import PortalLauncherCard from '$lib/components/PortalLauncherCard.svelte'
   import PortalSettings from '$lib/components/PortalSettings.svelte'
+  import PortalDeviceManager from '$lib/components/PortalDeviceManager.svelte'
   import PortalPwaGuide from '$lib/components/PortalPwaGuide.svelte'
   import PortalTodaySummary from '$lib/components/PortalTodaySummary.svelte'
   import PortalLoading from '$lib/components/PortalLoading.svelte'
@@ -138,6 +139,7 @@
 {/if}
 
 {#if userId}
+  <PortalDeviceManager />
   <PortalSettings {userId} allowedAppKeys={allowedKeys} />
 {/if}
 

@@ -7,7 +7,7 @@
     isThisDeviceSlot,
     listDevices,
     MAX_DEVICES,
-    removeDevice,
+    revokeDevice,
   } from '$lib/devices'
   import { t } from '$lib/i18n.svelte.js'
   import { formatDateTimeForIntl } from '$lib/format.js'
@@ -50,7 +50,8 @@
       : t('device.confirmOther')
     if (!window.confirm(msg)) return
     try {
-      await removeDevice(id)
+      // Soft-revoke so Apple shell exchange fails immediately (Owner Device Lock).
+      await revokeDevice(id)
       if (thisSlot) {
         await supabase.auth.signOut()
         return

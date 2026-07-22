@@ -5,7 +5,7 @@
   "description": "Life OS shared cloud sync: bidirectional pull/push, auth session, visibility hooks",
   "type": "module",
   "scripts": {
-    "test": "node scripts/authController.test.mjs && node scripts/sso.test.mjs && node scripts/sso.strict.test.mjs && node scripts/supabaseClient.test.mjs"
+    "test": "node scripts/authController.test.mjs && node scripts/sso.test.mjs && node scripts/sso.strict.test.mjs && node scripts/supabaseClient.test.mjs && node scripts/trustedDevices.test.mjs"
   },
   "types": "./src/index.d.ts",
   "exports": {

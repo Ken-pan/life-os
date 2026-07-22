@@ -227,3 +227,57 @@ export function notifyManualSyncResult(
     onBeforeNotify?: () => void | Promise<void>
   },
 ): Promise<void>
+
+/** Owner Device Lock / Trusted Devices */
+export type TrustedDeviceClass = 'desktop' | 'mobile'
+export type TrustedDevicePlatform = 'ios' | 'macos' | 'web'
+export const TRUSTED_DEVICES_TABLE: 'core_allowed_devices'
+export const MAX_TRUSTED_DEVICES: 2
+export const WEB_DEVICE_ID_STORAGE_KEY: string
+export const FINANCE_DEVICE_ID_STORAGE_KEY: string
+export const TRUSTED_DEVICE_SELECT: string
+export function resolveDeviceClass(ua?: string): TrustedDeviceClass
+export function deviceClassLabel(cls: TrustedDeviceClass): string
+export function describeBrowser(ua?: string): string
+export function describePlatform(ua?: string): string
+export function buildTrustedDeviceLabel(ua?: string): string
+export function newTrustedDeviceRowId(): string
+export function getOrCreateTrustedDeviceId(
+  storage: { getItem: (k: string) => string | null; setItem: (k: string, v: string) => void },
+  preferredKey?: string,
+): string
+export function filterActiveTrustedDevices<T extends { revoked_at?: string | null }>(
+  rows: T[] | null | undefined,
+): T[]
+export function findTrustedDeviceSlot(
+  devices: Array<{ device_id?: string | null; device_class?: string; revoked_at?: string | null }>,
+  opts: { deviceId: string; deviceClass: TrustedDeviceClass },
+): { device_id?: string | null; device_class?: string } | null
+export function isLifeOsPersonalOwnerEmail(email: string | null | undefined): boolean
+export function ensureTrustedDeviceAuthorized(
+  supabase: import('@supabase/supabase-js').SupabaseClient,
+  opts: {
+    deviceId: string
+    deviceClass: TrustedDeviceClass
+    label: string
+    userAgent?: string | null
+    platform?: TrustedDevicePlatform | null
+    publicKey?: string | null
+    pairedAt?: string | null
+  },
+): Promise<{ status: 'authorized' | 'limit-reached'; device?: object }>
+export function listTrustedDevices(
+  supabase: import('@supabase/supabase-js').SupabaseClient,
+): Promise<object[]>
+export function revokeTrustedDevice(
+  supabase: import('@supabase/supabase-js').SupabaseClient,
+  id: string,
+): Promise<void>
+export function removeTrustedDevice(
+  supabase: import('@supabase/supabase-js').SupabaseClient,
+  id: string,
+): Promise<void>
+export function isThisTrustedDeviceSlot(
+  row: { device_id?: string | null; device_class?: string },
+  local: { deviceId: string; deviceClass: TrustedDeviceClass },
+): boolean

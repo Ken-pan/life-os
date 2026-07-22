@@ -40,6 +40,29 @@ export {
   isFatalAuthRestoreError,
 } from './sso.js'
 
+export {
+  TRUSTED_DEVICES_TABLE,
+  MAX_TRUSTED_DEVICES,
+  WEB_DEVICE_ID_STORAGE_KEY,
+  FINANCE_DEVICE_ID_STORAGE_KEY,
+  TRUSTED_DEVICE_SELECT,
+  resolveDeviceClass,
+  deviceClassLabel,
+  describeBrowser,
+  describePlatform,
+  buildTrustedDeviceLabel,
+  newTrustedDeviceRowId,
+  getOrCreateTrustedDeviceId,
+  filterActiveTrustedDevices,
+  findTrustedDeviceSlot,
+  isLifeOsPersonalOwnerEmail,
+  ensureTrustedDeviceAuthorized,
+  listTrustedDevices,
+  revokeTrustedDevice,
+  removeTrustedDevice,
+  isThisTrustedDeviceSlot,
+} from './trustedDevices.js'
+
 /** Life OS 四端 appId */
 export const LIFE_OS_APP_IDS = /** @type {const} */ ([
   'finance',
