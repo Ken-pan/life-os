@@ -96,7 +96,7 @@ function changedAppIds() {
 }
 
 // ── git 版本标签 ──────────────────────────────────────────────────────────
-function gitInfo() {
+export function gitInfo() {
   const run = (/** @type {string} */ cmd) => {
     try {
       return execSync(cmd, { cwd: REPO_ROOT, encoding: 'utf8' }).trim()
@@ -461,8 +461,15 @@ function sheetLayout() {
     : { cols: 2, shotW: 660, gutter: 22, pad: 30 }
 }
 
+/** 竖屏原生截图（iOS）用窄格 3 列；Mac 宽窗用桌面 2 列。供 uiux-review-native.mjs 复用。 */
+export function nativeSheetLayout(/** @type {'ios'|'mac'} */ platform) {
+  return platform === 'ios'
+    ? { cols: 3, shotW: 300, gutter: 18, pad: 24 }
+    : { cols: 2, shotW: 660, gutter: 22, pad: 30 }
+}
+
 /** @param {ReturnType<typeof sheetLayout>} L */
-function sheetWidth(L) {
+export function sheetWidth(L) {
   return L.pad * 2 + L.cols * L.shotW + (L.cols - 1) * L.gutter
 }
 
@@ -475,13 +482,14 @@ function sheetWidth(L) {
  * - 两位序号：便于「第 3 屏 /calendar」式精确引用。
  *
  * @param {object} o
- * @param {import('./uiux-review.config.mjs').UiuxAppReview} o.app
+ * @param {{ name: string, accent: { light: string, dark: string } }} o.app
  * @param {'light'|'dark'} o.theme
  * @param {string} o.viewportLabel
  * @param {ReturnType<typeof gitInfo>} o.git
  * @param {{ title: string, path: string, dataUri?: string, note?: string, w: number, h: number }[]} o.cells
+ * @param {ReturnType<typeof sheetLayout>} [o.layout] 默认取当前 CLI 视口的布局
  */
-function buildContactSheetHtml({ app, theme, viewportLabel, git, cells }) {
+export function buildContactSheetHtml({ app, theme, viewportLabel, git, cells, layout }) {
   const dark = theme === 'dark'
   const accent = app.accent[theme] ?? app.accent.light
   // 中性画布；品牌色仅作点缀。
@@ -491,7 +499,7 @@ function buildContactSheetHtml({ app, theme, viewportLabel, git, cells }) {
   const sub = dark ? '#8b9098' : '#697079'
   const faint = dark ? '#6a6f77' : '#9aa0a8'
   const border = dark ? '#2b2e34' : '#e2e5ea'
-  const L = sheetLayout()
+  const L = layout ?? sheetLayout()
   const sheetW = sheetWidth(L)
   const stamp = new Date().toISOString().replace('T', ' ').slice(0, 16)
 
@@ -570,7 +578,7 @@ function escapeHtml(s) {
 }
 
 /** 从 PNG 头读尺寸（8B 签名 + IHDR：len4+"IHDR"4+width4+height4）。 @param {Buffer} buf */
-function pngSize(buf) {
+export function pngSize(buf) {
   try {
     return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) }
   } catch {
@@ -795,7 +803,9 @@ function writeGalleryManifest(results) {
     if (e.a11y) app.metrics.a11y = e.a11y // 仅浅色桌面变体带 a11y
   }
   // 静态 + git 治理指标（每 app 一次）：样式债务 · 共享采用率 · 代码变更影响。
+  // 原生壳条目（kenos-ios / kenos-mac，由 uiux-review-native.mjs 写入）没有 apps/<id>/src，跳过静态指标。
   for (const app of apps.values()) {
+    if (app.native) continue
     app.metrics = app.metrics || {}
     app.metrics.styleDebt = computeStyleDebt(REPO_ROOT, app.id)
     app.metrics.sharedAdoption = computeSharedAdoption(REPO_ROOT, app.id)
@@ -804,7 +814,12 @@ function writeGalleryManifest(results) {
       : prevApps.get(app.id)?.metrics?.codeImpact ?? { since: prevSha, files: 0, areas: [] }
   }
   const order = Object.keys(UIUX_REVIEW_APPS)
-  const list = [...apps.values()].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id))
+  // 原生壳条目排在 web app 之后（不在 UIUX_REVIEW_APPS 注册表里）。
+  const rank = (/** @type {any} */ a) => {
+    const i = order.indexOf(a.id)
+    return i === -1 ? order.length : i
+  }
+  const list = [...apps.values()].sort((a, b) => rank(a) - rank(b))
   const manifest = {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
@@ -814,7 +829,7 @@ function writeGalleryManifest(results) {
     site: 'https://kenos-uiux-review.netlify.app',
     imageUrlPattern: 'shots/{app}-{theme}-{viewport}.jpg',
     themes: ['light', 'dark'],
-    viewports: ['desktop', 'mobile'],
+    viewports: ['desktop', 'ios', 'mac'],
     count: list.length,
     apps: list,
   }
@@ -890,8 +905,13 @@ function snapshotApp(/** @type {any} */ a) {
  * @param {any} manifest
  */
 function computeGovernance(manifest) {
-  // 1) 每 app 健康分
+  // 1) 每 app 健康分（原生壳条目只记覆盖率，不参与 web 静态指标/健康分/组合）
   for (const a of manifest.apps) {
+    if (a.native) {
+      a.metrics = a.metrics ?? {}
+      a.metrics.coverage = coverageOf(a)
+      continue
+    }
     const m = (a.metrics = a.metrics ?? {})
     const cov = coverageOf(a)
     m.health = computeHealth({
@@ -914,6 +934,7 @@ function computeGovernance(manifest) {
   }
   const prevEntry = [...hist].reverse().find((e) => e.sha !== curSha) ?? null
   for (const a of manifest.apps) {
+    if (a.native) continue
     const cur = snapshotApp(a)
     const prev = prevEntry?.apps?.[a.id]
     a.metrics.trend =
@@ -927,8 +948,8 @@ function computeGovernance(manifest) {
           }
         : { score: null, debt: null, a11yFails: null, since: null }
   }
-  // 3) 组合视图
-  const apps = manifest.apps
+  // 3) 组合视图（仅 web app；原生壳没有可比的静态指标）
+  const apps = manifest.apps.filter((/** @type {any} */ a) => !a.native)
   const scores = apps.map((/** @type {any} */ a) => a.metrics.health?.score).filter((s) => s != null)
   const overallScore = scores.length ? Math.round(scores.reduce((x, y) => x + y, 0) / scores.length) : null
   const totalDebt = apps.reduce((/** @type {number} */ s, /** @type {any} */ a) => s + (a.metrics.styleDebt?.total ?? 0), 0)
@@ -1008,18 +1029,18 @@ function buildLlmsTxt(/** @type {any} */ m) {
   L.push('# LifeOS · UI/UX 审核画廊')
   L.push('')
   L.push(
-    '> LifeOS 8 个 app 核心页面的 UI/UX 审核截图集，供人工与 AI 走查。每个 app 一张「联系表」——把 6~8 个核心页面各截一屏拼成一张，每屏顶部标注「序号 · 中文标题 · 路由」；每 app 有 浅色/深色 × 桌面/移动 共 4 个变体。图为本地演示 / 种子数据，非真实账户内容。',
+    '> LifeOS 核心页面的 UI/UX 审核截图集，供人工与 AI 走查。每个 app 一张「联系表」——把 6~8 个核心页面各截一屏拼成一张，每屏顶部标注「序号 · 中文标题 · 路由」。Web app 有 浅色/深色 × 桌面 变体（移动形态由 Kenos 原生壳覆盖）；另有 Kenos iOS / Mac 原生壳条目（模拟器 / 真实窗口截图）。图为本地演示 / 种子数据，非真实账户内容。',
   )
   L.push('')
   L.push(
-    `机器可读入口首选 [manifest.json](${S}/manifest.json)（结构化：每 app 的描述、页面清单、4 变体图片 URL）。图片直链规则 \`${m.imageUrlPattern}\`（theme: light|dark, viewport: desktop|mobile）。CORS 全开，可跨源 fetch。`,
+    `机器可读入口首选 [manifest.json](${S}/manifest.json)（结构化：每 app 的描述、页面清单、变体图片 URL）。图片直链规则 \`${m.imageUrlPattern}\`（theme: light|dark, viewport: desktop|ios|mac）。CORS 全开，可跨源 fetch。`,
   )
   L.push('')
   L.push('## AI 审核工作流')
   L.push(`- [manifest.json](${S}/manifest.json): 完整结构化数据，优先读取。`)
   L.push('- 1) 从 apps[] 按 description / pages 选要审的 app 与变体（theme/viewport）。')
   L.push('- 2) GET 该变体 `variants["{theme}-{viewport}"].file` 的 JPEG，逐屏分析布局 / 一致性 / 空态 / 可读性 / 对齐 / 明暗对比。')
-  L.push('- 3) 需对比明暗或桌面/移动时，取同一 app 的其它变体。')
+  L.push('- 3) 需对比明暗或 Web/原生端时，取同一 app 的其它变体或 kenos-ios / kenos-mac 条目。')
   L.push('')
   L.push(`## 应用（生成于 ${m.generatedAt} · git ${m.git?.sha ?? ''}）`)
   for (const a of m.apps) {

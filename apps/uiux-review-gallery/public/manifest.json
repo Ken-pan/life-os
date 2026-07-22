@@ -1,15 +1,18 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-18T17:07:19.126Z",
+  "generatedAt": "2026-07-22T15:02:44.662Z",
   "git": {
-    "sha": "69243b01b",
-    "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+    "sha": "e7a595678",
+    "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
     "branch": "master"
   },
-  "baselineGit": "69243b01b",
+  "baselineGit": "e7a595678",
   "sharedImpact": {
-    "changed": false,
-    "packages": []
+    "changed": true,
+    "packages": [
+      "platform-web",
+      "theme"
+    ]
   },
   "site": "https://kenos-uiux-review.netlify.app",
   "imageUrlPattern": "shots/{app}-{theme}-{viewport}.jpg",
@@ -19,16 +22,17 @@
   ],
   "viewports": [
     "desktop",
-    "mobile"
+    "ios",
+    "mac"
   ],
-  "count": 8,
+  "count": 9,
   "apps": [
     {
       "id": "planner",
       "variants": {
         "light-desktop": {
           "file": "shots/planner-light-desktop.jpg",
-          "generatedAt": "2026-07-18T17:01:18.779Z",
+          "generatedAt": "2026-07-22T14:59:40.659Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -37,25 +41,7 @@
         },
         "dark-desktop": {
           "file": "shots/planner-dark-desktop.jpg",
-          "generatedAt": "2026-07-18T17:02:56.889Z",
-          "screens": 7,
-          "capture": {
-            "ok": 7,
-            "total": 7
-          }
-        },
-        "light-mobile": {
-          "file": "shots/planner-light-mobile.jpg",
-          "generatedAt": "2026-07-18T17:04:31.266Z",
-          "screens": 7,
-          "capture": {
-            "ok": 7,
-            "total": 7
-          }
-        },
-        "dark-mobile": {
-          "file": "shots/planner-dark-mobile.jpg",
-          "generatedAt": "2026-07-18T17:06:00.620Z",
+          "generatedAt": "2026-07-22T15:01:22.105Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -97,35 +83,40 @@
         }
       ],
       "git": {
-        "sha": "69243b01b",
-        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "sha": "e7a595678",
+        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
         "branch": "master"
       },
       "metrics": {
         "styleDebt": {
-          "total": 66,
+          "total": 60,
           "byRule": {
-            "raw-motion": 3,
-            "raw-hex": 36,
-            "raw-font-size": 22,
+            "raw-hex": 31,
+            "raw-font-size": 24,
             "reserved-ds-class": 5
           },
           "topRule": "raw-hex",
           "triage": "硬编码色值 → 收敛到 Design Token"
         },
         "sharedAdoption": {
-          "pct": 80,
-          "shared": 67,
+          "pct": 83,
+          "shared": 84,
           "local": 17
         },
         "codeImpact": {
-          "since": "64f531c34",
-          "files": 1,
-          "areas": []
+          "since": "69243b01b",
+          "files": 96,
+          "areas": [
+            "AppBar",
+            "BottomNav",
+            "DomainMusicHeader",
+            "InsightCard",
+            "PageShell"
+          ]
         },
         "a11y": {
-          "checked": 253,
-          "pass": 253,
+          "checked": 242,
+          "pass": 242,
           "issues": {
             "noAlt": 0,
             "noName": 0,
@@ -133,25 +124,26 @@
           }
         },
         "health": {
-          "score": 87,
+          "score": 88,
           "grade": "B",
           "dims": {
             "a11y": 100,
-            "token": 69,
-            "adoption": 80,
+            "token": 71,
+            "adoption": 83,
             "coverage": 100
           }
         },
         "coverage": {
-          "ok": 28,
-          "total": 28,
+          "ok": 14,
+          "total": 14,
           "pct": 100
         },
         "trend": {
-          "score": null,
-          "debt": null,
-          "a11yFails": null,
-          "since": null
+          "score": 1,
+          "debt": -6,
+          "a11yFails": 0,
+          "since": "69243b01b",
+          "sinceAt": "2026-07-18T17:07:19.126Z"
         }
       }
     },
@@ -160,7 +152,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/finance-light-desktop.jpg",
-          "generatedAt": "2026-07-18T17:01:27.765Z",
+          "generatedAt": "2026-07-22T14:59:50.068Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -169,25 +161,7 @@
         },
         "dark-desktop": {
           "file": "shots/finance-dark-desktop.jpg",
-          "generatedAt": "2026-07-18T17:03:06.182Z",
-          "screens": 7,
-          "capture": {
-            "ok": 7,
-            "total": 7
-          }
-        },
-        "light-mobile": {
-          "file": "shots/finance-light-mobile.jpg",
-          "generatedAt": "2026-07-18T17:04:39.973Z",
-          "screens": 7,
-          "capture": {
-            "ok": 7,
-            "total": 7
-          }
-        },
-        "dark-mobile": {
-          "file": "shots/finance-dark-mobile.jpg",
-          "generatedAt": "2026-07-18T17:06:09.337Z",
+          "generatedAt": "2026-07-22T15:01:31.447Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -229,27 +203,27 @@
         }
       ],
       "git": {
-        "sha": "69243b01b",
-        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "sha": "e7a595678",
+        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
         "branch": "master"
       },
       "metrics": {
         "styleDebt": {
-          "total": 22,
+          "total": 30,
           "byRule": {
-            "raw-hex": 22
+            "raw-hex": 30
           },
           "topRule": "raw-hex",
           "triage": "硬编码色值 → 收敛到 Design Token"
         },
         "sharedAdoption": {
-          "pct": 27,
-          "shared": 42,
-          "local": 112
+          "pct": 32,
+          "shared": 53,
+          "local": 113
         },
         "a11y": {
-          "checked": 349,
-          "pass": 345,
+          "checked": 364,
+          "pass": 360,
           "issues": {
             "noAlt": 0,
             "noName": 0,
@@ -257,30 +231,37 @@
           }
         },
         "codeImpact": {
-          "since": "64f531c34",
-          "files": 0,
-          "areas": []
+          "since": "69243b01b",
+          "files": 28,
+          "areas": [
+            "AppShell",
+            "AuthGate",
+            "CashflowQuickAddDrawer",
+            "DecisionStudioView",
+            "DeviceManager"
+          ]
         },
         "health": {
           "score": 81,
           "grade": "B",
           "dims": {
             "a11y": 99,
-            "token": 87,
-            "adoption": 27,
+            "token": 83,
+            "adoption": 32,
             "coverage": 100
           }
         },
         "coverage": {
-          "ok": 28,
-          "total": 28,
+          "ok": 14,
+          "total": 14,
           "pct": 100
         },
         "trend": {
-          "score": null,
-          "debt": null,
-          "a11yFails": null,
-          "since": null
+          "score": 0,
+          "debt": 8,
+          "a11yFails": 0,
+          "since": "69243b01b",
+          "sinceAt": "2026-07-18T17:07:19.126Z"
         }
       }
     },
@@ -289,7 +270,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/fitness-light-desktop.jpg",
-          "generatedAt": "2026-07-18T17:01:37.204Z",
+          "generatedAt": "2026-07-22T14:59:59.421Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -298,25 +279,7 @@
         },
         "dark-desktop": {
           "file": "shots/fitness-dark-desktop.jpg",
-          "generatedAt": "2026-07-18T17:03:15.566Z",
-          "screens": 7,
-          "capture": {
-            "ok": 7,
-            "total": 7
-          }
-        },
-        "light-mobile": {
-          "file": "shots/fitness-light-mobile.jpg",
-          "generatedAt": "2026-07-18T17:04:49.070Z",
-          "screens": 7,
-          "capture": {
-            "ok": 7,
-            "total": 7
-          }
-        },
-        "dark-mobile": {
-          "file": "shots/fitness-dark-mobile.jpg",
-          "generatedAt": "2026-07-18T17:06:18.429Z",
+          "generatedAt": "2026-07-22T15:01:40.803Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -358,34 +321,40 @@
         }
       ],
       "git": {
-        "sha": "69243b01b",
-        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "sha": "e7a595678",
+        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
         "branch": "master"
       },
       "metrics": {
         "styleDebt": {
-          "total": 59,
+          "total": 60,
           "byRule": {
-            "raw-hex": 31,
-            "raw-font-size": 25,
-            "raw-motion": 3
+            "raw-hex": 32,
+            "raw-font-size": 26,
+            "raw-motion": 2
           },
           "topRule": "raw-hex",
           "triage": "硬编码色值 → 收敛到 Design Token"
         },
         "sharedAdoption": {
-          "pct": 98,
-          "shared": 61,
+          "pct": 99,
+          "shared": 80,
           "local": 1
         },
         "codeImpact": {
-          "since": "64f531c34",
-          "files": 0,
-          "areas": []
+          "since": "69243b01b",
+          "files": 42,
+          "areas": [
+            "AppBar",
+            "BottomNav",
+            "DomainMusicHeader",
+            "FitnessToolSheet",
+            "FocusSession"
+          ]
         },
         "a11y": {
-          "checked": 176,
-          "pass": 176,
+          "checked": 214,
+          "pass": 214,
           "issues": {
             "noAlt": 0,
             "noName": 0,
@@ -397,21 +366,22 @@
           "grade": "A",
           "dims": {
             "a11y": 100,
-            "token": 72,
-            "adoption": 98,
+            "token": 71,
+            "adoption": 99,
             "coverage": 100
           }
         },
         "coverage": {
-          "ok": 28,
-          "total": 28,
+          "ok": 14,
+          "total": 14,
           "pct": 100
         },
         "trend": {
-          "score": null,
-          "debt": null,
-          "a11yFails": null,
-          "since": null
+          "score": 0,
+          "debt": 1,
+          "a11yFails": 0,
+          "since": "69243b01b",
+          "sinceAt": "2026-07-18T17:07:19.126Z"
         }
       }
     },
@@ -420,7 +390,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/music-light-desktop.jpg",
-          "generatedAt": "2026-07-18T17:01:47.675Z",
+          "generatedAt": "2026-07-22T15:00:09.224Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -429,25 +399,7 @@
         },
         "dark-desktop": {
           "file": "shots/music-dark-desktop.jpg",
-          "generatedAt": "2026-07-18T17:03:24.925Z",
-          "screens": 7,
-          "capture": {
-            "ok": 7,
-            "total": 7
-          }
-        },
-        "light-mobile": {
-          "file": "shots/music-light-mobile.jpg",
-          "generatedAt": "2026-07-18T17:04:58.946Z",
-          "screens": 7,
-          "capture": {
-            "ok": 7,
-            "total": 7
-          }
-        },
-        "dark-mobile": {
-          "file": "shots/music-dark-mobile.jpg",
-          "generatedAt": "2026-07-18T17:06:27.936Z",
+          "generatedAt": "2026-07-22T15:01:50.463Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -489,30 +441,35 @@
         }
       ],
       "git": {
-        "sha": "69243b01b",
-        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "sha": "e7a595678",
+        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
         "branch": "master"
       },
       "metrics": {
         "styleDebt": {
-          "total": 70,
+          "total": 68,
           "byRule": {
-            "raw-hex": 53,
-            "raw-font-size": 14,
-            "raw-motion": 3
+            "raw-hex": 54,
+            "raw-font-size": 14
           },
           "topRule": "raw-hex",
           "triage": "硬编码色值 → 收敛到 Design Token"
         },
         "sharedAdoption": {
-          "pct": 69,
-          "shared": 54,
+          "pct": 74,
+          "shared": 68,
           "local": 24
         },
         "codeImpact": {
-          "since": "64f531c34",
-          "files": 0,
-          "areas": []
+          "since": "69243b01b",
+          "files": 30,
+          "areas": [
+            "DomainMusicHeader",
+            "MiniPlayer",
+            "QueueDrawer",
+            "/+layout.js",
+            "/+page.svelte"
+          ]
         },
         "a11y": {
           "checked": 389,
@@ -524,25 +481,26 @@
           }
         },
         "health": {
-          "score": 84,
+          "score": 85,
           "grade": "B",
           "dims": {
             "a11y": 98,
-            "token": 68,
-            "adoption": 69,
+            "token": 69,
+            "adoption": 74,
             "coverage": 100
           }
         },
         "coverage": {
-          "ok": 28,
-          "total": 28,
+          "ok": 14,
+          "total": 14,
           "pct": 100
         },
         "trend": {
-          "score": null,
-          "debt": null,
-          "a11yFails": null,
-          "since": null
+          "score": 1,
+          "debt": -2,
+          "a11yFails": 0,
+          "since": "69243b01b",
+          "sinceAt": "2026-07-18T17:07:19.126Z"
         }
       }
     },
@@ -551,7 +509,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/home-light-desktop.jpg",
-          "generatedAt": "2026-07-18T17:01:56.221Z",
+          "generatedAt": "2026-07-22T15:00:17.682Z",
           "screens": 6,
           "capture": {
             "ok": 6,
@@ -560,29 +518,11 @@
         },
         "dark-desktop": {
           "file": "shots/home-dark-desktop.jpg",
-          "generatedAt": "2026-07-18T17:03:33.508Z",
+          "generatedAt": "2026-07-22T15:01:59.012Z",
           "screens": 6,
           "capture": {
             "ok": 6,
             "total": 6
-          }
-        },
-        "light-mobile": {
-          "file": "shots/home-light-mobile.jpg",
-          "generatedAt": "2026-07-18T17:05:03.979Z",
-          "screens": 4,
-          "capture": {
-            "ok": 4,
-            "total": 4
-          }
-        },
-        "dark-mobile": {
-          "file": "shots/home-dark-mobile.jpg",
-          "generatedAt": "2026-07-18T17:06:33.012Z",
-          "screens": 4,
-          "capture": {
-            "ok": 4,
-            "total": 4
           }
         }
       },
@@ -616,8 +556,8 @@
         }
       ],
       "git": {
-        "sha": "69243b01b",
-        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "sha": "e7a595678",
+        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
         "branch": "master"
       },
       "metrics": {
@@ -633,18 +573,24 @@
           "triage": "硬编码字号 → 收敛到 Design Token"
         },
         "sharedAdoption": {
-          "pct": 90,
-          "shared": 26,
+          "pct": 93,
+          "shared": 41,
           "local": 3
         },
         "codeImpact": {
-          "since": "64f531c34",
-          "files": 0,
-          "areas": []
+          "since": "69243b01b",
+          "files": 16,
+          "areas": [
+            "BottomNav",
+            "DomainMusicHeader",
+            "HomeTopBar",
+            "RecognitionBanner",
+            "RecognitionReview"
+          ]
         },
         "a11y": {
-          "checked": 179,
-          "pass": 179,
+          "checked": 178,
+          "pass": 178,
           "issues": {
             "noAlt": 0,
             "noName": 0,
@@ -657,20 +603,21 @@
           "dims": {
             "a11y": 100,
             "token": 25,
-            "adoption": 90,
+            "adoption": 93,
             "coverage": 100
           }
         },
         "coverage": {
-          "ok": 20,
-          "total": 20,
+          "ok": 12,
+          "total": 12,
           "pct": 100
         },
         "trend": {
-          "score": null,
-          "debt": null,
-          "a11yFails": null,
-          "since": null
+          "score": 0,
+          "debt": 0,
+          "a11yFails": 0,
+          "since": "69243b01b",
+          "sinceAt": "2026-07-18T17:07:19.126Z"
         }
       }
     },
@@ -679,7 +626,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/knowledge-light-desktop.jpg",
-          "generatedAt": "2026-07-18T17:02:25.138Z",
+          "generatedAt": "2026-07-22T15:00:51.568Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -688,25 +635,7 @@
         },
         "dark-desktop": {
           "file": "shots/knowledge-dark-desktop.jpg",
-          "generatedAt": "2026-07-18T17:04:02.559Z",
-          "screens": 7,
-          "capture": {
-            "ok": 7,
-            "total": 7
-          }
-        },
-        "light-mobile": {
-          "file": "shots/knowledge-light-mobile.jpg",
-          "generatedAt": "2026-07-18T17:05:32.559Z",
-          "screens": 7,
-          "capture": {
-            "ok": 7,
-            "total": 7
-          }
-        },
-        "dark-mobile": {
-          "file": "shots/knowledge-dark-mobile.jpg",
-          "generatedAt": "2026-07-18T17:07:01.485Z",
+          "generatedAt": "2026-07-22T15:02:28.044Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -748,8 +677,8 @@
         }
       ],
       "git": {
-        "sha": "69243b01b",
-        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "sha": "e7a595678",
+        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
         "branch": "master"
       },
       "metrics": {
@@ -761,17 +690,23 @@
         },
         "sharedAdoption": {
           "pct": 100,
-          "shared": 24,
+          "shared": 40,
           "local": 0
         },
         "codeImpact": {
-          "since": "64f531c34",
-          "files": 0,
-          "areas": []
+          "since": "69243b01b",
+          "files": 29,
+          "areas": [
+            "BottomNav",
+            "CategoryChip",
+            "DomainMusicHeader",
+            "ItemList",
+            "NoteCards"
+          ]
         },
         "a11y": {
-          "checked": 341,
-          "pass": 340,
+          "checked": 369,
+          "pass": 368,
           "issues": {
             "noAlt": 0,
             "noName": 1,
@@ -789,15 +724,16 @@
           }
         },
         "coverage": {
-          "ok": 28,
-          "total": 28,
+          "ok": 14,
+          "total": 14,
           "pct": 100
         },
         "trend": {
-          "score": null,
-          "debt": null,
-          "a11yFails": null,
-          "since": null
+          "score": 0,
+          "debt": 0,
+          "a11yFails": 0,
+          "since": "69243b01b",
+          "sinceAt": "2026-07-18T17:07:19.126Z"
         }
       }
     },
@@ -806,7 +742,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/health-light-desktop.jpg",
-          "generatedAt": "2026-07-18T17:02:29.669Z",
+          "generatedAt": "2026-07-22T15:00:56.033Z",
           "screens": 3,
           "capture": {
             "ok": 3,
@@ -815,25 +751,7 @@
         },
         "dark-desktop": {
           "file": "shots/health-dark-desktop.jpg",
-          "generatedAt": "2026-07-18T17:04:07.063Z",
-          "screens": 3,
-          "capture": {
-            "ok": 3,
-            "total": 3
-          }
-        },
-        "light-mobile": {
-          "file": "shots/health-light-mobile.jpg",
-          "generatedAt": "2026-07-18T17:05:37.028Z",
-          "screens": 3,
-          "capture": {
-            "ok": 3,
-            "total": 3
-          }
-        },
-        "dark-mobile": {
-          "file": "shots/health-dark-mobile.jpg",
-          "generatedAt": "2026-07-18T17:07:05.902Z",
+          "generatedAt": "2026-07-22T15:02:32.555Z",
           "screens": 3,
           "capture": {
             "ok": 3,
@@ -859,26 +777,34 @@
         }
       ],
       "git": {
-        "sha": "69243b01b",
-        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "sha": "e7a595678",
+        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
         "branch": "master"
       },
       "metrics": {
         "styleDebt": {
-          "total": 0,
-          "byRule": {},
-          "topRule": null,
-          "triage": "无已知样式债务"
+          "total": 2,
+          "byRule": {
+            "raw-hex": 2
+          },
+          "topRule": "raw-hex",
+          "triage": "硬编码色值 → 收敛到 Design Token"
         },
         "sharedAdoption": {
           "pct": 100,
-          "shared": 10,
+          "shared": 27,
           "local": 0
         },
         "codeImpact": {
-          "since": "64f531c34",
-          "files": 0,
-          "areas": []
+          "since": "69243b01b",
+          "files": 18,
+          "areas": [
+            "BottomNav",
+            "DomainMusicHeader",
+            "/+page.svelte",
+            "/settings",
+            "/trends"
+          ]
         },
         "a11y": {
           "checked": 18,
@@ -894,21 +820,22 @@
           "grade": "A",
           "dims": {
             "a11y": 100,
-            "token": 100,
+            "token": 99,
             "adoption": 100,
             "coverage": 100
           }
         },
         "coverage": {
-          "ok": 12,
-          "total": 12,
+          "ok": 6,
+          "total": 6,
           "pct": 100
         },
         "trend": {
-          "score": null,
-          "debt": null,
-          "a11yFails": null,
-          "since": null
+          "score": 0,
+          "debt": 2,
+          "a11yFails": 0,
+          "since": "69243b01b",
+          "sinceAt": "2026-07-18T17:07:19.126Z"
         }
       }
     },
@@ -917,83 +844,69 @@
       "variants": {
         "light-desktop": {
           "file": "shots/aios-light-desktop.jpg",
-          "generatedAt": "2026-07-18T17:02:41.588Z",
-          "screens": 7,
+          "generatedAt": "2026-07-22T15:01:09.136Z",
+          "screens": 8,
           "capture": {
-            "ok": 7,
-            "total": 7
+            "ok": 8,
+            "total": 8
           }
         },
         "dark-desktop": {
           "file": "shots/aios-dark-desktop.jpg",
-          "generatedAt": "2026-07-18T17:04:18.865Z",
-          "screens": 7,
+          "generatedAt": "2026-07-22T15:02:44.312Z",
+          "screens": 8,
           "capture": {
-            "ok": 7,
-            "total": 7
-          }
-        },
-        "light-mobile": {
-          "file": "shots/aios-light-mobile.jpg",
-          "generatedAt": "2026-07-18T17:05:48.487Z",
-          "screens": 7,
-          "capture": {
-            "ok": 7,
-            "total": 7
-          }
-        },
-        "dark-mobile": {
-          "file": "shots/aios-dark-mobile.jpg",
-          "generatedAt": "2026-07-18T17:07:18.862Z",
-          "screens": 7,
-          "capture": {
-            "ok": 7,
-            "total": 7
+            "ok": 8,
+            "total": 8
           }
         }
       },
-      "name": "AI.OS",
-      "description": "本地 AI 对话 · LocalAI 网关驱动的私有 LLM 聊天",
-      "screens": 7,
+      "name": "Kenos Assistant",
+      "description": "Kenos 默认协调入口 · Today、Assistant、Inbox、审批与 Activity",
+      "screens": 8,
       "pages": [
         {
-          "path": "/",
-          "title": "对话 · 代码调试"
+          "path": "/?kenosDemo=1",
+          "title": "Today"
         },
         {
-          "path": "/?chat=demo-chat-runes",
-          "title": "对话 · 联网检索+思考"
+          "path": "/assistant?kenosDemo=1",
+          "title": "Assistant"
         },
         {
-          "path": "/?chat=demo-chat-image",
-          "title": "对话 · 图片生成"
+          "path": "/spaces?kenosDemo=1",
+          "title": "Spaces 目录"
         },
         {
-          "path": "/?chat=demo-chat-clock",
-          "title": "对话 · HTML 产物预览"
+          "path": "/inbox?kenosDemo=1",
+          "title": "Inbox"
         },
         {
-          "path": "/?chat=demo-chat-sales",
-          "title": "对话 · 数据分析"
+          "path": "/approvals?kenosDemo=1",
+          "title": "Approvals"
         },
         {
-          "path": "/?chat=demo-chat-translate",
-          "title": "对话 · 中英翻译"
+          "path": "/activity?kenosDemo=1",
+          "title": "Activity"
         },
         {
-          "path": "/history",
-          "title": "历史会话"
+          "path": "/spaces/training?kenosDemo=1",
+          "title": "Training Space"
+        },
+        {
+          "path": "/work?kenosDemo=1",
+          "title": "Work hub"
         }
       ],
       "git": {
-        "sha": "69243b01b",
-        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "sha": "e7a595678",
+        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
         "branch": "master"
       },
       "metrics": {
         "a11y": {
-          "checked": 264,
-          "pass": 264,
+          "checked": 203,
+          "pass": 203,
           "issues": {
             "noAlt": 0,
             "noName": 0,
@@ -1001,63 +914,126 @@
           }
         },
         "styleDebt": {
-          "total": 51,
+          "total": 149,
           "byRule": {
-            "raw-font-size": 21,
-            "reserved-ds-class": 6,
-            "raw-hex": 13,
-            "raw-motion": 11
+            "raw-font-size": 85,
+            "raw-hex": 47,
+            "reserved-ds-class": 15,
+            "raw-motion": 2
           },
           "topRule": "raw-font-size",
           "triage": "硬编码字号 → 收敛到 Design Token"
         },
         "sharedAdoption": {
           "pct": 100,
-          "shared": 17,
+          "shared": 53,
           "local": 0
         },
         "codeImpact": {
-          "since": "64f531c34",
-          "files": 0,
-          "areas": []
+          "since": "69243b01b",
+          "files": 179,
+          "areas": [
+            "AgentThread",
+            "BottomNav",
+            "CaptureQuick",
+            "ChatSidebar",
+            "CloudGate"
+          ]
         },
         "health": {
-          "score": 93,
-          "grade": "A",
+          "score": 85,
+          "grade": "B",
           "dims": {
             "a11y": 100,
-            "token": 75,
+            "token": 50,
             "adoption": 100,
             "coverage": 100
           }
         },
         "coverage": {
-          "ok": 28,
-          "total": 28,
+          "ok": 16,
+          "total": 16,
           "pct": 100
         },
         "trend": {
-          "score": null,
-          "debt": null,
-          "a11yFails": null,
-          "since": null
+          "score": -8,
+          "debt": 98,
+          "a11yFails": 0,
+          "since": "69243b01b",
+          "sinceAt": "2026-07-18T17:07:19.126Z"
+        }
+      }
+    },
+    {
+      "id": "kenos-ios",
+      "variants": {
+        "dark-ios": {
+          "file": "shots/kenos-ios-dark-ios.jpg",
+          "generatedAt": "2026-07-22T15:31:49.490Z",
+          "screens": 6,
+          "capture": {
+            "ok": 6,
+            "total": 6
+          }
+        }
+      },
+      "native": true,
+      "name": "Kenos iOS",
+      "description": "Kenos 原生 iOS 壳（模拟器实截）：Dock · Space Shelf · 今日/问答/收件箱",
+      "screens": 6,
+      "pages": [
+        {
+          "path": "kenos://today",
+          "title": "今日"
+        },
+        {
+          "path": "kenos://assistant",
+          "title": "问答"
+        },
+        {
+          "path": "kenos://inbox",
+          "title": "收件箱"
+        },
+        {
+          "path": "kenos://shelf",
+          "title": "空间 Shelf"
+        },
+        {
+          "path": "kenos://settings",
+          "title": "设置"
+        },
+        {
+          "path": "kenos://compose",
+          "title": "快速捕获"
+        }
+      ],
+      "git": {
+        "sha": "e7a595678",
+        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
+        "branch": "master"
+      },
+      "metrics": {
+        "coverage": {
+          "ok": 6,
+          "total": 6,
+          "pct": 100
         }
       }
     }
   ],
   "portfolio": {
     "overall": {
-      "score": 89,
+      "score": 88,
       "grade": "B"
     },
     "totals": {
-      "styleDebt": 710,
+      "styleDebt": 811,
       "a11yFails": 12,
-      "a11yChecked": 1969,
+      "a11yChecked": 1977,
       "appsAudited": 8
     },
     "averages": {
-      "adoption": 83,
+      "adoption": 85,
       "coverage": 100
     },
     "worst": [
@@ -1076,7 +1052,7 @@
       {
         "id": "music",
         "name": "MUSIC.OS",
-        "score": 84,
+        "score": 85,
         "grade": "B"
       }
     ],
@@ -1100,29 +1076,12 @@
       {
         "name": "样式债务趋势",
         "target": "不新增",
-        "status": "n/a",
-        "detail": "无基线"
+        "status": "fail",
+        "detail": "+101"
       }
     ]
   },
   "findings": [
-    {
-      "rule": "raw-hex",
-      "label": "硬编码色值",
-      "appCount": 6,
-      "apps": [
-        "planner",
-        "fitness",
-        "finance",
-        "music",
-        "home",
-        "aios"
-      ],
-      "total": 336,
-      "scope": "systemic",
-      "altitude": "token",
-      "advice": "补齐色板 Design Token，替换硬编码 hex"
-    },
     {
       "rule": "raw-font-size",
       "label": "硬编码字号",
@@ -1134,26 +1093,29 @@
         "home",
         "aios"
       ],
-      "total": 317,
+      "total": 384,
       "scope": "systemic",
       "altitude": "token",
       "advice": "补齐字号 Token（type scale）"
     },
     {
-      "rule": "raw-motion",
-      "label": "硬编码动效",
-      "appCount": 5,
+      "rule": "raw-hex",
+      "label": "硬编码色值",
+      "appCount": 8,
       "apps": [
         "planner",
         "fitness",
+        "finance",
         "music",
+        "portal",
         "home",
+        "health",
         "aios"
       ],
-      "total": 31,
+      "total": 380,
       "scope": "systemic",
       "altitude": "token",
-      "advice": "补齐动效 Token（duration/easing）"
+      "advice": "补齐色板 Design Token，替换硬编码 hex"
     },
     {
       "rule": "reserved-ds-class",
@@ -1164,11 +1126,25 @@
         "home",
         "aios"
       ],
-      "total": 26,
+      "total": 35,
       "scope": "local",
       "altitude": "shared/local",
       "advice": "局部改名，或把该模式收敛为共享组件"
+    },
+    {
+      "rule": "raw-motion",
+      "label": "硬编码动效",
+      "appCount": 3,
+      "apps": [
+        "fitness",
+        "home",
+        "aios"
+      ],
+      "total": 15,
+      "scope": "local",
+      "altitude": "token",
+      "advice": "补齐动效 Token（duration/easing）"
     }
   ],
-  "trendSince": null
+  "trendSince": "69243b01b"
 }

@@ -1,16 +1,16 @@
 # LifeOS · UI/UX 审核画廊
 
-> LifeOS 8 个 app 核心页面的 UI/UX 审核截图集，供人工与 AI 走查。每个 app 一张「联系表」——把 6~8 个核心页面各截一屏拼成一张，每屏顶部标注「序号 · 中文标题 · 路由」；每 app 有 浅色/深色 × 桌面/移动 共 4 个变体。图为本地演示 / 种子数据，非真实账户内容。
+> LifeOS 核心页面的 UI/UX 审核截图集，供人工与 AI 走查。每个 app 一张「联系表」——把 6~8 个核心页面各截一屏拼成一张，每屏顶部标注「序号 · 中文标题 · 路由」。Web app 有 浅色/深色 × 桌面 变体（移动形态由 Kenos 原生壳覆盖）；另有 Kenos iOS / Mac 原生壳条目（模拟器 / 真实窗口截图）。图为本地演示 / 种子数据，非真实账户内容。
 
-机器可读入口首选 [manifest.json](https://kenos-uiux-review.netlify.app/manifest.json)（结构化：每 app 的描述、页面清单、4 变体图片 URL）。图片直链规则 `shots/{app}-{theme}-{viewport}.jpg`（theme: light|dark, viewport: desktop|mobile）。CORS 全开，可跨源 fetch。
+机器可读入口首选 [manifest.json](https://kenos-uiux-review.netlify.app/manifest.json)（结构化：每 app 的描述、页面清单、变体图片 URL）。图片直链规则 `shots/{app}-{theme}-{viewport}.jpg`（theme: light|dark, viewport: desktop|ios|mac）。CORS 全开，可跨源 fetch。
 
 ## AI 审核工作流
 - [manifest.json](https://kenos-uiux-review.netlify.app/manifest.json): 完整结构化数据，优先读取。
 - 1) 从 apps[] 按 description / pages 选要审的 app 与变体（theme/viewport）。
 - 2) GET 该变体 `variants["{theme}-{viewport}"].file` 的 JPEG，逐屏分析布局 / 一致性 / 空态 / 可读性 / 对齐 / 明暗对比。
-- 3) 需对比明暗或桌面/移动时，取同一 app 的其它变体。
+- 3) 需对比明暗或 Web/原生端时，取同一 app 的其它变体或 kenos-ios / kenos-mac 条目。
 
-## 应用（生成于 2026-07-18T17:07:19.126Z · git 69243b01b）
+## 应用（生成于 2026-07-22T15:02:44.662Z · git e7a595678）
 - [PLANNER.OS](https://kenos-uiux-review.netlify.app/shots/planner-light-desktop.jpg): 阳光感任务清单 · 轻松规划每一天 · 7 屏 · 页面: 今日 / 日历 / 接下来 / 项目 / 洞察 / 已完成 / 整理收集箱
 - [FINANCE.OS](https://kenos-uiux-review.netlify.app/shots/finance-light-desktop.jpg): 个人财务驾驶舱 · 现金流、资产与长期规划 · 7 屏 · 页面: 概览 / 账户 / 持仓 / 预测 / 流水洞察 / 审查队列 / 决策日志
 - [FITNESS.OS](https://kenos-uiux-review.netlify.app/shots/fitness-light-desktop.jpg): 胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先 · 7 屏 · 页面: 今日训练 / 训练计划 / 训练日详情 / 专注计时 / 统计分析 / 训练记录 / 动作库
@@ -18,57 +18,45 @@
 - [HOME.OS](https://kenos-uiux-review.netlify.app/shots/home-light-desktop.jpg): 居家空间规划 · 平面审计与储藏区管理 · 6 屏 · 页面: 平面图 · 浏览 / 平面图 · 编辑 / 储物 · 空间 / 储物 · 清单 / 整理建议 / 整理执行
 - [KNOWLEDGE.OS](https://kenos-uiux-review.netlify.app/shots/knowledge-light-desktop.jpg): 第二大脑 · 收集 / 连接 / 回忆，Life OS 的长期记忆层 · 7 屏 · 页面: 收集箱 / 笔记 · 方法论（双链+反链） / 笔记 · 技术（代码/列表块） / 笔记 · 项目文档 / 仪表盘 / 项目看板 / 时间线
 - [HEALTH.OS](https://kenos-uiux-review.netlify.app/shots/health-light-desktop.jpg): 个人健康与状态调节中枢 · Focus 防沉迷 · 本地优先 · 3 屏 · 页面: 此刻状态 / 专注防沉迷 / 健康趋势
-- [AI.OS](https://kenos-uiux-review.netlify.app/shots/aios-light-desktop.jpg): 本地 AI 对话 · LocalAI 网关驱动的私有 LLM 聊天 · 7 屏 · 页面: 对话 · 代码调试 / 对话 · 联网检索+思考 / 对话 · 图片生成 / 对话 · HTML 产物预览 / 对话 · 数据分析 / 对话 · 中英翻译 / 历史会话
+- [Kenos Assistant](https://kenos-uiux-review.netlify.app/shots/aios-light-desktop.jpg): Kenos 默认协调入口 · Today、Assistant、Inbox、审批与 Activity · 8 屏 · 页面: Today / Assistant / Spaces 目录 / Inbox / Approvals / Activity / Training Space / Work hub
+- [Kenos iOS](https://kenos-uiux-review.netlify.app/shots/kenos-ios-dark-ios.jpg): Kenos 原生 iOS 壳（模拟器实截）：Dock · Space Shelf · 今日/问答/收件箱 · 6 屏 · 页面: 今日 / 问答 / 收件箱 / 空间 Shelf / 设置 / 快速捕获
 
 ## 设计治理指标（每 app，见 manifest.json 的 apps[].metrics / variants[].capture|diff）
 字段：capture=捕获覆盖(ok/total) · a11y=无障碍(pass/checked, 查图无alt/控件无名/输入无标注) · sharedAdoption=共享UI import占比 · styleDebt=样式债务(棘轮基线, byRule+triage整改方向) · diff=视觉变更(vs上次基线, 哪些屏变了)。
-- PLANNER.OS: 样式债务 66（硬编码色值 → 收敛到 Design Token） · a11y 253/253 · 共享 80%
-- FINANCE.OS: 样式债务 22（硬编码色值 → 收敛到 Design Token） · a11y 345/349 · 共享 27%
-- FITNESS.OS: 样式债务 59（硬编码色值 → 收敛到 Design Token） · a11y 176/176 · 共享 98%
-- MUSIC.OS: 样式债务 70（硬编码色值 → 收敛到 Design Token） · a11y 382/389 · 共享 69%
-- HOME.OS: 样式债务 442（硬编码字号 → 收敛到 Design Token） · a11y 179/179 · 共享 90%
-- KNOWLEDGE.OS: 样式债务 0（无已知样式债务） · a11y 340/341 · 共享 100%
-- HEALTH.OS: 样式债务 0（无已知样式债务） · a11y 18/18 · 共享 100%
-- AI.OS: 样式债务 51（硬编码字号 → 收敛到 Design Token） · a11y 264/264 · 共享 100%
+- PLANNER.OS: 样式债务 60（硬编码色值 → 收敛到 Design Token） · a11y 242/242 · 共享 83%
+- FINANCE.OS: 样式债务 30（硬编码色值 → 收敛到 Design Token） · a11y 360/364 · 共享 32%
+- FITNESS.OS: 样式债务 60（硬编码色值 → 收敛到 Design Token） · a11y 214/214 · 共享 99%
+- MUSIC.OS: 样式债务 68（硬编码色值 → 收敛到 Design Token） · a11y 382/389 · 共享 74%
+- HOME.OS: 样式债务 442（硬编码字号 → 收敛到 Design Token） · a11y 178/178 · 共享 93%
+- KNOWLEDGE.OS: 样式债务 0（无已知样式债务） · a11y 368/369 · 共享 100%
+- HEALTH.OS: 样式债务 2（硬编码色值 → 收敛到 Design Token） · a11y 18/18 · 共享 100%
+- Kenos Assistant: 样式债务 149（硬编码字号 → 收敛到 Design Token） · a11y 203/203 · 共享 100%
+- Kenos iOS: 
 
 ## 全部变体
 ### PLANNER.OS
 - [PLANNER.OS · light-desktop](https://kenos-uiux-review.netlify.app/shots/planner-light-desktop.jpg)
 - [PLANNER.OS · dark-desktop](https://kenos-uiux-review.netlify.app/shots/planner-dark-desktop.jpg)
-- [PLANNER.OS · light-mobile](https://kenos-uiux-review.netlify.app/shots/planner-light-mobile.jpg)
-- [PLANNER.OS · dark-mobile](https://kenos-uiux-review.netlify.app/shots/planner-dark-mobile.jpg)
 ### FINANCE.OS
 - [FINANCE.OS · light-desktop](https://kenos-uiux-review.netlify.app/shots/finance-light-desktop.jpg)
 - [FINANCE.OS · dark-desktop](https://kenos-uiux-review.netlify.app/shots/finance-dark-desktop.jpg)
-- [FINANCE.OS · light-mobile](https://kenos-uiux-review.netlify.app/shots/finance-light-mobile.jpg)
-- [FINANCE.OS · dark-mobile](https://kenos-uiux-review.netlify.app/shots/finance-dark-mobile.jpg)
 ### FITNESS.OS
 - [FITNESS.OS · light-desktop](https://kenos-uiux-review.netlify.app/shots/fitness-light-desktop.jpg)
 - [FITNESS.OS · dark-desktop](https://kenos-uiux-review.netlify.app/shots/fitness-dark-desktop.jpg)
-- [FITNESS.OS · light-mobile](https://kenos-uiux-review.netlify.app/shots/fitness-light-mobile.jpg)
-- [FITNESS.OS · dark-mobile](https://kenos-uiux-review.netlify.app/shots/fitness-dark-mobile.jpg)
 ### MUSIC.OS
 - [MUSIC.OS · light-desktop](https://kenos-uiux-review.netlify.app/shots/music-light-desktop.jpg)
 - [MUSIC.OS · dark-desktop](https://kenos-uiux-review.netlify.app/shots/music-dark-desktop.jpg)
-- [MUSIC.OS · light-mobile](https://kenos-uiux-review.netlify.app/shots/music-light-mobile.jpg)
-- [MUSIC.OS · dark-mobile](https://kenos-uiux-review.netlify.app/shots/music-dark-mobile.jpg)
 ### HOME.OS
 - [HOME.OS · light-desktop](https://kenos-uiux-review.netlify.app/shots/home-light-desktop.jpg)
 - [HOME.OS · dark-desktop](https://kenos-uiux-review.netlify.app/shots/home-dark-desktop.jpg)
-- [HOME.OS · light-mobile](https://kenos-uiux-review.netlify.app/shots/home-light-mobile.jpg)
-- [HOME.OS · dark-mobile](https://kenos-uiux-review.netlify.app/shots/home-dark-mobile.jpg)
 ### KNOWLEDGE.OS
 - [KNOWLEDGE.OS · light-desktop](https://kenos-uiux-review.netlify.app/shots/knowledge-light-desktop.jpg)
 - [KNOWLEDGE.OS · dark-desktop](https://kenos-uiux-review.netlify.app/shots/knowledge-dark-desktop.jpg)
-- [KNOWLEDGE.OS · light-mobile](https://kenos-uiux-review.netlify.app/shots/knowledge-light-mobile.jpg)
-- [KNOWLEDGE.OS · dark-mobile](https://kenos-uiux-review.netlify.app/shots/knowledge-dark-mobile.jpg)
 ### HEALTH.OS
 - [HEALTH.OS · light-desktop](https://kenos-uiux-review.netlify.app/shots/health-light-desktop.jpg)
 - [HEALTH.OS · dark-desktop](https://kenos-uiux-review.netlify.app/shots/health-dark-desktop.jpg)
-- [HEALTH.OS · light-mobile](https://kenos-uiux-review.netlify.app/shots/health-light-mobile.jpg)
-- [HEALTH.OS · dark-mobile](https://kenos-uiux-review.netlify.app/shots/health-dark-mobile.jpg)
-### AI.OS
-- [AI.OS · light-desktop](https://kenos-uiux-review.netlify.app/shots/aios-light-desktop.jpg)
-- [AI.OS · dark-desktop](https://kenos-uiux-review.netlify.app/shots/aios-dark-desktop.jpg)
-- [AI.OS · light-mobile](https://kenos-uiux-review.netlify.app/shots/aios-light-mobile.jpg)
-- [AI.OS · dark-mobile](https://kenos-uiux-review.netlify.app/shots/aios-dark-mobile.jpg)
+### Kenos Assistant
+- [Kenos Assistant · light-desktop](https://kenos-uiux-review.netlify.app/shots/aios-light-desktop.jpg)
+- [Kenos Assistant · dark-desktop](https://kenos-uiux-review.netlify.app/shots/aios-dark-desktop.jpg)
+### Kenos iOS
+- [Kenos iOS · dark-ios](https://kenos-uiux-review.netlify.app/shots/kenos-ios-dark-ios.jpg)
