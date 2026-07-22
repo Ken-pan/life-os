@@ -709,3 +709,11 @@ Approved temporary defaults now on file:
 
 - SHA `9bc298c28…`; deploy `6a5e2f18f5e5050e35b63590` (UI+functions)
 - Due/schedule UI + MCP complete on Kenos; Legacy still not revoked
+
+## P5 Core Loop Reality Closure (2026-07-21)
+
+- **PASS_LOCAL_READY_FOR_PRODUCTION_GATE** — Capture→Plan→Today→Complete→Activity→Continue 全链路在规范云数据上 11/11 PASS
+- Harness `scripts/kenos-daily-beta/core-loop-e2e.mjs`;证据 `docs/qa/evidence/kenos-core-loop-2026-07-22/`;报告 `docs/qa/kenos-core-loop-p5-report.md`
+- 产品修复:AIOS auth 恢复强刷投影(冷启动 30s 空窗)/ beta AIOS 接入 Supabase env / Capture flags 进 beta / Activity 规范读源(prod 默认 Off)
+- iOS:17 Pro 真机 smoke 26/26(p50 447ms);stable-hostname 谓词接受 .ts.net
+- 批准门 GATE-1/2/3(push 部署 / Activity 读 / Capture cohort)见报告 §6;Owner 3 日 dogfood 清单见 §7

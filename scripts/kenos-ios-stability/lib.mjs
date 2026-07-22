@@ -120,7 +120,12 @@ export function originBase() {
 export function originIsStableHostname(url = originBase()) {
   try {
     const host = new URL(url).hostname
-    return host.endsWith('.local') && !/^\d+\.\d+\.\d+\.\d+$/.test(host)
+    // mDNS (.local) or Tailscale MagicDNS (.ts.net) — both survive DHCP churn;
+    // ts.net additionally works off-LAN. Raw IPs remain unstable.
+    return (
+      (host.endsWith('.local') || host.endsWith('.ts.net')) &&
+      !/^\d+\.\d+\.\d+\.\d+$/.test(host)
+    )
   } catch {
     return false
   }
