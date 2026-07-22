@@ -19,6 +19,9 @@ assert.equal(parsed.nonce, issued.nonce)
 
 assert.equal(parseAndVerifyChallenge('not-a-challenge').ok, false)
 assert.equal(parseAndVerifyChallenge(`${issued.challenge}x`).ok, false)
+// Forged MAC (right body, wrong signature) is rejected by the constant-time compare.
+const forged = `${issued.challenge.split('.')[0]}.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`
+assert.equal(parseAndVerifyChallenge(forged).ok, false)
 
 const { privateKey, publicKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' })
 const jwk = publicKey.export({ format: 'jwk' })

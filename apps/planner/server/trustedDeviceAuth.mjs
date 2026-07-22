@@ -5,7 +5,16 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { createHmac, createPublicKey, createHash, randomBytes, verify as cryptoVerify } from 'node:crypto'
+import { createHmac, createPublicKey, createHash, randomBytes, timingSafeEqual, verify as cryptoVerify } from 'node:crypto'
+
+/** Constant-time string compare for MAC/hash values (avoids timing side channel). */
+function safeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false
+  const bufA = Buffer.from(a)
+  const bufB = Buffer.from(b)
+  if (bufA.length !== bufB.length) return false
+  return timingSafeEqual(bufA, bufB)
+}
 import {
   LIFE_OS_PERSONAL_OWNER_EMAIL,
   MAX_TRUSTED_DEVICES,
@@ -74,11 +83,14 @@ export function getAdminClient() {
 }
 
 function hmacSecret() {
-  return (
-    readEnv('DEVICE_AUTH_HMAC_SECRET') ||
-    readSupabaseServiceRoleKey() ||
-    'life-os-device-auth-dev-secret'
-  )
+  // Prefer a dedicated secret; fall back to the service-role key so existing
+  // deployments keep working. Never fall back to a public literal — that would
+  // let anyone forge challenges. Fail closed if neither is configured.
+  const secret = readEnv('DEVICE_AUTH_HMAC_SECRET') || readSupabaseServiceRoleKey()
+  if (!secret) {
+    throw new Error('device_auth_hmac_secret_unconfigured')
+  }
+  return secret
 }
 
 function attestRequired() {
@@ -198,7 +210,7 @@ export function parseAndVerifyChallenge(challenge) {
   }
   const [body, mac] = challenge.split('.')
   const expected = createHmac('sha256', hmacSecret()).update(body).digest('base64url')
-  if (mac !== expected) return { ok: false, error: 'invalid_challenge' }
+  if (!safeEqual(mac, expected)) return { ok: false, error: 'invalid_challenge' }
   let payload
   try {
     payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'))
