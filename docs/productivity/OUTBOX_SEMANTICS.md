@@ -33,7 +33,7 @@
 ## Canary worker(A4 实现)
 
 - 运行体:`apps/planner/agent/outbox-worker.mjs`(launchd `space.kenos.outbox-worker`,KeepAlive);纯逻辑在 `apps/planner/server/outboxWorker.core.mjs`(单测覆盖)。
-- SQL 面(migration `20260722190000_kenos_outbox_worker_delivery.sql`,service_role only):
+- SQL 面(migration `20260722191520_kenos_outbox_worker_delivery.sql`,service_role only):
   `kenos_outbox_worker_claim(epoch, limit≤50, lease)` FOR UPDATE SKIP LOCKED + lease(processing 期间 next_attempt_at=租约到期,过期可重取)· `_deliver`(事务内 insert life_events on conflict do nothing + CAS→published)· `_fail`(attempts≥5 或 permanent→dead_letter,否则 retry)· `_requeue`(仅 dead_letter→pending,人工)· `_metrics`。
 - 参数:batch 10 · poll 20s · lease 300s · max_attempts 5 · retry 30s/2m/10m/1h/6h(`RETRY_SCHEDULE_MS`)。
 - 消费白名单:`CANARY_ACTION_TYPES`(15 类:plan.* ×8、project.* ×4、capture.* ×2、approval.decide)。白名单外(focus.*、work.*)即使入队也不消费(fail-closed,log warn)。

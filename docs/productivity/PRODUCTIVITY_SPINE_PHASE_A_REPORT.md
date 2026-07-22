@@ -13,12 +13,12 @@
 ## A3 · 审批接线 — 完成(canary 范围)
 
 - 管线 `executeTool → normalizeAction → registry → policyDecision → approval(如需) → executor → activity` 落在 `actionPipeline.core.js`,4 个写工具接线,approval-bypass 护栏测试防绕过。
-- 审批参数绑定:`normalized_parameters_hash` 列 + 请求 RPC 持久化 + **参数变化自动 supersede 旧 pending 审批**(migration 20260722210000)+ 执行侧 `approvalBindingValid`(hash/过期/类型三重校验)。
+- 审批参数绑定:`normalized_parameters_hash` 列 + 请求 RPC 持久化 + **参数变化自动 supersede 旧 pending 审批**(migration 20260722192300)+ 执行侧 `approvalBindingValid`(hash/过期/类型三重校验)。
 - 本轮 canary 全为 R1;R2/R3 执行器保持 disabled(Owner gate),但策略与绑定架构已统一。
 
 ## A4 · Outbox canary worker — 完成并常驻
 
-- SQL:claim(lease+SKIP LOCKED)/deliver(幂等投影 life_events)/fail(退避 30s/2m/10m/1h/6h→dead_letter)/requeue(人工)/metrics,service_role only(migration 20260722190000)。
+- SQL:claim(lease+SKIP LOCKED)/deliver(幂等投影 life_events)/fail(退避 30s/2m/10m/1h/6h→dead_letter)/requeue(人工)/metrics,service_role only(migration 20260722191520)。
 - 运行体:`apps/planner/agent/outbox-worker.mjs` + launchd `space.kenos.outbox-worker`(KeepAlive,已安装运行);安装/升级/状态/健康:`install-outbox-worker.sh [install|uninstall|status|health]`。
 - 紧急开关:`~/.kenos/outbox-worker.disable` / `KENOS_OUTBOX_WORKER_DISABLED=1`。
 - 只消费 `CANARY_ACTION_TYPES`(15 类),epoch 双层隔离历史。

@@ -46,7 +46,7 @@ executeTool → normalizeAction(TOOL_ACTION_MAP) → actionRegistry → policyDe
 
 `kenos_action_approvals.normalized_parameters_hash` = 规范化(递归 key 排序)参数 JSON 的 sha256(`canonicalParametersJson` + `normalizedParametersHash`)。
 
-- 请求侧(migration `20260722210000_kenos_approval_parameter_binding.sql`):`kenos_request_action_approval_action` 校验并持久化 hash;**同一 proposed action 出现不同 hash 的新请求时,旧 pending 审批自动转 superseded**(decided_by='system:parameter_change')。
+- 请求侧(migration `20260722192300_kenos_approval_parameter_binding.sql`):`kenos_request_action_approval_action` 校验并持久化 hash;**同一 proposed action 出现不同 hash 的新请求时,旧 pending 审批自动转 superseded**(decided_by='system:parameter_change')。
 - 执行侧:`approvalBindingValid(approval, action)` — status=approved + 未过期 + action_type 一致 + hash 重算一致,四者缺一不可;参数变化即失效。审批本身绑定 user_id(owner_id)/action_type/tool 映射/target(entity_refs)/risk/expires_at/correlation_id(表既有列)。
 - 本轮 canary 动作全为 R1(auto),R2/R3 的实际执行路径保持 executor disabled(Owner gate);架构与绑定校验已统一并有测试。
 

@@ -1,0 +1,11 @@
+{
+  "_comment": "Pre-existing migration version-drift pairs (repo filename stamp differs from the production schema_migrations version for the same migration name). These predate the 2026-07-22 governance milestone and were introduced by prior sessions applying via the Supabase MCP tool. The detector (scripts/check-migration-drift.mjs) ignores baselined pairs so it fails only on NEW drift. Reconciliation for these is an OWNER decision — see docs/productivity/MIGRATION_RECONCILIATION.md. The forbidden shortcut is `supabase migration repair --reverted` (it deletes real history). The safe fix is the same local git-rename used for the milestone's own 4 migrations.",
+  "acceptedDriftPairs": [
+    { "name": "purchase_review_rpc_revoke_anon", "repoVersion": "20260717210000" },
+    { "name": "core_trusted_devices_owner_lock", "repoVersion": "20260722010000" },
+    { "name": "device_auth_hardening", "repoVersion": "20260722020000" },
+    { "name": "device_auth_attest_hangup", "repoVersion": "20260722030000" },
+    { "name": "core_trusted_devices_view_rls_passthrough", "repoVersion": "20260722040000" },
+    { "name": "aios_shell_state", "repoVersion": "20260722090000" }
+  ]
+}

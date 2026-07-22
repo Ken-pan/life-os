@@ -1,6 +1,6 @@
 # Project Spine 契约(Phase B · B1/B2/B3/B4)
 
-> 日期:2026-07-22。迁移:`apps/finance/supabase/migrations/20260722200000_kenos_project_spine.sql`(已应用生产)。
+> 日期:2026-07-22。迁移:`apps/finance/supabase/migrations/20260722191728_kenos_project_spine.sql`(已应用生产)。
 
 ## B1 · Canonical ownership(硬边界)
 
