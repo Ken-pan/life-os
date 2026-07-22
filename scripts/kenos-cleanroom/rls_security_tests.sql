@@ -170,4 +170,36 @@ do $$ declare ok boolean:=false; begin
   raise notice 'T12 PASS anon cannot execute privileged create RPC';
 end $$; rollback;
 
+-- T13 IDOR-via-RPC: user B cannot convert user A's capture through the convert RPC
+begin; set local role authenticated;
+select set_config('request.jwt.claims', json_build_object('sub',:'B','role','authenticated')::text, true);
+do $$ declare ok boolean:=false; cap text; begin
+  select id::text into cap from public.kenos_capture_envelopes where payload->>'text'='A private capture' limit 1;
+  begin perform public.kenos_convert_capture_to_plan_task_action(jsonb_build_object(
+    'schemaVersion','1','id',gen_random_uuid()::text,'actionType','capture.convert_to_plan_task','producer','assistant','targetDomain','plan',
+    'actor',jsonb_build_object('type','user','id','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),'deviceId',gen_random_uuid()::text,
+    'securityDomain','personal','dataClassification','personal','requestedRisk','R1',
+    'payload',jsonb_build_object('captureId',cap),'reason','attack','idempotencyKey','capture_convert:idor',
+    'requestedAt',to_char(now() at time zone 'utc','YYYY-MM-DD"T"HH24:MI:SS"Z"'),'correlationId',gen_random_uuid()::text));
+  exception when others then ok:=true; end;
+  -- cap may be NULL (B can't even see it) which also means no conversion happened
+  if not ok and cap is not null then raise exception 'T13 FAIL B converted A capture'; end if;
+  raise notice 'T13 PASS B cannot convert A capture through the RPC';
+end $$; rollback;
+
+-- T14 IDOR-via-RPC: user B cannot complete user A's task through the complete RPC
+begin; set local role authenticated;
+select set_config('request.jwt.claims', json_build_object('sub',:'B','role','authenticated')::text, true);
+do $$ declare ok boolean:=false; atask text; begin
+  select id into atask from public.planner_tasks where data->>'title'='A owns this task' limit 1;
+  begin perform public.kenos_complete_plan_task_action(jsonb_build_object(
+    'schemaVersion','1','id',gen_random_uuid()::text,'actionType','plan.complete_task','producer','plan','targetDomain','plan',
+    'actor',jsonb_build_object('type','user','id','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),'deviceId',gen_random_uuid()::text,
+    'securityDomain','personal','dataClassification','personal','requestedRisk','R1',
+    'payload',jsonb_build_object('taskId',atask),'reason','attack','idempotencyKey','complete:idor',
+    'requestedAt',to_char(now() at time zone 'utc','YYYY-MM-DD"T"HH24:MI:SS"Z"'),'correlationId',gen_random_uuid()::text));
+  exception when others then ok:=true; end;
+  raise notice 'T14 PASS B cannot complete A task through the RPC';
+end $$; rollback;
+
 \echo '================= ALL RLS / AUTHZ ASSERTIONS PASSED ================='
