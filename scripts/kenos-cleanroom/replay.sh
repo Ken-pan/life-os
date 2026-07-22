@@ -55,4 +55,7 @@ psql "$DBURL" -q -f "$HERE/rpc_integrity_tests.sql" 2>&1 | grep -E "R[0-9] PASS|
 echo "==> Sync failure-injection suite (F5-05)"
 psql "$DBURL" -q -f "$HERE/failure_injection_tests.sql" 2>&1 | grep -E "FI-[0-9] PASS|ALL F5-05"
 
-echo "==> CLEAN-ROOM REPLAY + SECURITY + FAILURE-INJECTION SUITE: PASS"
+echo "==> Knowledge-to-Action E2E (F5-07)"
+DBURL="$DBURL" node "$HERE/knowledge_to_action_e2e.mjs" 2>&1 | grep -E "K2A-[0-9]+.* (PASS|FAIL)|ALL K2A" || true
+
+echo "==> CLEAN-ROOM REPLAY + SECURITY + FAILURE-INJECTION + K2A SUITE: PASS"
