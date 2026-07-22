@@ -266,6 +266,10 @@
     // 云同步恢复后：自动写入 Life OS MCP 舰队，再发现工具
     initCloud().then(() => {
       syncSpaceSwitcherOwner()
+      // Auth restore lands after the first mount read (which fails closed as
+      // permission_denied) — force one refresh so cold boot doesn't sit on the
+      // signed-out projection until the 30s throttle expires.
+      if (isCloudAuthorized()) void refreshControlCenter({ force: true })
       if (CLOUD_BUILD && !isCloudAuthorized()) {
         // Auth wall: do not seed/hydrate prior-user memory
         return

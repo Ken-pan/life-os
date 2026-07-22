@@ -208,6 +208,12 @@ cmd_build() {
     echo "  building aios-os (local daily beta origins)…"
     # Owner cohort: Capture ingest/convert writers + Kenos plan activity read for the
     # Capture→Plan→Today→Complete→Activity core loop (P5). Same hosted RPCs as prod canary.
+    # Supabase config single-sourced from apps/planner/.env (aios has no .env of its own;
+    # without it every AIOS cloud read/write in the beta is dead: Today/Inbox/Activity/Capture).
+    if [[ -f "$ROOT/apps/planner/.env" ]]; then
+      export PUBLIC_SUPABASE_URL="$(grep -E '^PUBLIC_SUPABASE_URL=' "$ROOT/apps/planner/.env" | head -1 | cut -d= -f2-)"
+      export PUBLIC_SUPABASE_ANON_KEY="$(grep -E '^PUBLIC_SUPABASE_ANON_KEY=' "$ROOT/apps/planner/.env" | head -1 | cut -d= -f2-)"
+    fi
     OWNER_EMAIL="${KENOS_DAILY_BETA_OWNER_EMAIL:-334452284ken@gmail.com}"
     VITE_KENOS_LOCAL_DAILY_BETA=1 VITE_AIOS_CLOUD=0 \
       VITE_KENOS_PROD_WRITES=1 \

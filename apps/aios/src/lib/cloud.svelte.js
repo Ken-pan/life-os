@@ -169,6 +169,19 @@ async function syncLifeOsMcpFleet(accessToken) {
 }
 
 /** app 启动时调用:恢复共享登录态、订阅变更、拉一次云端 */
+/**
+ * Auth restore lands after route mounts fire their first control-center read
+ * (which fails closed as permission_denied). Force one refresh so cold boot
+ * doesn't sit on the signed-out projection until the 30s throttle expires.
+ * Dynamic import avoids a cloud ↔ readSources module cycle.
+ */
+function refreshReadProjectionsAfterAuth() {
+  console.info('[kenos-auth] owner session restored — refreshing read projections')
+  void import('$lib/kenos/controlCenter.svelte.js')
+    .then((m) => m.refreshControlCenter({ force: true }))
+    .catch(() => {})
+}
+
 export async function initCloud() {
   if (!browser || !CLOUD.configured) {
     CLOUD.ready = true
@@ -193,6 +206,7 @@ export async function initCloud() {
     void syncLifeOsMcpFleet(session?.access_token)
     if (nextId && isCloudAuthorized()) {
       hydrateMemoryFromLocalStorage()
+      if (!prevId || prevId !== nextId) refreshReadProjectionsAfterAuth()
     }
   })
   // Wait for Cookie / iOS Keychain vault restore before first getSession.
@@ -207,6 +221,7 @@ export async function initCloud() {
     clearUserScopedSessionState()
   } else if (CLOUD.user && isCloudAuthorized()) {
     hydrateMemoryFromLocalStorage()
+    refreshReadProjectionsAfterAuth()
   }
   await syncLifeOsMcpFleet(data?.session?.access_token)
   if (unsubscribeBus) unsubscribeBus()

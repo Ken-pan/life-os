@@ -1,0 +1,137 @@
+{
+  "startedAt": "2026-07-22T04:30:55.203Z",
+  "finishedAt": "2026-07-22T04:31:59.218Z",
+  "sha": "4b590f2cb54a831ad9897282cb3079e11827662d",
+  "runTag": "p5-loop-mrvl499e",
+  "origins": {
+    "AIOS": "http://127.0.0.1:5219",
+    "PLANNER": "http://127.0.0.1:5188"
+  },
+  "taskId": "35e24298-647d-4c1b-bff5-f7c19f7e38e0",
+  "captureId": "09939ea8-3649-4ecd-8c4a-30989197ee19",
+  "cleanup": {
+    "tasks": 2,
+    "captures": 1
+  },
+  "flows": [
+    {
+      "id": "LOOP1_capture_ingest",
+      "expected": "CaptureQuick save → kenos_capture_envelopes row (needs_review)",
+      "actual": {
+        "captureId": "09939ea8-3649-4ecd-8c4a-30989197ee19",
+        "status": "needs_review",
+        "count": 1
+      },
+      "ok": true
+    },
+    {
+      "id": "LOOP2_convert_to_plan",
+      "expected": "Inbox convert → capture materialized + canonical planner_tasks row",
+      "actual": {
+        "rowVisible": 1,
+        "clicked": true,
+        "captureStatus": "materialized",
+        "taskId": "35e24298-647d-4c1b-bff5-f7c19f7e38e0",
+        "taskTitle": "P5 core loop task p5-loop-mrvl499e"
+      },
+      "ok": true
+    },
+    {
+      "id": "LOOP3_edit_title_due",
+      "expected": "Editor sheet save → canonical title + dueDate=today via update RPCs",
+      "actual": {
+        "editorOpen": 1,
+        "saved": true,
+        "title": "P5 core loop task p5-loop-mrvl499e · edited",
+        "dueDate": "2026-07-21"
+      },
+      "ok": true
+    },
+    {
+      "id": "LOOP4_today_projection",
+      "expected": "portal_today_summary todayOpen>0; AIOS Today renders count; Planner lists task",
+      "actual": {
+        "todayOpen": 18,
+        "aiosShowsCount": true,
+        "plannerHasTask": true,
+        "todaySample": "跳到主要内容\nKenos\n空间\n今日\n助手\n收件箱\n\nRECENT\n\nAll\n训练\n工作\n计划\n\nAssistant 协调动作；数据仍由各 Space 拥有。\n\n历史\n设置\n今日\n今日\n\n7月21日星期二\n\n57 项任务已逾期。训练：进行中\n\n刷新\n现在\n继续\n需要处理\n57 项任务已逾期\n另有 18 项今天到期\n打开"
+      },
+      "ok": true
+    },
+    {
+      "id": "LOOP5_complete_activity",
+      "expected": "UI toggle → task completed + plan.complete_task row in kenos_plan_activity",
+      "actual": {
+        "toggled": true,
+        "completed": true,
+        "activityId": "8652185f-364a-4470-bf16-bb743304b5cb"
+      },
+      "ok": true
+    },
+    {
+      "id": "LOOP6_activity_feed",
+      "expected": "AIOS /activity renders canonical plan.complete_task record",
+      "actual": {
+        "showsCompletion": true,
+        "sample": "动态\n\nINBOX\n\nActivity\n\n系统做过什么、哪里失败了，以及下一步如何恢复。\n\nCaptured\nApprovals\nActivity\n部分内容暂不可用\n上次更新于 2026年7月21日 21:31\n\n只显示最近 100 项；另有 49 项未复制到 Assistant。\n\n重试\n\n只显示安全摘要，不会复制敏"
+      },
+      "ok": true
+    },
+    {
+      "id": "LOOP7_continue_descriptor",
+      "expected": "Plan Continue CTA hands off to AIOS with resume descriptor bound to task",
+      "actual": {
+        "ctaVisible": 1,
+        "landedOnAios": true,
+        "boundToTask": true,
+        "url": "http://127.0.0.1:5219/"
+      },
+      "ok": true
+    },
+    {
+      "id": "LOOP8_relaunch_no_dup",
+      "expected": "Fresh context relaunch → task exists exactly once and stays completed",
+      "actual": {
+        "dbCount": 1,
+        "uiCount": 0
+      },
+      "ok": true
+    },
+    {
+      "id": "LOOP9_idempotent_replay",
+      "expected": "Replaying the original convert idempotency key → duplicate:true, still one task",
+      "actual": {
+        "originalKey": true,
+        "firstDup": true,
+        "replayDup": true,
+        "loopTaskCount": 1
+      },
+      "ok": true
+    },
+    {
+      "id": "LOOP10_offline_recovery",
+      "expected": "Offline create queued locally; reconnect flush → exactly one task; queue drained",
+      "actual": {
+        "typed": true,
+        "queuedCount": 1175,
+        "created": 1,
+        "drainedPending": 0
+      },
+      "ok": true
+    },
+    {
+      "id": "LOOP11_authz_isolation",
+      "expected": "User B cannot see/convert owner capture, cannot read owner activity; anon blocked",
+      "actual": {
+        "bSeesOwnerCapture": false,
+        "bConvertBlocked": true,
+        "bConvertErr": "capture_not_found",
+        "bSeesOwnerActivity": false,
+        "anonBlocked": true,
+        "anonErr": "permission denied for function kenos_list_plan_activity"
+      },
+      "ok": true
+    }
+  ],
+  "pass": true
+}
