@@ -506,6 +506,11 @@ final class KenosAppModel: ObservableObject {
     private static func localizedShellUnlockError(_ message: String?) -> String {
         let zh = KenosShellSettingsStore.current.resolvedLocale() == "zh"
         let raw = message ?? "Unlock required"
+        if raw == "Passcode not set" {
+            return zh
+                ? "设备未设置密码。请先在系统设置中开启设备密码，再回来解锁。"
+                : "No device passcode is set. Turn on a passcode in Settings, then unlock again."
+        }
         guard zh else { return raw }
         switch raw {
         case "Unlock required": return "需要解锁"
@@ -1367,6 +1372,10 @@ final class KenosAppModel: ObservableObject {
             presentSettings()
             return
         }
+        // Deep links must win over open chrome — otherwise the tab switches invisibly
+        // behind the sheet and the link looks like a no-op.
+        if showSettingsSheet { showSettingsSheet = false }
+        if showDomainMoreSheet { showDomainMoreSheet = false }
         #endif
         let tab = tabForShellPath(pathOnly)
         let previous = dailyBetaPathByTab[tab]
@@ -2167,7 +2176,27 @@ final class KenosAppModel: ObservableObject {
 
     func requestDomainCompose() {
         #if os(iOS)
-        KenosDomainWebBridge.openCompose()
+        if shellMode == .domain {
+            KenosDomainWebBridge.openCompose()
+            return
+        }
+        // Kenos Mode: compose lives in the shell web layout (CaptureQuick), not the
+        // domain bridge — without this the Capture intent silently no-ops on shell tabs.
+        guard let shell = KenosActiveWebRegistry.shellWebView else {
+            showCaptureSheet = true
+            return
+        }
+        let js = """
+        (function(){try{var f=window.__KENOS_SHELL_COMPOSE__||window.__KENOS_DOMAIN_COMPOSE__;\
+        if(typeof f==='function'){f();return true}return false}catch(e){return false}})()
+        """
+        shell.evaluateJavaScript(js) { [weak self] result, _ in
+            guard (result as? Bool) != true else { return }
+            Task { @MainActor in
+                // Web build without the hook — native capture sheet always mounts.
+                self?.showCaptureSheet = true
+            }
+        }
         #endif
     }
 

@@ -148,8 +148,15 @@
     return `/assistant?q=${title}`
   }
 
+  /** Raw RPC/auth errors are developer-facing — map to user copy (auth errors stay silent: the locked card already explains). */
+  function friendlyEnvelopesError(error) {
+    const raw = error instanceof Error ? error.message : String(error)
+    if (/permission denied|jwt|unauthorized|not.?authenticated/i.test(raw)) return ''
+    return '收件箱列表加载失败，请稍后重试。'
+  }
+
   async function loadEnvelopes() {
-    if (!captureListEnabled) return
+    if (!captureListEnabled || inboxLocked) return
     envelopesLoading = true
     envelopesError = ''
     try {
@@ -158,7 +165,7 @@
         limit: 50,
       })
     } catch (error) {
-      envelopesError = error instanceof Error ? error.message : String(error)
+      envelopesError = friendlyEnvelopesError(error)
     } finally {
       envelopesLoading = false
     }
@@ -178,7 +185,8 @@
       })
       await loadEnvelopes()
     } catch (error) {
-      convertError = error instanceof Error ? error.message : String(error)
+      console.warn('[inbox] convert capture failed', error)
+      convertError = '转成任务失败，请稍后重试。'
     } finally {
       convertingId = null
     }
@@ -186,7 +194,15 @@
 
   onMount(() => {
     void refreshControlCenter()
-    if (captureListEnabled) void loadEnvelopes()
+  })
+
+  // Load once sign-in state settles; re-run when the inbox unlocks (e.g. cold-start auth restore).
+  let envelopesRequested = $state(false)
+  $effect(() => {
+    if (!captureListEnabled || inboxLocked) return
+    if (envelopesRequested) return
+    envelopesRequested = true
+    void loadEnvelopes()
   })
 </script>
 
@@ -245,8 +261,15 @@
   {#if convertError}
     <p class="control-notice" role="alert">{convertError}</p>
   {/if}
-  {#if envelopesError}
-    <p class="control-notice" role="alert">{envelopesError}</p>
+  {#if envelopesError && !inboxLocked}
+    <p class="control-notice" role="alert">
+      {envelopesError}
+      <button
+        type="button"
+        class="control-button control-button--secondary"
+        onclick={() => loadEnvelopes()}>重试</button
+      >
+    </p>
   {/if}
 
   {#if !inboxLocked && (axis === 'all' || axis === 'confirm')}

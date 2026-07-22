@@ -221,22 +221,36 @@ struct KenosDomainModeShell: View {
             KenosDomainMoreSheet(model: model)
         }
         .alert(
-            "未保存的更改",
+            KenosOfflineShellPolicy.prefersChinese ? "未保存的更改" : "Unsaved changes",
             isPresented: $model.showDomainLeaveConfirm
         ) {
-            Button("继续编辑", role: .cancel) {
+            Button(
+                KenosOfflineShellPolicy.prefersChinese ? "继续编辑" : "Keep editing",
+                role: .cancel
+            ) {
                 model.cancelDomainLeave()
             }
-            Button("丢弃并离开", role: .destructive) {
+            Button(
+                KenosOfflineShellPolicy.prefersChinese ? "丢弃并离开" : "Discard and leave",
+                role: .destructive
+            ) {
                 model.confirmDomainLeaveDiscard()
             }
         } message: {
-            Text(
-                model.domainLeaveSummary.isEmpty
-                    ? "切换 Space 会丢失当前编辑。"
-                    : "「\(model.domainLeaveSummary)」尚未保存。切换 Space 会丢失这些更改。"
-            )
+            Text(domainLeaveAlertMessage)
         }
+    }
+
+    private var domainLeaveAlertMessage: String {
+        let zh = KenosOfflineShellPolicy.prefersChinese
+        if model.domainLeaveSummary.isEmpty {
+            return zh
+                ? "切换 Space 会丢失当前编辑。"
+                : "Switching Spaces will discard your current edits."
+        }
+        return zh
+            ? "「\(model.domainLeaveSummary)」尚未保存。切换 Space 会丢失这些更改。"
+            : "\"\(model.domainLeaveSummary)\" is not saved yet. Switching Spaces will discard these changes."
     }
 
     private var domainProbeContext: KenosOfflineShellPolicy.ProbeContext {
@@ -278,6 +292,11 @@ struct KenosDomainModeShell: View {
                         }
                     },
                     onProgress: { loadProgress = $0 },
+                    onLoadFailed: { detail in
+                        // Retries exhausted — surface the banner even when the health probe passed.
+                        domainProbeError = detail
+                        if !domainHardUnreachable { domainSyncPaused = true }
+                    },
                     // Keep status top pad while editing; only Focus/Summary go fully immersive.
                     chrome: isWebFocusSurface ? .none : .domainDock,
                     accessoryBottomPadPx: model.liveAccessoryWebBottomExtraPx,
@@ -288,7 +307,10 @@ struct KenosDomainModeShell: View {
 
             if domainHardUnreachable {
                 ContentUnavailableView {
-                    Label("\(model.domainDisplayTitle) unreachable", systemImage: "wifi.exclamationmark")
+                    Label(
+                        KenosOfflineShellPolicy.unreachableTitle(model.domainDisplayTitle),
+                        systemImage: "wifi.exclamationmark"
+                    )
                 } description: {
                     VStack(spacing: 8) {
                         Text(
@@ -297,16 +319,16 @@ struct KenosDomainModeShell: View {
                             )
                         )
                         if let domainProbeError, !domainProbeError.isEmpty {
-                            Text(domainProbeError).font(.caption2)
+                            Text(domainProbeError).font(.caption).foregroundStyle(.secondary)
                         }
                     }
                 } actions: {
                     if showsDomainUseProduction {
-                        Button("Use Production", action: activateProductionFromDomain)
+                        Button(KenosOfflineShellPolicy.useProductionLabel, action: activateProductionFromDomain)
                             .accessibilityIdentifier("kenos.domain.useProduction")
                     }
-                    Button("Retry", action: retryDomainOrigin)
-                    Button("Back to Kenos") {
+                    Button(KenosOfflineShellPolicy.retryLabel, action: retryDomainOrigin)
+                    Button(KenosOfflineShellPolicy.backToKenosLabel) {
                         model.dismissContinuity()
                     }
                 }

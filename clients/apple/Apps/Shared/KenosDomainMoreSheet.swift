@@ -31,8 +31,11 @@ struct KenosDomainMoreSheet: View {
                     Button(doneTitle) { dismiss() }
                 }
             }
-            .alert("需要 HomeScan", isPresented: $homeScanMissingAlert) {
-                Button("知道了", role: .cancel) {}
+            .alert(
+                prefersChinese ? "需要 HomeScan" : "HomeScan required",
+                isPresented: $homeScanMissingAlert
+            ) {
+                Button(prefersChinese ? "知道了" : "OK", role: .cancel) {}
             } message: {
                 Text(missingCompanionMessage)
             }
@@ -42,7 +45,9 @@ struct KenosDomainMoreSheet: View {
     }
 
     private var missingCompanionMessage: String {
-        "「\(homeScanMissingTitle)」在独立的 HomeScan 伴侣应用里（RoomPlan / AR）。请先安装 HomeScan，或在 Settings → Cloud scans 从网页拉取已有扫描。"
+        prefersChinese
+            ? "「\(homeScanMissingTitle)」在独立的 HomeScan 伴侣应用里（RoomPlan / AR）。请先安装 HomeScan，或在设置 → 云端扫描 从网页拉取已有扫描。"
+            : "\"\(homeScanMissingTitle)\" lives in the separate HomeScan companion app (RoomPlan / AR). Install HomeScan first, or pull existing scans from the web in Settings → Cloud scans."
     }
 
     @ViewBuilder

@@ -1,4 +1,5 @@
 import SwiftUI
+import KenosDesign
 
 /// Native shell lock screen — shown until Face ID / Touch ID grants `kenos.unlock.shell`.
 struct KenosShellUnlockGate: View {
@@ -20,10 +21,11 @@ struct KenosShellUnlockGate: View {
                 .accessibilityHidden(true)
             Text(isZh ? "解锁 Kenos" : "Unlock Kenos")
                 .font(.title2.weight(.semibold))
+                .accessibilityAddTraits(.isHeader)
             Text(
                 isZh
-                    ? "使用面容 ID 或设备密码解锁此设备上的 Life OS 数据。"
-                    : "Face ID or device passcode unlocks this device for your Life OS data."
+                    ? "使用面容 ID 或设备密码解锁此设备上的 Kenos 数据。"
+                    : "Face ID or device passcode unlocks this device for your Kenos data."
             )
             .font(.subheadline)
             .foregroundStyle(.secondary)
@@ -32,9 +34,10 @@ struct KenosShellUnlockGate: View {
             if let err = model.shellUnlockError, !err.isEmpty {
                 Text(err)
                     .font(.footnote)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(KenosColorToken.danger)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
+                    .accessibilityIdentifier("kenos.shellUnlock.error")
             }
             Button {
                 Task { @MainActor in
@@ -57,6 +60,13 @@ struct KenosShellUnlockGate: View {
         .background(model.chromeAppearance.canvasColor.ignoresSafeArea())
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("kenos.shellUnlock.gate")
+        // VoiceOver users get no visual cue when unlock fails — announce it.
+        .onChange(of: model.shellUnlockError) { _, newValue in
+            guard let newValue, !newValue.isEmpty else { return }
+            #if os(iOS)
+            UIAccessibility.post(notification: .announcement, argument: newValue)
+            #endif
+        }
         // Auto Face ID only while foreground-active; one shot per lock episode.
         #if os(iOS)
         .task(id: scenePhase) {

@@ -64,32 +64,64 @@ enum KenosOfflineShellPolicy {
         probeFailed && !shouldUseHardUnavailableGate(context)
     }
 
+    /// Offline copy follows the in-app language like the rest of the shell chrome.
+    static var prefersChinese: Bool {
+        KenosShellSettingsStore.current.resolvedLocale() == "zh"
+    }
+
     static func shellUnreachableDetail(isLanDependent: Bool) -> String {
+        let zh = prefersChinese
         if isLanDependent {
-            return "Life OS origin unreachable. Retry, or switch to Production."
+            return zh
+                ? "连不上本机测试版服务。可以重试，或切换到云端版本。"
+                : "The Daily Beta origin is unreachable. Retry, or switch to the cloud version."
         }
-        return "Check your network, then Retry."
+        return zh ? "请检查网络后重试。" : "Check your network, then retry."
     }
 
     static func domainUnreachableDetail(isLanDependent: Bool) -> String {
+        let zh = prefersChinese
         if isLanDependent {
-            return "This Space origin is unreachable. Retry, or use Production."
+            return zh
+                ? "连不上这个空间的本机服务。可以重试，或切换到云端版本。"
+                : "This Space's origin is unreachable. Retry, or switch to the cloud version."
         }
-        return "This Space did not respond. Check network, then Retry."
+        return zh
+            ? "这个空间暂时没有响应。请检查网络后重试。"
+            : "This Space did not respond. Check your network, then retry."
     }
 
     static func hardGateShellDetail(isLanDependent: Bool) -> String {
+        let zh = prefersChinese
         if isLanDependent {
-            return "Life OS shell is offline. Use Production (cellular) or reconnect Daily Beta."
+            return zh
+                ? "本机测试版服务离线。可切换到云端版本，或重新连接 Daily Beta。"
+                : "The Daily Beta shell is offline. Switch to the cloud version, or reconnect Daily Beta."
         }
-        return "Kenos shell origin did not respond. Check network, then Retry."
+        return zh
+            ? "Kenos 暂时无法连接。请检查网络后重试。"
+            : "Kenos did not respond. Check your network, then retry."
     }
 
     static func hardGateDomainDetail(isLanDependent: Bool) -> String {
+        let zh = prefersChinese
         if isLanDependent {
-            return "This Space is offline. Use Production (cellular) or reconnect Daily Beta."
+            return zh
+                ? "这个空间的本机服务离线。可切换到云端版本，或重新连接 Daily Beta。"
+                : "This Space is offline. Switch to the cloud version, or reconnect Daily Beta."
         }
-        return "This Space origin did not respond. Check network, then Retry."
+        return zh
+            ? "这个空间暂时无法连接。请检查网络后重试。"
+            : "This Space did not respond. Check your network, then retry."
+    }
+
+    /// Shared UI strings for gates/banners (localized once, used by shell + domain surfaces).
+    static var retryLabel: String { prefersChinese ? "重试" : "Retry" }
+    static var useProductionLabel: String { prefersChinese ? "切换到云端" : "Use cloud version" }
+    static var syncPausedTitle: String { prefersChinese ? "同步已暂停" : "Sync paused" }
+    static var backToKenosLabel: String { prefersChinese ? "返回 Kenos" : "Back to Kenos" }
+    static func unreachableTitle(_ name: String) -> String {
+        prefersChinese ? "无法连接“\(name)”" : "\(name) unreachable"
     }
 }
 
@@ -108,7 +140,7 @@ struct KenosShellSyncStatusBanner: View {
                 HStack(spacing: 8) {
                     Image(systemName: "wifi.exclamationmark")
                         .font(.subheadline.weight(.semibold))
-                    Text("Sync paused")
+                    Text(KenosOfflineShellPolicy.syncPausedTitle)
                         .font(.subheadline.weight(.semibold))
                 }
                 Text(message)
@@ -116,16 +148,16 @@ struct KenosShellSyncStatusBanner: View {
                     .foregroundStyle(.secondary)
                 if let errorDetail, !errorDetail.isEmpty {
                     Text(errorDetail)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
                 HStack(spacing: 12) {
                     if showsUseProduction {
-                        Button("Use Production", action: onUseProduction)
+                        Button(KenosOfflineShellPolicy.useProductionLabel, action: onUseProduction)
                             .font(.caption.weight(.semibold))
                             .accessibilityIdentifier(useProductionIdentifier)
                     }
-                    Button("Retry", action: onRetry)
+                    Button(KenosOfflineShellPolicy.retryLabel, action: onRetry)
                         .font(.caption.weight(.semibold))
                 }
                 .padding(.top, 2)

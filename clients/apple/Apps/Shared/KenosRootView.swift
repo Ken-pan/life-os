@@ -889,6 +889,17 @@ struct FocusSessionView: View {
                 Text("Capture stays available from the system menu / toolbar.")
                     .font(KenosTypography.caption)
                     .foregroundStyle(.secondary)
+            } else {
+                // Focus ended (or state lost) while this screen is up — give an exit, never a blank trap.
+                Text("No active focus")
+                    .font(KenosTypography.title)
+                Text("The focus session has ended or is unavailable.")
+                    .font(KenosTypography.body)
+                    .foregroundStyle(.secondary)
+                Button("Back to Kenos") { model.endFocus() }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("kenos.focus.exit")
+                Spacer()
             }
         }
         .padding(KenosSpacing.lg)
@@ -1053,7 +1064,7 @@ struct AssistantView: View {
                     draft = ""
                     Task { await model.sendAssistant(text) }
                 }
-                .disabled(model.streaming)
+                .disabled(model.streaming || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 .accessibilityIdentifier("kenos.assistant.send")
             }
             .padding(KenosSpacing.md)
@@ -1116,7 +1127,8 @@ struct SpacesHubView: View {
             case .work:
                 WorkHubView(model: model)
             default:
-                WorkHubView(model: model)
+                // Only Work has a native hub — other spaces open on their own surfaces.
+                SpaceUnavailableView(model: model, destination: destination)
             }
         }
         .toolbar {
@@ -1356,7 +1368,7 @@ struct SpaceSwitcherSheet: View {
             KenosRow(
                 title: item.descriptor.displayTitle,
                 subtitle: item.descriptor.displaySubtitle ?? item.descriptor.spaceId,
-                meta: item.descriptor.isExpired ? "expired → home" : "resume"
+                meta: item.descriptor.isExpired ? "Starts from home" : "Resume"
             )
         }
         .accessibilityIdentifier("kenos.continue.\(item.descriptor.spaceId)")
@@ -1387,6 +1399,8 @@ struct SpaceSwitcherSheet: View {
                 model.togglePinnedSpace(id: entry.id)
             } label: {
                 Image(systemName: model.pinnedSpaceIds.contains(entry.id) ? "star.fill" : "star")
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
             .accessibilityLabel(model.pinnedSpaceIds.contains(entry.id) ? "Unpin \(entry.title)" : "Pin \(entry.title)")
@@ -1634,7 +1648,7 @@ struct InboxView: View {
             List {
                 if let library = model.repository.snapshot.work?.library {
                     ForEach(Array(library.enumerated()), id: \.offset) { _, ref in
-                        KenosRow(title: ref.safeTitle ?? "Document", subtitle: ref.libraryRef.id.uuidString)
+                        KenosRow(title: ref.safeTitle ?? "Document", subtitle: ref.libraryRef.type)
                     }
                 }
             }
@@ -1651,7 +1665,9 @@ struct InboxView: View {
                         .foregroundStyle(.secondary)
                 }
                 Text("Sign-in uses the local secure store on this device.")
-                Text("Approvals actions: \(model.approvalsActionsEnabled ? "ON" : "OFF")")
+                Text(model.approvalsActionsEnabled
+                    ? "Approvals can be acted on from this device."
+                    : "Approvals are read-only on this device.")
                 Button("Sign out") {
                     Task { await model.logout() }
                 }
@@ -1681,18 +1697,11 @@ struct ApprovalsView: View {
                         subtitle: approvalHumanSubtitle(approval),
                         meta: approvalExpiryMeta(approval.expiresAt.rawValue)
                     )
-                    if model.approvalsActionsEnabled {
-                        HStack {
-                            Button("Approve") {}
-                            Button("Reject") {}
-                        }
-                        .accessibilityIdentifier("kenos.approvals.actions")
-                    } else {
-                        Text("Details · \(approvalHumanAction(approval.actionType))")
-                            .font(KenosTypography.caption)
-                            .foregroundStyle(.secondary)
-                            .accessibilityIdentifier("kenos.approvals.actions.disabled")
-                    }
+                    // Read-only until real approve/reject writes exist — never render no-op buttons.
+                    Text("Details · \(approvalHumanAction(approval.actionType))")
+                        .font(KenosTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("kenos.approvals.actions.disabled")
                 }
             }
         }
@@ -1754,14 +1763,45 @@ struct ActivityView: View {
             ForEach(model.repository.snapshot.activity) { item in
                 KenosRow(
                     title: item.safeSummary,
-                    subtitle: "\(item.result) · undo=\(item.undoAvailable ? "available" : "none")",
-                    meta: item.correlationId.uuidString
+                    subtitle: item.undoAvailable ? "\(item.result) · Undo available" : item.result,
+                    meta: nil
                 )
                 .accessibilityIdentifier("kenos.activity.item.\(item.id.uuidString)")
             }
         }
         .navigationTitle("Activity")
         .accessibilityIdentifier("kenos.activity")
+    }
+}
+
+/// Fallback for spaces without a native hub — points the user back instead of mislabeling everything as Work.
+struct SpaceUnavailableView: View {
+    @ObservedObject var model: KenosAppModel
+    let destination: KenosAppModel.SpacesDestination
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: KenosSpacing.lg) {
+            Text(title)
+                .font(KenosTypography.title)
+            Text("This space opens on its own surface. Pick it from the Spaces list to open it.")
+                .font(KenosTypography.body)
+                .foregroundStyle(.secondary)
+            Button("Back to Spaces") {
+                model.spacesDestination = nil
+                model.selectedTab = .spaces
+            }
+            .buttonStyle(.bordered)
+            Spacer()
+        }
+        .padding(KenosSpacing.lg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .navigationTitle(title)
+        .accessibilityIdentifier("kenos.spaces.unavailable.\(destination.rawValue)")
+    }
+
+    private var title: String {
+        KenosAppModel.spaceCatalog.first(where: { $0.id == destination.rawValue })?.title
+            ?? destination.rawValue.capitalized
     }
 }
 
@@ -1810,18 +1850,16 @@ struct WorkHubView: View {
                     ForEach(Array(library.enumerated()), id: \.offset) { _, ref in
                         KenosRow(
                             title: ref.safeTitle ?? "Library document",
-                            subtitle: ref.libraryRef.type,
-                            meta: ref.deepLink?.absoluteString
+                            subtitle: ref.libraryRef.type
                         )
                     }
                 }
             }
-            if case let .planTask(id) = model.route {
+            if case .planTask = model.route {
                 Section("Plan Task reference") {
                     KenosRow(
                         title: "Plan Task",
-                        subtitle: id.uuidString,
-                        meta: "Deep link only · Plan remains owner"
+                        subtitle: "Opens in Plan — Plan remains owner"
                     )
                 }
             }
@@ -2378,7 +2416,7 @@ private struct DailyBetaAdvancedDiagnosticsView: View {
             } header: {
                 Text("Push")
             } footer: {
-                Text("Local Plan/Training alerts work without APNs. Remote registration needs App ID Push + provisioning. Smoke with scripts/kenos-daily-beta/apns-smoke.sh.")
+                Text("Local Plan/Training alerts work without APNs. Remote push requires developer provisioning.")
                     .font(KenosTypography.caption)
             }
 

@@ -246,6 +246,12 @@
 
   onMount(() => {
     markIosNativeShellDom()
+    // Native shell Capture intent (kenos://compose) — expose a compose hook on every
+    // shell page so the deep link works outside Domain Mode too.
+    window.__KENOS_SHELL_COMPOSE__ = () => {
+      if (gated) return
+      captureOpen = true
+    }
     const cleanupShellSettings = bindKenosShellSettings({
       getTheme: () => S.settings.theme,
       setTheme: (theme) => {

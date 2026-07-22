@@ -76,12 +76,16 @@ enum KenosShellUnlock {
         #else
 
         let context = LAContext()
-        context.localizedCancelTitle = "Cancel"
+        context.localizedCancelTitle =
+            KenosShellSettingsStore.current.resolvedLocale() == "zh" ? "取消" : "Cancel"
         var laError: NSError?
         let canEvaluate = context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &laError)
 
         guard canEvaluate else {
-            let message = laError?.localizedDescription ?? "Biometrics unavailable"
+            // Stable key for the no-passcode dead end so the gate can show a recovery path.
+            let message: String = laError?.code == LAError.passcodeNotSet.rawValue
+                ? "Passcode not set"
+                : (laError?.localizedDescription ?? "Biometrics unavailable")
             KenosLog.notice(
                 "shell unlock unavailable",
                 category: .session,

@@ -201,6 +201,9 @@ struct KenosWebSurfaceView: UIViewRepresentable {
     var onURLChange: ((URL) -> Void)? = nil
     /// Safari-style estimatedProgress (0...1) for the hairline loader.
     var onProgress: ((Double) -> Void)? = nil
+    /// Fired when a page load fails and the limited retry budget is spent —
+    /// hosts surface a banner/retry instead of leaving a silent blank canvas.
+    var onLoadFailed: ((String) -> Void)? = nil
     /// Which floating chrome the page must clear with scroll padding.
     var chrome: KenosWebChrome = .kenosTabs
     /// Extra bottom pad for Live Accessory above the dock (0 when absent).
@@ -214,7 +217,8 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             stayInApp: stayInApp,
             onCanGoBackChange: onCanGoBackChange,
             onURLChange: onURLChange,
-            onProgress: onProgress
+            onProgress: onProgress,
+            onLoadFailed: onLoadFailed
         )
     }
 
@@ -637,6 +641,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         context.coordinator.onCanGoBackChange = onCanGoBackChange
         context.coordinator.onURLChange = onURLChange
         context.coordinator.onProgress = onProgress
+        context.coordinator.onLoadFailed = onLoadFailed
         context.coordinator.applyActivation(isActive, on: uiView)
         // Keep scroll padding in sync when Focus / Live Accessory chrome changes —
         // skip when pads unchanged (dock tab switches spam updateUIView).
@@ -766,6 +771,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         var onCanGoBackChange: ((Bool) -> Void)?
         var onURLChange: ((URL) -> Void)?
         var onProgress: ((Double) -> Void)?
+        var onLoadFailed: ((String) -> Void)?
         weak var webView: WKWebView?
         var loadedURL: URL?
         /// Last path loaded because native dock requested it (vs SPA self-nav).
@@ -807,13 +813,15 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             stayInApp: Bool,
             onCanGoBackChange: ((Bool) -> Void)?,
             onURLChange: ((URL) -> Void)?,
-            onProgress: ((Double) -> Void)?
+            onProgress: ((Double) -> Void)?,
+            onLoadFailed: ((String) -> Void)? = nil
         ) {
             self.onTitle = onTitle
             self.stayInApp = stayInApp
             self.onCanGoBackChange = onCanGoBackChange
             self.onURLChange = onURLChange
             self.onProgress = onProgress
+            self.onLoadFailed = onLoadFailed
             super.init()
             if stayInApp {
                 nowPlayingObserver = NotificationCenter.default.addObserver(
@@ -1315,7 +1323,12 @@ struct KenosWebSurfaceView: UIViewRepresentable {
 
         private func scheduleLimitedRetry(on webView: WKWebView, error: Error) {
             if isCancelledNavigation(error) { return }
-            guard loadRetryCount < Self.maxLoadRetries, let url = loadedURL else { return }
+            guard let url = loadedURL else { return }
+            guard loadRetryCount < Self.maxLoadRetries else {
+                // Retry budget spent — tell the host so the user gets a banner, not a blank canvas.
+                onLoadFailed?(error.localizedDescription)
+                return
+            }
             loadRetryCount += 1
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self, weak webView] in
                 guard let self, let webView else { return }
@@ -1487,8 +1500,25 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                 decisionHandler(.cancel)
                 return
             }
-            // Continuity cover (Plan/Training): keep http(s) in this WKWebView.
+            // Continuity cover (Plan/Training): keep http(s) in this WKWebView —
+            // except tapped external sites, which would trap the user in a chrome-less surface.
             if stayInApp {
+                if navigationAction.navigationType == .linkActivated,
+                   dest.scheme?.hasPrefix("http") == true
+                {
+                    let destHost = (dest.host ?? "").lowercased()
+                    let current = webView.url ?? loadedURL
+                    let currentHost = (current?.host ?? "").lowercased()
+                    let sameHost = !destHost.isEmpty && destHost == currentHost
+                    if !sameHost,
+                       !KenosDomainRegistry.isEmbeddedWebContinuityURL(dest),
+                       !KenosAppBoundDomains.isProductionHost(destHost)
+                    {
+                        UIApplication.shared.open(dest)
+                        decisionHandler(.cancel)
+                        return
+                    }
+                }
                 decisionHandler(.allow)
                 return
             }
@@ -1594,6 +1624,11 @@ struct KenosDailyBetaSurface: View {
                         hardUnreachable = false
                     },
                     onProgress: { loadProgress = $0 },
+                    onLoadFailed: { detail in
+                        // Retries exhausted — show the banner path instead of a silent blank canvas.
+                        loadError = detail
+                        if !hardUnreachable { syncPaused = true }
+                    },
                     chrome: chrome,
                     accessoryBottomPadPx: accessoryBottomPadPx,
                     isActive: isActive
@@ -1603,7 +1638,10 @@ struct KenosDailyBetaSurface: View {
 
             if hardUnreachable {
                 ContentUnavailableView {
-                    Label("Kenos unreachable", systemImage: "wifi.exclamationmark")
+                    Label(
+                        KenosOfflineShellPolicy.unreachableTitle("Kenos"),
+                        systemImage: "wifi.exclamationmark"
+                    )
                 } description: {
                     VStack(spacing: 8) {
                         Text(
@@ -1612,15 +1650,15 @@ struct KenosDailyBetaSurface: View {
                             )
                         )
                         if let loadError, !loadError.isEmpty {
-                            Text(loadError).font(.caption2)
+                            Text(loadError).font(.caption).foregroundStyle(.secondary)
                         }
                     }
                 } actions: {
                     if showsUseProductionAction {
-                        Button("Use Production", action: activateProductionFromShell)
+                        Button(KenosOfflineShellPolicy.useProductionLabel, action: activateProductionFromShell)
                             .accessibilityIdentifier("kenos.shell.useProduction")
                     }
-                    Button("Retry", action: retryShellOrigin)
+                    Button(KenosOfflineShellPolicy.retryLabel, action: retryShellOrigin)
                 }
             }
 

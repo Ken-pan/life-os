@@ -258,7 +258,8 @@ struct KenosGlobalDock: View {
     private var destinationCapsule: some View {
         let count = max(capsuleItems.count, 1)
         return HStack(spacing: 0) {
-            ForEach(Array(capsuleItems.enumerated()), id: \.offset) { index, item in
+            // Stable identity across Kenos ↔ Domain mode switches — offsets reuse views and glitch selection transitions.
+            ForEach(Array(capsuleItems.enumerated()), id: \.element.title) { index, item in
                 capsuleButton(index: index, item: item)
             }
         }
@@ -294,7 +295,7 @@ struct KenosGlobalDock: View {
         .frame(height: Metrics.hitSize + Metrics.capsulePad * 2)
         .kenosLiquidGlass(in: Capsule(style: .continuous), interactive: true, prominent: true)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Destinations")
+        .accessibilityLabel(prefersChinese ? "主导航" : "Destinations")
     }
 
     @ViewBuilder
@@ -341,8 +342,8 @@ struct KenosGlobalDock: View {
         .animation(selectionAnimation, value: showLabel)
         .accessibilityIdentifier("kenos.dock.capsule.\(index)")
         .accessibilityLabel(title)
+        // No custom hint — .isSelected + the system's activate hint already say it, localized.
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
-        .accessibilityHint(selected ? "Selected" : "Double tap to open \(title)")
     }
 
     private func localizedDockTitle(_ title: String) -> String {
