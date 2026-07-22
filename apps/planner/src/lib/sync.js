@@ -327,17 +327,36 @@ export function initAutoSync({ isSignedIn }) {
 
   const offMutation = onStateMutation(handleLocalMutation);
 
+  // F5-05.3: drain durable pending intents whenever the app has a live window to
+  // send them — not only on an offline→online transition. A relaunch while
+  // already online (or a mobile foreground) previously left queued writes stalled.
+  const flushPlanIntentQueue = () => {
+    if (!signedInCheck() || isOffline()) return;
+    void import('./kenos/planOfflineIntentQueue.host.js')
+      .then((mod) => mod.flushOfflinePlanIntentQueue?.())
+      .then((res) => {
+        // Surface non-silent failures: dead-letter / rejected work needs attention.
+        if (res && (res.deadLettered > 0 || res.rejected > 0)) {
+          syncState.message = '有待同步操作未成功，请在计划里查看并重试。';
+        }
+      })
+      .catch(() => {})
+  };
+
   const onOnline = () => {
     if (!signedInCheck()) return;
     if (syncState.phase === 'offline') syncState.phase = 'idle';
     // Track C / Phase 3: flush Kenos offline Plan intents (create + mutations; flag-gated).
-    void import('./kenos/planOfflineIntentQueue.host.js')
-      .then((mod) => mod.flushOfflinePlanIntentQueue?.())
-      .catch(() => {})
+    flushPlanIntentQueue();
     // 恢复在线：无论有无待传改动都做一次双向同步，顺带拉取云端新数据
     scheduleBidirectionalSync();
   };
   window.addEventListener('online', onOnline);
+
+  // Startup drain: on relaunch while already online, `online` never fires.
+  if (signedInCheck() && !isOffline()) {
+    setTimeout(flushPlanIntentQueue, 0);
+  }
 
   const onOffline = () => {
     if (syncState.pendingChanges) markOffline();
@@ -345,22 +364,26 @@ export function initAutoSync({ isSignedIn }) {
   window.addEventListener('offline', onOffline);
 
   // 切后台（移动端切 app / 关标签前）：立即冲刷待传改动，不等 debounce
-  const onVisibilityHidden = () => {
-    if (document.visibilityState !== 'hidden') return;
-    if (!syncState.pendingChanges || !signedInCheck() || isOffline()) return;
-    if (autoSyncTimer) {
-      clearTimeout(autoSyncTimer);
-      autoSyncTimer = null;
+  // 回前台（app resume）：冲刷 durable 意图队列(可能在后台入队但未发出)。
+  const onVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') {
+      if (!syncState.pendingChanges || !signedInCheck() || isOffline()) return;
+      if (autoSyncTimer) {
+        clearTimeout(autoSyncTimer);
+        autoSyncTimer = null;
+      }
+      runAutoSync();
+    } else if (document.visibilityState === 'visible') {
+      flushPlanIntentQueue();
     }
-    runAutoSync();
   };
-  document.addEventListener('visibilitychange', onVisibilityHidden);
+  document.addEventListener('visibilitychange', onVisibilityChange);
 
   return () => {
     offMutation();
     window.removeEventListener('online', onOnline);
     window.removeEventListener('offline', onOffline);
-    document.removeEventListener('visibilitychange', onVisibilityHidden);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
     if (autoSyncTimer) {
       clearTimeout(autoSyncTimer);
       autoSyncTimer = null;

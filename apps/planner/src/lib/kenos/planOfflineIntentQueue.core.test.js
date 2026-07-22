@@ -175,3 +175,32 @@ describe('planOfflineIntentQueue.core', () => {
     expect(remapOfflineIntentTaskIds(null, new Map())).toBe(null)
   })
 })
+
+describe('idempotency-key payload mismatch guard (F5-05.4)', () => {
+  it('same key + same payload → idempotent no-op; different payload → throws', async () => {
+    const { createEmptyOfflineQueueState, enqueueOfflineIntent } = await import(
+      './planOfflineIntentQueue.core.js'
+    )
+    let state = createEmptyOfflineQueueState({ userId: 'u1' })
+    const mk = (title) => ({
+      id: crypto.randomUUID(),
+      actionType: 'plan.create_task',
+      idempotencyKey: 'k1',
+      correlationId: crypto.randomUUID(),
+      actionRequest: { payload: { title } },
+      enqueuedAt: 1,
+    })
+    state = enqueueOfflineIntent(state, mk('buy milk')).state
+    // same key, same payload → duplicate, no throw
+    const again = enqueueOfflineIntent(state, mk('buy milk'))
+    if (!again.duplicate) throw new Error('expected duplicate for same payload')
+    // same key, DIFFERENT payload → throws
+    let threw = false
+    try {
+      enqueueOfflineIntent(state, mk('buy eggs'))
+    } catch (e) {
+      threw = /payload_mismatch/.test(String(e.message))
+    }
+    if (!threw) throw new Error('expected idempotency_key_payload_mismatch')
+  })
+})

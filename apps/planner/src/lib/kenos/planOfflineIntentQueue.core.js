@@ -47,6 +47,29 @@ export function bindOfflineQueueToUser(state, nextUserId) {
  * @param {object} state
  * @param {{ id: string, actionType: string, idempotencyKey: string, correlationId: string, actionRequest: object, enqueuedAt: number }} intent
  */
+/**
+ * Stable, order-independent fingerprint of the mutation payload — used to detect
+ * an idempotency-key reused with a DIFFERENT payload (F5-05.4: must not silently
+ * accept changed data under the same key).
+ * @param {object | undefined} actionRequest
+ */
+export function offlineIntentPayloadFingerprint(actionRequest) {
+  const payload = actionRequest?.payload ?? {}
+  const stable = (v) => {
+    if (Array.isArray(v)) return v.map(stable)
+    if (v && typeof v === 'object') {
+      return Object.keys(v)
+        .sort()
+        .reduce((acc, k) => {
+          acc[k] = stable(v[k])
+          return acc
+        }, {})
+    }
+    return v
+  }
+  return JSON.stringify(stable(payload))
+}
+
 export function enqueueOfflineIntent(state, intent) {
   if (!intent?.id || !intent?.idempotencyKey || !intent?.actionType) {
     throw new Error('offline intent requires id, actionType, idempotencyKey')
@@ -56,6 +79,14 @@ export function enqueueOfflineIntent(state, intent) {
     (i) => i.actionType === intent.actionType && i.idempotencyKey === intent.idempotencyKey,
   )
   if (dup) {
+    // Same key, same payload → idempotent re-enqueue (safe no-op).
+    // Same key, DIFFERENT payload → a client bug that would otherwise silently
+    // drop the new data server-side. Fail loudly instead.
+    const dupFp = offlineIntentPayloadFingerprint(dup.actionRequest)
+    const newFp = offlineIntentPayloadFingerprint(intent.actionRequest)
+    if (dupFp !== newFp) {
+      throw new Error('idempotency_key_payload_mismatch')
+    }
     return { state, duplicate: true, intent: dup }
   }
   intents.push({
