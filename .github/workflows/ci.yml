@@ -26,6 +26,28 @@ jobs:
       - run: npm run validate:tokens
       - run: npm run build
 
+  # Domain / Kenos unit tests — Action Registry, approval-bypass guardrail,
+  # outbox consumer idempotency, MCP handlers, fitness pure-function suites.
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Contracts (Action Registry)
+        run: npm test --workspace @life-os/contracts
+      - name: MCP handler suites
+        run: npm run test:mcp
+      - name: AIOS unit tests (action pipeline / approval bypass / spine)
+        run: npm test --workspace aios-os
+      - name: Planner server tests (outbox worker core)
+        run: npm test --workspace planner-os
+      - name: Fitness unit tests
+        run: npm run test:unit --workspace fitness-os
+
   design-catalog:
     runs-on: ubuntu-24.04
     container:

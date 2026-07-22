@@ -5,23 +5,24 @@ test.describe('首页与导航', () => {
   test('今日推荐与底部导航', async ({ page }) => {
     await seed(page);
     await page.goto('/');
-    await expect(page.locator('.hero-title')).toContainText('胸');
+    // 2026-07 首页改版:hero 标题变为 main 内 h1,「发现」入口更名「资料」
+    await expect(page.locator('main h1').first()).toContainText('胸');
     await expect(page.locator('.btn-start')).toBeVisible();
 
     await page.getByRole('link', { name: '计划', exact: true }).filter({ visible: true }).click();
     await expect(page).toHaveURL('/program');
     await expect(page.locator('.prog-list').first()).toBeVisible();
 
-    await page.getByRole('link', { name: '发现', exact: true }).filter({ visible: true }).click();
+    await page.getByRole('link', { name: '资料', exact: true }).filter({ visible: true }).click();
     await expect(page).toHaveURL('/discover');
-    await expect(page.locator('.discover-grid')).toBeVisible();
+    await expect(page.locator('.discover-grid').first()).toBeVisible();
 
     await page.getByRole('link', { name: '设置', exact: true }).filter({ visible: true }).click();
     await expect(page).toHaveURL('/settings');
     await expect(page.locator('.sg-title', { hasText: '账号与云同步' })).toBeVisible();
 
     await page.getByRole('link', { name: '今日', exact: true }).filter({ visible: true }).click();
-    await expect(page.locator('.hero-title')).toContainText('胸');
+    await expect(page.locator('main h1').first()).toContainText('胸');
   });
 
   test('今日进度与减载提醒', async ({ page }) => {

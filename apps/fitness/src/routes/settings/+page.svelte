@@ -40,6 +40,8 @@
   import SettingsSyncBlock from '@life-os/platform-web/svelte/settings/sync-block'
   import SettingsRow from '@life-os/platform-web/svelte/settings/row'
   import SettingsSegment from '@life-os/platform-web/svelte/settings/segment'
+  import SettingsToggleRow from '@life-os/platform-web/svelte/settings/toggle-row'
+  import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group'
   import SettingsToggle from '@life-os/platform-web/svelte/settings/toggle'
   import SettingsStackBlock from '@life-os/platform-web/svelte/settings/stack-block'
   import { scrollToSettingsHash } from '@life-os/platform-web/settings-hash'
