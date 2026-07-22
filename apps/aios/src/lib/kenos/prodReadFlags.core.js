@@ -103,6 +103,17 @@ export function isProdTodayKenosOverlayEnabled(env = import.meta.env) {
 }
 
 /**
+ * Canonical Plan Activity read (`kenos_list_plan_activity`) merged into the
+ * Activity feed. Read projection only — Activity append stays in Plan RPCs.
+ * Default Off.
+ * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
+ */
+export function isProdPlanActivityReadEnabled(env = import.meta.env) {
+  if (isProdReadCanaryMode(env)) return env?.VITE_KENOS_PROD_READ_PLAN_ACTIVITY !== '0'
+  return env?.VITE_KENOS_PROD_READ_PLAN_ACTIVITY === '1'
+}
+
+/**
  * Shadow comparison against independent legacy fixtures/sources.
  * Default On in non-production builds; Off unless explicitly enabled in prod hosts.
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
@@ -127,6 +138,7 @@ export function prodReadFlagSnapshot(env = import.meta.env) {
     music: isProdMusicReadEnabled(env),
     home: isProdHomeReadEnabled(env),
     todayOverlay: isProdTodayKenosOverlayEnabled(env),
+    planActivity: isProdPlanActivityReadEnabled(env),
     shadow: isProdShadowCompareEnabled(env),
     planCommandWrite: false,
     approvalDecisionWrite: false,

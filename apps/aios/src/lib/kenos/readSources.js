@@ -1,6 +1,11 @@
 import { isCloudAuthorized } from '$lib/cloud.svelte.js'
 import { lifeOsReadClient } from '$lib/lifeos.js'
 import { readCanonicalApprovalSource } from './approvalReadSource.core.js'
+import {
+  isProdPlanActivityReadEnabled,
+  mergeActivityRecords,
+  readPlanActivitySource,
+} from './planActivityReadSource.core.js'
 import { readCanonicalFocusSource } from './focusReadSource.core.js'
 import { readCanonicalWorkSource } from './workReadSource.core.js'
 import {
@@ -194,13 +199,32 @@ export async function readActivitySource({ client = lifeOsReadClient() } = {}) {
   if (!isCloudAuthorized()) return result('items', [], unavailableWithoutAuth(SOURCE.activity))
   if (!online()) return result('items', [], unavailableWithoutAuth(SOURCE.activity))
   try {
-    const { data, error } = await client
-      .from('life_events')
-      .select('id,type,payload,status,created_at,updated_at')
-      .order('created_at', { ascending: false })
-      .limit(200)
+    const kenosEnabled = isProdPlanActivityReadEnabled()
+    const [{ data, error }, kenosRead] = await Promise.all([
+      client
+        .from('life_events')
+        .select('id,type,payload,status,created_at,updated_at')
+        .order('created_at', { ascending: false })
+        .limit(200),
+      kenosEnabled
+        ? readPlanActivitySource({ client, authorized: true, online: online() })
+        : Promise.resolve(null),
+    ])
     if (error) throw error
-    const projected = projectActivityEvents(data ?? [])
+    const legacy = projectActivityEvents(data ?? [])
+    // Canonical Plan activity merge is additive and fail-open: a Kenos read
+    // error keeps the legacy feed intact (its state stays visible via counts).
+    const projected = kenosRead?.items?.length
+      ? (() => {
+          const merged = mergeActivityRecords(legacy.records, kenosRead.items)
+          return {
+            records: merged.records,
+            malformedCount: legacy.malformedCount + (kenosRead.malformedCount ?? 0),
+            duplicateCount: legacy.duplicateCount + merged.duplicateCount,
+            truncatedCount: legacy.truncatedCount + merged.truncatedCount,
+          }
+        })()
+      : legacy
     const status = projected.records.length
       ? projected.malformedCount || projected.truncatedCount
         ? 'partial'

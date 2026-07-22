@@ -206,11 +206,19 @@ cmd_build() {
   (
     cd "$ROOT"
     echo "  building aios-os (local daily beta origins)…"
+    # Owner cohort: Capture ingest/convert writers + Kenos plan activity read for the
+    # Capture→Plan→Today→Complete→Activity core loop (P5). Same hosted RPCs as prod canary.
+    OWNER_EMAIL="${KENOS_DAILY_BETA_OWNER_EMAIL:-334452284ken@gmail.com}"
     VITE_KENOS_LOCAL_DAILY_BETA=1 VITE_AIOS_CLOUD=0 \
+      VITE_KENOS_PROD_WRITES=1 \
+      VITE_KENOS_CAPTURE_INGEST_WRITER=1 \
+      VITE_KENOS_CAPTURE_WRITER_OWNER_EMAILS="$OWNER_EMAIL" \
+      VITE_KENOS_CAPTURE_CONVERT_WRITER=1 \
+      VITE_KENOS_CAPTURE_CONVERT_WRITER_OWNER_EMAILS="$OWNER_EMAIL" \
+      VITE_KENOS_PROD_READ_PLAN_ACTIVITY=1 \
       npm run build -w aios-os
     echo "  building planner-os (Owner-limited writers + offline queue for Daily Beta)…"
     # Owner cohort: hosted create/lifecycle/title writers + offline intent queue for dogfood.
-    OWNER_EMAIL="${KENOS_DAILY_BETA_OWNER_EMAIL:-334452284ken@gmail.com}"
     VITE_KENOS_CONTINUE_ORIGIN="$AIOS_URL" \
       VITE_KENOS_PROD_WRITES=1 \
       VITE_KENOS_PLAN_CREATE_TASK_WRITER=1 \
