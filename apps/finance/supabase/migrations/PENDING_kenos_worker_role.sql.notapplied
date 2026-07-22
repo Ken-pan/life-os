@@ -1,0 +1,62 @@
+-- Least-privilege worker role for the Kenos outbox worker (G5). PREPARED — NOT APPLIED.
+-- Filename ends `.notapplied` so `supabase db push` ignores it. Apply ONLY under an
+-- Owner authorization (npm run prod:authorize -- --operation apply_migration).
+--
+-- Goal: the worker stops using the full `service_role` key. Instead it presents a
+-- PostgREST JWT with `role: 'kenos_worker'`. That role can ONLY execute the four
+-- worker RPCs (all SECURITY DEFINER, so they run as their postgres owner and reach
+-- private.kenos_transition_plan_outbox internally). The role itself gets no table
+-- grants, no other function grants, no schema-modification rights, cannot switch
+-- to other users, and cannot read unrelated private tables.
+
+set lock_timeout = '5s';
+set statement_timeout = '30s';
+
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'kenos_worker') then
+    -- NOLOGIN: reachable only via PostgREST role-switch from `authenticator`,
+    -- never as a direct database login.
+    create role kenos_worker nologin noinherit nobypassrls;
+  end if;
+end;
+$$;
+
+-- Allow PostgREST's authenticator to assume this role (Supabase pattern).
+grant kenos_worker to authenticator;
+
+-- Minimal surface: USAGE on public + EXECUTE on exactly the four worker RPCs.
+grant usage on schema public to kenos_worker;
+
+revoke all on function public.kenos_outbox_worker_claim(timestamptz, integer, integer) from kenos_worker;
+revoke all on function public.kenos_outbox_worker_deliver(uuid, text, jsonb) from kenos_worker;
+revoke all on function public.kenos_outbox_worker_fail(uuid, text, text, timestamptz) from kenos_worker;
+revoke all on function public.kenos_outbox_worker_metrics(timestamptz) from kenos_worker;
+grant execute on function public.kenos_outbox_worker_claim(timestamptz, integer, integer) to kenos_worker;
+grant execute on function public.kenos_outbox_worker_deliver(uuid, text, jsonb) to kenos_worker;
+grant execute on function public.kenos_outbox_worker_fail(uuid, text, text, timestamptz) to kenos_worker;
+grant execute on function public.kenos_outbox_worker_metrics(timestamptz) to kenos_worker;
+-- NOTE: kenos_outbox_worker_requeue is intentionally NOT granted — requeue is an
+-- operator action, not a worker action.
+
+-- Belt-and-suspenders: ensure the role has NOTHING else.
+revoke all on all tables in schema public from kenos_worker;
+revoke all on all sequences in schema public from kenos_worker;
+revoke all on schema private from kenos_worker;
+revoke all on all tables in schema private from kenos_worker;
+revoke create on schema public from kenos_worker;
+
+-- Default privileges must not silently grant future objects to the worker.
+alter default privileges in schema public revoke all on tables from kenos_worker;
+alter default privileges in schema public revoke all on functions from kenos_worker;
+
+-- Verification (run after apply):
+--   select has_function_privilege('kenos_worker','public.kenos_outbox_worker_deliver(uuid,text,jsonb)','execute'); -- t
+--   select has_table_privilege('kenos_worker','public.planner_tasks','insert');   -- f
+--   select has_function_privilege('kenos_worker','public.kenos_create_plan_task_action(jsonb)','execute'); -- f
+--   select has_function_privilege('kenos_worker','public.kenos_outbox_worker_requeue(uuid)','execute'); -- f
+--
+-- Mint the worker JWT (Owner, once; store ONLY the JWT in ~/.kenos/outbox-worker.env):
+--   a JWT signed with the project JWT secret, claims { "role": "kenos_worker",
+--   "iss": "kenos-outbox-worker", "exp": <e.g. now + 90d> }. Rotate on schedule.
+-- Then set KENOS_WORKER_JWT in the env file and remove SUPABASE_SERVICE_ROLE_KEY.

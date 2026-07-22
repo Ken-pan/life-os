@@ -65,6 +65,47 @@ export function nextAttemptAtIso(attempts, nowMs = Date.now()) {
   return new Date(nowMs + retryDelayMs(Math.max(attempts, 1))).toISOString()
 }
 
+/**
+ * Least-privilege credential contract (G5). The worker prefers a scoped
+ * `kenos_worker` JWT (KENOS_WORKER_JWT) over the full service_role key, and
+ * refuses to start when the credential source is unsafe. Pure/deterministic:
+ * takes the environment + the credential file's stat mode explicitly.
+ *
+ * @param {object} p
+ * @param {Record<string,string|undefined>} p.env
+ * @param {string[]} p.argv           process.argv (to reject secrets in argv)
+ * @param {number|null} p.envFileMode fs.stat().mode of the credential file, or null if none
+ * @returns {{ ok: true, credential: 'worker_jwt'|'service_role', warnings: string[] }
+ *          | { ok: false, reason: string }}
+ */
+export function resolveCredentialContract({ env = {}, argv = [], envFileMode = null }) {
+  // 1. never accept a secret passed on the command line (visible in `ps`)
+  const argvSecret = argv.some((a) =>
+    /^--?(key|token|jwt|service[-_]?role|secret)=/i.test(String(a)) ||
+    /^eyJ[A-Za-z0-9._-]{20,}$/.test(String(a)))
+  if (argvSecret) return { ok: false, reason: 'secret_in_argv' }
+
+  // 2. if a credential file is used, it must not be group/world accessible
+  if (envFileMode != null && (envFileMode & 0o077) !== 0) {
+    return { ok: false, reason: 'credential_file_permissions_unsafe' }
+  }
+
+  const warnings = []
+  const workerJwt = env.KENOS_WORKER_JWT
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY
+
+  // 3. prefer the least-privilege worker JWT
+  if (workerJwt) {
+    if (!/^eyJ[A-Za-z0-9._-]{20,}$/.test(workerJwt)) return { ok: false, reason: 'malformed_worker_jwt' }
+    return { ok: true, credential: 'worker_jwt', warnings }
+  }
+  if (serviceKey) {
+    warnings.push('using full service_role key — migrate to KENOS_WORKER_JWT (least privilege, see PENDING_kenos_worker_role.sql.notapplied)')
+    return { ok: true, credential: 'service_role', warnings }
+  }
+  return { ok: false, reason: 'no_credential' }
+}
+
 /** Compact one poll cycle's outcomes for the structured log line. */
 export function summarizeCycle(outcomes) {
   const summary = { claimed: outcomes.length, delivered: 0, duplicates: 0, retried: 0, deadLettered: 0, skipped: 0 }

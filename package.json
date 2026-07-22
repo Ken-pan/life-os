@@ -83,7 +83,10 @@
     "kenos:ios-stability": "node scripts/kenos-ios-stability/run-closure.mjs",
     "kenos:ios-stability:hostname": "node scripts/kenos-ios-stability/hostname-regression.mjs",
     "kenos:ios-dogfood-check": "node scripts/kenos-ios-stability/dogfood-check.mjs",
-    "app:knowledge": "bash scripts/knowledge/build-app.sh"
+    "app:knowledge": "bash scripts/knowledge/build-app.sh",
+    "prod:authorize": "node scripts/prod-authorize.mjs",
+    "check:migration-drift": "node scripts/check-migration-drift.mjs",
+    "test:governance": "node scripts/check-migration-drift.test.mjs && node scripts/lib/prodAuthorization.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

@@ -1,0 +1,167 @@
+-- Kenos OWNER-ONLY production writer canary (G3). PREPARED — NOT APPLIED.
+-- Filename intentionally ends `.notapplied` so `supabase db push` will NOT pick
+-- it up. Rename to a real `<timestamp>_kenos_owner_canary.sql` and apply ONLY
+-- under an Owner authorization (npm run prod:authorize -- --operation apply_migration).
+--
+-- Server-enforced, default-DENY gate consulted at the entry of every governed
+-- writer RPC. The client VITE flag becomes advisory; THIS is the boundary.
+--
+-- Guarantees:
+--   * authenticated user required (auth.uid() not null)
+--   * exact owner allowlist (owner_id must equal auth.uid())
+--   * exact action allowlist (allowed_action_types)
+--   * exact RPC allowlist (allowed_rpcs)
+--   * production environment assertion (environment='production' row must exist)
+--   * start + expiration window
+--   * emergency disable (single UPDATE)
+--   * audit record per decision
+--   * a hard denylist that rejects prohibited classes even if mis-allowlisted
+--   * deny by default (no active row → reject)
+
+set lock_timeout = '5s';
+set statement_timeout = '30s';
+
+create table if not exists public.kenos_owner_canary (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users (id) on delete cascade,
+  environment text not null check (environment = 'production'),
+  allowed_action_types text[] not null default '{}',
+  allowed_rpcs text[] not null default '{}',
+  starts_at timestamptz not null,
+  expires_at timestamptz not null,
+  disabled boolean not null default false,
+  approving_reference text not null,
+  created_at timestamptz not null default now(),
+  check (expires_at > starts_at)
+);
+
+create table if not exists public.kenos_owner_canary_audit (
+  id uuid primary key default gen_random_uuid(),
+  at timestamptz not null default now(),
+  owner_id uuid,
+  action_type text,
+  rpc text,
+  decision text not null check (decision in ('allow','deny')),
+  reason text not null
+);
+
+alter table public.kenos_owner_canary enable row level security;
+alter table public.kenos_owner_canary_audit enable row level security;
+
+drop policy if exists kenos_owner_canary_select_own on public.kenos_owner_canary;
+create policy kenos_owner_canary_select_own on public.kenos_owner_canary
+  for select to authenticated
+  using ((select auth.uid()) is not null and (select auth.uid()) = owner_id);
+
+drop policy if exists kenos_owner_canary_audit_select_own on public.kenos_owner_canary_audit;
+create policy kenos_owner_canary_audit_select_own on public.kenos_owner_canary_audit
+  for select to authenticated
+  using ((select auth.uid()) is not null and (select auth.uid()) = owner_id);
+
+revoke all on public.kenos_owner_canary from public, anon, authenticated;
+revoke all on public.kenos_owner_canary_audit from public, anon, authenticated;
+grant select on public.kenos_owner_canary to authenticated;
+grant select on public.kenos_owner_canary_audit to authenticated;
+
+-- Prohibited classes: rejected even if an operator mis-adds them to an allowlist.
+create or replace function public.kenos_canary_action_prohibited(p_action_type text)
+returns boolean language sql immutable set search_path = '' as $$
+  select
+    p_action_type is null
+    or p_action_type = ''
+    or p_action_type like 'work.%'            -- frozen work domain
+    or p_action_type like 'email.%'
+    or p_action_type like 'calendar.%'
+    or p_action_type like 'connector.%'
+    or p_action_type like 'native.%'          -- native Mac tools
+    or p_action_type like '%bulk%'
+    or p_action_type like '%delete_all%'
+    or p_action_type like 'url.%'
+    or p_action_type like 'http.%';
+$$;
+
+-- Default-DENY gate. Raises on any failure; returns void on allow. Writes audit.
+create or replace function public.kenos_assert_owner_canary(p_action_type text, p_rpc text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_row public.kenos_owner_canary%rowtype;
+  v_reason text;
+begin
+  if v_uid is null then
+    insert into public.kenos_owner_canary_audit(owner_id, action_type, rpc, decision, reason)
+      values (null, p_action_type, p_rpc, 'deny', 'not_authenticated');
+    raise exception 'owner_canary_denied: not_authenticated';
+  end if;
+
+  -- hard denylist first (belt-and-suspenders; cannot be allowlisted around)
+  if public.kenos_canary_action_prohibited(p_action_type) then
+    insert into public.kenos_owner_canary_audit(owner_id, action_type, rpc, decision, reason)
+      values (v_uid, p_action_type, p_rpc, 'deny', 'prohibited_action_class');
+    raise exception 'owner_canary_denied: prohibited_action_class (%%)', p_action_type;
+  end if;
+
+  select * into v_row
+  from public.kenos_owner_canary c
+  where c.owner_id = v_uid
+    and c.environment = 'production'
+    and c.disabled = false
+    and now() >= c.starts_at
+    and now() < c.expires_at
+    and p_action_type = any(c.allowed_action_types)
+    and p_rpc = any(c.allowed_rpcs)
+  order by c.expires_at desc
+  limit 1;
+
+  if not found then
+    -- distinguish reasons for the audit trail without leaking other owners' rows
+    if not exists (select 1 from public.kenos_owner_canary c where c.owner_id = v_uid) then
+      v_reason := 'no_canary_for_owner';
+    elsif not exists (select 1 from public.kenos_owner_canary c
+                      where c.owner_id = v_uid and c.disabled = false
+                        and now() >= c.starts_at and now() < c.expires_at) then
+      v_reason := 'no_active_window_or_disabled';
+    else
+      v_reason := 'action_or_rpc_not_allowlisted';
+    end if;
+    insert into public.kenos_owner_canary_audit(owner_id, action_type, rpc, decision, reason)
+      values (v_uid, p_action_type, p_rpc, 'deny', v_reason);
+    raise exception 'owner_canary_denied: %%', v_reason;
+  end if;
+
+  insert into public.kenos_owner_canary_audit(owner_id, action_type, rpc, decision, reason)
+    values (v_uid, p_action_type, p_rpc, 'allow', 'authorized');
+end;
+$$;
+
+revoke all on function public.kenos_canary_action_prohibited(text) from public, anon;
+revoke all on function public.kenos_assert_owner_canary(text, text) from public, anon;
+grant execute on function public.kenos_assert_owner_canary(text, text) to authenticated, service_role;
+
+-- INTEGRATION (applied together, in the same migration, when authorized):
+-- add as the FIRST executable statement inside each governed writer RPC body,
+-- after the auth.uid() null-check, e.g. in private.kenos_project_spine_action:
+--
+--   perform public.kenos_assert_owner_canary(v_action_type, 'kenos_project_spine_action');
+--
+-- Governed writers + their initial allowlist:
+--   kenos_project_spine_action           : project.set_context, project.set_next_action,
+--                                           project.link_object, project.unlink_object
+--   kenos_create_plan_task_action        : plan.create_task
+--   kenos_complete_plan_task_action      : plan.complete_task
+--   kenos_reopen_plan_task_action        : plan.reopen_task
+--   kenos_update_plan_task_project_action: plan.update_task_project
+-- Seed the single production canary row (Owner only):
+--   insert into public.kenos_owner_canary(owner_id, environment, allowed_action_types, allowed_rpcs,
+--     starts_at, expires_at, approving_reference)
+--   values ('<OWNER_UID>', 'production',
+--     array['project.set_context','project.set_next_action','project.link_object','project.unlink_object',
+--           'plan.create_task','plan.complete_task','plan.reopen_task','plan.update_task_project'],
+--     array['kenos_project_spine_action','kenos_create_plan_task_action','kenos_complete_plan_task_action',
+--           'kenos_reopen_plan_task_action','kenos_update_plan_task_project_action'],
+--     now(), now() + interval '72 hours', 'owner-only 72h canary');
+-- Emergency disable: update public.kenos_owner_canary set disabled = true;

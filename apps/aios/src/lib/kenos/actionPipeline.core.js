@@ -29,6 +29,69 @@ export const TOOL_ACTION_MAP = Object.freeze({
 })
 
 /**
+ * Native (Tauri-only) tool governance (G4). Every native tool is classified.
+ * Write-capable tools are the assistant's highest-capability surface
+ * (arbitrary AppleScript, gh CLI, typing into apps, spawning agents) and were
+ * previously executed with NO registry/approval governance. Until they are
+ * fully routed through Approval + an executor, write-capable native tools are
+ * hard-disabled for autonomous/background execution and require an explicit
+ * human-in-the-loop manual approval flag to run at all.
+ */
+export const NATIVE_TOOL_CLASS = Object.freeze({
+  // read-only (safe in any context)
+  check_task: 'read',
+  read_cursor_sessions: 'read',
+  read_cursor_thread: 'read',
+  search_cursor_sessions: 'read',
+  ai_app_read: 'read',
+  look_at_screen: 'read',
+  // external write (side-effecting on other apps / spawns work)
+  ai_app_send: 'external_write',
+  type_into_app: 'external_write',
+  open_mac_app: 'external_write',
+  delegate_task: 'external_write',
+  cancel_task: 'external_write',
+  // sensitive / destructive (arbitrary capability)
+  run_applescript: 'sensitive',
+  github_cli: 'sensitive',
+})
+
+/**
+ * Gate for a native tool call.
+ * @param {string} name
+ * @param {{ autonomous?: boolean, manualApproved?: boolean }} ctx
+ *   autonomous defaults TRUE (fail-closed) — the assistant loop is autonomous.
+ *   manualApproved is set ONLY by an explicit human-in-the-loop UI confirmation.
+ * @returns {{ ok: true, class: string } | { ok: false, error: string }}
+ */
+export function guardNativeToolCall(name, ctx = {}) {
+  const autonomous = ctx.autonomous !== false // default fail-closed
+  const manualApproved = ctx.manualApproved === true
+  const cls = NATIVE_TOOL_CLASS[name]
+  if (!cls) {
+    return { ok: false, error: `原生工具 ${name} 未在治理表声明(fail-closed 拒绝)。` }
+  }
+  if (cls === 'read') return { ok: true, class: cls }
+  // write-capable (external_write | sensitive)
+  if (autonomous) {
+    return {
+      ok: false,
+      error: `原生工具 ${name}(${cls})为 manual-only:禁止自主/后台执行。不要声称已执行。`,
+    }
+  }
+  if (!manualApproved) {
+    return {
+      ok: false,
+      error: `原生工具 ${name}(${cls})需人工在 UI 显式确认(manualApproved)后方可执行。`,
+    }
+  }
+  // manual + explicitly approved: allowed as an interim measure until the tool
+  // is routed through the full Approval executor. Sensitive tools should still
+  // surface a normalized preview in the UI before this point.
+  return { ok: true, class: cls }
+}
+
+/**
  * Side-effect-free navigation / read tools that intentionally bypass the
  * registry (risk R0: they open a surface or read state, never write a domain).
  */

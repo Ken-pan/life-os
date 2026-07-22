@@ -14,6 +14,17 @@ if [[ "${KENOS_DEPLOY_ALLOW_DIRTY:-}" != "1" ]] && [[ -n "$(git status --porcela
   exit 1
 fi
 
+# G2: production mutation requires a scoped, unexpired Owner authorization.
+node "$ROOT/scripts/require-prod-authorization.mjs" --operation prod_deploy || {
+  echo "✗ 无生产部署授权。Owner 先执行: npm run prod:authorize -- --operation prod_deploy --ttl 1h" >&2
+  exit 1
+}
+# G1: never deploy on top of undetected migration drift.
+node "$ROOT/scripts/check-migration-drift.mjs" || {
+  echo "✗ 检测到迁移版本 drift,拒绝部署。见 docs/productivity/MIGRATION_RECONCILIATION.md" >&2
+  exit 1
+}
+
 DEPLOY_COMMIT="$(git rev-parse HEAD)"
 DEPLOY_ACTOR="$(git config user.name || echo unknown)@$(hostname -s)"
 DEPLOY_LOG="docs/ops/deploy-log/DEPLOY_LOG.ndjson"

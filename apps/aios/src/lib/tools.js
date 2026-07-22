@@ -18,7 +18,7 @@ import {
   plannerAddTask,
 } from '$lib/lifeos.js'
 import { areProductionWritesBlocked } from '$lib/kenos/prodWriteGuard.core.js'
-import { guardToolAction } from '$lib/kenos/actionPipeline.core.js'
+import { guardToolAction, guardNativeToolCall, normalizeAction } from '$lib/kenos/actionPipeline.core.js'
 import { mcpToolDefinitions, isMcpTool, executeMcpTool } from '$lib/mcp.js'
 import {
   filterBuiltinToolEntries,
@@ -1747,6 +1747,15 @@ export async function executeTool(name, argsJson, opts = {}) {
   }
   const callId = opts.callId
   if (isNativeTool(name)) {
+    // G4: native tools are the highest-capability surface. Write-capable ones
+    // are hard-disabled for autonomous/background execution and require an
+    // explicit human-in-the-loop manual approval. Default is fail-closed
+    // (autonomous) — only an explicit UI confirmation sets opts.manualApproved.
+    const nativeGate = guardNativeToolCall(name, {
+      autonomous: opts.autonomous !== false,
+      manualApproved: opts.manualApproved === true,
+    })
+    if (!nativeGate.ok) return nativeGate.error
     try {
       return await executeNativeTool(name, args)
     } catch (err) {
@@ -1754,6 +1763,14 @@ export async function executeTool(name, argsJson, opts = {}) {
     }
   }
   if (isMcpTool(name)) {
+    // MCP writes route through governed server-side RPCs, but the client policy
+    // pipeline must not be silently skipped: an MCP tool that maps to a
+    // registry action is policy-checked here too (fail-closed on deny).
+    const mcpAction = normalizeAction(name, args)
+    if (mcpAction) {
+      const mcpGate = guardToolAction(name, args, import.meta.env)
+      if (!mcpGate.ok) return mcpGate.error
+    }
     return await executeMcpTool(name, args)
   }
   try {

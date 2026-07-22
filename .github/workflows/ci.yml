@@ -37,7 +37,11 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: Contracts (Action Registry)
+      - name: Governance (prod-auth gate + migration-drift detector)
+        run: npm run test:governance
+      - name: Migration drift detector (skips without Supabase token)
+        run: npm run check:migration-drift
+      - name: Contracts (Action Registry + owner canary)
         run: npm test --workspace @life-os/contracts
       - name: MCP handler suites
         run: npm run test:mcp

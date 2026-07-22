@@ -14,7 +14,7 @@
 // Disable:  touch ~/.kenos/outbox-worker.disable   (checked every poll)
 //           or KENOS_OUTBOX_WORKER_DISABLED=1
 // One-shot: node agent/outbox-worker.mjs --once   (single cycle + metrics, for ops/CI)
-import { existsSync } from 'node:fs'
+import { existsSync, statSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
@@ -23,6 +23,7 @@ import {
   buildDeliveryEvent,
   classifyDeliveryError,
   nextAttemptAtIso,
+  resolveCredentialContract,
   shouldProcessRow,
   summarizeCycle,
 } from '../server/outboxWorker.core.mjs'
@@ -33,17 +34,26 @@ import {
 } from '@life-os/contracts/kenos-actions'
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://iueozzuctstwvzbcxcyh.supabase.co'
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 const EPOCH = process.env.KENOS_OUTBOX_EPOCH || OUTBOX_WORKER_EPOCH
 const DISABLE_FILE = join(homedir(), '.kenos', 'outbox-worker.disable')
+const ENV_FILE = join(homedir(), '.kenos', 'outbox-worker.env')
 const ONCE = process.argv.includes('--once')
 
-if (!SERVICE_KEY) {
-  console.error(JSON.stringify({ level: 'fatal', msg: 'SUPABASE_SERVICE_ROLE_KEY required' }))
+// G5: least-privilege credential contract. Prefer a scoped kenos_worker JWT;
+// refuse to start on a secret-in-argv or an unsafe credential-file permission.
+const envFileMode = existsSync(ENV_FILE) ? statSync(ENV_FILE).mode : null
+const cred = resolveCredentialContract({ env: process.env, argv: process.argv, envFileMode })
+if (!cred.ok) {
+  console.error(JSON.stringify({ level: 'fatal', msg: 'credential contract failed', reason: cred.reason }))
   process.exit(1)
 }
+for (const w of cred.warnings) console.error(JSON.stringify({ level: 'warn', msg: w }))
+const CREDENTIAL =
+  cred.credential === 'worker_jwt'
+    ? process.env.KENOS_WORKER_JWT
+    : process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 
-const sb = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
+const sb = createClient(SUPABASE_URL, CREDENTIAL, { auth: { persistSession: false } })
 
 function log(fields) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), worker: 'kenos-outbox', ...fields }))
