@@ -66,6 +66,9 @@ final class KorbenShellState: ObservableObject {
     // ── P4A Intent Dock 三层 ──
     @Published var showsQuickCapture = false
     @Published var quickCaptureDetent: PresentationDetent = KorbenQuickCaptureSheet.captureDetent
+
+    // ── P4B Receipt / Undo(10s 窗口)──
+    @Published var undoReceipt: KorbenActionReceipt?
 }
 
 #endif

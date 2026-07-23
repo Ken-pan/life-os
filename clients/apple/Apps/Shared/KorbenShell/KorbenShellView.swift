@@ -79,9 +79,19 @@ struct KorbenShellView: View {
             .sheet(isPresented: $shellState.showsQuickCapture) {
                 KorbenQuickCaptureSheet(
                     model: model,
+                    shellState: shellState,
                     detent: $shellState.quickCaptureDetent
                 )
             }
+            // P4B Undo pill — 创建后 10s 可撤(撤销恢复输入,不丢 Draft)。
+            .overlay(alignment: .bottom) {
+                if let receipt = shellState.undoReceipt {
+                    KorbenUndoPill(receipt: receipt, model: model, shellState: shellState)
+                        .padding(.bottom, 118)
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: shellState.undoReceipt?.id)
         }
         // P1B: legacy Space Shelf chrome doesn't exist anywhere in the Korben
         // tree (Domain shell runs `.externalKorbenShell`) — redirect ALL shelf

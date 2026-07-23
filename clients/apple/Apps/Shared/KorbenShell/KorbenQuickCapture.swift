@@ -12,6 +12,7 @@ import KenosDesign
 /// (CaptureDraft + 离线队列 + idempotencyKey)——不做意图分类/路由(P4B)。
 struct KorbenQuickCaptureSheet: View {
     @ObservedObject var model: KenosAppModel
+    @ObservedObject var shellState: KorbenShellState
     @Binding var detent: PresentationDetent
     @Environment(\.dismiss) private var dismiss
     @FocusState private var textFocused: Bool
@@ -76,15 +77,18 @@ struct KorbenQuickCaptureSheet: View {
             .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
             .accessibilityIdentifier("korben.quickCapture.text")
 
-            // 识别行 — P4A 静态口径(不假装已分类)。
+            // 识别行 — P4B:本地启发式分类的实时预览(候选 ≠ 已写入)。
             Label(
-                prefersChinese
-                    ? "将保存为 Capture 草稿,稍后在收件箱整理"
-                    : "Saves as a capture draft — triage later in Inbox",
+                KorbenCaptureRouter.summary(
+                    for: KorbenCaptureRouter.classify(model.captureText),
+                    chinese: prefersChinese
+                ),
                 systemImage: "tray.and.arrow.down"
             )
             .font(.system(size: 12))
             .foregroundStyle(.secondary)
+            .animation(.easeInOut(duration: 0.15), value: model.captureText.isEmpty)
+            .accessibilityIdentifier("korben.quickCapture.recognition")
 
             HStack {
                 Button(prefersChinese ? "取消" : "Cancel") {
@@ -94,7 +98,8 @@ struct KorbenQuickCaptureSheet: View {
                 .foregroundStyle(.secondary)
                 Spacer()
                 Button {
-                    model.submitCapture()
+                    // P4B:回执 + 10s Undo 窗口(失败自动回填文本不丢 Draft)。
+                    shellState.undoReceipt = model.korbenSubmitCapture()
                     dismiss()
                 } label: {
                     Text(prefersChinese ? "创建" : "Create")
