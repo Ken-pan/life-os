@@ -408,5 +408,35 @@ Domain: 86 + 胶囊行 48 + 两层间距 8            = 142 → 差额 +64
 定性:由同一批 token **推导**,非运行时实测。Dynamic Type 引入可变高度时需升级为
 GeometryReader/PreferenceKey 运行时测量。5 个单测锁住组成与区间。
 
+## 8j. System Strip 行为验收(follow-up 收口,2026-07-23,commit d2c69001)
+
+```
+SYSTEM STRIP: BEHAVIOR VERIFIED(不再是 VISUAL PROTOTYPE ONLY)
+真机 testSystemStripBehavior PASS:单元可点 / Tray 展开与关闭 / 单元数 ≤3 / 空态整条隐藏
+纯函数优先级 9 单测 PASS
+```
+
+### 修复的规范偏离
+规范明确「`Korben 等待确认 · 2 项` **优先于** `♪ Daily Mix · 1:42`」,而原实现把 runtime
+排在 attention 之前 —— **优先级是反的**。新增纯函数 `KorbenStripModel`:
+
+```
+P0/P1 Attention(待确认)   ← 最高
+P2    当前主要 Runtime
+P3    次要 Runtime 数量「+N 进行中」
+上限 3 单元;无单元 → 整条隐藏不占位
+```
+9 单测锁住:attention 压过 runtime · 空态隐藏 · 只有其一时不冒另一个 · 次要计数 ·
+无主 runtime 时不得冒次要 · 单 runtime 无次要 · 硬上限 3 · 空标题当无 runtime。
+
+### 多 Runtime 数据源
+`liveAccessory` 原本是对 5 个源(Capture草稿 / Focus返回 / LiveActivity / 音乐 / 续播)
+的**单选**;新增同源计数,主 runtime 之外的条数进「次要」单元,详情留给 Tray。
+
+### 顺带修掉一个真实 a11y 缺陷
+Strip 容器只设了 `accessibilityIdentifier` 而未声明 `.accessibilityElement(children: .contain)`
+→ SwiftUI 把三个状态单元**合并进容器**:单元不可单独寻址/聚焦,**VoiceOver 会把整条
+读成一坨**。这个缺陷只有跑 UI 测试才暴露(看截图 strip 显示完全正常)。已修。
+
 ## 9. Device Gate 通过后的 P2 边界(预告,未开工)
 只做 System Strip(Runtime + Attention 投影)+ System Tray:高度 ≤36pt、无状态 0pt、同一条最多 3 单元(`♪ Daily Mix · 1:42 | 专注 · 18:23 | 2 待确认`),不做大型顶部 Runtime 卡。**不碰**:Orb 新手势、Intent 分类、Korben Assist、App Group、Lens、Per-Space WebView Pool。能力支线并行:App Group closure(先于 Live Activity/Widget 扩展)、Music Runtime 审计(先于后台音频 entitlement)。
