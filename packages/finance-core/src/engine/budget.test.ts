@@ -23,16 +23,17 @@ function txn(over: Partial<Txn> & Pick<Txn, "date" | "budgetImpact">): Txn {
 }
 
 describe("dailySpendSeries", () => {
-  it("缺日补 0，按日期升序，退款相抵", () => {
+  it("缺日补 0，按日期升序，退款不冲抵（outflow 口径,与记录页每日柱图一致）", () => {
     const txns = [
       txn({ date: "2026-07-01", budgetImpact: -30 }),
       txn({ date: "2026-07-01", budgetImpact: -20 }),
-      txn({ date: "2026-07-02", budgetImpact: 10 }), // 退款
+      // 退款:不是「花掉负数」,那天没花钱就是 0
+      txn({ date: "2026-07-02", budgetImpact: 10, flow: "refund_or_reversal", amount: -10 }),
     ];
     const series = dailySpendSeries(txns, "2026-07-03", 3);
     expect(series.map((d) => d.date)).toEqual(["2026-07-01", "2026-07-02", "2026-07-03"]);
     expect(series[0].amount).toBe(50);
-    expect(series[1].amount).toBe(-10);
+    expect(series[1].amount).toBe(0);
     expect(series[2].amount).toBe(0);
   });
 });
@@ -71,13 +72,28 @@ describe("budgetProgress", () => {
     txn({ date: "2026-07-20", budgetImpact: -50 }), // 未来日期，不计
   ];
 
-  it("只统计本月截至今天的净花销，含今日已花", () => {
+  it("只统计本月截至今天的花销，含今日已花", () => {
     const p = budgetProgress(txns, 3000, "2026-07-10");
     expect(p.spent).toBe(1000);
     expect(p.todaySpend).toBe(100);
     expect(p.remaining).toBe(2000);
     expect(p.daysLeft).toBe(21);
     expect(p.dailyAllowance).toBeCloseTo(2000 / 21, 2);
+  });
+
+  it("退款不冲抵本月已花（与记录页 KPI 同口径）", () => {
+    const withRefund = [
+      ...txns,
+      // 实测坑:7 月三笔 Amazon 退货共 $961 把「本月已花」压掉近一半,
+      // 与同页 KPI 花销合计对不上。
+      txn({
+        date: "2026-07-05",
+        budgetImpact: 300,
+        flow: "refund_or_reversal",
+        amount: -300,
+      }),
+    ];
+    expect(budgetProgress(withRefund, 3000, "2026-07-10").spent).toBe(1000);
   });
 
   it("超速 / 慢于进度判断", () => {

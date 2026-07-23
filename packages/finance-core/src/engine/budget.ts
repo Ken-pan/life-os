@@ -2,7 +2,7 @@
 // 以「固定支出计划」推导默认月预算，把真实流水折算成：
 // 本月已花 / 今日已花 / 近 N 日每日花销 / 按进度的超支状态。
 
-import { spendingOf, type Txn } from "./transactions";
+import { outflowOf, type Txn } from "./transactions";
 import { LOCKBOX_CONTRIBUTION_CATEGORY } from "./monthly";
 import type { CashFlowItem } from "../types.js";
 
@@ -11,12 +11,16 @@ export interface DaySpend {
   amount: number;
 }
 
-/** 近 days 天（含 endDate 当天）的每日净花销序列，按日期升序，缺日补 0。 */
+/**
+ * 近 days 天（含 endDate 当天）的每日花销序列，按日期升序，缺日补 0。
+ * outflowOf 口径（退款不冲抵）——与记录页 KPI/分类/商户/每日柱图完全一致：
+ * 一笔退款不会让「那天花的钱」变少，更不会把某天拉成负数。
+ */
 export function dailySpendSeries(txns: Txn[], endDate: string, days: number): DaySpend[] {
   const map = new Map<string, number>();
   for (const t of txns) {
-    const s = spendingOf(t);
-    if (s === 0) continue;
+    const s = outflowOf(t);
+    if (s <= 0) continue;
     map.set(t.date, (map.get(t.date) ?? 0) + s);
   }
   const out: DaySpend[] = [];
@@ -99,7 +103,7 @@ export type BudgetPace = "under" | "on" | "over";
 export interface BudgetProgress {
   /** 月预算（<=0 表示没有可用预算基准）。 */
   budget: number;
-  /** 本月已花（净花销）。 */
+  /** 本月已花（outflow 口径,退款不冲抵——与记录页 KPI/分类/商户一致）。 */
   spent: number;
   remaining: number;
   /** 今日已花。 */
@@ -125,11 +129,14 @@ export function budgetProgress(txns: Txn[], budget: number, today: string): Budg
   const dayOfMonth = Number(today.slice(8, 10));
   const daysLeft = Math.max(0, daysInMonth - dayOfMonth);
 
+  // outflowOf 口径（退款不冲抵）。之前用净额:7 月三笔 Amazon 大额退货(共 $961)
+  // 把「本月已花」从 $2,330 压成 $1,368,与同页 KPI 的花销合计对不上——
+  // 同一页面两个「花销」数字差近一倍,回答不了「这个月花了多少」。
   let spent = 0;
   let todaySpend = 0;
   for (const t of txns) {
     if (t.month !== month || t.date > today) continue;
-    const s = spendingOf(t);
+    const s = outflowOf(t);
     spent += s;
     if (t.date === today) todaySpend += s;
   }

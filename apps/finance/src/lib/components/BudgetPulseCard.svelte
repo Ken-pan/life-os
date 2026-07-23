@@ -2,7 +2,7 @@
   // Port of src/components/BudgetPulseCard.tsx.
   import { t } from '$lib/i18n.svelte.js'
   import { getTransactionsStore } from '$lib/transactions.svelte.js'
-  import { budgetProgress, dailySpendSeries, plannedMonthlyBudget } from '../../engine/budget.js'
+  import { budgetProgress, dailySpendSeries, discretionaryMonthlyBudget } from '../../engine/budget.js'
   import { money } from '$lib/format.js'
 
   /** @type {{ data: import('../../types.js').FinanceData, onQuickAdd?: () => void, compact?: boolean }} */
@@ -17,7 +17,9 @@
 
   let showWeekChart = $state(!compact)
 
-  const budget = $derived(plannedMonthlyBudget(data.cashFlows))
+  // 可变月预算(剔除房租/401k 等不走日常流水的固定项)——与记录页日预算同分母。
+  // 之前用全量计划($4,700 含房租):房租从不出现在流水里,进度条永远「低于进度」。
+  const budget = $derived(discretionaryMonthlyBudget(data.cashFlows).monthly)
   const progress = $derived(budgetProgress(txStore.txns, budget, today))
   const days = $derived(dailySpendSeries(txStore.txns, today, 7))
   const maxDay = $derived(Math.max(1, ...days.map((d) => Math.abs(d.amount))))

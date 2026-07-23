@@ -5,7 +5,7 @@
   import { getTransactionsStore } from '$lib/transactions.svelte.js'
   import { getTimelineStore } from '$lib/timeline.svelte.js'
   import { spendingOf } from '$lib/engine/transactions'
-  import { budgetProgress, plannedMonthlyBudget } from '$lib/engine/budget'
+  import { budgetProgress, discretionaryMonthlyBudget } from '$lib/engine/budget'
   import { buildTodayBriefPrompt } from '$lib/aiBrief'
   import {
     ensureAiText,
@@ -47,7 +47,8 @@
   }
 
   const facts = $derived.by(() => {
-    const budget = plannedMonthlyBudget(data.cashFlows)
+    // 可变月预算(与脉搏卡/记录页日预算同分母),AI 简报的进度判断才与页面显示一致。
+    const budget = discretionaryMonthlyBudget(data.cashFlows).monthly
     const progress = budgetProgress(txnsStore.txns, budget, today)
 
     const horizon = new Date(`${today}T00:00:00`)
