@@ -26,7 +26,10 @@ enum KorbenShellMetrics {
     /// 域子导航胶囊行实高(项 44 + 上下内边距 2×2)。
     static let domainCapsuleRowHeight: CGFloat = 48
     /// 两层 chrome 之间的间距(与 KorbenBottomChrome 的 VStack spacing 同源)。
-    static let chromeRowGap: CGFloat = 8
+    /// 收紧到 6 —— 胶囊与 Dock 同列时更紧凑,读作一个 chrome 栈。
+    static let chromeRowGap: CGFloat = 6
+    /// 供 KorbenBottomChrome 直接消费的同名别名(避免两处写死数字)。
+    static var chromeStackGap: CGFloat { chromeRowGap }
 
     /// **底部 chrome 遮挡高度 —— shared derived metric(单一真源)**。
     /// Today(Kenos 态)与各 Domain 同源消费,禁止任何页面写死数字。

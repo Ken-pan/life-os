@@ -35,18 +35,21 @@ struct KorbenBottomChrome: View {
             // P2: runtime chrome 归 System Strip(顶部)——Korben 壳不再渲染
             // 底部 LiveAccessory,保持单一 chrome 规则。
 
-            VStack(spacing: 8) {
-                // P1B 域子导航胶囊 —— 四条约束(Owner 定):仅当前域显示、不复制
-                // Orb/Capture、视觉权重低于 Intent Dock、随滚动收敛。
-                // 收敛:web 下滑(阅读)→ liveAccessoryMinimized=true → 胶囊淡出让位;
-                // 上滑复现。这也顺带减轻底部遮挡。
-                if model.shellMode == .domain, !model.domainDockItems.isEmpty,
-                   !model.liveAccessoryMinimized {
-                    domainDestinationCapsule
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
-                }
-                HStack(spacing: KorbenShellMetrics.orbDockGap) {
-                    spaceOrb
+            // 层级打磨:域胶囊移进 Intent Dock 所在的列(与 Dock 同宽、正上方),
+            // Orb 作为最左的全局锚点跨两行底对齐 —— 读作「一个 chrome 列」而非
+            // 「两条互相竞争的全宽横栏」。这是 Owner Gate4 Warning「双层 Chrome
+            // 视觉权重偏高」的结构性降权,不靠继续调透明度。
+            HStack(alignment: .bottom, spacing: KorbenShellMetrics.orbDockGap) {
+                spaceOrb
+                VStack(spacing: KorbenShellMetrics.chromeStackGap) {
+                    // 四条约束(Owner 定):仅当前域显示、不复制 Orb/Capture、
+                    // 视觉权重低于 Intent Dock、随滚动收敛。
+                    // 收敛:web 下滑(阅读)→ liveAccessoryMinimized → 胶囊淡出让位。
+                    if model.shellMode == .domain, !model.domainDockItems.isEmpty,
+                       !model.liveAccessoryMinimized {
+                        domainDestinationCapsule
+                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    }
                     intentDock
                 }
             }
@@ -70,13 +73,13 @@ struct KorbenBottomChrome: View {
         }
         .padding(.horizontal, 3)
         .padding(.vertical, 2)
-        // 与 Intent Dock 同宽(全宽)—— 收窄成 300pt 会让列表行从胶囊左右两侧
-        // 露出来(真机 Gate4-2 实测),反而更乱。降权改靠「更矮 + 更淡 + 更弱描边」:
-        // 胶囊 ~48pt vs Dock 56pt,内容为 secondary 灰,视觉从属于全局 Dock。
+        // 与 Intent Dock 同列同宽(收窄成 300pt 会让列表行从两侧露出,Gate4-2 实测)。
+        // 降权靠「更矮 + 更淡 + 更弱描边 + 更小图标字」:胶囊 ~48pt vs Dock 56pt,
+        // 未选中项为 secondary 灰,整体从属于全局 Dock。
         .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(.white.opacity(0.06), lineWidth: 0.5))
+        .overlay(Capsule().strokeBorder(.white.opacity(0.05), lineWidth: 0.5))
         .frame(maxWidth: .infinity)
-        .shadow(color: .black.opacity(0.14), radius: 4, y: 1)
+        .shadow(color: .black.opacity(0.10), radius: 3, y: 1)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(prefersChinese ? "主导航" : "Destinations")
         .accessibilityIdentifier("korben.domainCapsule")
@@ -88,17 +91,18 @@ struct KorbenBottomChrome: View {
             model.selectDomainDockSlot(index)
         } label: {
             Group {
+                // 图标/字比 Intent Dock(15pt 占位文案)更小一档,强化从属关系。
                 if selected {
                     HStack(spacing: 5) {
                         Image(systemName: item.systemImage)
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.system(size: 14, weight: .medium))
                         Text(item.title)
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 10.5, weight: .semibold))
                             .lineLimit(1)
                     }
                 } else {
                     Image(systemName: item.systemImage)
-                        .font(.system(size: 16, weight: .regular))
+                        .font(.system(size: 15, weight: .regular))
                 }
             }
             .foregroundStyle(
