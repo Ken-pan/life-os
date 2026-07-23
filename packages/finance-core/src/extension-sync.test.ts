@@ -642,6 +642,132 @@ describe('planNewTransactions', () => {
     expect(transfer.inSpending).toBe(false)
   })
 
+  it('带 platformId 的 pending 行入账并标记 pending,且不消耗 key 配额(FINC.PENDING.1)', () => {
+    const pendingEnv: CaptureEnvelope = {
+      ...env,
+      data: {
+        rows: [
+          {
+            date: '2026-07-21',
+            merchant: 'Alaska Airlines',
+            category: 'Travel & Vacation',
+            amount: 866.81,
+            credit: false,
+            pending: true,
+            platformId: 'rm-alaska-1',
+          },
+          // key 与已有 posted 行完全相同的 pending 行:身份是 platformId,不得被配额吞掉
+          {
+            date: '2026-06-29',
+            merchant: 'Amazon Purchase',
+            category: 'Shopping',
+            amount: 39.99,
+            credit: false,
+            pending: true,
+            platformId: 'rm-amazon-dup-key',
+          },
+        ],
+      },
+    }
+    const plan = planNewTransactions(pendingEnv, existing)
+    expect(plan.skippedPending).toBe(0)
+    expect(plan.txns).toHaveLength(2)
+    for (const txn of plan.txns) {
+      expect(txn.pending).toBe(true)
+      expect(txn.platformId).toBeTruthy()
+    }
+    const alaska = plan.txns.find((t) => t.merchant === 'Alaska Airlines')!
+    expect(alaska.inSpending).toBe(true)
+    expect(alaska.budgetImpact).toBe(-866.81)
+  })
+
+  it('posted 按 platformId 找到本地 pending → 转正;本地已 posted → 冻结跳过', () => {
+    const storedPending: Txn = {
+      id: 'txn-1',
+      date: '2026-07-20',
+      month: '2026-07',
+      merchant: 'Dyson',
+      category: 'Shopping',
+      account: 'Amex ••1002',
+      flow: 'expense',
+      amount: 547.97,
+      budgetImpact: -547.97,
+      inSpending: true,
+      inCashFlow: true,
+      pending: true,
+      platformId: 'rm-dyson-1',
+      captureSource: 'rocketmoney',
+    }
+    const postedEnv: CaptureEnvelope = {
+      ...env,
+      data: {
+        rows: [
+          // posted 版本:日期后移一天、金额微调——典型清算变化
+          {
+            date: '2026-07-21',
+            merchant: 'Dyson',
+            category: 'Shopping',
+            amount: 549.02,
+            credit: false,
+            pending: false,
+            platformId: 'rm-dyson-1',
+          },
+        ],
+      },
+    }
+    const plan = planNewTransactions(postedEnv, [storedPending])
+    expect(plan.txns).toHaveLength(1)
+    expect(plan.txns[0].pending).toBeUndefined()
+    expect(plan.txns[0].date).toBe('2026-07-21')
+    expect(plan.txns[0].amount).toBe(549.02)
+    // 本地已转正(pending=false)后再收到同 platformId → 冻结,不覆写
+    const storedPosted = { ...storedPending, pending: undefined }
+    const plan2 = planNewTransactions(postedEnv, [storedPosted])
+    expect(plan2.txns).toHaveLength(0)
+    expect(plan2.skippedDuplicate).toBe(1)
+  })
+
+  it('pending 重抓:数据没变跳过,变了才刷新', () => {
+    const storedPending: Txn = {
+      id: 'txn-2',
+      date: '2026-07-22',
+      month: '2026-07',
+      merchant: 'Panda Express',
+      category: 'Dining & Drinks',
+      account: 'Amex ••1002',
+      flow: 'expense',
+      amount: 14.39,
+      budgetImpact: -14.39,
+      inSpending: true,
+      inCashFlow: true,
+      pending: true,
+      platformId: 'rm-panda-1',
+      captureSource: 'rocketmoney',
+    }
+    const sameRow: CapturedTxnRow = {
+      date: '2026-07-22',
+      merchant: 'Panda Express',
+      category: 'Dining & Drinks',
+      amount: 14.39,
+      credit: false,
+      pending: true,
+      platformId: 'rm-panda-1',
+    }
+    const unchanged = planNewTransactions(
+      { ...env, data: { rows: [sameRow] } },
+      [storedPending],
+    )
+    expect(unchanged.txns).toHaveLength(0)
+    expect(unchanged.skippedDuplicate).toBe(1)
+    const changed = planNewTransactions(
+      { ...env, data: { rows: [{ ...sameRow, amount: 15.02 }] } },
+      [storedPending],
+    )
+    expect(changed.txns).toHaveLength(1)
+    expect(changed.txns[0].amount).toBe(15.02)
+    expect(changed.txns[0].pending).toBe(true)
+  })
+
   it('uses statement as merchant and real payment account, not import source label', () => {
     const stmtEnv: CaptureEnvelope = {
       ...env,
@@ -838,6 +964,34 @@ describe('buildAppSnapshot', () => {
     expect(snap.txnCount).toBe(2)
     expect(snap.txnFastStopBefore).toBe('2026-06-28')
     expect(snap.txnScrollStopBefore).toBe('2026-05-29')
+  })
+
+  it('pending 行:键不进 txnKeys、日期不推停止点、platformId 进 pendingPlatformIds', () => {
+    const withPending: Txn[] = [
+      ...txns,
+      {
+        date: '2026-07-05',
+        month: '2026-07',
+        merchant: 'Dyson',
+        category: 'Shopping',
+        account: 'Amex ••1002',
+        flow: 'expense',
+        amount: 547.97,
+        budgetImpact: -547.97,
+        inSpending: true,
+        inCashFlow: true,
+        pending: true,
+        platformId: 'rm-dyson-1',
+        captureSource: 'rocketmoney',
+      },
+    ]
+    const snap = buildAppSnapshot(accounts, withPending, cashFlows, [])
+    // pending 行不能证明「同步到了 7/5」:停止点仍按最新 posted 行(7/1)算
+    expect(snap.txnNewestDate).toBe('2026-07-01')
+    expect(snap.txnFastStopBefore).toBe('2026-06-28')
+    expect(snap.txnKeys).toHaveLength(2)
+    expect(snap.pendingPlatformIds).toEqual(['rm-dyson-1'])
+    expect(snap.txnCount).toBe(3)
   })
 })
 

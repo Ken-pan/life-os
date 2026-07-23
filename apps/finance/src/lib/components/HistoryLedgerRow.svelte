@@ -174,6 +174,11 @@
     <div class="lr-main">
       <div class="lr-main-head">
         <span class="lr-title">{title}</span>
+        {#if txn.pending}
+          <span class="txn-pending-badge" title={t('history.pendingBadgeTitle')}>
+            {t('history.pendingBadge')}
+          </span>
+        {/if}
         <span class="lr-amt lr-amt--inline {depositDeltaClass(signed)}">
           {signed === 0 ? '—' : signedMoneyPrecise(signed, privacy)}
         </span>

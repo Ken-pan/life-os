@@ -3657,6 +3657,20 @@ div.input {
   text-underline-offset: 2px;
 }
 
+/* 待入账(pending)徽标:银行授权未清算,虚线边框传达「未定」;转正后徽标消失。 */
+.txn-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0.0625rem 0.4375rem;
+  border: 1px dashed color-mix(in srgb, var(--warning) 55%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 8%, transparent);
+}
+
 .purchase-state-badge {
   display: inline-flex;
   align-items: center;

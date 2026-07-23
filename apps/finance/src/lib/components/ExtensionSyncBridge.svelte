@@ -209,17 +209,60 @@
           captureKind: env.kind,
           transactions: plan.txns.map(newTxnToExtensionSyncPayload),
         })
-        if (syncResult.transactions.length > 0) {
-          transactions.mergeImportedTxns(syncResult.transactions)
+        const mergedRows = [
+          ...syncResult.transactions,
+          ...(syncResult.updatedTransactions ?? []),
+        ]
+        if (mergedRows.length > 0) {
+          transactions.mergeImportedTxns(mergedRows)
           for (const txn of syncResult.transactions) sessionTxns.push(txn)
+        }
+        // 陈旧 pending 清理（FINC.PENDING.1）：完整爬取（complete=true，从最新无空洞
+        // 收集到停点）覆盖范围内，本地 pending 行的 platformId 若未再出现——扩展预过滤
+        // 对 pendingPlatformIds 永远放行，所以「不在」只能是页面上消失了——即银行取消
+        // 了这笔授权，删掉，别让它永远挂着。
+        const capData = /** @type {{ rows?: Array<{ date?: string, platformId?: string }>, complete?: boolean }} */ (
+          env.data
+        )
+        if (
+          !syncResult.alreadyProcessed &&
+          capData?.complete === true &&
+          Array.isArray(capData.rows) &&
+          capData.rows.length > 0
+        ) {
+          const seenIds = new Set(
+            capData.rows.map((r) => r?.platformId).filter(Boolean),
+          )
+          let oldestCaptured = null
+          for (const r of capData.rows) {
+            if (r?.date && (oldestCaptured == null || r.date < oldestCaptured))
+              oldestCaptured = r.date
+          }
+          const stale = transactions.txns.filter(
+            (x) =>
+              x.pending &&
+              x.platformId &&
+              x.id &&
+              (x.captureSource ?? env.source) === env.source &&
+              oldestCaptured != null &&
+              x.date >= oldestCaptured &&
+              !seenIds.has(x.platformId),
+          )
+          for (const s of stale) {
+            await transactions.removeTxn(s.id)
+          }
+          if (stale.length > 0) {
+            notes.push(t('extension.pendingRemoved', { count: stale.length }))
+          }
         }
         rpcFinalized = true
         const dupTotal = plan.skippedDuplicate + syncResult.skippedTransactionCount
         summary = syncResult.alreadyProcessed
           ? t('extension.alreadySynced', { count: plan.txns.length })
-          : t('extension.newTxns', {
+          : t('extension.newTxnsV2', {
               inserted: syncResult.insertedTransactionCount,
-              pending: plan.skippedPending,
+              pendingIn: syncResult.transactions.filter((x) => x.pending).length,
+              updated: syncResult.updatedTransactionCount ?? 0,
               dup: dupTotal,
             })
       }

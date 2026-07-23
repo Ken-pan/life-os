@@ -49,6 +49,16 @@ export interface Txn {
    * 由 loadTransactions 装填；决定显示态时优先于自动分类。
    */
   reviewState?: "confirmed" | "rejected";
+  /**
+   * 扩展抓取时页面标记为 Pending（授权未清算，FINC.PENDING.1）。金额/日期可能在
+   * 清算时变化；posted 版本按 platformId 到达后原地转正为 false。计入花销分析
+   * （钱已经花出去了），但扩展水位线与去重键均不采信 pending 行。
+   */
+  pending?: boolean;
+  /** 扩展抓取侧稳定 ID（如 Rocket Money 交易 id）；pending→posted 转正的对账键。 */
+  platformId?: string;
+  /** 抓取来源（rocketmoney 等）；platformId 唯一键的一部分。 */
+  captureSource?: string;
 }
 
 /** 新建一笔时的输入（id/month 由系统补全）。 */

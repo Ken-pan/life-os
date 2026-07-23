@@ -86,15 +86,23 @@
   }
 
   function filterNewCaptureTxnRows(rows, snapshot, _source) {
-    if (!snapshot?.txnKeys?.length) return { rows, skippedDuplicate: 0 };
+    if (!snapshot?.txnKeys?.length && !snapshot?.pendingPlatformIds?.length)
+      return { rows, skippedDuplicate: 0 };
     const remaining = new Map();
-    for (const k of snapshot.txnKeys) {
+    for (const k of snapshot?.txnKeys ?? []) {
       remaining.set(k, (remaining.get(k) ?? 0) + 1);
     }
+    // app 侧仍为 pending 的行（FINC.PENDING.1）：无论页面上还是 Pending 还是已 posted,
+    // 都必须放行——它们是待转正/待刷新的更新,键相同也不算重复。
+    const pendingIds = new Set(snapshot?.pendingPlatformIds ?? []);
     const out = [];
     let skippedDuplicate = 0;
     for (const row of rows) {
       if (row.pending) {
+        out.push(row);
+        continue;
+      }
+      if (row.platformId && pendingIds.has(row.platformId)) {
         out.push(row);
         continue;
       }

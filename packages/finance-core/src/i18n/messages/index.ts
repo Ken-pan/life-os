@@ -729,6 +729,8 @@ export const zhCN: MessageTree = {
     planUnderspend:
       '真实花销比预测假设低约 {pct}%，预测偏保守，可适当下调月支出假设。',
     ledgerTitle: '全部流水 · {count} 笔',
+    pendingBadge: '待入账',
+    pendingBadgeTitle: '银行授权未清算,金额与日期可能在入账时变化;入账后自动转正',
     ledgerViaImport: '经 {source} 同步',
     ledgerProductsAria: '订单商品',
     ledgerProductsMore: '另有 {count} 件',
@@ -1645,6 +1647,9 @@ export const zhCN: MessageTree = {
     recurringSummary: '订阅对账：更新 {updated} 项，未收录 {missing} 项',
     alreadySynced: '已同步过（跳过重复 {count} 笔）',
     newTxns: '新交易 {inserted} 笔（跳过 pending {pending}、重复 {dup}）',
+    newTxnsV2:
+      '新交易 {inserted} 笔（含待入账 {pendingIn}）、转正/刷新 {updated} 笔、跳过重复 {dup}',
+    pendingRemoved: '已移除 {count} 笔已取消的待入账交易',
     merchantOrdersSummary:
       '订单标注 {linked} 笔（{orders} 个订单，跳过已标注 {skipped}）',
     merchantOrdersNone: '订单 {orders} 个，无新的高置信匹配',
@@ -2419,6 +2424,9 @@ export const enUS: MessageTree = {
     planUnderspend:
       'Actual spending is ~{pct}% below forecast — forecast is conservative; you may lower monthly expense assumptions.',
     ledgerTitle: 'All transactions · {count}',
+    pendingBadge: 'Pending',
+    pendingBadgeTitle:
+      'Bank authorization not yet settled; amount and date may change when it posts, then it clears automatically',
     ledgerViaImport: 'Synced via {source}',
     ledgerProductsAria: 'Order items',
     ledgerProductsMore: '+{count} more',
@@ -3365,6 +3373,9 @@ export const enUS: MessageTree = {
     alreadySynced: 'Already synced (skipped {count} duplicates)',
     newTxns:
       '{inserted} new transactions (skipped pending {pending}, dup {dup})',
+    newTxnsV2:
+      '{inserted} new ({pendingIn} pending), {updated} posted/updated, {dup} dup skipped',
+    pendingRemoved: 'Removed {count} canceled pending transactions',
     merchantOrdersSummary:
       'Annotated {linked} purchases ({orders} orders, {skipped} already annotated)',
     merchantOrdersNone: '{orders} orders, no new high-confidence matches',

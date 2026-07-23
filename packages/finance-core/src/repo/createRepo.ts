@@ -1584,6 +1584,9 @@ function txnFromRow(r: Row): Txn {
     excludeReason: ostr(r.exclude_reason),
     source: (ostr(r.source) as Txn['source']) ?? 'import',
     purchaseEnrichment: purchaseEnrichmentFromRow(r.purchase_enrichment),
+    pending: r.pending === true ? true : undefined,
+    platformId: ostr(r.platform_id),
+    captureSource: ostr(r.capture_source),
   }
 }
 
@@ -1675,6 +1678,9 @@ function txnFromExtensionRpcRow(r: Row): Txn {
     excludeReason: ostr(r.exclude_reason),
     source: (ostr(r.source) as Txn['source']) ?? 'import',
     purchaseEnrichment: purchaseEnrichmentFromRow(r.purchase_enrichment),
+    pending: r.pending === true ? true : undefined,
+    platformId: ostr(r.platform_id),
+    captureSource: ostr(r.capture_source),
   }
 }
 
@@ -1708,6 +1714,7 @@ function txnToRow(userId: string, t: Partial<Txn> & { date: string }): Row {
     exclude_reason: t.excludeReason ?? null,
     source: t.source ?? 'manual',
     platform_id: (t as { platformId?: string }).platformId ?? null,
+    pending: t.pending ?? false,
     review_status: 'resolved',
     review_flags: [],
     purchase_enrichment: t.purchaseEnrichment ?? null,
@@ -1861,9 +1868,13 @@ export interface FinalizeExtensionSyncInput {
 export interface FinalizeExtensionSyncResult {
   alreadyProcessed: boolean
   insertedTransactionCount: number
+  /** pending 行被重抓刷新 / posted 转正而更新的行数（FINC.PENDING.1）。 */
+  updatedTransactionCount: number
   skippedTransactionCount: number
   insertedAssertionCount: number
   transactions: Txn[]
+  /** 被更新（转正/刷新）的行，需合并回本地 store 覆盖同 id 旧行。 */
+  updatedTransactions: Txn[]
 }
 
 /** 扩展同步原子落库：幂等记录 + 交易 + 余额锚点（Supabase RPC）。 */
@@ -1886,12 +1897,18 @@ export async function finalizeExtensionSync(
   const transactions = Array.isArray(txnsRaw)
     ? (txnsRaw as Row[]).map((t) => txnFromExtensionRpcRow(t))
     : []
+  const updatedRaw = row.updated_transactions
+  const updatedTransactions = Array.isArray(updatedRaw)
+    ? (updatedRaw as Row[]).map((t) => txnFromExtensionRpcRow(t))
+    : []
   return {
     alreadyProcessed: Boolean(row.already_processed),
     insertedTransactionCount: Number(row.inserted_transaction_count ?? 0),
+    updatedTransactionCount: Number(row.updated_transaction_count ?? 0),
     skippedTransactionCount: Number(row.skipped_transaction_count ?? 0),
     insertedAssertionCount: Number(row.inserted_assertion_count ?? 0),
     transactions,
+    updatedTransactions,
   }
 }
 

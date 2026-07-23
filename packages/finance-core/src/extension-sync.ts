@@ -215,8 +215,15 @@ export interface AppSnapshot {
   /** true 表示隐私模式下只导出最小同步元数据，不含金额/商户/持仓明细。 */
   privacyRedacted?: boolean
   accounts: AppSnapshotAccount[]
-  /** planNewTransactions 同款去重键（date|merchant|amount），最近 N 笔。 */
+  /** planNewTransactions 同款去重键（date|merchant|amount），最近 N 笔。仅含已入账
+   *  （非 pending）行——pending 行的键不稳定（清算时金额/日期会变），不能用作去重依据。 */
   txnKeys: string[]
+  /**
+   * 本地仍为 pending 的行的 platformId（FINC.PENDING.1）。扩展预过滤必须放行这些 id
+   * 对应的行（无论页面上还是 Pending 还是已 posted）——它们是待转正/待刷新的更新，
+   * 即使 date|merchant|amount 键与已有行相同也不算重复。
+   */
+  pendingPlatformIds?: string[]
   txnCount: number
   txnOldestDate?: string
   txnNewestDate?: string
@@ -249,6 +256,7 @@ export interface UnenrichedMerchantTxn {
 }
 
 const SNAPSHOT_TXN_KEY_MAX = 4000
+const SNAPSHOT_PENDING_ID_MAX = 200
 const SCROLL_BUFFER_DAYS = 3
 const UNENRICHED_MERCHANT_WINDOW_DAYS = 45
 const UNENRICHED_MERCHANT_MAX = 50
@@ -315,13 +323,20 @@ export function buildAppSnapshot(
   holdingsSnapshots: HoldingsSnapshot[],
   options: { privacy?: boolean; txnBackfill?: { from: string; to: string } | null } = {},
 ): AppSnapshot {
-  const sorted = [...txns].sort((a, b) =>
+  // pending 行单列：键不进 txnKeys（不稳定），platformId 进 pendingPlatformIds（放行更新）；
+  // 停止点/水位参考日期也只看已入账行——pending 行不能证明「同步到了这一天」。
+  const posted = txns.filter((t) => !t.pending)
+  const sorted = [...posted].sort((a, b) =>
     a.date < b.date ? -1 : a.date > b.date ? 1 : 0,
   )
   const recent = sorted.slice(-SNAPSHOT_TXN_KEY_MAX)
   const txnKeys = options.privacy
     ? []
     : recent.map((t) => txnDedupKey(t.date, t.merchant, t.amount))
+  const pendingPlatformIds = txns
+    .filter((t) => t.pending && t.platformId)
+    .map((t) => t.platformId as string)
+    .slice(-SNAPSHOT_PENDING_ID_MAX)
   const txnOldestDate = sorted[0]?.date
   const txnNewestDate = sorted[sorted.length - 1]?.date
   const txnFastStopBefore = txnNewestDate
@@ -345,6 +360,7 @@ export function buildAppSnapshot(
           balanceManual: a.balanceManual,
         })),
     txnKeys,
+    pendingPlatformIds: options.privacy ? [] : pendingPlatformIds,
     txnCount: txns.length,
     txnOldestDate,
     txnNewestDate,
@@ -932,10 +948,20 @@ export function planNewTransactions(
     isIncomeMerchant: buildIncomeMerchantIndex(existing),
   }
   // key → 已有该组合的剩余「配额」；capture 行先消耗配额（视为重复），配额耗尽才是新交易。
+  // 配额只由已入账（非 pending）行构成：本地 pending 行只按 platformId 对账（FINC.PENDING.1），
+  // 它的键不稳定，进配额会把 posted 转正行误吞成重复。
   const existingCount = new Map<string, number>()
   for (const t of existing) {
+    if (t.pending) continue
     const key = txnKey(t.date, t.merchant, t.amount)
     existingCount.set(key, (existingCount.get(key) ?? 0) + 1)
+  }
+  // platformId → 已存行；跨 capture 来源的 id 不可比，仅认同源（或来源未知的老行）。
+  const existingByPlatformId = new Map<string, Txn>()
+  for (const t of existing) {
+    if (!t.platformId) continue
+    if (t.captureSource && t.captureSource !== env.source) continue
+    existingByPlatformId.set(t.platformId, t)
   }
   const seenPlatformIds = new Set<string>()
   const seenKeylessKeys = new Set<string>()
@@ -943,7 +969,9 @@ export function planNewTransactions(
   let skippedPending = 0
   let skippedDuplicate = 0
   for (const row of data.rows) {
-    if (row.pending) {
+    // 无 platformId 的 pending 行仍旧跳过：没有稳定键，清算后无法转正对账，
+    // 入了账等 posted 版本到达时必然重复。
+    if (row.pending && !row.platformId) {
       skippedPending += 1
       continue
     }
@@ -952,6 +980,34 @@ export function planNewTransactions(
       seenPlatformIds.add(row.platformId)
     }
     const txn = captureRowToTxn(row, env.source, flowCtx)
+    const stored = row.platformId
+      ? existingByPlatformId.get(row.platformId)
+      : undefined
+    if (stored) {
+      if (!stored.pending) {
+        // 已入账的行冻结（用户可能手动改过），不重复也不覆写。
+        skippedDuplicate += 1
+        continue
+      }
+      // 本地还是 pending：posted 到达 → 转正；仍 pending → 仅数据变化时刷新。
+      const changed =
+        txn.date !== stored.date ||
+        txn.amount !== stored.amount ||
+        txn.merchant !== stored.merchant ||
+        Boolean(txn.pending) !== Boolean(stored.pending)
+      if (!changed) {
+        skippedDuplicate += 1
+        continue
+      }
+      out.push(txn)
+      continue
+    }
+    // 全新 pending 行（带 platformId，前面已保证）：身份就是 platformId，DB 侧唯一索引
+    // 兜底防重；不走键配额——pending 键撞上某笔旧 posted 行纯属巧合，误吞会让它永不入账。
+    if (txn.pending) {
+      out.push(txn)
+      continue
+    }
     const key = txnKey(txn.date, txn.merchant, txn.amount)
     // 无 platformId 的行分不清「两笔一样的真交易」还是「同一行抓了两次」：
     // 同一 capture 内相同 key 只收第一条，保守防重。
@@ -987,6 +1043,8 @@ function captureRowToTxn(
     account: resolveCaptureAccount(row),
     source: 'import' as const,
     platformId: row.platformId,
+    // pending 只对带 platformId 的行有意义（无稳定键无法转正对账，plan 阶段已跳过）。
+    ...(row.pending && row.platformId ? { pending: true } : {}),
   }
   switch (flow) {
     case 'income':
@@ -1183,6 +1241,7 @@ export function newTxnToExtensionSyncPayload(
     source: t.source ?? 'import',
     ...(t.excludeReason ? { exclude_reason: t.excludeReason } : {}),
     ...(t.platformId ? { platform_id: t.platformId } : {}),
+    ...(t.pending ? { pending: true } : {}),
   })
 }
 
