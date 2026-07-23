@@ -54,6 +54,9 @@ export const DAY_IMAGES = {
 const DEDICATED_EX_IMAGE_IDS = [
   'sh_latraise',
   'sh_cableraise',
+  'ar_ropeoh',
+  'l_calf',
+  'b_rdl',
   'c_bench',
   'c_incdb',
   'c_incmc',
@@ -95,19 +98,34 @@ export const EXERCISE_IMAGES = Object.fromEntries(
   ]),
 )
 
+/**
+ * 同一动作在多个分类下有独立记录时，示范图挂在「动作」上、各记录共用一张。
+ * 只影响取图，不走 EX_ID_ALIASES（那是历史/训练量迁移，会合并记录语义）。
+ * key = 借图的记录 id，value = 图所在的规范记录 id。
+ */
+const EX_IMAGE_ALIASES = {
+  l_rdl: 'b_rdl', // 罗马尼亚硬拉：腿日与背日共用同一示范图
+}
+
+/** 取该动作的专属图 key：先做记录别名，再做图片别名 */
+function exImageKey(exId) {
+  const id = resolveExerciseId(exId)
+  return EX_IMAGE_ALIASES[id] ?? id
+}
+
 export function dayImage(id) {
   return DAY_IMAGES[id] ?? null
 }
 
 /** 动作缩略图：仅返回有专属图的路径，否则 null（由 UI 显示占位） */
 export function exerciseImage(exId) {
-  const id = resolveExerciseId(exId)
+  const id = exImageKey(exId)
   return EXERCISE_IMAGES[id] ?? EXERCISE_IMAGES[exId] ?? null
 }
 
 /** Focus 大图：仅专属动作图，无图时不借用训练日封面 */
 export function focusHeroImage(exId) {
-  const id = resolveExerciseId(exId)
+  const id = exImageKey(exId)
   return EXERCISE_IMAGES[id] ?? EXERCISE_IMAGES[exId] ?? null
 }
 
