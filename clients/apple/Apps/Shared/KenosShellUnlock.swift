@@ -25,7 +25,7 @@ enum KenosShellUnlock {
     @MainActor
     static func ensure(
         prompt: Bool = true,
-        reason: String = "Unlock Kenos",
+        reason: String = "Unlock Korben",
         grantTTL: TimeInterval = KenosUnlockGrantStore.defaultTTL
     ) async -> Result {
         if KenosUnlockGrantStore.isShellUnlocked() {

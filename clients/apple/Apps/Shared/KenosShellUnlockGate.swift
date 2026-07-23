@@ -19,13 +19,13 @@ struct KenosShellUnlockGate: View {
                 .font(.system(size: 44, weight: .medium))
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
-            Text(isZh ? "解锁 Kenos" : "Unlock Kenos")
+            Text(isZh ? "解锁 Korben" : "Unlock Korben")
                 .font(.title2.weight(.semibold))
                 .accessibilityAddTraits(.isHeader)
             Text(
                 isZh
-                    ? "使用面容 ID 或设备密码解锁此设备上的 Kenos 数据。"
-                    : "Face ID or device passcode unlocks this device for your Kenos data."
+                    ? "使用面容 ID 或设备密码解锁此设备上的 Korben 数据。"
+                    : "Face ID or device passcode unlocks this device for your Korben data."
             )
             .font(.subheadline)
             .foregroundStyle(.secondary)

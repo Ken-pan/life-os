@@ -95,7 +95,7 @@ struct KenosMacShellSurface: View {
                     .frame(height: 2)
             }
         }
-        // Prefer sidebar IA labels — SPA document.title stays "Kenos Assistant".
+        // Prefer sidebar IA labels — SPA document.title stays "Korben Assistant".
         .navigationTitle(shellTitle)
         .kenosMacSeamlessChrome()
         .onReceive(NotificationCenter.default.publisher(for: .kenosMacReloadWeb)) { _ in

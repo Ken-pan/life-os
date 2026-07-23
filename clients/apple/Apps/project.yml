@@ -49,7 +49,7 @@ targets:
     info:
       path: iOS/Info.plist
       properties:
-        CFBundleDisplayName: Kenos
+        CFBundleDisplayName: Korben
         CFBundleShortVersionString: '1.0.0'
         CFBundleVersion: '$(CURRENT_PROJECT_VERSION)'
         UILaunchScreen:
@@ -177,7 +177,7 @@ targets:
     info:
       path: macOS/Info.plist
       properties:
-        CFBundleDisplayName: Kenos
+        CFBundleDisplayName: Korben
         CFBundleURLTypes:
           - CFBundleURLName: space.kenos.app.macos
             CFBundleURLSchemes:
@@ -226,7 +226,7 @@ targets:
     info:
       path: watchOS/Info.plist
       properties:
-        CFBundleDisplayName: Kenos
+        CFBundleDisplayName: Korben
         CFBundleShortVersionString: '0.4.1'
         CFBundleVersion: '1'
         WKApplication: true
@@ -261,7 +261,7 @@ targets:
     info:
       path: Extensions/Widget/Info.plist
       properties:
-        CFBundleDisplayName: Kenos
+        CFBundleDisplayName: Korben
         CFBundleShortVersionString: '$(MARKETING_VERSION)'
         CFBundleVersion: '$(CURRENT_PROJECT_VERSION)'
         NSExtension:

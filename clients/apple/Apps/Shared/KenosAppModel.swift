@@ -101,7 +101,7 @@ final class KenosAppModel: ObservableObject {
     @Published var watchCaptures: [CaptureDraft] = []
     @Published var notificationInbox: [KenosNotificationRecord] = []
     @Published var assistantMessages: [AssistantMessage] = [
-        AssistantMessage(role: .assistant, text: "Ask Kenos anything. Writes still go through Approvals when needed."),
+        AssistantMessage(role: .assistant, text: "Ask Korben anything. Writes still go through Approvals when needed."),
     ]
     @Published var streaming = false
     /// Capture sheet while Focus hides TabView/Sidebar.
@@ -474,8 +474,8 @@ final class KenosAppModel: ObservableObject {
             shellUnlockError = nil
         } else {
             let reason = KenosShellSettingsStore.current.resolvedLocale() == "zh"
-                ? "解锁 Kenos"
-                : "Unlock Kenos"
+                ? "解锁 Korben"
+                : "Unlock Korben"
             let result = await KenosShellUnlock.ensure(prompt: prompt, reason: reason)
             shellUnlocked = result.ok
             shellUnlockError = result.ok ? nil : Self.localizedShellUnlockError(result.message)
@@ -589,7 +589,7 @@ final class KenosAppModel: ObservableObject {
             if item.type != .planReminder, item.type != .approvalRequested { count += 1 }
         }
         let today = TodayGlance(
-            nextPlanTitle: plan?.safeTitle ?? "Kenos",
+            nextPlanTitle: plan?.safeTitle ?? "Korben",
             nextPlanDue: nil,
             nextPlanDeepLink: plan?.deepLink ?? "kenos://today",
             pendingInboxCount: inboxCount > 0 ? inboxCount : nil,
@@ -2255,7 +2255,7 @@ final class KenosAppModel: ObservableObject {
         KenosDomainRegistry.definition(for: domainSpaceId)?.label ?? "Space"
     }
 
-    /// Brand accent per Space / Kenos Mode — shelf cards / general tints (adaptive L/D).
+    /// Brand accent per Space / Korben Mode — shelf cards / general tints (adaptive L/D).
     /// SSOT: domainIdentity.core.js via KenosDomainRegistry semantic pairs.
     static func accentColor(for spaceId: String) -> Color {
         KenosDomainRegistry.accentColor(for: spaceId)
@@ -2270,7 +2270,7 @@ final class KenosAppModel: ObservableObject {
         Self.accentColor(for: domainSpaceId)
     }
 
-    /// Dock selected tint on Liquid Glass — Domain Space on-glass pair; Kenos Mode Kenos on-glass.
+    /// Dock selected tint on Liquid Glass — Domain Space on-glass pair; Korben Mode Korben on-glass.
     var dockSelectionAccent: Color {
         shellMode == .domain
             ? Self.accentOnGlass(for: domainSpaceId)
@@ -2286,13 +2286,13 @@ final class KenosAppModel: ObservableObject {
         var systemImage: String
         /// Relative path on domain origin (Domain Mode capsule).
         var path: String? = nil
-        /// Kenos Mode capsule tab.
+        /// Korben Mode capsule tab.
         var kenosTab: Tab? = nil
         /// Domain Mode: opens More sheet (Search / History / secondary).
         var opensMore: Bool = false
     }
 
-    /// Kenos Mode capsule — three destinations; Spaces is a separate leading Orb.
+    /// Korben Mode capsule — three destinations; Spaces is a separate leading Orb.
     var kenosCapsuleDockItems: [DomainDockItem] {
         [
             .init(title: "Today", systemImage: "sun.max", kenosTab: .today),
@@ -2326,8 +2326,8 @@ final class KenosAppModel: ObservableObject {
         return [("Home", "house", "/")]
     }
 
-    /// Leading Spaces chip — **tap always toggles Space Shelf** (Kenos + Domain).
-    /// Never returns Home / Today; leave Domain via shelf “Back to Kenos” row.
+    /// Leading Spaces chip — **tap always toggles Space Shelf** (Korben + Domain).
+    /// Never returns Home / Today; leave Domain via shelf “Back to Korben” row.
     func activateSpacesDockButton() {
         if showSpaceShelf {
             dismissSpaceShelf()
@@ -2402,7 +2402,7 @@ final class KenosAppModel: ObservableObject {
             "to": next.host ?? "",
             "path": next.path,
         ])
-        // Keep shell on production too so Work / Kenos handoffs stay coherent.
+        // Keep shell on production too so Work / Korben handoffs stay coherent.
         _ = KenosDailyBetaConfig.activateProductionFallback(reason: reason, force: force)
         continuityURL = next
         persistDomainContinuity(next)
@@ -2414,7 +2414,7 @@ final class KenosAppModel: ObservableObject {
     }
 
     /// Enter Domain Mode with the Continuity URL. Always MainActor — WKWebView
-    /// callbacks can post off-main and leave Kenos dock stuck on screen.
+    /// callbacks can post off-main and leave Korben dock stuck on screen.
     @MainActor
     func enterDomainMode(url: URL) {
         KenosLog.breadcrumb("enter domain mode", category: .shell, metadata: [
@@ -2425,7 +2425,7 @@ final class KenosAppModel: ObservableObject {
         #if os(iOS)
         KenosPerfStateReporter.enterDomain(url: url)
         #endif
-        // Already in Domain (Space↔Space): keep Kenos return tab; only swap URL.
+        // Already in Domain (Space↔Space): keep Korben return tab; only swap URL.
         if shellMode != .domain {
             previousKenosTab = selectedTab
         }
@@ -2707,13 +2707,13 @@ final class KenosAppModel: ObservableObject {
         var subtitle: String
         var relativeTime: String?
         var isCurrent: Bool
-        /// Catalog / resume key — `"kenos"` for Kenos Mode home.
+        /// Catalog / resume key — `"kenos"` for Korben Mode home.
         var listKey: String
         var systemImage: String = "app"
         var isKenos: Bool = false
     }
 
-    /// Global app switcher: Kenos + full Life OS catalog (not recent-only).
+    /// Global app switcher: Korben + full Life OS catalog (not recent-only).
     var spaceShelfCards: [SpaceShelfCard] {
         let inDomain = shellMode == .domain
         let currentId = inDomain ? domainSpaceId : ""
@@ -2754,7 +2754,7 @@ final class KenosAppModel: ObservableObject {
 
         var cards: [SpaceShelfCard] = []
 
-        // 1) Kenos — first-class system home (current when not in Domain).
+        // 1) Korben — first-class system home (current when not in Domain).
         let kenosCurrent = !inDomain
         let waiting = notificationInbox.reduce(into: 0) { count, item in
             if item.type != .planReminder, item.type != .approvalRequested { count += 1 }
@@ -2859,7 +2859,7 @@ final class KenosAppModel: ObservableObject {
 
     private func openExternalURL(_ url: URL) {
         #if os(iOS)
-        // Personal Daily Beta: Domain Mode stays inside Kenos (dock replaces tabs).
+        // Personal Daily Beta: Domain Mode stays inside Korben (dock replaces tabs).
         if KenosDailyBetaConfig.isEnabled, isDomainContinuityURL(url) {
             enterDomainMode(url: url)
             return
@@ -2954,7 +2954,7 @@ final class KenosAppModel: ObservableObject {
 }
 
 /// Pure copy helpers for Space Shelf Current / resume subtitles.
-/// Never emit a generic "Home" that collides with Kenos Home or Domain home tabs.
+/// Never emit a generic "Home" that collides with Korben Home or Domain home tabs.
 enum KenosSpaceShelfLabels {
     /// Domain landing destination when Continuity is at the Space home path.
     static func homeDestination(for spaceId: String) -> String {

@@ -19,7 +19,7 @@ enum KenosContinuityDomain: String, AppEnum, CaseIterable, Sendable {
     case home
     case health
 
-    nonisolated static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Kenos Space")
+    nonisolated static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Korben Space")
 
     nonisolated static let caseDisplayRepresentations: [KenosContinuityDomain: DisplayRepresentation] = [
         .plan: "Plan",
@@ -41,7 +41,7 @@ enum KenosShellDestination: String, AppEnum, CaseIterable, Sendable {
     case settings
     case compose
 
-    nonisolated static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Kenos Shell")
+    nonisolated static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Korben Shell")
 
     nonisolated static let caseDisplayRepresentations: [KenosShellDestination: DisplayRepresentation] = [
         .today: "Today",
@@ -63,7 +63,7 @@ enum KenosIntentError: Error, CustomLocalizedStringResourceConvertible {
     var localizedStringResource: LocalizedStringResource {
         switch self {
         case let .unknownDomain(id):
-            return "Unknown Kenos space: \(id)"
+            return "Unknown Korben space: \(id)"
         }
     }
 }
@@ -81,15 +81,15 @@ enum KenosIntentURLOpener {
 
 /// Open a Continuity space (Plan / Training / …) inside Kenos.
 struct OpenKenosDomainIntent: AppIntent {
-    nonisolated static let title: LocalizedStringResource = "Open Kenos Space"
-    nonisolated static let description = IntentDescription("Open a Life OS space in Kenos Continuity.")
+    nonisolated static let title: LocalizedStringResource = "Open Korben Space"
+    nonisolated static let description = IntentDescription("Open a Life OS space in Korben Continuity.")
     nonisolated static let openAppWhenRun = true
 
     @Parameter(title: "Space")
     var domain: KenosContinuityDomain
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Open \(\.$domain) in Kenos")
+        Summary("Open \(\.$domain) in Korben")
     }
 
     @MainActor
@@ -104,15 +104,15 @@ struct OpenKenosDomainIntent: AppIntent {
 
 /// Open Kenos shell destinations (`kenos://today`, shelf, compose, …).
 struct OpenKenosShellIntent: AppIntent {
-    nonisolated static let title: LocalizedStringResource = "Open Kenos"
-    nonisolated static let description = IntentDescription("Open Today, Ask, Inbox, Shelf, or Compose in Kenos.")
+    nonisolated static let title: LocalizedStringResource = "Open Korben"
+    nonisolated static let description = IntentDescription("Open Today, Ask, Inbox, Shelf, or Compose in Korben.")
     nonisolated static let openAppWhenRun = true
 
     @Parameter(title: "Destination")
     var destination: KenosShellDestination
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Open \(\.$destination) in Kenos")
+        Summary("Open \(\.$destination) in Korben")
     }
 
     @MainActor
@@ -125,11 +125,11 @@ struct OpenKenosShellIntent: AppIntent {
 /// Jump straight into Training workout Continuity (`/session`).
 struct StartTrainingIntent: AppIntent {
     nonisolated static let title: LocalizedStringResource = "Start Training"
-    nonisolated static let description = IntentDescription("Open Training workout in Kenos Continuity.")
+    nonisolated static let description = IntentDescription("Open Training workout in Korben Continuity.")
     nonisolated static let openAppWhenRun = true
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Start Training in Kenos")
+        Summary("Start Training in Korben")
     }
 
     @MainActor
@@ -144,12 +144,12 @@ struct StartTrainingIntent: AppIntent {
 
 /// Capture / compose entry (domain compose or Kenos capture).
 struct CaptureInKenosIntent: AppIntent {
-    nonisolated static let title: LocalizedStringResource = "Capture in Kenos"
-    nonisolated static let description = IntentDescription("Open compose / capture in Kenos.")
+    nonisolated static let title: LocalizedStringResource = "Capture in Korben"
+    nonisolated static let description = IntentDescription("Open compose / capture in Korben.")
     nonisolated static let openAppWhenRun = true
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Capture in Kenos")
+        Summary("Capture in Korben")
     }
 
     @MainActor
@@ -162,11 +162,11 @@ struct CaptureInKenosIntent: AppIntent {
 /// Start Deep Work Continuity surface.
 struct StartDeepWorkIntent: AppIntent {
     nonisolated static let title: LocalizedStringResource = "Start Deep Work"
-    nonisolated static let description = IntentDescription("Open Work Deep Work focus in Kenos.")
+    nonisolated static let description = IntentDescription("Open Work Deep Work focus in Korben.")
     nonisolated static let openAppWhenRun = true
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Start Deep Work in Kenos")
+        Summary("Start Deep Work in Korben")
     }
 
     @MainActor
@@ -229,7 +229,7 @@ struct KenosAppShortcuts: AppShortcutsProvider {
                 "Open \(\.$destination) in \(.applicationName)",
                 "打开 \(\.$destination) in \(.applicationName)",
             ],
-            shortTitle: "Open Kenos",
+            shortTitle: "Open Korben",
             systemImageName: "tray"
         )
     }

@@ -28,7 +28,7 @@ struct KenosLogViewer: View {
                 ContentUnavailableView(
                     "No log lines",
                     systemImage: "text.alignleft",
-                    description: Text("Native events will appear as you navigate Kenos.")
+                    description: Text("Native events will appear as you navigate Korben.")
                 )
             } else {
                 List(filtered.reversed()) { event in

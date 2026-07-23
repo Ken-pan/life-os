@@ -183,7 +183,7 @@ struct WatchTodayView: View {
 
     private var watchTodayIdle: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Kenos")
+            Text("Korben")
                 .font(.headline)
                 .accessibilityIdentifier("kenos.watch.brand")
             Text(model.glance.state.uppercased())

@@ -97,7 +97,7 @@ struct KenosLiveActivityWidget: Widget {
         case .training: return "Training"
         case .focus: return "Focus"
         case .tidy: return "Tidy"
-        case .none: return "Kenos"
+        case .none: return "Korben"
         }
     }
 }
@@ -164,7 +164,7 @@ private struct KenosLiveActivityLockScreenView: View {
         case .training: return "Training"
         case .focus: return "Focus"
         case .tidy: return "Tidy"
-        case .none: return "Kenos"
+        case .none: return "Korben"
         }
     }
 }

@@ -595,7 +595,7 @@ final class KenosLogStore: @unchecked Sendable {
 
         let transcriptURL = exportDir.appendingPathComponent("transcript.txt")
         let header = [
-            "Kenos Log Export",
+            "Korben Log Export",
             "session: \(sessionInfo.sessionId)",
             "app: \(sessionInfo.app) \(sessionInfo.marketingVersion) (\(sessionInfo.build))",
             "device: \(sessionInfo.deviceModel) · \(sessionInfo.platform) \(sessionInfo.systemVersion)",

@@ -49,7 +49,7 @@ struct KenosLaunchVeil: View {
         ZStack {
             ink.ignoresSafeArea()
             VStack(spacing: 10) {
-                Text("Kenos")
+                Text("Korben")
                     .font(.system(size: 34, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.92))
                     .tracking(-0.6)
@@ -70,7 +70,7 @@ struct KenosLaunchVeil: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Kenos")
+        .accessibilityLabel("Korben")
     }
 }
 

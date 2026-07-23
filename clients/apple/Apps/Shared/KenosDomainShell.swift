@@ -317,10 +317,11 @@ struct KenosDomainModeShell: View {
                     chrome: isWebFocusSurface ? .none : .domainDock,
                     // Korben chrome (P1B) stacks a domain capsule above the dock —
                     // widen the scroll-end clearance accordingly.
+                    // Korben owns chrome → 用与 Today 同源的共享遮挡计算(域态含胶囊行)。
                     accessoryBottomPadPx: model.liveAccessoryWebBottomExtraPx
                         + (ownsGlobalChrome || isWebFocusSurface
                             ? 0
-                            : KorbenShellMetrics.domainCapsuleWebExtraPadPx),
+                            : KorbenShellMetrics.webBottomExtraPadPx(hasDomainCapsule: true)),
                     topExtraPadPx: isWebFocusSurface ? 0 : topExtraPadPx,
                     isActive: isActive
                 )
@@ -845,7 +846,7 @@ struct KenosSpaceShelfView: View {
 
     private func localizedShelfCardTitle(_ card: KenosAppModel.SpaceShelfCard) -> String {
         // Space name only — destination / status belong in the subtitle.
-        if card.isKenos { return "Kenos" }
+        if card.isKenos { return "Korben" }
         guard prefersChinese else { return card.title }
         switch card.id {
         case "home": return "家"

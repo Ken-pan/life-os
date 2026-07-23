@@ -73,7 +73,7 @@ struct KenosAppleHealthSettingsSection: View {
             } header: {
                 Text("Mac delivery")
             } footer: {
-                Text("Empty uses your Kenos shell host. Delivery: iCloud inbox and/or LAN :5193/ingest.")
+                Text("Empty uses your Korben shell host. Delivery: iCloud inbox and/or LAN :5193/ingest.")
                     .font(KenosTypography.caption)
             }
         }

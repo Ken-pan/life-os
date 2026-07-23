@@ -826,7 +826,7 @@ enum KenosNativeCapabilityBridge {
 
     private static func authenticate(params: [String: Any], id: String, webView: WKWebView?) {
         let reason = stringValue(params["reason"]).nilIfEmpty
-            ?? "Unlock this Kenos surface"
+            ?? "Unlock this Korben surface"
         let storageKey = stringValue(params["storageKey"])
         let force = boolValue(params["force"])
         // prompt=false: restore-only (grant / session). Never present Face ID.

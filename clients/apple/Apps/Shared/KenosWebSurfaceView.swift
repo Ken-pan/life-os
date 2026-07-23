@@ -394,7 +394,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                 "html[data-ios-native-shell='true'] .tw{",
                 "bottom:calc(\(bottomPad)px + 18px + env(safe-area-inset-bottom,0px))!important;",
                 "}",
-                /* Kenos space pages — pack under Music-style scroll header. */
+                /* Korben space pages — pack under Music-style scroll header. */
                 "html[data-ios-native-shell='true'] .space-page{",
                 "padding-top:0!important;",
                 "}",
@@ -420,7 +420,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
                 "html[data-ios-native-shell='true'] .safari-chrome-tint-bottom{",
                 "display:none!important;",
                 "}",
-                /* Kenos Today — pack under scroll header; kill PWA letterbox padding. */
+                /* Korben Today — pack under scroll header; kill PWA letterbox padding. */
                 "html[data-ios-native-shell='true'] .today-page{",
                 "padding-top:0!important;",
                 "padding-bottom:12px!important;",
@@ -1659,7 +1659,7 @@ struct KenosDailyBetaSurface: View {
             if hardUnreachable {
                 ContentUnavailableView {
                     Label(
-                        KenosOfflineShellPolicy.unreachableTitle("Kenos"),
+                        KenosOfflineShellPolicy.unreachableTitle("Korben"),
                         systemImage: "wifi.exclamationmark"
                     )
                 } description: {

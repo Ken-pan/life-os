@@ -17,7 +17,7 @@ struct KenosPlanWidget: Widget {
             )
         }
         .configurationDisplayName("Plan")
-        .description("Next task from Kenos Plan")
+        .description("Next task from Korben Plan")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

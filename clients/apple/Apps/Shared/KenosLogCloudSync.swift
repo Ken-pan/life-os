@@ -167,7 +167,7 @@ final class KenosLogCloudSync: ObservableObject {
 
         let sessionAuth = await resolveAuth(explicit: auth)
         guard let sessionAuth else {
-            let message = "Sign in on the Kenos web shell to sync logs."
+            let message = "Sign in on the Korben web shell to sync logs."
             lastUploadError = message
             UserDefaults.standard.set(message, forKey: Self.lastErrorKey)
             logNoAuthIfNeeded(reason: reason)

@@ -11,7 +11,7 @@ struct KenosMacApp: App {
         // Single main window (MAC-P0-06): prefer/allow "*" so an open scene
         // always claims kenos:// URLs. Empty sets never match (Apple docs) and
         // caused LaunchServices to spawn duplicate windows on every open.
-        Window("Kenos", id: "main") {
+        Window("Korben", id: "main") {
             // Owner Device Lock (Touch ID → exchange → SSO) is owned solely by
             // KenosRootView → AppModel.unlockShellAndHydrate — do not prompt here.
             KenosRootView(model: model)
@@ -35,7 +35,7 @@ struct KenosMacApp: App {
                 }
                 .keyboardShortcut("r", modifiers: [.command])
             }
-            CommandMenu("Kenos") {
+            CommandMenu("Korben") {
                 Button("Spaces…") { model.openSpaceShelf() }
                     .keyboardShortcut("s", modifiers: [.command, .shift])
                 Divider()
@@ -82,12 +82,12 @@ struct KenosMacApp: App {
 
     private var menuBarTitle: String {
         if model.focusStore.isForeground || model.focusStore.isPaused {
-            return "Kenos Focus"
+            return "Korben Focus"
         }
         if model.pendingApprovalCount > 0 {
-            return "Kenos · \(model.pendingApprovalCount)"
+            return "Korben · \(model.pendingApprovalCount)"
         }
-        return "Kenos"
+        return "Korben"
     }
 
     private var menuBarSystemImage: String {

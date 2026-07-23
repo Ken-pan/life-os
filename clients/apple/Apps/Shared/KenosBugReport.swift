@@ -881,8 +881,10 @@ enum KenosBugReportPrefill {
         let label: String = {
             if !d.heading.isEmpty { return d.heading }
             if !d.pageTitle.isEmpty {
-                // Drop trailing brand suffixes like " · Kenos"
+                // Drop trailing brand suffixes like " · Korben" (legacy " · Kenos" titles too)
                 let cleaned = d.pageTitle
+                    .replacingOccurrences(of: " | Korben", with: "")
+                    .replacingOccurrences(of: " · Korben", with: "")
                     .replacingOccurrences(of: " | Kenos", with: "")
                     .replacingOccurrences(of: " · Kenos", with: "")
                     .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1273,7 +1275,7 @@ enum KenosBugReportSubmitter {
         let (_, response) = try await URLSession.shared.data(for: req)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             let code = (response as? HTTPURLResponse)?.statusCode ?? -1
-            throw SubmitError.remoteFailed("Bug log insert failed (\(code)). Sign in on the Kenos web shell, then retry.")
+            throw SubmitError.remoteFailed("Bug log insert failed (\(code)). Sign in on the Korben web shell, then retry.")
         }
     }
 

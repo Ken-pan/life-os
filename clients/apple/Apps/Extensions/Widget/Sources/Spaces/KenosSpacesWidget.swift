@@ -9,7 +9,7 @@ struct KenosSpacesWidget: Widget {
         StaticConfiguration(kind: kind, provider: KenosWidgetSnapshotProvider()) { entry in
             KenosSpacesWidgetView(entry: entry)
         }
-        .configurationDisplayName("Kenos Spaces")
+        .configurationDisplayName("Korben Spaces")
         .description("Jump into Plan, Training, Music, and more")
         .supportedFamilies([.systemMedium, .systemLarge])
     }

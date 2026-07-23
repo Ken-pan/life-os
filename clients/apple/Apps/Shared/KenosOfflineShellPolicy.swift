@@ -99,8 +99,8 @@ enum KenosOfflineShellPolicy {
                 : "The Daily Beta shell is offline. Switch to the cloud version, or reconnect Daily Beta."
         }
         return zh
-            ? "Kenos 暂时无法连接。请检查网络后重试。"
-            : "Kenos did not respond. Check your network, then retry."
+            ? "Korben 暂时无法连接。请检查网络后重试。"
+            : "Korben did not respond. Check your network, then retry."
     }
 
     static func hardGateDomainDetail(isLanDependent: Bool) -> String {
@@ -119,7 +119,7 @@ enum KenosOfflineShellPolicy {
     static var retryLabel: String { prefersChinese ? "重试" : "Retry" }
     static var useProductionLabel: String { prefersChinese ? "切换到云端" : "Use cloud version" }
     static var syncPausedTitle: String { prefersChinese ? "同步已暂停" : "Sync paused" }
-    static var backToKenosLabel: String { prefersChinese ? "返回 Kenos" : "Back to Kenos" }
+    static var backToKenosLabel: String { prefersChinese ? "返回 Korben" : "Back to Korben" }
     static func unreachableTitle(_ name: String) -> String {
         prefersChinese ? "无法连接“\(name)”" : "\(name) unreachable"
     }

@@ -375,7 +375,7 @@ struct KenosRootView: View {
             )) { tab in
                 Text(tab.title).tag(tab)
             }
-            .navigationTitle("Kenos")
+            .navigationTitle("Korben")
             .accessibilityIdentifier("kenos.ipad.sidebar")
             .toolbar {
                 ToolbarItem {
@@ -403,7 +403,7 @@ struct KenosRootView: View {
                 get: { Optional(model.macSidebarSelection) },
                 set: { if let value = $0 { model.selectMacSidebar(value) } }
             )) {
-                Section("Kenos") {
+                Section("Korben") {
                     macSidebarRow(.today)
                     macSidebarRow(.assistant)
                     macSidebarRow(.inbox)
@@ -417,7 +417,7 @@ struct KenosRootView: View {
             }
             .listStyle(.sidebar)
             .navigationSplitViewColumnWidth(min: 200, ideal: 240, max: 320)
-            .navigationTitle("Kenos")
+            .navigationTitle("Korben")
             .accessibilityIdentifier("kenos.mac.sidebar")
             // Settings opens a window (⌘,) — a pinned footer button avoids the
             // fake List-selection flash a sidebar row caused.
@@ -904,7 +904,7 @@ struct FocusSessionView: View {
                 Text("The focus session has ended or is unavailable.")
                     .font(KenosTypography.body)
                     .foregroundStyle(.secondary)
-                Button("Back to Kenos") { model.endFocus() }
+                Button("Back to Korben") { model.endFocus() }
                     .buttonStyle(.bordered)
                     .accessibilityIdentifier("kenos.focus.exit")
                 Spacer()
@@ -2006,7 +2006,7 @@ struct DailyBetaSettingsView: View {
         Form {
             #if os(iOS)
             Section {
-                LabeledContent(L("Kenos account", "Kenos 账户")) {
+                LabeledContent(L("Korben account", "Korben 账户")) {
                     // Token presence ≠ Continuity sync health. Never label this "Synced".
                     Text(webSsoSignedIn ? L("Signed in", "已登录") : L("Not connected", "未连接"))
                         .foregroundStyle(webSsoSignedIn ? .primary : .secondary)
@@ -2038,7 +2038,7 @@ struct DailyBetaSettingsView: View {
                 Text(
                     L(
                         "Sign in once on this iPhone/Mac to pair. Later cold starts only need Face ID — browsers still require account login. Manage devices in Portal. Revoke requires a fresh login (15m).",
-                        "在本机 Kenos App 登录一次即可配对；之后冷启动只需 Face ID。浏览器仍需账号登录。可在 Portal 管理信任设备。撤销设备需 15 分钟内的新鲜登录。"
+                        "在本机 Korben App 登录一次即可配对；之后冷启动只需 Face ID。浏览器仍需账号登录。可在 Portal 管理信任设备。撤销设备需 15 分钟内的新鲜登录。"
                     )
                 )
                 .font(KenosTypography.caption)
@@ -2097,8 +2097,8 @@ struct DailyBetaSettingsView: View {
             } footer: {
                 Text(
                     L(
-                        "Theme and language apply across Kenos and Continuity spaces.",
-                        "主题与语言会应用到 Kenos 与各空间。"
+                        "Theme and language apply across Korben and Continuity spaces.",
+                        "主题与语言会应用到 Korben 与各空间。"
                     )
                 )
                 .font(KenosTypography.caption)
@@ -2136,7 +2136,7 @@ struct DailyBetaSettingsView: View {
             #if os(macOS)
             // MAC-P0-04: split account sync vs shell-origin reachability (was "Connected" vs Today CTA).
             Section {
-                LabeledContent(L("Kenos account", "Kenos 账户")) {
+                LabeledContent(L("Korben account", "Korben 账户")) {
                     Text(
                         KenosSharedWebAuth.hasSharedTokens
                             ? L("Signed in", "已登录")
@@ -2225,8 +2225,8 @@ struct DailyBetaSettingsView: View {
             } footer: {
                 Text(
                     L(
-                        "Shell origin only — not Kenos account login. Origin URL and LAN tools live under Advanced.",
-                        "仅表示壳层源是否可用，不是 Kenos 账户登录。地址与局域网工具在「高级」中。"
+                        "Shell origin only — not Korben account login. Origin URL and LAN tools live under Advanced.",
+                        "仅表示壳层源是否可用，不是 Korben 账户登录。地址与局域网工具在「高级」中。"
                     )
                 )
                 .font(KenosTypography.caption)
@@ -2329,7 +2329,7 @@ private struct DailyBetaAdvancedDiagnosticsView: View {
 
     var body: some View {
         Form {
-            Section("Kenos shell origin") {
+            Section("Korben shell origin") {
                 TextField(originFieldPrompt, text: $originDraft)
                     #if os(iOS)
                     .textInputAutocapitalization(.never)

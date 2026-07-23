@@ -5,9 +5,9 @@ import KenosClient
 /// Interactive Widget taps write a pending deep link, then open Kenos (`openAppWhenRun`).
 /// Host consumes via `KenosWidgetGlanceBridge.consumePendingDeepLink`.
 struct KenosWidgetCaptureIntent: AppIntent {
-    nonisolated static let title: LocalizedStringResource = "Capture in Kenos"
+    nonisolated static let title: LocalizedStringResource = "Capture in Korben"
     nonisolated static let openAppWhenRun = true
-    nonisolated static let description = IntentDescription("Open compose / capture in Kenos.")
+    nonisolated static let description = IntentDescription("Open compose / capture in Korben.")
 
     @MainActor
     func perform() async throws -> some IntentResult {
@@ -20,7 +20,7 @@ struct KenosWidgetCaptureIntent: AppIntent {
 struct KenosWidgetStartTrainingIntent: AppIntent {
     nonisolated static let title: LocalizedStringResource = "Start Training"
     nonisolated static let openAppWhenRun = true
-    nonisolated static let description = IntentDescription("Open Training workout in Kenos.")
+    nonisolated static let description = IntentDescription("Open Training workout in Korben.")
 
     @MainActor
     func perform() async throws -> some IntentResult {
@@ -33,7 +33,7 @@ struct KenosWidgetStartTrainingIntent: AppIntent {
 struct KenosWidgetOpenAssistantIntent: AppIntent {
     nonisolated static let title: LocalizedStringResource = "Open Ask"
     nonisolated static let openAppWhenRun = true
-    nonisolated static let description = IntentDescription("Open Kenos Ask.")
+    nonisolated static let description = IntentDescription("Open Korben Ask.")
 
     @MainActor
     func perform() async throws -> some IntentResult {

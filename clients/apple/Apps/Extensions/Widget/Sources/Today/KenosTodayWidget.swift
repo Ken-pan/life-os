@@ -11,7 +11,7 @@ struct KenosTodayWidget: Widget {
         StaticConfiguration(kind: kind, provider: KenosWidgetSnapshotProvider()) { entry in
             KenosTodayWidgetView(entry: entry)
         }
-        .configurationDisplayName("Kenos Today")
+        .configurationDisplayName("Korben Today")
         .description("Next Plan · Inbox · Approvals glance")
         .supportedFamilies([
             .systemSmall,
@@ -82,7 +82,7 @@ struct KenosTodayWidgetView: View {
     private var mediumBody: some View {
         HStack(alignment: .center, spacing: 14) {
             VStack(alignment: .leading, spacing: 8) {
-                KenosWidgetEyebrow(title: "Kenos Today", systemImage: "circle.grid.2x2.fill")
+                KenosWidgetEyebrow(title: "Korben Today", systemImage: "circle.grid.2x2.fill")
                 Text(summary)
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(.primary)
@@ -143,7 +143,7 @@ struct KenosTodayWidgetView: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Color(kenosRGB: KenosWidgetChrome.brandRGB))
             VStack(alignment: .leading, spacing: 1) {
-                Text("Kenos")
+                Text("Korben")
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
                 Text(summary)
