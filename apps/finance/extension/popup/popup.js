@@ -483,9 +483,31 @@ function renderMerchantPending(pending) {
   el.textContent = `检测到 ${pending.total} 笔新购买待标注：${parts.join(' · ')}`
 }
 
+function renderDirectAuth(auth, lastSync) {
+  const status = document.getElementById('direct-status')
+  const form = document.getElementById('direct-login-form')
+  const logout = document.getElementById('direct-logout')
+  if (!status || !form || !logout) return
+  if (auth?.signedIn) {
+    const lastDirect =
+      lastSync?.direct && lastSync.at ? ` · 上次直连 ${fmtTime(lastSync.at)}` : ''
+    status.className = 'plan-box'
+    status.textContent = `已登录 ${auth.email ?? ''} — 交易抓到即自动落库,无需打开 Finance OS 页面${lastDirect}`
+    form.style.display = 'none'
+    logout.style.display = ''
+  } else {
+    status.className = 'plan-box missing'
+    status.textContent =
+      '未登录:交易需打开 Finance OS 页面同步。用 Life OS 账号登录后,抓到的交易直接写入云端。'
+    form.style.display = 'flex'
+    logout.style.display = 'none'
+  }
+}
+
 async function refresh() {
   const res = await chrome.runtime.sendMessage({ type: 'FOS_STATUS' })
   if (!res?.ok) return
+  renderDirectAuth(res.directAuth, res.lastSync)
   const queue = res.queue ?? []
   const inFlight = res.inFlight ?? []
   const dlq = res.dlq ?? []
@@ -750,6 +772,47 @@ document.getElementById('retry-dlq')?.addEventListener('click', async () => {
 
 document.getElementById('clear-dlq')?.addEventListener('click', async () => {
   await chrome.runtime.sendMessage({ type: 'FOS_CLEAR_DLQ' })
+  await refresh()
+})
+
+document
+  .getElementById('direct-login-form')
+  ?.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const email = document.getElementById('direct-email')?.value?.trim()
+    const password = document.getElementById('direct-password')?.value
+    const errEl = document.getElementById('direct-login-error')
+    const btn = document.getElementById('direct-login')
+    if (!email || !password) return
+    if (btn) {
+      btn.disabled = true
+      btn.textContent = '登录中…'
+    }
+    const res = await chrome.runtime.sendMessage({
+      type: 'FOS_DIRECT_LOGIN',
+      email,
+      password,
+    })
+    if (btn) {
+      btn.disabled = false
+      btn.textContent = '登录并启用直连'
+    }
+    if (res?.ok) {
+      const pw = document.getElementById('direct-password')
+      if (pw) pw.value = ''
+      if (errEl) errEl.style.display = 'none'
+      await refresh()
+    } else if (errEl) {
+      errEl.style.display = ''
+      errEl.textContent = res?.error ?? '登录失败'
+    }
+  })
+
+document.getElementById('direct-logout')?.addEventListener('click', async () => {
+  const btn = document.getElementById('direct-logout')
+  if (btn) btn.disabled = true
+  await chrome.runtime.sendMessage({ type: 'FOS_DIRECT_LOGOUT' })
+  if (btn) btn.disabled = false
   await refresh()
 })
 

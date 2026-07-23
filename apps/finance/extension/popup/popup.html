@@ -193,6 +193,21 @@
         color: var(--text-muted);
       }
 
+      .direct-input {
+        font-family: inherit;
+        font-size: var(--text-sm);
+        padding: 7px 10px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text-primary);
+      }
+
+      .direct-input:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: -1px;
+      }
+
       /* ===== 按钮（app .btn / .btn.ghost / .btn.outline）===== */
       button {
         font-family: inherit;
@@ -529,6 +544,17 @@
         <h2>抓取计划（Finance OS）</h2>
         <div id="snapshot-plan" class="plan-box missing">尚未拉取。打开 Finance OS 后会自动更新。</div>
         <button id="refresh-plan" class="btn ghost">更新抓取计划</button>
+      </section>
+      <section>
+        <h2>直连账号（免开页面同步）</h2>
+        <div id="direct-status" class="plan-box missing">读取中…</div>
+        <form id="direct-login-form" style="display:none; flex-direction:column; gap:6px">
+          <input id="direct-email" class="direct-input" type="email" placeholder="Life OS 邮箱" autocomplete="username" />
+          <input id="direct-password" class="direct-input" type="password" placeholder="密码" autocomplete="current-password" />
+          <button id="direct-login" class="btn" type="submit">登录并启用直连</button>
+          <div id="direct-login-error" class="crawl-state" style="display:none"></div>
+        </form>
+        <button id="direct-logout" class="btn ghost" style="display:none" type="button">退出直连账号</button>
       </section>
       <section>
         <h2>同步到 Finance OS</h2>

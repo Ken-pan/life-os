@@ -85,6 +85,53 @@
     return normal;
   }
 
+  /**
+   * 入队前的行级清洗(FINC.DIRECT.1:清理/校验在扩展侧完成,坏行不出扩展)。
+   * 丢弃:日期非 ISO / 在未来 2 天以外 / 早于 2000 年;金额非有限数或为 0;
+   * 商户为空。裁剪:商户/类别/账户长度(与 RPC 的 left() 上限一致)。
+   * 返回 { rows, dropped: [{reason, row}] } 供爬取日志/console 记账。
+   */
+  function validateTxnRows(rows, todayIso) {
+    const out = [];
+    const dropped = [];
+    const maxDate = (() => {
+      const d = new Date(`${todayIso}T00:00:00`);
+      d.setDate(d.getDate() + 2);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    })();
+    for (const row of rows ?? []) {
+      const date = String(row?.date ?? "");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        dropped.push({ reason: "bad-date", row });
+        continue;
+      }
+      if (date > maxDate || date < "2000-01-01") {
+        dropped.push({ reason: "date-out-of-range", row });
+        continue;
+      }
+      const amount = Number(row?.amount);
+      if (!Number.isFinite(amount) || amount === 0) {
+        dropped.push({ reason: "bad-amount", row });
+        continue;
+      }
+      const merchant = String(row?.merchant ?? "").trim();
+      const statement = String(row?.statement ?? "").trim();
+      if (!merchant && !statement) {
+        dropped.push({ reason: "no-merchant", row });
+        continue;
+      }
+      out.push({
+        ...row,
+        amount,
+        merchant: merchant.slice(0, 200),
+        category: String(row?.category ?? "Uncategorized").slice(0, 200),
+        ...(row?.account ? { account: String(row.account).slice(0, 200) } : {}),
+        ...(statement ? { statement: statement.slice(0, 500) } : {}),
+      });
+    }
+    return { rows: out, dropped };
+  }
+
   function filterNewCaptureTxnRows(rows, snapshot, _source) {
     if (!snapshot?.txnKeys?.length && !snapshot?.pendingPlatformIds?.length)
       return { rows, skippedDuplicate: 0 };
@@ -167,6 +214,7 @@
   window.FOS_PLAN = {
     txnDedupKey,
     resolveTxnScrollStopBefore,
+    validateTxnRows,
     filterNewCaptureTxnRows,
     filterAccountRows,
     filterRecurringRows,

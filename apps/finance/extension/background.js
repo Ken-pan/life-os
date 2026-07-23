@@ -1,9 +1,16 @@
 // Finance OS Sync — background service worker。
-// 扩展不直连 Supabase；经 bridge.js 与 Finance OS 页面通信，由页面写入 Life OS（public schema）。
+// 交易 capture 优先**直连 Supabase 落库**(FINC.DIRECT.1:popup 登录自有会话,
+// 经 finalize_extension_sync_v1 幂等 RPC,不再要求开着 Finance OS 标签页);
+// 无会话/无 platformId 的行回退老路:经 bridge.js 与 Finance OS 页面通信落库。
+// 账户/订阅/持仓/订单同步仍走 bridge(需要页面侧账户匹配与交互确认)。
 // 职责：维护 capture 队列（chrome.storage.local）、in-flight（session）、
 // DLQ、同步状态；Robinhood 持仓详情后台批量补齐。
 
-importScripts('rhDetailsShared.js')
+importScripts('rhDetailsShared.js', 'vendor/fos-sync-core.js', 'directSync.js')
+
+if (!self.FOS_CORE || !self.FOS_DIRECT) {
+  console.error('[FOS] fos-sync-core / directSync 未加载，直连同步不可用')
+}
 
 if (!self.FOS_RH) {
   console.error('[FOS] rhDetailsShared.js 未加载，Robinhood 详情补齐不可用')
@@ -638,8 +645,176 @@ async function buildStatusPayload() {
       attempts: meta.attempts,
     })),
     lastSync: obj[SYNC_STATE_KEY] ?? null,
+    directAuth: self.FOS_DIRECT
+      ? await self.FOS_DIRECT.directAuthStatus()
+      : { signedIn: false },
   }
 }
+
+// ===================== 直连落库(FINC.DIRECT.1) =====================
+
+const DIRECT_DRAIN_ALARM = 'fos-direct-drain'
+let directDrainBusy = false
+
+/** 队列里还有交易 capture 时挂一个重试闹钟;排空后清掉,不空转耗电。 */
+async function scheduleDirectDrainAlarm() {
+  const queue = await getQueue()
+  const hasTxn = queue.some((c) => c.kind === 'transactions')
+  const existing = await chrome.alarms.get(DIRECT_DRAIN_ALARM)
+  if (hasTxn && !existing) {
+    chrome.alarms.create(DIRECT_DRAIN_ALARM, { periodInMinutes: 2 })
+  } else if (!hasTxn && existing) {
+    await chrome.alarms.clear(DIRECT_DRAIN_ALARM)
+  }
+}
+
+/**
+ * 把队列里的交易 capture 直接经 RPC 落库,不经 Finance OS 页面。
+ * - 只处理带 platformId 的行(服务端唯一键幂等去重);无 platformId 的行拆成
+ *   `<id>::kl` 残包留在队列走 bridge(需要页面全量账本做 multiset 去重)。
+ * - 未登录/刷新失败 → 整体跳过,队列原样留给 bridge——直连是加速器不是单点。
+ * - 数据级错误(22P02/payload mismatch)进 DLQ;网络/5xx 留队列等闹钟重试。
+ * - 水位线与 FOS_ACK 同规则:complete 且**无 keyless 拆包**时,推进到非 pending
+ *   行的最大日期(拆包意味着部分行尚未落库,推早了会留下永远不补的空洞)。
+ */
+async function directDrainTransactions(reason = 'auto') {
+  if (directDrainBusy) return { ok: true, skipped: 'busy' }
+  if (!self.FOS_CORE || !self.FOS_DIRECT) return { ok: false, error: 'core-missing' }
+  directDrainBusy = true
+  try {
+    const token = await self.FOS_DIRECT.getDirectAccessToken()
+    if (!token) {
+      await scheduleDirectDrainAlarm()
+      return { ok: true, skipped: 'no-session' }
+    }
+    const queue = await getQueue()
+    const txnCaptures = queue.filter((c) => c.kind === 'transactions')
+    if (txnCaptures.length === 0) {
+      await scheduleDirectDrainAlarm()
+      return { ok: true, processed: 0 }
+    }
+    const { [SNAPSHOT_KEY]: snap } = await chrome.storage.local.get(SNAPSHOT_KEY)
+    const incomeMerchants = snap?.incomeMerchants ?? []
+    let processed = 0
+    let inserted = 0
+    let updated = 0
+    const summaries = []
+
+    for (const env of txnCaptures) {
+      const rows = Array.isArray(env.data?.rows) ? env.data.rows : []
+      const { payloads, keyless } = self.FOS_CORE.captureRowsToRpcPayloads(
+        rows,
+        env.source,
+        incomeMerchants,
+      )
+      if (payloads.length === 0) continue // 全 keyless:整包留给 bridge
+
+      const payloadHash = await self.FOS_CORE.computeEnvelopePayloadHash(env)
+      let res = await self.FOS_DIRECT.directFinalizeRpc(token, {
+        envelope_id: env.id,
+        payload_hash: payloadHash,
+        capture_source: env.source,
+        capture_kind: env.kind,
+        transactions: payloads,
+      })
+      if (res.status === 401) {
+        const fresh = await self.FOS_DIRECT.getDirectAccessToken()
+        if (fresh) {
+          res = await self.FOS_DIRECT.directFinalizeRpc(fresh, {
+            envelope_id: env.id,
+            payload_hash: payloadHash,
+            capture_source: env.source,
+            capture_kind: env.kind,
+            transactions: payloads,
+          })
+        }
+      }
+
+      if (!res.ok) {
+        if (res.permanent) {
+          await moveCaptureToDlq(env.id, `直连落库失败:${res.error}`)
+        }
+        // 非永久错误:留在队列,闹钟或下次入队再试;也不阻塞后面的包
+        console.warn('[FOS] 直连落库失败', env.id, res.error)
+        continue
+      }
+
+      // 成功:出队(keyless 残行拆成新包留给 bridge)+ 历史 + 水位线
+      await mutateQueue((q) => {
+        const rest = q.filter((c) => c.id !== env.id)
+        if (keyless.length > 0) {
+          rest.push({
+            ...env,
+            id: `${env.id}::kl`,
+            data: { ...env.data, rows: keyless, complete: false },
+          })
+        }
+        return rest
+      })
+      await appendHistory({
+        id: env.id,
+        source: env.source,
+        kind: env.kind,
+        capturedAt: env.capturedAt,
+        syncedAt: new Date().toISOString(),
+        direct: true,
+      })
+      if (env.data?.complete === true && keyless.length === 0) {
+        const dates = rows
+          .filter((r) => !r.pending)
+          .map((r) => r.date)
+          .sort()
+        const max = dates[dates.length - 1]
+        if (max) {
+          const { fos_txn_watermark: cur } =
+            await chrome.storage.local.get('fos_txn_watermark')
+          if (!cur || max > cur) {
+            await chrome.storage.local.set({ fos_txn_watermark: max })
+          }
+        }
+      }
+      processed += 1
+      const r = res.result ?? {}
+      inserted += Number(r.inserted_transaction_count ?? 0)
+      updated += Number(r.updated_transaction_count ?? 0)
+      summaries.push(
+        `直连:${env.source} 新增 ${r.inserted_transaction_count ?? 0}、更新 ${r.updated_transaction_count ?? 0}、跳过 ${r.skipped_transaction_count ?? 0}`,
+      )
+    }
+
+    if (processed > 0) {
+      const remaining = (await getQueue()).length
+      await chrome.storage.local.set({
+        [SYNC_STATE_KEY]: {
+          ok: true,
+          direct: true,
+          reason,
+          processed,
+          failed: 0,
+          pending: remaining,
+          summaries,
+          at: new Date().toISOString(),
+        },
+      })
+      console.info(
+        `[FOS] 直连落库:${processed} 包,新增 ${inserted} 更新 ${updated}(${reason})`,
+      )
+    }
+    await scheduleDirectDrainAlarm()
+    return { ok: true, processed, inserted, updated }
+  } finally {
+    directDrainBusy = false
+  }
+}
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === DIRECT_DRAIN_ALARM) {
+    void directDrainTransactions('alarm')
+  }
+})
+
+// SW 冷启动(浏览器重启/被回收后唤醒)补一次排水。
+void directDrainTransactions('startup').catch(() => {})
 
 async function saveLastRhHoldings(holdings) {
   if (!holdings?.positions?.length) return
@@ -894,6 +1069,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
             await saveLastRhHoldings(capture.data)
           }
           sendResponse({ ok: true, queued: queued.length })
+          // 交易 capture 入队即尝试直连落库(不阻塞响应;失败留队列走 bridge)。
+          if (capture.kind === 'transactions') {
+            void directDrainTransactions('enqueue')
+          }
           break
         }
         case 'FOS_MARK_INFLIGHT': {
@@ -1131,7 +1310,28 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           sendResponse(await buildStatusPayload())
           break
         }
+        case 'FOS_DIRECT_LOGIN': {
+          const { email, password } = msg
+          if (!email || !password) {
+            sendResponse({ ok: false, error: '缺少邮箱或密码' })
+            break
+          }
+          const result = await self.FOS_DIRECT.directLogin(email, password)
+          if (result.ok) void directDrainTransactions('login')
+          sendResponse(result)
+          break
+        }
+        case 'FOS_DIRECT_LOGOUT': {
+          sendResponse(await self.FOS_DIRECT.directLogout())
+          break
+        }
+        case 'FOS_DIRECT_DRAIN': {
+          sendResponse(await directDrainTransactions('manual'))
+          break
+        }
         case 'FOS_TRIGGER_SYNC': {
+          // 先直连排掉交易包;剩余(账户/订阅/keyless 残包)再走 bridge 流程。
+          await directDrainTransactions('trigger-sync').catch(() => {})
           const { fos_active_sync: active } = await chrome.storage.session.get('fos_active_sync')
           // Heartbeat-based stale detection: 60s without any FOS_PULL, FOS_MARK_INFLIGHT, or setRhEnrichState
           if (active && (Date.now() - (active.heartbeatAt ?? active.startedAt) < 60000)) {

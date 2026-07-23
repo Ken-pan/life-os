@@ -224,6 +224,11 @@ export interface AppSnapshot {
    * 即使 date|merchant|amount 键与已有行相同也不算重复。
    */
   pendingPlatformIds?: string[]
+  /**
+   * 历史账本里的「纯收入来源」商户名（FINC.DIRECT.1）。扩展直连落库时用它做
+   * 收入识别（flowForCaptureRow 的 ctx），与页面侧 buildIncomeMerchantIndex 同源。
+   */
+  incomeMerchants?: string[]
   txnCount: number
   txnOldestDate?: string
   txnNewestDate?: string
@@ -257,6 +262,7 @@ export interface UnenrichedMerchantTxn {
 
 const SNAPSHOT_TXN_KEY_MAX = 4000
 const SNAPSHOT_PENDING_ID_MAX = 200
+const SNAPSHOT_INCOME_MERCHANT_MAX = 50
 const SCROLL_BUFFER_DAYS = 3
 const UNENRICHED_MERCHANT_WINDOW_DAYS = 45
 const UNENRICHED_MERCHANT_MAX = 50
@@ -361,6 +367,9 @@ export function buildAppSnapshot(
         })),
     txnKeys,
     pendingPlatformIds: options.privacy ? [] : pendingPlatformIds,
+    incomeMerchants: options.privacy
+      ? []
+      : pureIncomeMerchants(txns).slice(0, SNAPSHOT_INCOME_MERCHANT_MAX),
     txnCount: txns.length,
     txnOldestDate,
     txnNewestDate,
@@ -908,22 +917,58 @@ export function flowForCaptureRow(
  * 工资商户名在不同数据源写法不一（"Ingram Micro" vs
  * "Ingram Micro PAYROLL PPD ID: 1621644402"），所以用 nameMatches 做词边界模糊匹配。
  */
-export function buildIncomeMerchantIndex(
-  existing: Txn[],
-): (merchant: string) => boolean {
+export function pureIncomeMerchants(existing: Txn[]): string[] {
   const incomeNames = new Set<string>()
   const spendNames = new Set<string>()
   for (const t of existing) {
     if (t.flow === 'income') incomeNames.add(t.merchant)
     else if (t.flow === 'expense') spendNames.add(t.merchant)
   }
-  const pure = [...incomeNames].filter(
+  return [...incomeNames].filter(
     (n) => ![...spendNames].some((s) => nameMatches(n, s)),
   )
+}
+
+export function buildIncomeMerchantIndex(
+  existing: Txn[],
+): (merchant: string) => boolean {
+  const pure = pureIncomeMerchants(existing)
   return (merchant: string) => {
     if (!merchant) return false
     return pure.some((n) => nameMatches(n, merchant))
   }
+}
+
+/**
+ * 扩展直连落库（FINC.DIRECT.1）：capture 行 → finalize_extension_sync_v1 的
+ * transactions payload。与 planNewTransactions 的分类完全同源（captureRowToTxn），
+ * 但去重完全交给服务端 platformId 唯一键——因此**只处理带 platformId 的行**，
+ * 无 platformId 的行返回在 `keyless` 里，由调用方走 bridge 全量去重路径。
+ * incomeMerchants 来自 app 快照（pureIncomeMerchants），保证收入识别与页面一致。
+ */
+export function captureRowsToRpcPayloads(
+  rows: CapturedTxnRow[],
+  source: CaptureSource,
+  incomeMerchants: string[] = [],
+): { payloads: Record<string, unknown>[]; keyless: CapturedTxnRow[] } {
+  const ctx: CaptureFlowContext = {
+    isIncomeMerchant: (m: string) =>
+      Boolean(m) && incomeMerchants.some((n) => nameMatches(n, m)),
+  }
+  const seen = new Set<string>()
+  const payloads: Record<string, unknown>[] = []
+  const keyless: CapturedTxnRow[] = []
+  for (const row of rows) {
+    if (!row.platformId) {
+      // pending 且无 platformId:既不能直连也不该 bridge(无法转正对账),直接丢
+      if (!row.pending) keyless.push(row)
+      continue
+    }
+    if (seen.has(row.platformId)) continue
+    seen.add(row.platformId)
+    payloads.push(newTxnToExtensionSyncPayload(captureRowToTxn(row, source, ctx)))
+  }
+  return { payloads, keyless }
 }
 
 function txnKey(date: string, merchant: string, amount: number): string {

@@ -26,7 +26,8 @@
     "guard:overflow": "vitest run src/debug/overflowGuard.test.ts",
     "qa:screenshots": "node scripts/ui-main-flows-screenshot-qa.mjs",
     "qa:ia-routes": "node scripts/ia-route-smoke.mjs",
-    "qa:ia-nav": "node scripts/ia-nav-qa.mjs"
+    "qa:ia-nav": "node scripts/ia-nav-qa.mjs",
+    "ext:build-core": "node scripts/build-extension-core.mjs"
   },
   "dependencies": {
     "@life-os/contracts": "*",

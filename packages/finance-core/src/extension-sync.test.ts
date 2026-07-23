@@ -4,6 +4,7 @@ import type { Txn } from './engine/transactions.js'
 import {
   accountRowUnchangedInApp,
   buildAppSnapshot,
+  captureRowsToRpcPayloads,
   buildIncomeMerchantIndex,
   collectUnenrichedMerchantTxns,
   planMerchantOrderEnrichment,
@@ -899,6 +900,58 @@ describe('flowForCaptureRow', () => {
         ctx,
       ),
     ).toBe('refund_or_reversal')
+  })
+})
+
+describe('captureRowsToRpcPayloads(扩展直连,FINC.DIRECT.1)', () => {
+  it('platformId 行出 payload(含 pending),keyless posted 行回落 bridge,keyless pending 丢弃', () => {
+    const rows: CapturedTxnRow[] = [
+      {
+        date: '2026-07-22', merchant: 'Panda Express', category: 'Dining & Drinks',
+        amount: 14.39, credit: false, pending: true, platformId: 'pid-1',
+      },
+      {
+        date: '2026-07-21', merchant: 'Home Depot', category: 'Home & Garden',
+        amount: 32.5, credit: false, pending: false, platformId: 'pid-2',
+      },
+      { // keyless posted → bridge
+        date: '2026-07-20', merchant: 'Corner Store', category: 'Shopping',
+        amount: 5, credit: false, pending: false,
+      },
+      { // keyless pending → 丢弃(无法转正对账)
+        date: '2026-07-20', merchant: 'Gas Hold', category: 'Auto & Transport',
+        amount: 60, credit: false, pending: true,
+      },
+      { // 同 platformId 重复 → 只出一份
+        date: '2026-07-21', merchant: 'Home Depot', category: 'Home & Garden',
+        amount: 32.5, credit: false, pending: false, platformId: 'pid-2',
+      },
+    ]
+    const { payloads, keyless } = captureRowsToRpcPayloads(rows, 'rocketmoney')
+    expect(payloads).toHaveLength(2)
+    expect(keyless).toHaveLength(1)
+    expect(keyless[0].merchant).toBe('Corner Store')
+    const panda = payloads.find((p) => p.merchant === 'Panda Express')!
+    expect(panda.pending).toBe(true)
+    expect(panda.platform_id).toBe('pid-1')
+    expect(panda.flow_type).toBe('expense')
+    expect(panda.budget_impact).toBe(-14.39)
+    const hd = payloads.find((p) => p.merchant === 'Home Depot')!
+    expect(hd.pending).toBeUndefined()
+  })
+
+  it('incomeMerchants 上下文让工资进账分类为 income 而非退款', () => {
+    const rows: CapturedTxnRow[] = [
+      {
+        date: '2026-07-16', merchant: 'Ingram Micro', category: 'Software & Tech',
+        amount: 3322.74, credit: true, pending: false, platformId: 'pid-pay',
+      },
+    ]
+    const noCtx = captureRowsToRpcPayloads(rows, 'rocketmoney')
+    expect(noCtx.payloads[0].flow_type).toBe('refund_or_reversal')
+    const withCtx = captureRowsToRpcPayloads(rows, 'rocketmoney', ['Ingram Micro'])
+    expect(withCtx.payloads[0].flow_type).toBe('income')
+    expect(withCtx.payloads[0].amount).toBe(-3322.74)
   })
 })
 

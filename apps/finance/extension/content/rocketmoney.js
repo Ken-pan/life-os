@@ -1324,8 +1324,16 @@
         stats: { stopBefore },
       })
       const { rows: rawRows, complete } = await scrollAndCollect(stopBefore)
+      // 行级清洗在扩展侧完成:坏行(日期/金额/商户不合法)不出扩展。
+      const validated = plan.validateTxnRows(rawRows, todayISO())
+      if (validated.dropped.length > 0) {
+        appendCrawlLog('warn', `清洗丢弃 ${validated.dropped.length} 行`, {
+          code: 'ROWS_DROPPED',
+          reasons: validated.dropped.map((d) => d.reason),
+        })
+      }
       const { rows, skippedDuplicate } = plan.filterNewCaptureTxnRows(
-        rawRows,
+        validated.rows,
         snap,
         'rocketmoney',
       )
@@ -1456,8 +1464,15 @@
           lastTxnSig = sig
           void (async () => {
             const snap = await loadAppSnapshot()
+            const validated = plan.validateTxnRows(rows, todayISO())
+            if (validated.dropped.length > 0) {
+              console.info(
+                `[FOS] RocketMoney 被动抓取清洗丢弃 ${validated.dropped.length} 行`,
+                validated.dropped.map((d) => d.reason),
+              )
+            }
             const { rows: need, skippedDuplicate } =
-              plan.filterNewCaptureTxnRows(rows, snap, 'rocketmoney')
+              plan.filterNewCaptureTxnRows(validated.rows, snap, 'rocketmoney')
             if (need.length === 0) {
               if (skippedDuplicate > 0) {
                 console.info(
