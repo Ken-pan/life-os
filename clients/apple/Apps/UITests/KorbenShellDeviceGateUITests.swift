@@ -321,6 +321,61 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         assertSingleKorbenChrome(app, context: "plan-bottom")
     }
 
+    // MARK: System Strip 行为验收(Attention / Tray 展开)
+
+    /// 证明 System Strip 不只是视觉原型:单元可点、Tray 能展开与关闭、
+    /// 无状态时整条隐藏不占位。真机上通常有 Training runtime,故 strip 存在。
+    func testSystemStripBehavior() {
+        let app = launchKorben()
+        XCTAssertTrue(app.buttons["korben.orb"].waitForExistence(timeout: 15))
+        sleep(3)
+
+        // 按 identifier 跨类型查 —— SwiftUI 在 Strip 容器下不一定把单元暴露成
+        // `button` 类型(实测 app.buttons 查不到,但元素确实在)。
+        func byId(_ id: String) -> XCUIElement { app.descendants(matching: .any)[id] }
+        let strip = byId("korben.systemStrip")
+        let runtime = byId("korben.strip.runtime")
+        let attention = byId("korben.strip.attention")
+        let secondary = byId("korben.strip.secondaryRuntimes")
+
+        guard strip.waitForExistence(timeout: 6) else {
+            // 无任何 runtime/attention:规范要求整条隐藏 —— 这本身就是通过条件。
+            XCTAssertFalse(runtime.exists || attention.exists, "无状态时 Strip 单元不应存在")
+            attachScreenshot(app, name: "STRIP-empty-hidden")
+            return
+        }
+        _ = runtime.waitForExistence(timeout: 3) // 让单元先入树再计数
+        attachScreenshot(app, name: "STRIP-1-visible")
+
+        // 单元总数不超过规范上限 3。
+        let unitCount = [runtime, attention, secondary].filter { $0.exists }.count
+        XCTAssertLessThanOrEqual(unitCount, 3, "Strip 最多 3 个状态单元")
+        XCTAssertGreaterThan(unitCount, 0, "Strip 可见时至少有一个单元")
+
+        // Tray 展开:优先点 attention(规范里它是 Tray 入口),否则点次要 runtime。
+        let trayOpener = attention.exists ? attention : (secondary.exists ? secondary : runtime)
+        if trayOpener.exists, trayOpener.isHittable, trayOpener != runtime {
+            trayOpener.tap()
+            let tray = app.descendants(matching: .any)["korben.systemTray"]
+            XCTAssertTrue(tray.waitForExistence(timeout: 5), "点 Strip 单元应展开 System Tray")
+            attachScreenshot(app, name: "STRIP-2-tray-open")
+            // 点 Tray 外部关闭。
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap()
+            XCTAssertTrue(
+                app.buttons["korben.orb"].waitForExistence(timeout: 5),
+                "关闭 Tray 后应回到壳"
+            )
+            attachScreenshot(app, name: "STRIP-3-tray-closed")
+        } else {
+            // 只有主 runtime 单元(无 attention/次要):点它应回到运行中的会话,
+            // 不应崩溃或留下悬空 overlay。
+            runtime.tap()
+            sleep(3)
+            assertSingleKorbenChrome(app, context: "after-runtime-tap")
+            attachScreenshot(app, name: "STRIP-2-runtime-activated")
+        }
+    }
+
     // MARK: Test 7 — Dynamic Type(辅助功能大号)
 
     func testDynamicTypeAccessibilityLarge() {

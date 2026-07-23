@@ -14,26 +14,47 @@ struct KorbenSystemStrip: View {
         KenosShellSettingsStore.current.resolvedLocale() == "zh"
     }
 
+    /// 同时在跑的 Runtime 条数 —— 与 `KenosAppModel.liveAccessory` 的 5 个来源同源
+    /// (它只单选优先级最高的一个,这里数总数以支撑「次要 Runtime」单元)。
+    @MainActor
+    static func activeRuntimeCount(model: KenosAppModel) -> Int {
+        var n = 0
+        if !model.captureText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           !model.showCaptureSheet { n += 1 }
+        if model.focusStore.showReturnBanner { n += 1 }
+        if let snap = KenosLiveActivityFoundation.lastSnapshot,
+           KenosLiveActivityFoundation.activeKinds.contains(snap.kind) { n += 1 }
+        if KenosNowPlayingBridge.hasLiveTrack { n += 1 }
+        return n
+    }
+
+    @MainActor
+    static func units(model: KenosAppModel) -> [KorbenStripModel.Unit] {
+        KorbenStripModel.units(
+            attentionCount: model.pendingApprovalCount,
+            primaryRuntimeTitle: model.liveAccessory?.title,
+            activeRuntimeCount: max(activeRuntimeCount(model: model), model.liveAccessory == nil ? 0 : 1)
+        )
+    }
+
     /// Strip 是否有内容(host 用它决定 web 顶部 inset)。
     @MainActor
     static func hasUnits(model: KenosAppModel) -> Bool {
-        model.liveAccessory != nil || model.pendingApprovalCount > 0
+        !units(model: model).isEmpty
     }
 
     var body: some View {
-        if Self.hasUnits(model: model) {
+        let strip = Self.units(model: model)
+        if !strip.isEmpty {
             HStack(spacing: 0) {
-                if let live = model.liveAccessory {
-                    runtimeUnit(live)
-                    if model.pendingApprovalCount > 0 {
+                ForEach(Array(strip.enumerated()), id: \.offset) { index, unit in
+                    if index > 0 {
                         Rectangle()
                             .fill(.white.opacity(0.12))
                             .frame(width: 0.5, height: 14)
                             .accessibilityHidden(true)
                     }
-                }
-                if model.pendingApprovalCount > 0 {
-                    attentionUnit(count: model.pendingApprovalCount)
+                    unitView(unit)
                 }
             }
             .frame(height: 34)
@@ -42,8 +63,44 @@ struct KorbenSystemStrip: View {
             .padding(.horizontal, KorbenShellMetrics.chromeHorizontalInset)
             .frame(maxHeight: KorbenShellMetrics.topChromeMaxHeight)
             .transition(.opacity.combined(with: .move(edge: .top)))
+            // `.contain` —— 只给容器 identifier 会让 SwiftUI 把子单元合并进容器,
+            // 单元既查不到也读不出(VoiceOver 会把整条读成一坨)。声明为容器后
+            // 每个状态单元保持独立可寻址 / 可聚焦。
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("korben.systemStrip")
         }
+    }
+
+    @ViewBuilder
+    private func unitView(_ unit: KorbenStripModel.Unit) -> some View {
+        switch unit {
+        case .attention(let count):
+            attentionUnit(count: count)
+        case .runtime:
+            if let live = model.liveAccessory { runtimeUnit(live) }
+        case .secondaryRuntimes(let count):
+            secondaryRuntimesUnit(count: count)
+        }
+    }
+
+    /// P3 次要 Runtime 数量 —— 只报条数,详情在 Tray 里看。
+    private func secondaryRuntimesUnit(count: Int) -> some View {
+        Button {
+            shellState.showsSystemTray = true
+        } label: {
+            Text(prefersChinese ? "+\(count) 进行中" : "+\(count) running")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.primary.opacity(0.75))
+                .padding(.horizontal, 12)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(
+            prefersChinese ? "另有 \(count) 项进行中" : "\(count) more running"
+        )
+        .accessibilityHint(prefersChinese ? "打开系统托盘" : "Opens the System Tray")
+        .accessibilityIdentifier("korben.strip.secondaryRuntimes")
     }
 
     /// Runtime 单元(Focus 显示实时计时;其余显示 accessory 标题)。
