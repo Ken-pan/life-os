@@ -71,18 +71,34 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       accentId: 'aios',
       description:
         platform === 'ios'
-          ? 'Kenos 原生 iOS 壳（模拟器实截）：Dock · Space Shelf · 今日/问答/收件箱'
+          ? 'Kenos 原生 iOS 壳（模拟器实截）：Dock · Shelf · 今日/问答/收件箱 + Korben 壳 V2 预览'
           : 'Kenos Mac Command Center（真实窗口截图）：侧栏 + 详情 · Spaces · Capture',
       screens: [
         { link: 'kenos://today', title: '今日', path: 'kenos://today', settle: 5000 },
         { link: 'kenos://assistant', title: '问答', path: 'kenos://assistant', settle: shellSettle },
         { link: 'kenos://inbox', title: '收件箱', path: 'kenos://inbox', settle: shellSettle },
         { link: 'kenos://shelf', title: '空间 Shelf', path: 'kenos://shelf', settle: 2200 },
-        // settings 会顺带压掉 shelf（实测）；之后回 today 复位，再截 compose。
+        // settings 会顺带压掉 shelf（实测）；之后回 today 复位,再截 compose。
         { link: 'kenos://settings', title: '设置', path: 'kenos://settings', settle: 2200 },
         { link: 'kenos://today', reset: true, settle: 1500 },
         ...(platform === 'ios'
-          ? [{ link: 'kenos://compose', title: '快速捕获', path: 'kenos://compose', settle: 2200 }]
+          ? [
+              { link: 'kenos://compose', title: '快速捕获', path: 'kenos://compose', settle: 2200 },
+              // compose 的 web 弹窗会残留到下一屏 —— 回 today 复位再截 continue。
+              { link: 'kenos://today', reset: true, settle: 1800 },
+              { link: 'kenos://continue', title: '继续', path: 'kenos://continue', settle: 2200 },
+              // ── Korben Shell V2 预览(feature flag 重启;截完回旧壳)──
+              { link: 'relaunch:-korbenShellV2 -kenosDevMode', reset: true, settle: 7000 },
+              { link: 'kenos://today', title: 'Korben 壳 · 今日', path: 'kenos://today', settle: 4000 },
+              {
+                link: 'kenos://domain/plan?path=%2F%3Fdemo%3D1',
+                title: 'Korben 壳 · 计划域',
+                path: 'kenos://domain/plan',
+                settle: 7000,
+              },
+              // 回旧壳 —— 仍带 -kenosDevMode 保持 HealthKit sheet 被抑制。
+              { link: 'relaunch:-kenosDevMode', reset: true, settle: 6000 },
+            ]
           : []),
       ],
     },
@@ -268,8 +284,10 @@ async function captureIOS() {
   sh(`xcrun simctl install ${udid} "${app}"`)
   // 卸载清不掉 cfprefsd 层的 defaults（曾被 userOrigin 残留劫持到生产登录墙）——显式清域。
   sh(`xcrun simctl spawn ${udid} defaults delete space.kenos.app.ios 2>/dev/null || true`)
+  // 开发后门:-kenosDevMode 一次跳过 HealthKit 授权 sheet（+ Face ID，模拟器本就跳）。
+  // 比预写 authPrompted defaults 更干净：不污染持久化偏好、与真机测试同一机制。
   sh(`xcrun simctl terminate ${udid} space.kenos.app.ios 2>/dev/null || true`)
-  sh(`xcrun simctl launch ${udid} space.kenos.app.ios`)
+  sh(`xcrun simctl launch ${udid} space.kenos.app.ios -kenosDevMode`)
   await sleep(4000)
 
   const tmp = join(tmpdir(), `kenos-uiux-ios-${Date.now()}`)
@@ -279,7 +297,17 @@ async function captureIOS() {
   for (const entry of nativeEntries('ios')) {
     process.stdout.write(`  ${entry.name} `)
     const cells = await captureEntryScreens(entry, {
-      open: (link) => sh(`xcrun simctl openurl ${udid} "${link}"`),
+      // `relaunch:<args>` — 用指定 launch args 重启 app(如 Korben 壳 V2 预览);
+      // 空 args = 回默认旧壳。其余按 deep link openurl。
+      open: (link) => {
+        if (link.startsWith('relaunch:')) {
+          const args = link.slice('relaunch:'.length).trim()
+          sh(`xcrun simctl terminate ${udid} space.kenos.app.ios 2>/dev/null || true`)
+          sh(`xcrun simctl launch ${udid} space.kenos.app.ios ${args}`)
+          return
+        }
+        sh(`xcrun simctl openurl ${udid} "${link}"`)
+      },
       shoot: () => {
         const file = join(tmp, `${shot++}.png`)
         sh(`xcrun simctl io ${udid} screenshot "${file}"`)

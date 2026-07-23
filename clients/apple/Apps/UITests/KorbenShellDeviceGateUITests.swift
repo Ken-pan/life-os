@@ -63,11 +63,21 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
     }
 
     /// 经 Orb → Space Switcher 真实点按切换 Space。
+    /// 切换器是带 List 的 sheet,靠后的 Space(如 Money)在折叠线以下且懒加载,
+    /// 未滚动到可见时查询命中不到 —— 需滚动查找。
     private func switchSpace(_ app: XCUIApplication, rowText: String) {
         app.buttons["korben.orb"].tap()
         XCTAssertTrue(switcherVisible(app, timeout: 5), "Orb tap 后 Switcher 应打开")
         let row = app.buttons.containing(NSPredicate(format: "label CONTAINS %@", rowText)).firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 5), "Switcher 内应有 \(rowText) 行")
+        // 先等一拍首屏渲染;找不到就在 sheet 内向上滚,最多 5 次。
+        var found = row.waitForExistence(timeout: 3)
+        var scrolls = 0
+        while !(found && row.isHittable) && scrolls < 5 {
+            app.swipeUp()
+            scrolls += 1
+            found = row.exists
+        }
+        XCTAssertTrue(found, "Switcher 内应有 \(rowText) 行(滚动 \(scrolls) 次后仍未见)")
         row.tap()
         // Domain WKWebView 加载余量
         sleep(6)
@@ -207,15 +217,10 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         XCTAssertFalse(item0.label.isEmpty, "胶囊项应有 label")
         XCTAssertGreaterThanOrEqual(item0.frame.height, 44)
 
-        // Xcode 15+ 内建审计(对 WKWebView 内容会产生噪音——只审 chrome 层可交互元素,
-        // 若整页审计失败仅记录不判死,人工复核 attachment)
-        if #available(iOS 17.0, *) {
-            do {
-                try app.performAccessibilityAudit(for: [.hitRegion])
-            } catch {
-                add(XCTAttachment(string: "a11y audit(hitRegion) findings: \(error)"))
-            }
-        }
+        // 不用 performAccessibilityAudit 全屏审计:它会穿进 WKWebView(独立进程)
+        // 审网页内容,那是 web 侧责任、不属原生壳 Device Gate,且在 Swift 6 严格
+        // 并发下 handler 无法安全捕获 self。原生壳控件的命中区/标签已在上方逐一
+        // 精准断言(Orb/Dock/域胶囊 ≥44pt + 非空 label),覆盖此 gate 的原生范围。
     }
 
     // MARK: Test 6b — 域胶囊真实点按(域内视图切换)
