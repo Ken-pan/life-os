@@ -118,12 +118,23 @@ targets:
         NSSupportsLiveActivitiesFrequentUpdates: true
     entitlements:
       path: iOS/KenosIOS.entitlements
-      # HealthKit temporarily removed — wildcard / daily-beta signing cannot
-      # carry com.apple.developer.healthkit. Re-add after App ID + Xcode
-      # account can refresh a HealthKit Development profile:
-      #   com.apple.developer.healthkit: true
-      #   com.apple.developer.healthkit.access: []
-      properties: {}
+      # HealthKit re-enabled: KenosHealthKitReader needs com.apple.developer.healthkit
+      # or every read fails "Missing entitlement" (195x in kenos_app_logs). Device
+      # builds sign with -allowProvisioningUpdates, which registers an explicit App ID
+      # (space.kenos.app.ios) + HealthKit-capable profile. Requires a paid team; the
+      # wildcard "XC Wildcard" profile cannot carry it (Xcode silently strips it).
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+        # Same container as apps/health/companion — KenosHealthDelivery.writeICloud()
+        # targets "iCloud.space.kenos.healthos"; without this the Mac agent's
+        # scanInbox() never sees synced days (writeICloud silently returns false).
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.space.kenos.healthos
+        com.apple.developer.icloud-services:
+          - CloudDocuments
+        com.apple.developer.ubiquity-container-identifiers:
+          - iCloud.space.kenos.healthos
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios
@@ -293,6 +304,19 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios.tests
         GENERATE_INFOPLIST_FILE: YES
 
+  KenosIOSUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: KenosIOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: KenosIOS
+
   KenosMacTests:
     type: bundle.unit-test
     platform: macOS
@@ -352,9 +376,19 @@ schemes:
         KenosWatch: all
         KenosWidget: [build]
         KenosIOSTests: [test]
+        KenosIOSUITests: [test]
     test:
       targets:
         - KenosIOSTests
+        - KenosIOSUITests
+  KenosIOSUITests:
+    build:
+      targets:
+        KenosIOS: all
+        KenosIOSUITests: [test]
+    test:
+      targets:
+        - KenosIOSUITests
   KenosMac:
     build:
       targets:

@@ -1,10 +1,12 @@
 import Foundation
 
-/// Temporary HealthKit kill switch for daily-beta device signing.
+/// HealthKit runtime gate.
 ///
-/// Wildcard / Automatic profiles cannot carry `com.apple.developer.healthkit`.
-/// Flip back to `true` once the App ID has HealthKit and Xcode can refresh a
-/// Development profile that includes it.
+/// Was a temporary kill switch while wildcard / Automatic profiles couldn't carry
+/// `com.apple.developer.healthkit`. Re-enabled once the explicit App ID
+/// (`space.kenos.app.ios`) gained the HealthKit capability and Xcode signed a
+/// Development profile that includes it (`-allowProvisioningUpdates` with an
+/// account logged in).
 enum KenosHealthKitFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
