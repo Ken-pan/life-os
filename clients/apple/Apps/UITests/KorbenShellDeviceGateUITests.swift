@@ -415,7 +415,7 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
 
     /// B 组:交互与手势(含从未视觉验证过的 Orb 右拉 → Assist)。
     func testReviewShotsB_Interactions() {
-        let app = launchKorben()
+        var app = launchKorben()
         let orb = app.buttons["korben.orb"]
         XCTAssertTrue(orb.waitForExistence(timeout: 15))
         sleep(2)
@@ -436,6 +436,18 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
             app.swipeDown(velocity: .fast)
             _ = orb.waitForExistence(timeout: 5)
         }
+
+        // B2 之后会停在 Ask 页(Assist 面板的「展开对话」导航过去),而 Ask 页自带
+        // composer、Korben Intent Dock 按 P0-2 规则隐藏 —— 若不复位,B3/B4 测到的
+        // 会是**网页的**输入框而非 Quick Capture(此前几轮就是这样误采)。
+        // 用重启拿干净 Today 态,比在 UI 里绕路可靠。
+        app.terminate()
+        app = launchKorben()
+        XCTAssertTrue(
+            app.buttons["korben.intentDock"].waitForExistence(timeout: 15),
+            "Today 应有 Intent Dock(仅 Ask 页隐藏)"
+        )
+        dismissKeyboardTutorialIfPresent(app)
 
         // B3 Intent Dock → Quick Capture + 键盘
         app.buttons["korben.intentDock"].tap()

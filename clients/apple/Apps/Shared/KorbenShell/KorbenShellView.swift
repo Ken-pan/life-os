@@ -53,7 +53,10 @@ struct KorbenShellView: View {
                     .transition(.opacity)
                 }
 
-                if projection.showsKorbenChrome {
+                // Gate5B:Capture/Canvas 展开时整条底部 chrome 让位 —— 三层状态机
+                // 每一态**只允许一个文本输入源、一个 Draft、一个主动作**。不靠 sheet
+                // detent 恰好遮住 Dock 碰运气(下滑 detent 或无键盘时它会露出来)。
+                if projection.showsKorbenChrome, !shellState.showsQuickCapture {
                     VStack(spacing: 0) {
                         KorbenSystemStrip(model: model, shellState: shellState)
                         Spacer(minLength: 0)

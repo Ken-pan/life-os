@@ -125,22 +125,29 @@ struct KorbenQuickCaptureSheet: View {
             }
 
             // Canvas 档:多出的高度给书写区之后,底部给真 agent 入口。
-            // 多轮协作 / 批量 / Agent 执行接入前,这里就是「更大的书写空间 + 转对话」。
+            // Gate5B「一个主动作」:主动作恒为「创建」(落草稿,可靠且可撤销);
+            // 转对话是**另一条去向**,故降为次要样式的文字入口 —— 此前两个同色
+            // 蓝胶囊并列,用户分不清「创建」与「展开对话」谁是主(review P1-3)。
             if expanded {
                 Divider().overlay(.white.opacity(0.08))
                 Button {
                     dismiss()
                     model.open(urlString: "kenos://assistant")
                 } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "sparkle").font(.system(size: 14, weight: .medium))
-                        Text(prefersChinese ? "交给 Korben 展开对话" : "Hand to Korben — open conversation")
-                            .font(.system(size: 15, weight: .semibold))
+                    HStack(spacing: 6) {
+                        Image(systemName: "sparkle").font(.system(size: 13))
+                        Text(
+                            prefersChinese
+                                ? "或者交给 Korben 继续讨论"
+                                : "Or hand it to Korben to discuss"
+                        )
+                        .font(.system(size: 14, weight: .medium))
+                        Image(systemName: "chevron.right").font(.system(size: 11))
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color(red: 0.357, green: 0.549, blue: 1.0), in: Capsule())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color(red: 0.357, green: 0.549, blue: 1.0))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 6)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("korben.canvas.openConversation")
