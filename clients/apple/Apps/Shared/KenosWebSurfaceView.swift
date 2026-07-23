@@ -224,6 +224,12 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         )
     }
 
+    /// 壳当前的主题决定('auto' | 'light' | 'dark'),随 Continuity 壳设置。
+    /// 下发给 web 的单一真源 —— Domain 不再各用各的默认值。
+    private var shellThemePreference: String {
+        KenosShellSettingsStore.current.theme
+    }
+
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .default()
@@ -258,6 +264,15 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         let shellScript = WKUserScript(
             source: """
             window.__KENOS_IOS_NATIVE_SHELL__ = true;
+            // Shell 决定 colorScheme —— 此脚本在 .atDocumentStart 注入,**早于**各
+            // Domain 在 <head> 里的阻塞式主题解析器。此前壳从不下发主题,每个 app
+            // 用各自的默认值(planner 默认 light / aios 默认 dark),于是同一台设备上
+            // Plan 浅、Today 深,破坏「同一个 Korben Shell」的连续性(review P0-1)。
+            // Web 侧解析器需优先读这两个值,否则本注入不产生效果(见 web 侧工单)。
+            window.__KENOS_SHELL_THEME__ = '\(shellThemePreference)';
+            try {
+              document.documentElement.dataset.kenosShellTheme = '\(shellThemePreference)';
+            } catch (e) {}
             try {
               document.documentElement.dataset.iosNativeShell = 'true';
               document.documentElement.dataset.kenosWebChrome = '\(chrome.rawValue)';
