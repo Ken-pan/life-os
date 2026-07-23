@@ -1,6 +1,6 @@
 {
   "id": "home",
-  "name": "Kenos Home",
+  "name": "Korben Home",
   "shortName": "Home",
   "description": {
     "zh": "居家空间规划 · 平面审计与储藏区管理",
@@ -18,7 +18,7 @@
   "domain": "home.kenos.space",
   "shellType": "main-col-wrap",
   "wordmarkAccent": { "light": "#7d93a8", "dark": "#7d93a8" },
-  "wordmarkBase": "Kenos",
+  "wordmarkBase": "Korben",
   "wordmarkAccentText": "Home",
   "switcherOrder": 50,
   "experimental": true,

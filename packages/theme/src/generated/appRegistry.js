@@ -27,7 +27,7 @@
 export const LIFE_OS_SITE_META = {
   planner: {
     id: "planner",
-    name: "Kenos Plan",
+    name: "Korben Plan",
     shortName: "Plan",
     description: {
       zh: "阳光感任务清单 · 轻松规划每一天",
@@ -49,7 +49,7 @@ export const LIFE_OS_SITE_META = {
   },
   fitness: {
     id: "fitness",
-    name: "Kenos Training",
+    name: "Korben Training",
     shortName: "Training",
     description: {
       zh: "胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先",
@@ -71,7 +71,7 @@ export const LIFE_OS_SITE_META = {
   },
   finance: {
     id: "finance",
-    name: "Kenos Money",
+    name: "Korben Money",
     shortName: "Money",
     description: {
       zh: "个人财务驾驶舱 · 现金流、资产与长期规划",
@@ -93,7 +93,7 @@ export const LIFE_OS_SITE_META = {
   },
   music: {
     id: "music",
-    name: "Kenos Music",
+    name: "Korben Music",
     shortName: "Music",
     description: {
       zh: "本地音乐，留在心里 · 离线播放与歌单",
@@ -115,7 +115,7 @@ export const LIFE_OS_SITE_META = {
   },
   home: {
     id: "home",
-    name: "Kenos Home",
+    name: "Korben Home",
     shortName: "Home",
     description: {
       zh: "居家空间规划 · 平面审计与储藏区管理",
@@ -162,8 +162,8 @@ export const LIFE_OS_SITE_META = {
     name: "Korben",
     shortName: "Korben",
     description: {
-      zh: "Kenos 默认协调入口 · Today、Assistant、Inbox、审批与 Activity",
-      en: "The Kenos coordination entry · Today, Assistant, Inbox, approvals, and Activity",
+      zh: "Korben 默认协调入口 · Today、Assistant、Inbox、审批与 Activity",
+      en: "The Korben coordination entry · Today, Assistant, Inbox, approvals, and Activity",
     },
     themeColor: {
       light: "#ffffff",
@@ -181,7 +181,7 @@ export const LIFE_OS_SITE_META = {
   },
   health: {
     id: "health",
-    name: "Kenos Health",
+    name: "Korben Health",
     shortName: "Health",
     description: {
       zh: "个人健康与状态调节中枢 · Focus 防沉迷 · 本地优先",
@@ -203,7 +203,7 @@ export const LIFE_OS_SITE_META = {
   },
   knowledge: {
     id: "knowledge",
-    name: "Kenos Library",
+    name: "Korben Library",
     shortName: "Library",
     description: {
       zh: "第二大脑 · 收集 / 连接 / 回忆，Life OS 的长期记忆层",
@@ -268,14 +268,14 @@ export const LIFE_OS_APP_WORDMARK_ACCENT = {
 
 /** wordmark 主体覆盖（缺省 = shortName） @type {Partial<Record<LifeOsAppId, string>>} */
 export const LIFE_OS_WORDMARK_BASE = {
-  planner: "Kenos",
-  fitness: "Kenos",
-  finance: "Kenos",
-  music: "Kenos",
-  home: "Kenos",
+  planner: "Korben",
+  fitness: "Korben",
+  finance: "Korben",
+  music: "Korben",
+  home: "Korben",
   aios: "Korben",
-  health: "Kenos",
-  knowledge: "Kenos",
+  health: "Korben",
+  knowledge: "Korben",
 }
 
 /** wordmark 高亮文字覆盖（缺省 = "OS"） @type {Partial<Record<LifeOsAppId, string>>} */
@@ -302,7 +302,7 @@ export const LIFE_OS_BRAND_ASSET_PREFIX = {
 export const LIFE_OS_PWA_APPS = {
   planner: {
     id: "planner",
-    name: "Kenos Plan",
+    name: "Korben Plan",
     workspace: "planner-os",
     port: 5188,
     shellType: "main-col-wrap",
@@ -318,7 +318,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   fitness: {
     id: "fitness",
-    name: "Kenos Training",
+    name: "Korben Training",
     workspace: "fitness-os",
     port: 4173,
     shellType: "main-wrap-main",
@@ -334,7 +334,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   finance: {
     id: "finance",
-    name: "Kenos Money",
+    name: "Korben Money",
     workspace: "finance-os",
     port: 5180,
     shellType: "main-wrap-content",
@@ -351,7 +351,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   music: {
     id: "music",
-    name: "Kenos Music",
+    name: "Korben Music",
     workspace: "music-os",
     port: 5191,
     shellType: "main-wrap-main",
@@ -367,7 +367,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   home: {
     id: "home",
-    name: "Kenos Home",
+    name: "Korben Home",
     workspace: "home-os",
     port: 5196,
     shellType: "main-col-wrap",
@@ -408,7 +408,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   health: {
     id: "health",
-    name: "Kenos Health",
+    name: "Korben Health",
     workspace: "health-os",
     port: 5192,
     shellType: "main-wrap-main",
@@ -422,7 +422,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   knowledge: {
     id: "knowledge",
-    name: "Kenos Library",
+    name: "Korben Library",
     workspace: "knowledge-os",
     port: 5879,
     shellType: "main-wrap-main",

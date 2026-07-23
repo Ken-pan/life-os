@@ -672,7 +672,7 @@
       <div class="code-connect-card">
         <strong class="code-connect-title">Code 仅在 App 内可用</strong>
         <p class="code-muted">
-          Code 用于监控并远程操控你 Mac 上的 Cursor,只在 <strong>Kenos 的 Mac app</strong> 或
+          Code 用于监控并远程操控你 Mac 上的 Cursor,只在 <strong>Korben 的 Mac app</strong> 或
           <strong>iPhone app</strong> 里提供。在普通浏览器中无法使用。
         </p>
       </div>

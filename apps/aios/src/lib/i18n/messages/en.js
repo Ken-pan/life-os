@@ -53,7 +53,7 @@ export default {
   chat: {
     title: 'Chat',
     greeting: 'What needs attention?',
-    tagline: 'Ask Kenos',
+    tagline: 'Ask Korben',
     placeholder: 'Ask anything',
     placeholderAll: 'Ask or delegate a task',
     placeholderWork: 'Ask about Work data',
@@ -63,10 +63,10 @@ export default {
     homeTitle: 'Assistant',
     recentChats: 'Recent chats',
     moreActions: 'More',
-    lockedTitle: 'Connect Kenos account',
+    lockedTitle: 'Connect Korben account',
     lockedBody:
       'Sync today summary, inbox, and cross-device state. Spaces still work on their own.',
-    lockedConnect: 'Connect Kenos account',
+    lockedConnect: 'Connect Korben account',
     lockedLocal: 'Continue in local mode',
     contextReadonly: 'Read-only',
     hintLocal: 'Local model · your data never leaves this device',
@@ -75,11 +75,11 @@ export default {
     hintLocalDown:
       'Local AI unavailable · confirm Mac Tailscale + LocalAI are running',
     hintCloud:
-      'Local AI first · falls back to cloud Kenos assistant when offline',
+      'Local AI first · falls back to cloud Korben assistant when offline',
     hintCloudKimi:
-      'Cloud Kenos assistant · Plan/Money/Today available · notes/images need local AI',
+      'Cloud Korben assistant · Plan/Money/Today available · notes/images need local AI',
     hintCloudLocal: 'Local AI connected · full tools',
-    emptyTrust: 'Kenos can read current context; every write needs your confirm.',
+    emptyTrust: 'Korben can read current context; every write needs your confirm.',
     suggestionsLabel: 'Quick start',
     attentionLabel: 'Worth attention today',
     send: 'Send',
@@ -287,7 +287,7 @@ export default {
       'Let AI.OS reach out instead of waiting to be asked. Fires a native notification at your set time while the app is open; if it was closed then, it catches up the first time you open it that day.',
     dailyBrief: 'Morning brief',
     dailyBriefDesc:
-      "One a day: today's tasks, this month's cash flow, whether you should train (Kenos Continuity uses system local notifications; Mac shell uses desktop alerts)",
+      "One a day: today's tasks, this month's cash flow, whether you should train (Korben Continuity uses system local notifications; Mac shell uses desktop alerts)",
     briefTime: 'Delivery time',
     briefTimeDesc:
       'Fires once after this time, the first time conditions are met that day (requires sign-in)',

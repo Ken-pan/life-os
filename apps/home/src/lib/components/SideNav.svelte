@@ -45,7 +45,7 @@
     <AppBrandSwitcher
       appId="home"
       tagline="居家空间规划"
-      ariaLabel="Kenos Home"
+      ariaLabel="Korben Home"
       allowedAppIds={auth.allowedAppKeys}
       canSwitch={canSwitchApps}
     />

@@ -1,6 +1,6 @@
 export default {
   app: {
-    name: 'Kenos Plan',
+    name: 'Korben Plan',
     tagline: 'Sunny tasks, calm planning',
   },
   nav: {
@@ -486,10 +486,10 @@ export default {
     paperLinkCopied: 'PaperOS page reference copied',
     paperLinkCopyFailed: 'Could not copy the PaperOS page reference',
     noteLinks: 'Referenced knowledge notes',
-    openInKnowledge: 'Open “{title}” in Kenos Library',
+    openInKnowledge: 'Open “{title}” in Korben Library',
     openInKnowledgeNative:
-      'Open “{title}” in native Kenos Library (app required)',
-    openInKnowledgeWeb: 'Open “{title}” in Kenos Library on the web',
+      'Open “{title}” in native Korben Library (app required)',
+    openInKnowledgeWeb: 'Open “{title}” in Korben Library on the web',
     knowledgeWeb: 'Web',
   },
   recurrence: {

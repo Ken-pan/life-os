@@ -402,7 +402,7 @@ export function capabilityEmptyCopy(capability) {
   if (capability.surface === 'unauthorized') {
     return {
       kind: 'unauthorized',
-      title: '连接 Kenos 账户',
+      title: '连接 Korben 账户',
       body: capability.userSafeDetail || '登录后即可同步你的数据。',
     }
   }

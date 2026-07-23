@@ -41,7 +41,7 @@
   let unlockState = $state(/** @type {'pending'|'open'|'locked'} */ ('open'))
   const moneyUnlock = createNativeUnlockController({
     storageKey: 'kenos.unlock.money',
-    reason: 'Unlock Money',
+    reason: t('unlock.reason'),
   })
 
   const pageTitle = $derived.by(() => {
@@ -140,15 +140,17 @@
       : 'money-native-unlock-gate'}
     aria-busy={unlockState === 'pending'}
   >
-    <h1>Money locked</h1>
+    <h1>{t('unlock.title')}</h1>
     <p>
       {unlockState === 'pending'
-        ? 'Waiting for Face ID or passcode…'
-        : 'Use Face ID or passcode to open Money in Kenos.'}
+        ? t('unlock.hintPending')
+        : t('unlock.hintLocked')}
     </p>
     <div class="money-unlock-actions">
       {#if unlockState === 'pending'}
-        <button type="button" class="secondary" onclick={cancelMoneyUnlock}>Cancel</button>
+        <button type="button" class="secondary" onclick={cancelMoneyUnlock}>
+          {t('unlock.cancel')}
+        </button>
       {/if}
       <button
         type="button"
@@ -158,7 +160,7 @@
           )
         }
       >
-        {unlockState === 'pending' ? 'Try again' : 'Unlock'}
+        {unlockState === 'pending' ? t('unlock.retry') : t('unlock.unlock')}
       </button>
     </div>
   </main>

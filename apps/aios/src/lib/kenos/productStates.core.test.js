@@ -10,7 +10,7 @@ describe('productStates.core', () => {
   it('exposes honest empty / expired copy without demo language', () => {
     assert.match(PRODUCT_COPY.continueEmptyRecent.title, /继续/)
     assert.match(PRODUCT_COPY.todayEmptyUrgent.title, /没有需要处理/)
-    assert.match(PRODUCT_COPY.permissionDenied.title, /连接 Kenos 账户/)
+    assert.match(PRODUCT_COPY.permissionDenied.title, /连接 Korben 账户/)
     assert.doesNotMatch(JSON.stringify(PRODUCT_COPY), /demo|mock|descriptor/i)
     assert.doesNotMatch(JSON.stringify(PRODUCT_COPY), /Cookie|Keychain|Token/i)
   })

@@ -191,7 +191,7 @@
   }
 </script>
 
-<svelte:head><title>Projects · Kenos</title></svelte:head>
+<svelte:head><title>Projects · Korben</title></svelte:head>
 
 <div class="spine-page" data-domain="plan">
   <header class="spine-header">

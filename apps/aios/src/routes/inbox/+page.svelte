@@ -301,7 +301,7 @@
                   <p class="control-row-impact">
                     影响：未确认前不会写入计划或其他空间
                   </p>
-                  <p class="control-row-detail">来源 · Kenos 捕获</p>
+                  <p class="control-row-detail">来源 · Korben 捕获</p>
                 </div>
                 <div class="control-row-actions">
                   {#if canConvert(envelope.status)}

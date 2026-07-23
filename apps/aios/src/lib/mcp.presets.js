@@ -8,15 +8,15 @@
 /** @typedef {{ id:string, name:string, url:string, enabled:boolean, token?:string, writeToolsBlockedUntilHostedRpc?:boolean }} McpServer */
 
 export const LIFE_OS_MCP_PRESETS = [
-  { id: 'lifeos_home', name: 'Kenos Home', url: 'https://home.kenos.space/api/mcp' },
+  { id: 'lifeos_home', name: 'Korben Home', url: 'https://home.kenos.space/api/mcp' },
   {
     id: 'lifeos_planner',
-    name: 'Kenos Plan',
+    name: 'Korben Plan',
     url: 'https://plan.kenos.space/api/mcp',
     writeToolsBlockedUntilHostedRpc: true,
   },
-  { id: 'lifeos_finance', name: 'Kenos Money', url: 'https://money.kenos.space/api/mcp' },
-  { id: 'lifeos_fitness', name: 'Kenos Training', url: 'https://training.kenos.space/api/mcp' },
+  { id: 'lifeos_finance', name: 'Korben Money', url: 'https://money.kenos.space/api/mcp' },
+  { id: 'lifeos_fitness', name: 'Korben Training', url: 'https://training.kenos.space/api/mcp' },
 ]
 
 const PRESET_URLS = new Set(LIFE_OS_MCP_PRESETS.map((p) => p.url.replace(/\/$/, '')))

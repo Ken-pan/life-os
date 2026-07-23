@@ -1,6 +1,6 @@
 export default {
   app: {
-    name: 'Kenos Health',
+    name: 'Korben Health',
   },
   common: {
     skipToContent: 'Skip to content',
@@ -38,8 +38,8 @@ export default {
     dir_flat: '→ flat vs last week',
     dir_na: 'Not enough data to compare',
     empty:
-      'No measured data yet. Connect Apple Health in Kenos iOS — trends grow over a few days.',
-    emptyCmd: 'Kenos iOS → Settings → Apple Health',
+      'No measured data yet. Connect Apple Health in Korben iOS — trends grow over a few days.',
+    emptyCmd: 'Korben iOS → Settings → Apple Health',
     goodHigh: 'higher is better',
     goodLow: 'lower is better',
   },
@@ -73,8 +73,8 @@ export default {
     actResume: 'Resume guard',
     connectWatch: 'Connect Apple Health',
     connectWatchHint:
-      'Authorize once in Kenos iOS Settings → Apple Health. Sleep, heart, HRV, steps and activity sync automatically — no manual logging. Or import one Apple Health export on your Mac.',
-    connectWatchCmd: 'Kenos iOS → Settings → Apple Health',
+      'Authorize once in Korben iOS Settings → Apple Health. Sleep, heart, HRV, steps and activity sync automatically — no manual logging. Or import one Apple Health export on your Mac.',
+    connectWatchCmd: 'Korben iOS → Settings → Apple Health',
     trainTitle: 'Today’s training check',
     trainRecover: 'Recover first — skip high intensity today.',
     trainAlready:
@@ -127,10 +127,10 @@ export default {
     r_alreadyLoaded: 'Training load already filled — skip another hard session',
     r_overreach: 'Hard session and resting HR still elevated',
     r_derivedPhysio: 'Derived from sleep + resting HR + activity',
-    r_needWatch: 'Connect Apple Health in Kenos iOS to measure this',
-    r_needHealth: 'Connect Apple Health in Kenos iOS Settings to measure this',
-    r_needWatchSleep: 'No sleep data yet — connect Apple Health in Kenos',
-    r_needWatchHrv: 'No HRV data yet — connect Apple Health in Kenos',
+    r_needWatch: 'Connect Apple Health in Korben iOS to measure this',
+    r_needHealth: 'Connect Apple Health in Korben iOS Settings to measure this',
+    r_needWatchSleep: 'No sleep data yet — connect Apple Health in Korben',
+    r_needWatchHrv: 'No HRV data yet — connect Apple Health in Korben',
     r_needBaseline: 'Baseline building ({n}/{need} days) — give it a few more',
     h_breaking: 'Protected break in progress — step away from the screen.',
     h_stress:
@@ -144,7 +144,7 @@ export default {
     h_focus: 'Focus window nearly spent. Start wrapping up.',
     h_allGood: 'You are in good shape — push one high-cognition task.',
     h_noData:
-      'No measured data yet. Connect Apple Health once in Kenos iOS Settings.',
+      'No measured data yet. Connect Apple Health once in Korben iOS Settings.',
   },
   focus: {
     title: 'Focus',
@@ -202,9 +202,9 @@ export default {
       'Detection rules (CPU thresholds / process list / windows) live in the agent config.json; restart the agent after editing.',
     localAlerts: 'System local alerts',
     localAlertsDesc:
-      'On Kenos Continuity: light system alerts when focus load is high or evening sleep debt is elevated (at most once each per day)',
+      'On Korben Continuity: light system alerts when focus load is high or evening sleep debt is elevated (at most once each per day)',
     localAlertsEnable: 'Allow notifications',
     localAlertsDenied:
-      'Notifications blocked — enable in iPhone Settings → Kenos → Notifications',
+      'Notifications blocked — enable in iPhone Settings → Korben → Notifications',
   },
 }

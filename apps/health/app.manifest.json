@@ -1,6 +1,6 @@
 {
   "id": "health",
-  "name": "Kenos Health",
+  "name": "Korben Health",
   "shortName": "Health",
   "description": {
     "zh": "个人健康与状态调节中枢 · Focus 防沉迷 · 本地优先",
@@ -29,7 +29,7 @@
     "light": "#5b6cff",
     "dark": "#8fa3ff"
   },
-  "wordmarkBase": "Kenos",
+  "wordmarkBase": "Korben",
   "wordmarkAccentText": "Health",
   "experimental": true,
   "switcherOrder": 60,

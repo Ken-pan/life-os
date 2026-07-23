@@ -285,7 +285,7 @@
         <section class="project-knowledge">
           <div class="project-knowledge-head">
             <h2>{t('projects.knowledgeTitle')}</h2>
-            <span class="tag">Kenos Library</span>
+            <span class="tag">Korben Library</span>
           </div>
           <div class="knowledge-list">
             {#each knowledgeItems as item, i (item.path + i)}

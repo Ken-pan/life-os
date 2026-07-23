@@ -870,7 +870,7 @@ export const PROGRAMS = [
       goalLabel: '手臂围度 · 上肢优先',
       description:
         '手臂围度优先：胸 → 背 → 腿 → 臂轮换。臂日前有腿日缓冲，且不接在背日后。每日保留核心动作，双杠/弯举等可在可选库补充。',
-      source: 'Kenos Training 定制 · 二头/三头直接量 12–18 组/周 · RIR 1–2',
+      source: 'Korben Training 定制 · 二头/三头直接量 12–18 组/周 · RIR 1–2',
       daysPerWeek: 4,
       level: '中级',
       tags: ['默认', '手臂围优先', '上肢优先'],

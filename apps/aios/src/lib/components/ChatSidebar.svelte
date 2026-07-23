@@ -127,7 +127,7 @@
     </div>
   </div>
 
-  <nav class="workspace-nav" aria-label="Kenos System">
+  <nav class="workspace-nav" aria-label="Korben System">
     {#each primaryItems as item (item.href)}
       <a
         class="workspace-nav-item"

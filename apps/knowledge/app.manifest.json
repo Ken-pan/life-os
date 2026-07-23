@@ -1,6 +1,6 @@
 {
   "id": "knowledge",
-  "name": "Kenos Library",
+  "name": "Korben Library",
   "shortName": "Library",
   "description": {
     "zh": "第二大脑 · 收集 / 连接 / 回忆，Life OS 的长期记忆层",
@@ -29,7 +29,7 @@
     "light": "#4d55c7",
     "dark": "#9aa2ff"
   },
-  "wordmarkBase": "Kenos",
+  "wordmarkBase": "Korben",
   "wordmarkAccentText": "Library",
   "experimental": true,
   "switcherOrder": 55,

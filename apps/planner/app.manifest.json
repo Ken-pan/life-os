@@ -1,6 +1,6 @@
 {
   "id": "planner",
-  "name": "Kenos Plan",
+  "name": "Korben Plan",
   "shortName": "Plan",
   "description": {
     "zh": "阳光感任务清单 · 轻松规划每一天",
@@ -18,11 +18,11 @@
   "domain": "plan.kenos.space",
   "shellType": "main-col-wrap",
   "wordmarkAccent": { "light": "#e9a832", "dark": "#f5b83d" },
-  "wordmarkBase": "Kenos",
+  "wordmarkBase": "Korben",
   "wordmarkAccentText": "Plan",
   "switcherOrder": 10,
   "registryOrder": 1,
-  "pwaName": "Kenos Plan",
+  "pwaName": "Korben Plan",
   "production": true,
   "pwaTestEnabled": true,
   "routes": [

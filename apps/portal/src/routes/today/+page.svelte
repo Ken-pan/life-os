@@ -35,18 +35,18 @@
 
 <section class="portal-today-redirect" aria-live="polite">
   {#if status === 'redirecting' || status === 'waiting_auth' || status === 'checking'}
-    <p>正在前往 Kenos Today…</p>
+    <p>正在前往 Korben Today…</p>
   {:else if status === 'signin'}
-    <h1>Kenos Today</h1>
+    <h1>Korben Today</h1>
     <p>登录后可进入 Owner 限定 soft-redirect。</p>
     <p><a href="/">返回 Portal</a></p>
   {:else if status === 'denied'}
-    <h1>Kenos Today</h1>
+    <h1>Korben Today</h1>
     <p>当前账号不在 Portal Today soft-redirect cohort。</p>
     <p><a href="/">返回 Portal</a> · <a href={targetUrl || KENOS_TODAY_ORIGIN + '/'}>手动打开 Kenos Today</a></p>
   {:else}
-    <h1>Kenos Today</h1>
-    <p>Portal → Kenos Today soft-redirect 默认关闭（可回滚）。</p>
+    <h1>Korben Today</h1>
+    <p>Portal → Korben Today soft-redirect 默认关闭（可回滚）。</p>
     <p><a href="/">返回 Portal</a> · <a href={targetUrl || KENOS_TODAY_ORIGIN + '/'}>打开 Kenos Today</a></p>
   {/if}
 </section>

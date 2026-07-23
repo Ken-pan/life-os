@@ -12,7 +12,7 @@
 
 <LifeOsAppBar {title} {subtitle} {backHref} {backLabel} {hidden}>
   {#snippet leading()}
-    <AppBrand appId="home" variant="appbar" ariaLabel="Kenos Home" />
+    <AppBrand appId="home" variant="appbar" ariaLabel="Korben Home" />
   {/snippet}
   {#snippet trailing()}
     <ReportBugButton app="home" {supabase} user={auth.user} {toast} />

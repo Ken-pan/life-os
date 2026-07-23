@@ -1,6 +1,6 @@
 export default {
   app: {
-    name: 'Kenos Health',
+    name: 'Korben Health',
   },
   common: {
     skipToContent: '跳到主要内容',
@@ -38,8 +38,8 @@ export default {
     dir_flat: '→ 与前一周持平',
     dir_na: '数据不足,无法比较',
     empty:
-      '还没有测量数据。在 Kenos iOS 连接 Apple Health 后,趋势会在几天后长出来。',
-    emptyCmd: 'Kenos iOS → Settings → Apple Health',
+      '还没有测量数据。在 Korben iOS 连接 Apple Health 后,趋势会在几天后长出来。',
+    emptyCmd: 'Korben iOS → Settings → Apple Health',
     goodHigh: '越高越好',
     goodLow: '越低越好',
   },
@@ -73,8 +73,8 @@ export default {
     actResume: '恢复守护',
     connectWatch: '连接 Apple Health',
     connectWatchHint:
-      '在 Kenos iOS「设置 → Apple Health」授权一次:睡眠、心率、HRV、步数与活动会自动同步,状态引擎被动推导——无需手填。也可在 Mac 上导入一次 Apple Health 导出。',
-    connectWatchCmd: 'Kenos iOS → Settings → Apple Health',
+      '在 Korben iOS「设置 → Apple Health」授权一次:睡眠、心率、HRV、步数与活动会自动同步,状态引擎被动推导——无需手填。也可在 Mac 上导入一次 Apple Health 导出。',
+    connectWatchCmd: 'Korben iOS → Settings → Apple Health',
     trainTitle: '今日训练对账',
     trainRecover: '恢复优先——今天别上高强度。',
     trainAlready: '今天已经练过——第二节课请降级或改恢复。',
@@ -125,10 +125,10 @@ export default {
     r_alreadyLoaded: '今日训练负荷已够,不宜再上高强度',
     r_overreach: '大负荷训练后静息心率仍偏高',
     r_derivedPhysio: '由睡眠 + 静息心率 + 活动量合成',
-    r_needWatch: '在 Kenos iOS 连接 Apple Health 才能测这项',
-    r_needHealth: '在 Kenos iOS「设置 → Apple Health」连接后自动测量',
-    r_needWatchSleep: '还没有睡眠数据——在 Kenos 连接 Apple Health',
-    r_needWatchHrv: '还没有 HRV 数据——在 Kenos 连接 Apple Health',
+    r_needWatch: '在 Korben iOS 连接 Apple Health 才能测这项',
+    r_needHealth: '在 Korben iOS「设置 → Apple Health」连接后自动测量',
+    r_needWatchSleep: '还没有睡眠数据——在 Korben 连接 Apple Health',
+    r_needWatchHrv: '还没有 HRV 数据——在 Korben 连接 Apple Health',
     r_needBaseline: '基线数据不足({n}/{need} 天),再攒几天',
     h_breaking: '保护休息进行中,离开屏幕活动一下。',
     h_stress: '压力偏高。完成手头一件事就收,不要开新范围。',
@@ -139,7 +139,7 @@ export default {
     h_focus: '专注窗口快用完了,准备收尾。',
     h_allGood: '状态不错,适合推进一个高认知任务。',
     h_noData:
-      '还没有测量数据。在 Kenos iOS「设置 → Apple Health」连接一次即可自动读取。',
+      '还没有测量数据。在 Korben iOS「设置 → Apple Health」连接一次即可自动读取。',
   },
   focus: {
     title: '专注',
@@ -196,8 +196,8 @@ export default {
       '检测规则(CPU 阈值 / 进程名单 / 窗口时长)在代理的 config.json 里,改完后重启代理生效。',
     localAlerts: '系统本地提醒',
     localAlertsDesc:
-      'Kenos Continuity：专注负荷偏高或夜间睡眠债升高时，用系统本地通知轻提醒（每天各最多一次）',
+      'Korben Continuity：专注负荷偏高或夜间睡眠债升高时，用系统本地通知轻提醒（每天各最多一次）',
     localAlertsEnable: '允许通知',
-    localAlertsDenied: '通知权限已关闭，请在 iPhone「设置 → Kenos → 通知」中开启',
+    localAlertsDenied: '通知权限已关闭，请在 iPhone「设置 → Korben → 通知」中开启',
   },
 }

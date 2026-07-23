@@ -1,6 +1,6 @@
 export default {
   app: {
-    name: 'Kenos Plan',
+    name: 'Korben Plan',
     tagline: '阳光清单，轻松规划',
   },
   nav: {
@@ -473,9 +473,9 @@ export default {
     paperLinkCopied: '已复制 PaperOS 页面引用',
     paperLinkCopyFailed: '无法复制 PaperOS 页面引用',
     noteLinks: '引用的知识笔记',
-    openInKnowledge: '在 Kenos Library 打开「{title}」',
-    openInKnowledgeNative: '在原生 Kenos Library 打开「{title}」（需已安装）',
-    openInKnowledgeWeb: '在网页 Kenos Library 打开「{title}」',
+    openInKnowledge: '在 Korben Library 打开「{title}」',
+    openInKnowledgeNative: '在原生 Korben Library 打开「{title}」（需已安装）',
+    openInKnowledgeWeb: '在网页 Korben Library 打开「{title}」',
     knowledgeWeb: '网页',
   },
   recurrence: {

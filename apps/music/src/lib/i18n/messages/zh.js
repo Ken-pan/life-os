@@ -1,11 +1,11 @@
 export default {
   app: {
-    name: 'Kenos Music',
+    name: 'Korben Music',
     tagline: '本地音乐，留在心里',
   },
   common: {
     back: '返回',
-    brand: 'Kenos Music',
+    brand: 'Korben Music',
     play: '播放',
     playAll: '播放全部',
     playAlbum: '播放专辑',
@@ -357,7 +357,7 @@ export default {
     signIn: '登录',
     signOut: '退出登录',
     about: '关于',
-    version: 'Kenos Music 0.1',
+    version: 'Korben Music 0.1',
   },
   auth: {
     title: '账号',

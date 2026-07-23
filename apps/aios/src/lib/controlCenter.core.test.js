@@ -232,7 +232,7 @@ describe('Kenos Phase 2 control center read model', () => {
         cloudAuthorized: false,
       },
     })
-    assert.match(brief.bullets[0], /连接 Kenos 账户/)
+    assert.match(brief.bullets[0], /连接 Korben 账户/)
     assert.doesNotMatch(brief.bullets.join(' '), /没有急需|没有需要立即/)
     assert.equal(brief.availability, 'unavailable')
   })

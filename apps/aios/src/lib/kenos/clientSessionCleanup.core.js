@@ -132,7 +132,7 @@ export const AIOS_CLIENT_STORAGE_INVENTORY = Object.freeze([
   },
 ])
 
-export const AUTH_WALL_DOCUMENT_TITLE = 'Kenos — Sign in'
+export const AUTH_WALL_DOCUMENT_TITLE = 'Korben — Sign in'
 
 /** Exact keys always removed on logout / user switch (fail-closed). */
 export const USER_SCOPED_STORAGE_KEYS = Object.freeze(

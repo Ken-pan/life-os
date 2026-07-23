@@ -27,7 +27,7 @@
     }
   ],
   "id": "/",
-  "description": "Kenos 的 Today、Assistant、Inbox、审批与 Activity 协调入口",
+  "description": "Korben 的 Today、Assistant、Inbox、审批与 Activity 协调入口",
   "display_override": [
     "standalone",
     "minimal-ui"

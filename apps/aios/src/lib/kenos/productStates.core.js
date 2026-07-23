@@ -33,7 +33,7 @@ export const PRODUCT_COPY = Object.freeze({
     actionAssistant: '问助手',
   }),
   todayNeedSignIn: Object.freeze({
-    title: '连接 Kenos 账户',
+    title: '连接 Korben 账户',
     body: '同步今日摘要、收件箱与跨设备状态。各空间仍可独立使用。',
     actionContinue: '继续刚才的事',
     actionSettings: '连接账户',
@@ -75,7 +75,7 @@ export const PRODUCT_COPY = Object.freeze({
     action: '重新登录',
   }),
   permissionDenied: Object.freeze({
-    title: '连接 Kenos 账户',
+    title: '连接 Korben 账户',
     body: '同步今日摘要、收件箱与跨设备状态。',
     action: '连接账户',
   }),

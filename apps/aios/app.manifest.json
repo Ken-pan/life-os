@@ -3,8 +3,8 @@
   "name": "Korben",
   "shortName": "Korben",
   "description": {
-    "zh": "Kenos 默认协调入口 · Today、Assistant、Inbox、审批与 Activity",
-    "en": "The Kenos coordination entry · Today, Assistant, Inbox, approvals, and Activity"
+    "zh": "Korben 默认协调入口 · Today、Assistant、Inbox、审批与 Activity",
+    "en": "The Korben coordination entry · Today, Assistant, Inbox, approvals, and Activity"
   },
   "themeColor": {
     "light": "#ffffff",

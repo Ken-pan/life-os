@@ -6,7 +6,7 @@ export default {
       "shortName": "4-day split",
       "goalLabel": "Arm size · upper-body focus",
       "description": "Arm-size priority: chest → back → legs → arms. Leg day buffers before arms and never follows back. Core lifts stay daily; dips/curls can be added from the pool.",
-      "source": "Kenos Training custom · 12–18 direct arm sets/week · RIR 1–2",
+      "source": "Korben Training custom · 12–18 direct arm sets/week · RIR 1–2",
       "level": "Intermediate",
       "tags": [
         "Default",

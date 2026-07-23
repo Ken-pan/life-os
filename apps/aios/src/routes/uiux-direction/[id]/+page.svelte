@@ -136,7 +136,7 @@
         </ol>
         <button type="button" class="primary-btn">记录本组</button>
         {#if id !== 'a'}
-          <p class="shell-hint">Kenos chrome 降低 · 可切 Plan 后恢复此组</p>
+          <p class="shell-hint">Korben chrome 降低 · 可切 Plan 后恢复此组</p>
         {/if}
       </section>
     {:else}

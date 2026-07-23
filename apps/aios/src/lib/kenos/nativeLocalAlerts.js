@@ -103,7 +103,7 @@ export async function syncApprovalAlerts(approvals, opts = {}) {
     const id = String(approval.id)
     if (seen.has(id)) continue
     const body = String(
-      approval.safeImpactSummary || approval.summary || 'Open Kenos to review',
+      approval.safeImpactSummary || approval.summary || 'Open Korben to review',
     ).slice(0, 160)
     await nativeNotificationsSchedule({
       type: 'approval_requested',

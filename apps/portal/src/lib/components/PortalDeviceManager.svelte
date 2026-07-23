@@ -149,7 +149,7 @@
   <h2 id="portal-devices-title" class="portal-section-label">信任设备</h2>
   <div class="settings-block portal-settings-block">
     <p class="portal-settings-hint">
-      仅 iPhone 与 Mac 上的 Kenos App 可配对免登（最多 {MAX_TRUSTED_DEVICES} 台：1
+      仅 iPhone 与 Mac 上的 Korben App 可配对免登（最多 {MAX_TRUSTED_DEVICES} 台：1
       手机 + 1 电脑）。撤销会失效该设备私钥换票，并踢掉其他会话。浏览器 / PWA
       仍需账号登录。手机丢失请用「挂失全部」。
     </p>
@@ -169,7 +169,7 @@
     {#if loading}
       <p class="portal-settings-hint">加载中…</p>
     {:else if devices.length === 0}
-      <p class="portal-settings-hint">尚无信任设备。在 Kenos App 登录一次即可配对本机。</p>
+      <p class="portal-settings-hint">尚无信任设备。在 Korben App 登录一次即可配对本机。</p>
     {:else}
       <ul class="portal-devices-list">
         {#each devices as d (d.id)}

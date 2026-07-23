@@ -112,7 +112,7 @@ describe('productSessionState.core', () => {
       canClaimEmptyAttention({ summary: null, queue: null, session: locked }),
       false,
     )
-    assert.match(ASK_SESSION_COPY.unavailable, /连接 Kenos 账户/)
+    assert.match(ASK_SESSION_COPY.unavailable, /连接 Korben 账户/)
     assert.match(ASK_SESSION_COPY.empty, /没有需要立即处理/)
   })
 })

@@ -385,7 +385,7 @@
     <InventoryImport />
   </SettingsStackBlock>
   <p class="block-desc">
-    从 Kenos Money
+    从 Korben Money
     的购买记录导入「还在家里」的那批东西。家具会尽量认领平面图上扫描
     出来的那一件(认不准就新建到暂存网格),杂物按线索归进储藏区 —— 导入前有预览,
     确认了才落库。

@@ -123,7 +123,7 @@
       <p>
         {unlockState === 'pending'
           ? 'Waiting for Face ID or passcode…'
-          : 'Use Face ID or passcode to open Work in Kenos.'}
+          : 'Use Face ID or passcode to open Work in Korben.'}
       </p>
       <div class="state-actions">
         {#if unlockState === 'pending'}

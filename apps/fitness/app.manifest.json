@@ -1,6 +1,6 @@
 {
   "id": "fitness",
-  "name": "Kenos Training",
+  "name": "Korben Training",
   "shortName": "Training",
   "description": {
     "zh": "胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先",
@@ -19,11 +19,11 @@
   "domain": "training.kenos.space",
   "shellType": "main-wrap-main",
   "wordmarkAccent": { "light": "#c42f0a", "dark": "#ff4d2e" },
-  "wordmarkBase": "Kenos",
+  "wordmarkBase": "Korben",
   "wordmarkAccentText": "Training",
   "switcherOrder": 30,
   "registryOrder": 2,
-  "pwaName": "Kenos Training",
+  "pwaName": "Korben Training",
   "favicon": { "light": "/favicon-32.png" },
   "production": true,
   "pwaTestEnabled": true,

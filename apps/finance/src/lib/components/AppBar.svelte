@@ -13,7 +13,7 @@
 
 <LifeOsAppBar {title} {subtitle}>
   {#snippet leading()}
-    <AppBrand appId="finance" variant="appbar" ariaLabel="Kenos Money" />
+    <AppBrand appId="finance" variant="appbar" ariaLabel="Korben Money" />
   {/snippet}
   {#snippet trailing()}
     {#if meta}<span class="appbar-meta">{meta}</span>{/if}

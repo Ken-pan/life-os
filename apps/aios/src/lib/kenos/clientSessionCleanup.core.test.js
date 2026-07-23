@@ -98,7 +98,7 @@ describe('clientSessionCleanup.core', () => {
   })
 
   it('auth wall title is stable and non-contextual', () => {
-    assert.equal(AUTH_WALL_DOCUMENT_TITLE, 'Kenos — Sign in')
+    assert.equal(AUTH_WALL_DOCUMENT_TITLE, 'Korben — Sign in')
     assert.ok(!/Work|Focus|Inbox|Training|Today/i.test(AUTH_WALL_DOCUMENT_TITLE))
   })
 

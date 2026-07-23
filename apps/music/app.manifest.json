@@ -1,6 +1,6 @@
 {
   "id": "music",
-  "name": "Kenos Music",
+  "name": "Korben Music",
   "shortName": "Music",
   "description": {
     "zh": "本地音乐，留在心里 · 离线播放与歌单",
@@ -19,11 +19,11 @@
   "domain": "music.kenos.space",
   "shellType": "main-wrap-main",
   "wordmarkAccent": { "light": "#ff4d6d", "dark": "#ff4d6d" },
-  "wordmarkBase": "Kenos",
+  "wordmarkBase": "Korben",
   "wordmarkAccentText": "Music",
   "switcherOrder": 40,
   "registryOrder": 4,
-  "pwaName": "Kenos Music",
+  "pwaName": "Korben Music",
   "production": true,
   "pwaTestEnabled": true,
   "routes": [

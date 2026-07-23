@@ -213,7 +213,7 @@
   }
 </script>
 
-<svelte:head><title>专注整理 · Kenos Home</title></svelte:head>
+<svelte:head><title>专注整理 · Korben Home</title></svelte:head>
 
 <div class="go">
   <header class="go-bar">

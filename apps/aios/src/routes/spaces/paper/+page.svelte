@@ -13,7 +13,7 @@
   <ul>
     <li>状态：PARTIAL / NOT_INTEGRATED（in-repo app missing）</li>
     <li>不迁移品牌 DB；不复制 Vault 为第二真相源</li>
-    <li>从 Space Shelf 返回 Kenos 使用原生 Dock / Shelf</li>
+    <li>从 Space Shelf 返回 Korben 使用原生 Dock / Shelf</li>
   </ul>
   <p><a href="/spaces">‹ Spaces</a> · <a href="/spaces/knowledge">Library</a></p>
 </div>

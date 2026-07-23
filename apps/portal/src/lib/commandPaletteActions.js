@@ -147,7 +147,7 @@ export const PORTAL_DEEP_LINKS = [
   {
     id: 'portal-today-soft-redirect',
     appId: 'portal',
-    title: 'Portal · Today → Kenos',
+    title: 'Portal · Today → Korben',
     subtitle: 'Owner 限定 soft-redirect（可回滚）',
     path: '/today',
     icon: 'layout-dashboard',
@@ -156,7 +156,7 @@ export const PORTAL_DEEP_LINKS = [
   {
     id: 'assistant-today',
     appId: 'aios',
-    title: 'Kenos · Today',
+    title: 'Korben · Today',
     subtitle: '状态、下一步与待决定事项',
     path: '/',
     icon: 'layout-dashboard',
@@ -165,7 +165,7 @@ export const PORTAL_DEEP_LINKS = [
   {
     id: 'assistant-chat',
     appId: 'aios',
-    title: 'Kenos · Assistant',
+    title: 'Korben · Assistant',
     subtitle: '对话、来源与 Action preview',
     path: '/assistant',
     icon: 'message-circle',
@@ -174,7 +174,7 @@ export const PORTAL_DEEP_LINKS = [
   {
     id: 'assistant-approvals',
     appId: 'aios',
-    title: 'Kenos · Approvals',
+    title: 'Korben · Approvals',
     subtitle: '查看动作风险、范围与影响',
     path: '/approvals',
     icon: 'shield-check',
@@ -183,7 +183,7 @@ export const PORTAL_DEEP_LINKS = [
   {
     id: 'assistant-activity',
     appId: 'aios',
-    title: 'Kenos · Activity',
+    title: 'Korben · Activity',
     subtitle: '动作结果、失败与恢复',
     path: '/activity',
     icon: 'activity',

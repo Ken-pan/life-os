@@ -29,7 +29,7 @@ export default {
     close: 'Close',
     back: 'Back',
     bodyweight: 'BW',
-    brand: 'Kenos Training',
+    brand: 'Korben Training',
     skipToContent: 'Skip to main content',
     sets: 'sets',
     min: 'min',
@@ -52,7 +52,7 @@ export default {
     titleFocus: '{day} · Focus',
     titleSummary: '{day} · Summary',
     titleDayOverview: '{day} Overview',
-    titleDefault: 'Kenos Training',
+    titleDefault: 'Korben Training',
     autoFinalize: 'Auto-logged {count} unfinished workout(s)',
   },
   home: {
@@ -266,11 +266,11 @@ export default {
     notifyGranted:
       'Alerts when you switch apps or lock screen; sound only while page is open',
     notifyGrantedNative:
-      'Kenos schedules a system local notification when rest ends (works on lock screen)',
+      'Korben schedules a system local notification when rest ends (works on lock screen)',
     notifyDenied:
       'Notifications blocked — enable in browser or system settings',
     notifyDeniedNative:
-      'Notifications blocked — enable in iPhone Settings → Kenos → Notifications',
+      'Notifications blocked — enable in iPhone Settings → Korben → Notifications',
     notifyIos:
       'Safari tabs on iPhone/iPad cannot receive background alerts. Open in Safari → Share → Add to Home Screen, then open from home screen',
     notifyInApp:
@@ -280,7 +280,7 @@ export default {
     notifyDefault:
       'Allow alerts when you leave the page (on iPhone, add to home screen first)',
     notifyDefaultNative:
-      'Allow Kenos to send a system alert when your rest timer ends',
+      'Allow Korben to send a system alert when your rest timer ends',
     notifyAria: 'Background alerts',
     enableNotify: 'Enable notifications',
     appearance: 'Appearance',

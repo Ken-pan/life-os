@@ -53,7 +53,7 @@
   {#if DIAG.reason === 'unauthorized'}
     <div class="control-empty">
       <strong>需要登录</strong>
-      诊断数据按账户归属,连接 Kenos 账户后可查看。
+      诊断数据按账户归属,连接 Korben 账户后可查看。
     </div>
   {:else if DIAG.reason === 'offline'}
     <div class="control-empty"><strong>当前离线</strong> 恢复网络后重试。</div>

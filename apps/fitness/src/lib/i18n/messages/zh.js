@@ -29,7 +29,7 @@ export default {
     close: '关闭',
     back: '返回',
     bodyweight: '自重',
-    brand: 'Kenos Training',
+    brand: 'Korben Training',
     skipToContent: '跳到主内容',
     sets: '组',
     min: 'min',
@@ -52,7 +52,7 @@ export default {
     titleFocus: '{day} · 专注模式',
     titleSummary: '{day} · 训练总结',
     titleDayOverview: '{day} 训练概览',
-    titleDefault: 'Kenos Training',
+    titleDefault: 'Korben Training',
     autoFinalize: '已自动补记 {count} 次未完成的训练',
   },
   home: {
@@ -262,9 +262,9 @@ export default {
     notifications: '后台通知',
     notifyToggleLabel: '休息结束提醒',
     notifyGranted: '切到其他 App 或锁屏时会发通知；页面在前台只播提示音',
-    notifyGrantedNative: 'Kenos 会用系统本地通知提醒休息结束（锁屏 / 切 App 也有效）',
+    notifyGrantedNative: 'Korben 会用系统本地通知提醒休息结束（锁屏 / 切 App 也有效）',
     notifyDenied: '通知权限已被拒绝，请在浏览器 / 系统设置中重新开启',
-    notifyDeniedNative: '通知权限已关闭，请在 iPhone「设置 → Kenos → 通知」中开启',
+    notifyDeniedNative: '通知权限已关闭，请在 iPhone「设置 → Korben → 通知」中开启',
     notifyIos:
       'iPhone / iPad 在 Safari 标签页里收不到后台通知。请用 Safari 打开本站 → 分享 →「添加到主屏幕」→ 从主屏幕打开后再开启',
     notifyInApp:
@@ -272,7 +272,7 @@ export default {
     notifyUnsupported: '当前浏览器不支持通知；计时提示音在前台仍可用',
     notifyDefault:
       '允许后，离开网页也能收到休息结束提醒（iPhone 需先添加到主屏幕）',
-    notifyDefaultNative: '允许后，休息结束会通过 Kenos 系统通知提醒你',
+    notifyDefaultNative: '允许后，休息结束会通过 Korben 系统通知提醒你',
     notifyAria: '后台通知',
     enableNotify: '开启通知',
     appearance: '外观',

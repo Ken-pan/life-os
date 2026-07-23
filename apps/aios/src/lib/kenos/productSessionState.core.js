@@ -183,7 +183,7 @@ export function resolveProductSessionState({
 }
 
 export const ASK_SESSION_COPY = Object.freeze({
-  unavailable: '连接 Kenos 账户后，我可以汇总各空间中需要处理的事项。',
+  unavailable: '连接 Korben 账户后，我可以汇总各空间中需要处理的事项。',
   syncing: '正在检查各空间的最新状态。',
   empty: '今天没有需要立即处理的事项。',
 })
@@ -211,7 +211,7 @@ export function productSessionLabels(session) {
 
   const todayOverview = {
     syncing: '正在同步今天的计划…',
-    locked: '连接 Kenos 账户后即可同步今日摘要、收件箱与跨设备状态。',
+    locked: '连接 Korben 账户后即可同步今日摘要、收件箱与跨设备状态。',
     unavailable: '今日摘要暂不可用。各空间仍可独立使用。',
     offline: '当前离线。恢复网络后将自动重试。',
     error: '暂时无法更新今日摘要。可重试。',

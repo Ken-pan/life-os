@@ -1,6 +1,6 @@
 export default {
   app: {
-    name: 'Kenos Library',
+    name: 'Korben Library',
   },
   common: {
     skipToContent: '跳到主要内容',

@@ -480,7 +480,7 @@ const DEFS = [
       function: {
         name: 'focus_status',
         description:
-          '查看当前 Kenos Focus Session(开始计划/专注)状态:是否进行中、mode、title。用户问「我在专注吗」「现在的计划会话」时用。',
+          '查看当前 Korben Focus Session(开始计划/专注)状态:是否进行中、mode、title。用户问「我在专注吗」「现在的计划会话」时用。',
         parameters: { type: 'object', properties: {} },
       },
     },
@@ -543,7 +543,7 @@ const DEFS = [
       function: {
         name: 'open_space',
         description:
-          '打开 Kenos Space 或系统页(Plan/Money/Library/Work/Today 等)。用户要去某个 Space、读 Library、看 Plan 时用。打开即导航,不读取笔记正文。',
+          '打开 Korben Space 或系统页(Plan/Money/Library/Work/Today 等)。用户要去某个 Space、读 Library、看 Plan 时用。打开即导航,不读取笔记正文。',
         parameters: {
           type: 'object',
           properties: {
