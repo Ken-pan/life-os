@@ -31,6 +31,28 @@ struct KorbenShellView: View {
                 // above it come and go without touching its identity.
                 KorbenSpaceSurfaceHost(model: model)
 
+                // 顶部 scrim:System Strip 浮在内容上时,状态栏+Strip 区域铺一层
+                // 从当前页面画布色渐隐的背景,滚动内容从其后经过不再与系统时间/Strip
+                // 叠加成糊(截图 08/09 的顶部撞车)。用页面 polarity 色故亮/暗域都贴合。
+                if projection.showsKorbenChrome, KorbenSystemStrip.hasUnits(model: model) {
+                    VStack(spacing: 0) {
+                        LinearGradient(
+                            colors: [
+                                model.chromeAppearance.canvasColor.opacity(0.96),
+                                model.chromeAppearance.canvasColor.opacity(0.82),
+                                model.chromeAppearance.canvasColor.opacity(0),
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 104)
+                        .ignoresSafeArea(edges: .top)
+                        Spacer(minLength: 0)
+                    }
+                    .allowsHitTesting(false)
+                    .transition(.opacity)
+                }
+
                 if projection.showsKorbenChrome {
                     VStack(spacing: 0) {
                         KorbenSystemStrip(model: model, shellState: shellState)

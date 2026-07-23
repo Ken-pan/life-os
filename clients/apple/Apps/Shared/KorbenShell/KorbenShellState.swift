@@ -23,7 +23,9 @@ enum KorbenShellMetrics {
     /// Extra web scroll-end pad (CSS px) in Domain Mode under Korben chrome —
     /// the domain destination capsule adds a second chrome row above the dock,
     /// so the legacy single-row `.domainDock` pad is not enough clearance.
-    static let domainCapsuleWebExtraPadPx = 60
+    /// 需覆盖 dock(~56)+ 胶囊行(~50)+ 间距,否则最后一项滚不到 chrome 上方
+    /// (截图 12/13/15 被遮)。滚动收敛后到底时胶囊已隐,此值保静止态短页也不压。
+    static let domainCapsuleWebExtraPadPx = 96
 }
 
 /// Who owns the GLOBAL chrome (dock / shelf trigger / capture entry).

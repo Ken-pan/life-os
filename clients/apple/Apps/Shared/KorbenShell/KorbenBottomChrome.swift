@@ -36,34 +36,46 @@ struct KorbenBottomChrome: View {
             // 底部 LiveAccessory,保持单一 chrome 规则。
 
             VStack(spacing: 8) {
-                // P1B: Domain sub-navigation stays available when Korben owns
-                // the chrome — compact capsule reusing the SSOT dock items
-                // (removing it with the legacy dock would regress Plan's
-                // Tasks / Calendar / Inbox switching).
-                if model.shellMode == .domain, !model.domainDockItems.isEmpty {
+                // P1B 域子导航胶囊 —— 四条约束(Owner 定):仅当前域显示、不复制
+                // Orb/Capture、视觉权重低于 Intent Dock、随滚动收敛。
+                // 收敛:web 下滑(阅读)→ liveAccessoryMinimized=true → 胶囊淡出让位;
+                // 上滑复现。这也顺带减轻底部遮挡。
+                if model.shellMode == .domain, !model.domainDockItems.isEmpty,
+                   !model.liveAccessoryMinimized {
                     domainDestinationCapsule
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
                 HStack(spacing: KorbenShellMetrics.orbDockGap) {
                     spaceOrb
                     intentDock
                 }
             }
+            .animation(
+                KenosMotion.selection(reduceMotion: reduceMotion),
+                value: model.liveAccessoryMinimized
+            )
             .padding(.horizontal, KorbenShellMetrics.chromeHorizontalInset)
             .padding(.bottom, KorbenShellMetrics.bottomSafeAreaGap)
         }
     }
 
-    // ── Domain destination capsule (P1B, icons + selected label) ──
+    // ── Domain destination capsule ──
+    // 视觉权重刻意低于 Intent Dock:更窄(居中包裹,非全宽)、更弱的填充(非
+    // ultraThinMaterial 的实体玻璃)、更矮 —— 从属于内容与全局 Dock。
     private var domainDestinationCapsule: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 2) {
             ForEach(Array(model.domainDockItems.enumerated()), id: \.element.title) { index, item in
                 domainCapsuleButton(index: index, item: item)
             }
         }
-        .padding(.horizontal, 4)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 3)
+        .padding(.vertical, 3)
+        // 与 Intent Dock 同族的 ultraThinMaterial(frosted,不漏内容 —— 之前透视是
+        // black 0.28 的锅,不是材质)。降权靠「更窄」而非更透:窄于全宽 Dock 即从属。
         .background(.ultraThinMaterial, in: Capsule())
         .overlay(Capsule().strokeBorder(.white.opacity(0.08), lineWidth: 0.5))
+        .frame(maxWidth: 300) // 居中收窄,弱于全宽 Intent Dock
+        .shadow(color: .black.opacity(0.16), radius: 5, y: 2)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(prefersChinese ? "主导航" : "Destinations")
         .accessibilityIdentifier("korben.domainCapsule")
