@@ -48,9 +48,12 @@ struct KorbenSpaceSurfaceHost: View {
                             for: model.selectedTab == .settings ? .today : model.selectedTab
                         ),
                         isActive: model.shellMode != .domain,
-                        // P2: 顶部 System Strip 取代底部 LiveAccessory —— 底部
-                        // accessory pad 归零,顶部按 strip 可见加余隙。
-                        accessoryBottomPadPx: 0,
+                        // P2 移除底部 LiveAccessory 后曾把此值归零 → Today 最后一张卡
+                        // 被 dock 压(真机 Gate4-1 回归)。改为与 Domain 同源的共享
+                        // 遮挡计算(Kenos 态无域胶囊),不写 Today 专属数字。
+                        accessoryBottomPadPx: KorbenShellMetrics.webBottomExtraPadPx(
+                            hasDomainCapsule: false
+                        ),
                         chrome: model.hideGlobalDockForAssistantConversation
                             ? .kenosConversation
                             : .kenosTabs,

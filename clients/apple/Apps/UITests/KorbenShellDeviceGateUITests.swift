@@ -293,6 +293,34 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         attachScreenshot(app, name: "G4-6-finance-locked")
     }
 
+    // MARK: Gate 4 补采 — Today 底部余隙回归(1A/1B)+ Plan 不回归
+
+    /// Owner 补采清单:1A Today 静止 / 1B Today 滚到真实底部;
+    /// 外加 Plan 滚到底,证明共享 inset 改动没让 Domain 回归。
+    func testTodayBottomInsetEvidence() {
+        let app = launchKorben()
+        XCTAssertTrue(app.buttons["korben.orb"].waitForExistence(timeout: 15))
+        sleep(3)
+        attachScreenshot(app, name: "G4-1A-today-rest")
+
+        // 1B — 滚到 Today 真实底部(多滑几次直到不再变化)
+        for _ in 0..<10 { app.swipeUp() }
+        sleep(2)
+        attachScreenshot(app, name: "G4-1B-today-bottom")
+        assertSingleKorbenChrome(app, context: "today-bottom")
+        XCTAssertFalse(
+            app.otherElements["korben.domainCapsule"].exists,
+            "Today(Kenos 态)不应出现域胶囊"
+        )
+
+        // 不回归:Plan 滚到底仍完整
+        switchSpace(app, rowText: "Plan")
+        for _ in 0..<8 { app.swipeUp() }
+        sleep(2)
+        attachScreenshot(app, name: "G4-3B-plan-bottom-regression")
+        assertSingleKorbenChrome(app, context: "plan-bottom")
+    }
+
     // MARK: Test 7 — Dynamic Type(辅助功能大号)
 
     func testDynamicTypeAccessibilityLarge() {

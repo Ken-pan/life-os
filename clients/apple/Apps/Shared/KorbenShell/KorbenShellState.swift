@@ -1,4 +1,5 @@
 import SwiftUI
+import KenosDesign
 
 #if os(iOS)
 
@@ -20,12 +21,32 @@ enum KorbenShellMetrics {
     static let chromeHorizontalInset: CGFloat = 16
     static let orbDockGap: CGFloat = 8
     static let bottomSafeAreaGap: CGFloat = 12
-    /// Extra web scroll-end pad (CSS px) in Domain Mode under Korben chrome —
-    /// the domain destination capsule adds a second chrome row above the dock,
-    /// so the legacy single-row `.domainDock` pad is not enough clearance.
-    /// 需覆盖 dock(~56)+ 胶囊行(~50)+ 间距,否则最后一项滚不到 chrome 上方
-    /// (截图 12/13/15 被遮)。滚动收敛后到底时胶囊已隐,此值保静止态短页也不压。
-    static let domainCapsuleWebExtraPadPx = 96
+    /// 最后一项与 chrome 顶边之间的视觉呼吸(Owner 验收要求 12–16pt)。
+    static let contentBreathingRoom: CGFloat = 14
+    /// 域子导航胶囊行实高(项 44 + 上下内边距 2×2)。
+    static let domainCapsuleRowHeight: CGFloat = 48
+    /// 两层 chrome 之间的间距(与 KorbenBottomChrome 的 VStack spacing 同源)。
+    static let chromeRowGap: CGFloat = 8
+
+    /// **底部 chrome 实际遮挡高度(单一真源)** —— Today(Kenos 态)与各 Domain
+    /// 同源消费,禁止任何页面写死数字。
+    ///
+    /// 组成 = Orb/Dock 行高(取二者较大的命中高:Orb 命中 60 > Dock 56)
+    ///      + dock 距安全区间距 + 内容呼吸;域态再 += 胶囊行高 + 两层间距。
+    /// 不含 home indicator —— CSS 侧已叠加 `env(safe-area-inset-bottom)`。
+    static func bottomObstruction(hasDomainCapsule: Bool) -> CGFloat {
+        let dockRow = max(intentDockHeight, minHitTarget)
+        var total = dockRow + bottomSafeAreaGap + contentBreathingRoom
+        if hasDomainCapsule { total += domainCapsuleRowHeight + chromeRowGap }
+        return total
+    }
+
+    /// 传给 web 的**额外** scroll-end pad:`KenosWebChrome` 枚举已贡献
+    /// `KenosGlass.dockScrollEndPadPx`(按旧 dock 几何算),这里只补差额,避免双计。
+    static func webBottomExtraPadPx(hasDomainCapsule: Bool) -> Int {
+        let needed = bottomObstruction(hasDomainCapsule: hasDomainCapsule)
+        return max(0, Int(needed.rounded(.up)) - KenosGlass.dockScrollEndPadPx)
+    }
 }
 
 /// Who owns the GLOBAL chrome (dock / shelf trigger / capture entry).
