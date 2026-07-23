@@ -28,8 +28,13 @@ enum KorbenShellMetrics {
     /// 两层 chrome 之间的间距(与 KorbenBottomChrome 的 VStack spacing 同源)。
     static let chromeRowGap: CGFloat = 8
 
-    /// **底部 chrome 实际遮挡高度(单一真源)** —— Today(Kenos 态)与各 Domain
-    /// 同源消费,禁止任何页面写死数字。
+    /// **底部 chrome 遮挡高度 —— shared derived metric(单一真源)**。
+    /// Today(Kenos 态)与各 Domain 同源消费,禁止任何页面写死数字。
+    ///
+    /// 注意定性:这是**由同一批 token 推导**出的值,不是运行时从视图实测的
+    /// live measurement。当前 Dock / Orb / 胶囊尺寸都由这些 token 驱动,故对本
+    /// Gate 足够;若将来引入 Dynamic Type 驱动的可变高度,需升级为运行时测量
+    /// (GeometryReader/PreferenceKey 上报真实 chrome 高度)。
     ///
     /// 组成 = Orb/Dock 行高(取二者较大的命中高:Orb 命中 60 > Dock 56)
     ///      + dock 距安全区间距 + 内容呼吸;域态再 += 胶囊行高 + 两层间距。
