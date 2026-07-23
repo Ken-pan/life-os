@@ -84,8 +84,18 @@ enum KenosPerfStateReporter {
 
     private static func reportOS(domain: String, state: String) {
         #if canImport(StateReporting)
-        let reporter = StateReporter.reporter(for: domain)
-        reporter.reportTransition(to: state)
+        // StateReporting ships in the iOS 27 SDK, but the module is present at
+        // compile time whenever the SDK is (canImport). Deployment target is
+        // iOS 17, so the symbol still needs a runtime availability guard —
+        // below iOS 27 we skip the MetricKit hop; KenosCrashContextStore already
+        // persists the same states for triage.
+        if #available(iOS 27.0, *) {
+            let reporter = StateReporter.reporter(for: domain)
+            reporter.reportTransition(to: state)
+        } else {
+            _ = domain
+            _ = state
+        }
         #else
         _ = domain
         _ = state
