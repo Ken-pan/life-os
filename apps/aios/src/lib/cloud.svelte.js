@@ -317,6 +317,40 @@ export async function retryShellAutoSignIn() {
   }
 }
 
+let shellRecoveryRunning = false
+
+/**
+ * 壳内登录态兜底:原生会话 vault 在 Face ID 解锁 + 设备交换后才灌,常晚于 web 冷启
+ * 那一次性的 getSession / 单次 retry。只重试一次就放弃,会让「连接 Kenos 账户」门在
+ * 一次竞态后长期误显、每次开 app 反复出现。这里在未登录时有界重试几次(冷启兜底),
+ * 回前台 / 重新联网时也会再兜一轮。CLOUD.user 一旦落地,UI 会自动收敛(反应式)。
+ * 幂等:已登录或已有兜底在跑即早退。
+ * @param {{ attempts?: number, delayMs?: number }} [opts]
+ * @returns {Promise<boolean>} 结束时是否已登录
+ */
+export async function recoverShellSessionWhenSignedOut({
+  attempts = 5,
+  delayMs = 1200,
+} = {}) {
+  if (!browser || !CLOUD.configured) return false
+  if (CLOUD.user) return true
+  if (shellRecoveryRunning) return false
+  shellRecoveryRunning = true
+  try {
+    for (let i = 0; i < attempts; i += 1) {
+      if (CLOUD.user) return true
+      const ok = await retryShellAutoSignIn()
+      if (ok || CLOUD.user) return true
+      if (i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, delayMs))
+      }
+    }
+  } finally {
+    shellRecoveryRunning = false
+  }
+  return !!CLOUD.user
+}
+
 export async function signOutCloud() {
   CLOUD.busy = true
   try {

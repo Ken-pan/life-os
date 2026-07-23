@@ -48,7 +48,9 @@
     syncNow,
     CLOUD,
     isCloudAuthorized,
+    recoverShellSessionWhenSignedOut,
   } from '$lib/cloud.svelte.js'
+  import { isShellSurface } from '$lib/kenos/shellSurface.js'
   import { installKenosAppLogs } from '@life-os/platform-web/kenos-app-logs'
   import { supabase } from '$lib/supabase.js'
   import {
@@ -242,6 +244,10 @@
 
   function onWindowOnline() {
     online = true
+    // 重新联网:壳内若仍未登录,离线期间无法读 vault 的竞态在此补一轮。
+    if (isShellSurface() && !CLOUD.user) {
+      void recoverShellSessionWhenSignedOut({ attempts: 2, delayMs: 800 })
+    }
     if (shouldReconnectAfterOnline({ online: true, wasOffline })) {
       reconnectAttempts = 0
       void attemptReconnect(0)
@@ -276,6 +282,12 @@
     // 云同步恢复后：自动写入 Life OS MCP 舰队，再发现工具
     initCloud().then(() => {
       syncSpaceSwitcherOwner()
+      // 壳内冷启:原生会话 vault 常晚于 initCloud 的一次性恢复才灌入。未登录时有界
+      // 重试几次,避免「连接 Kenos 账户」门因一次竞态就长期误显(CLOUD.user 落地后
+      // onAuthStateChange 会自动刷新读投影,UI 反应式收敛)。
+      if (isShellSurface() && !CLOUD.user) {
+        void recoverShellSessionWhenSignedOut()
+      }
       // Auth restore lands after the first mount read (which fails closed as
       // permission_denied) — force one refresh so cold boot doesn't sit on the
       // signed-out projection until the 30s throttle expires.
@@ -309,6 +321,14 @@
       },
       { when: () => !!CLOUD.user },
     )
+    // 壳内回前台且仍未登录:再兜一轮原生会话恢复(锁屏期间会话可能过期,或首启竞态
+    // 后 vault 才灌)。gate 在未登录时才跑,已登录走上面的 syncNow。
+    const cleanupAuthResume = bindVisibilitySync(
+      () => {
+        void recoverShellSessionWhenSignedOut({ attempts: 2, delayMs: 800 })
+      },
+      { when: () => isShellSurface() && !CLOUD.user },
+    )
     // 早晨今日简报:运行时轮询 + 挂载即查(原生壳且开启才实际发通知)
     startDailyBriefScheduler()
 
@@ -335,6 +355,7 @@
       cleanupTheme()
       cleanupViewport()
       cleanupVisibility()
+      cleanupAuthResume()
       disposeAppLogs()
       stopDailyBriefScheduler()
       window.removeEventListener('offline', onWindowOffline)
