@@ -69,13 +69,14 @@ struct KorbenBottomChrome: View {
             }
         }
         .padding(.horizontal, 3)
-        .padding(.vertical, 3)
-        // 与 Intent Dock 同族的 ultraThinMaterial(frosted,不漏内容 —— 之前透视是
-        // black 0.28 的锅,不是材质)。降权靠「更窄」而非更透:窄于全宽 Dock 即从属。
+        .padding(.vertical, 2)
+        // 与 Intent Dock 同宽(全宽)—— 收窄成 300pt 会让列表行从胶囊左右两侧
+        // 露出来(真机 Gate4-2 实测),反而更乱。降权改靠「更矮 + 更淡 + 更弱描边」:
+        // 胶囊 ~48pt vs Dock 56pt,内容为 secondary 灰,视觉从属于全局 Dock。
         .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(.white.opacity(0.08), lineWidth: 0.5))
-        .frame(maxWidth: 300) // 居中收窄,弱于全宽 Intent Dock
-        .shadow(color: .black.opacity(0.16), radius: 5, y: 2)
+        .overlay(Capsule().strokeBorder(.white.opacity(0.06), lineWidth: 0.5))
+        .frame(maxWidth: .infinity)
+        .shadow(color: .black.opacity(0.14), radius: 4, y: 1)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(prefersChinese ? "主导航" : "Destinations")
         .accessibilityIdentifier("korben.domainCapsule")

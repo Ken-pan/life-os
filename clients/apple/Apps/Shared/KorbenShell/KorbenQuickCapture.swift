@@ -17,8 +17,12 @@ struct KorbenQuickCaptureSheet: View {
     @Environment(\.dismiss) private var dismiss
     @FocusState private var textFocused: Bool
 
-    static let captureDetent = PresentationDetent.fraction(0.44)
-    static let canvasDetent = PresentationDetent.fraction(0.82)
+    /// 规范原值 0.44,但 Quick Capture 打开即自动聚焦拉起键盘 —— 键盘约占屏高 40%,
+    /// fraction detent 不会为键盘让位,0.44 的 sheet 被压到只剩一条边(真机 Gate4-5
+    /// 实测),输入区不可用。既然「打开即可打字」是这层的定义,就按**键盘态**定尺寸:
+    /// 0.72 在键盘之上仍留 ~290pt,足够「标题+Scope+输入框+识别行+操作」完整可见。
+    static let captureDetent = PresentationDetent.fraction(0.72)
+    static let canvasDetent = PresentationDetent.fraction(0.95)
 
     private var prefersChinese: Bool {
         KenosShellSettingsStore.current.resolvedLocale() == "zh"

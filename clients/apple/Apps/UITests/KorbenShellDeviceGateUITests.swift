@@ -243,6 +243,56 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         attachScreenshot(app, name: "T6b-capsule-slot0")
     }
 
+    // MARK: Gate 4 — Owner 指定的六张验收截图(真机)
+
+    /// 产出 Owner Gate 4 清单的 6 张证据截图:
+    /// Today 静止 / Plan 顶 / Plan 底 / Fitness 历史 / Intent Dock+键盘 / Finance 锁定。
+    func testGate4EvidenceShots() {
+        let app = launchKorben()
+        XCTAssertTrue(app.buttons["korben.orb"].waitForExistence(timeout: 15))
+        sleep(3)
+        attachScreenshot(app, name: "G4-1-today-rest")
+
+        // 2 / 3 — Plan 顶部与底部
+        switchSpace(app, rowText: "Plan")
+        sleep(2)
+        attachScreenshot(app, name: "G4-2-plan-top")
+        for _ in 0..<8 { app.swipeUp() }
+        sleep(2)
+        attachScreenshot(app, name: "G4-3-plan-bottom")
+
+        // 5 — Intent Dock + 键盘(在 Plan 内,验证域态下的 capture 层级)
+        app.buttons["korben.intentDock"].tap()
+        let byId = app.descendants(matching: .any)["korben.quickCapture.text"]
+        let field = byId.waitForExistence(timeout: 6)
+            ? byId
+            : (app.textViews.firstMatch.exists ? app.textViews.firstMatch : app.textFields.firstMatch)
+        if field.waitForExistence(timeout: 4) {
+            field.tap()
+            _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
+            field.typeText("Gate4 evidence")
+            sleep(1)
+            attachScreenshot(app, name: "G4-5-dock-keyboard")
+        }
+        app.swipeDown(velocity: .fast)
+        _ = app.buttons["korben.intentDock"].waitForExistence(timeout: 6)
+
+        // 4 — Fitness 历史(域胶囊最后一个 slot 通常是历史/统计)
+        switchSpace(app, rowText: "Fitness")
+        sleep(2)
+        let lastSlot = app.buttons["korben.domainCapsule.2"]
+        if lastSlot.waitForExistence(timeout: 6), lastSlot.isHittable {
+            lastSlot.tap()
+            sleep(5)
+        }
+        attachScreenshot(app, name: "G4-4-fitness-history")
+
+        // 6 — Finance 锁定页
+        switchSpace(app, rowText: "Money")
+        sleep(3)
+        attachScreenshot(app, name: "G4-6-finance-locked")
+    }
+
     // MARK: Test 7 — Dynamic Type(辅助功能大号)
 
     func testDynamicTypeAccessibilityLarge() {
