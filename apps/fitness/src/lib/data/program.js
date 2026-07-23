@@ -52,6 +52,8 @@ export const DAY_IMAGES = {
 
 /** 动作 id 与 static/assets/images/exercises/{id}.jpg 一一对应；无专属图的不映射（UI 显示占位） */
 const DEDICATED_EX_IMAGE_IDS = [
+  'sh_latraise',
+  'sh_cableraise',
   'c_bench',
   'c_incdb',
   'c_incmc',
