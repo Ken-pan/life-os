@@ -134,6 +134,35 @@ export function normalizeLogLevel(level) {
 }
 
 /**
+ * 稳定日志指纹:抹平消息里的易变部分(数字/uuid/十六进制/引号内容)后与分类一起散列。
+ * 让同一类 error/fault 在服务端按 fingerprint 聚合去重,triage 面不再被重现刷屏。
+ * 与 aios diagnosticsModel.core 的 normalizeLogSignature 同构(两端各自实现,勿跨包依赖)。
+ * @param {string} message
+ * @param {string} [category]
+ * @returns {string} 8-hex
+ */
+export function computeLogFingerprint(message, category = '') {
+  const base = String(message ?? '')
+    .replace(/0x[0-9a-fA-F]+/g, '0x·')
+    .replace(
+      /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g,
+      '·uuid·',
+    )
+    .replace(/\b\d[\d.,]*\b/g, '·n·')
+    .replace(/["'`][^"'`]{0,80}["'`]/g, '·s·')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 200)
+  const sig = `${String(category || 'app').slice(0, 40)}::${base || 'unknown'}`
+  let h = 0x811c9dc5
+  for (let i = 0; i < sig.length; i += 1) {
+    h ^= sig.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return (h >>> 0).toString(16).padStart(8, '0')
+}
+
+/**
  * @param {KenosLogLevel} level
  * @param {KenosLogLevel} min
  */
@@ -335,14 +364,24 @@ export function createKenosAppLogs(options) {
    */
   function append(level, message, extra = {}) {
     if (disposed) return null
+    const normalizedLevel = normalizeLogLevel(level)
+    const category = String(extra.category || 'app').slice(0, 64)
+    // error/fault 附稳定指纹 → 服务端按 fingerprint 聚合去重(triage 用);
+    // 采集方已给指纹(如崩溃 reporter)则尊重原值。
+    const withFingerprint =
+      LEVEL_RANK[normalizedLevel] >= LEVEL_RANK.error &&
+      !(extra.metadata && extra.metadata.fingerprint)
+        ? { fingerprint: computeLogFingerprint(message, category) }
+        : {}
     const event = {
       id: newId(),
       loggedAt: new Date().toISOString(),
-      level: normalizeLogLevel(level),
-      category: String(extra.category || 'app').slice(0, 64),
+      level: normalizedLevel,
+      category,
       message: redactLogText(message),
       metadata: redactLogMetadata({
         route: typeof window !== 'undefined' ? safeRoute(window.location) : '',
+        ...withFingerprint,
         ...extra.metadata,
       }),
       file: extra.file ? String(extra.file).slice(0, 200) : undefined,

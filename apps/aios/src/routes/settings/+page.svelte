@@ -916,6 +916,14 @@
   />
 
   <section class="card">
+    <h2>{t('settings.diagnostics')}</h2>
+    <p class="note">{t('settings.diagnosticsDesc')}</p>
+    <a class="mini-btn diagnostics-link" href="/diagnostics">
+      {t('settings.diagnosticsOpen')}
+    </a>
+  </section>
+
+  <section class="card">
     <h2>{t('settings.data')}</h2>
     <button type="button" class="danger-btn" onclick={clearChats}>
       {t('settings.clearChats')}

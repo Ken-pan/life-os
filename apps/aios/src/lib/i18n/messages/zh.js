@@ -362,6 +362,9 @@ export default {
     cloudNever: '尚未同步',
     cloudPrivacyNote:
       '文本(对话、记忆)会上传到你的 Supabase 项目;图片和文件附件留在本机,不上云。',
+    diagnostics: '诊断',
+    diagnosticsDesc: '崩溃、错误日志与 Bug 反馈的 triage,可标注已解决/忽略。',
+    diagnosticsOpen: '打开诊断面',
     data: '数据',
     clearChats: '清空全部对话',
     clearChatsConfirm: '确定删除全部对话?此操作不可撤销。',

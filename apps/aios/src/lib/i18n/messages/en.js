@@ -376,6 +376,9 @@ export default {
     cloudNever: 'Never synced',
     cloudPrivacyNote:
       'Text (chats, memories) is uploaded to your Supabase project; images and file attachments stay on this device.',
+    diagnostics: 'Diagnostics',
+    diagnosticsDesc: 'Triage crashes, error logs and bug reports; mark resolved/ignored.',
+    diagnosticsOpen: 'Open diagnostics',
     data: 'Data',
     clearChats: 'Delete all chats',
     clearChatsConfirm: 'Delete all conversations? This cannot be undone.',

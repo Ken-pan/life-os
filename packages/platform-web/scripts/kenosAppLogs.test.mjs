@@ -5,10 +5,22 @@ import {
   redactLogMetadata,
   normalizeLogLevel,
   levelMeetsMinimum,
+  computeLogFingerprint,
   evaluateAppLogAlertRules,
   createKenosAppLogs,
   installKenosAppLogs,
 } from '../src/kenosAppLogs.js'
+
+// computeLogFingerprint: same class of error → same fingerprint (volatile parts scrubbed)
+assert.equal(
+  computeLogFingerprint('load failed for user 42 at 0xABC', 'net'),
+  computeLogFingerprint('load failed for user 99 at 0xDEF', 'net'),
+)
+assert.match(computeLogFingerprint('x', 'net'), /^[0-9a-f]{8}$/)
+assert.notEqual(
+  computeLogFingerprint('load failed', 'net'),
+  computeLogFingerprint('save failed', 'net'),
+)
 
 assert.equal(normalizeLogLevel('warn'), 'warning')
 assert.equal(normalizeLogLevel('fatal'), 'fault')
