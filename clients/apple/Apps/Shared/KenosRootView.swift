@@ -1299,7 +1299,15 @@ struct SpaceSwitcherSheet: View {
     @ViewBuilder
     private var switchSections: some View {
         Section("System") {
-            Button("Today") { model.returnToSystem(.today) }
+            Button("Today") {
+                // 从域内点 Today 必须先退出 domain 模式 —— returnToSystem 只改
+                // selectedTab,不翻 shellMode,会把域面/域胶囊留在原地(真机 Device
+                // Gate 实测)。dismissContinuity 同步翻 .kenos + 恢复 tab,可靠无异步。
+                if model.shellMode == .domain { model.dismissContinuity() }
+                model.returnToSystem(.today)
+            }
+            // 唯一 id:域胶囊也有个叫「Today」的 tab,测试需精确定位切换器这个。
+            .accessibilityIdentifier("kenos.switcher.system.today")
         }
         if !filteredPinned.isEmpty {
             Section("Pinned") {
@@ -1363,7 +1371,10 @@ struct SpaceSwitcherSheet: View {
         Section("System") {
             ForEach(KenosAppModel.Tab.allCases) { tab in
                 if matches(tab.title) {
-                    Button(tab.title) { model.returnToSystem(tab) }
+                    Button(tab.title) {
+                        if model.shellMode == .domain { model.dismissContinuity() }
+                        model.returnToSystem(tab)
+                    }
                 }
             }
         }

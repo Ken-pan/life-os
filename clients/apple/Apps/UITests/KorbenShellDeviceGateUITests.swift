@@ -102,9 +102,11 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
             attachScreenshot(app, name: "T1-\(label)")
         }
 
-        // 回 Today
+        // 回 Today —— 精确点切换器的系统 Today(域胶囊也有个叫 Today 的 tab,不能用
+        // firstMatch 否则会误点域内 tab,停留在 domain)。
         app.buttons["korben.orb"].tap()
-        let todayRow = app.buttons["Today"].firstMatch
+        XCTAssertTrue(switcherVisible(app, timeout: 5), "回 Today 前 Switcher 应打开")
+        let todayRow = app.buttons["kenos.switcher.system.today"]
         XCTAssertTrue(todayRow.waitForExistence(timeout: 5))
         todayRow.tap()
         sleep(3)

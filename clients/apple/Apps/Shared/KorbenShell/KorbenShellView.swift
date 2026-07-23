@@ -106,15 +106,8 @@ struct KorbenShellView: View {
             model.dismissSpaceShelf()
             model.openSpaceSwitcher()
         }
-        // 修复:切换器「Today/系统」项走 returnToSystem —— 它只改 selectedTab,不退
-        // domain 模式(shellMode/continuityURL 不动),导致域面与域胶囊残留。此处补偿:
-        // 仍在 domain 却切到了 Kenos 系统 tab 时主动退域。domain 内导航只动
-        // domainDockSlot、不动 selectedTab,故 guard 不会误伤域内切换。
-        .onChange(of: model.selectedTab) { _, _ in
-            if model.shellMode == .domain {
-                model.returnToKenosFromDomain()
-            }
-        }
+        // 切换器「Today/系统」项的退域修复在 SpaceSwitcherSheet 的按钮里
+        // (dismissContinuity 同步退域)—— selectedTab 在域内导航时不变,无法在此 hook。
         // P4A:Korben 壳内 capture 意图统一走 Quick Capture 两档 sheet
         // (深链 kenos://compose、旧代码路径)。Focus 分支不挂载本视图,不受影响。
         .onChange(of: model.showCaptureSheet) { _, open in
