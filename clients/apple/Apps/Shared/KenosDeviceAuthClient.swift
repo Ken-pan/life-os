@@ -69,7 +69,12 @@ enum KenosDeviceAuthClient {
                 KenosLog.notice(
                     "device exchange failed",
                     category: .session,
-                    metadata: ["error": String(describing: error)]
+                    metadata: [
+                        "error": String(describing: error),
+                        // 法证:确认运行中二进制实际解析出的 API base(排查旧域名来源)
+                        "apiBase": apiBaseURL.absoluteString,
+                        "buildStamp": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion").map { String(describing: $0) } ?? "?",
+                    ]
                 )
                 if case AuthError.http(let code, _) = error, code == 401 || code == 403 || code == 409 {
                     KenosDeviceIdentityStore.clearPairing()

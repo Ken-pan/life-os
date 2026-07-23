@@ -261,7 +261,12 @@ final class KenosHealthSyncer: ObservableObject {
             return
         }
         BGTaskScheduler.shared.register(forTaskWithIdentifier: bgTaskID, using: nil) { task in
-            handleBackground(task as! BGAppRefreshTask)
+            // BGTaskScheduler 回调跑在私有队列;本类是 @MainActor,直接调用会触发
+            // Swift 6 运行时隔离断言 SIGTRAP(真机夜间 BGAppRefresh 秒崩)。显式跳回主 actor。
+            let refresh = task as! BGAppRefreshTask
+            Task { @MainActor in
+                handleBackground(refresh)
+            }
         }
         scheduleBackgroundSync()
     }

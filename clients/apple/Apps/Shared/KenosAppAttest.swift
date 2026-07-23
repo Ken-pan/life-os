@@ -46,7 +46,24 @@ enum KenosAppAttest {
                 try secureStore.writeSecret(Data(keyId.utf8), account: keyIdAccount)
             }
             let hash = Data(SHA256.hash(data: Data(challenge.utf8)))
-            let attestation = try await attestKey(keyId: keyId, clientDataHash: hash)
+            let attestation: Data
+            do {
+                attestation = try await attestKey(keyId: keyId, clientDataHash: hash)
+            } catch {
+                // 卸载重装后 Keychain 里的旧 keyId 仍在,但 App Attest 密钥本体已被系统
+                // 销毁(DCError.invalidKey)。清掉残留、换新 key 重试一次,避免 attest 死锁。
+                guard isInvalidKeyError(error), storedKeyId != nil else { throw error }
+                KenosLog.notice("app attest key invalid — regenerating", category: .session)
+                try? secureStore.deleteSecret(account: keyIdAccount)
+                let freshKeyId = try await generateKey()
+                try secureStore.writeSecret(Data(freshKeyId.utf8), account: keyIdAccount)
+                attestation = try await attestKey(keyId: freshKeyId, clientDataHash: hash)
+                return AttestationBundle(
+                    keyId: freshKeyId,
+                    attestationBase64: attestation.base64EncodedString(),
+                    challenge: challenge
+                )
+            }
             return AttestationBundle(
                 keyId: keyId,
                 attestationBase64: attestation.base64EncodedString(),
@@ -79,12 +96,25 @@ enum KenosAppAttest {
                 category: .session,
                 metadata: ["error": String(describing: error)]
             )
+            // 密钥本体已失效(通常是卸载重装):清掉残留 keyId,
+            // 下次 pair 会注册新 key,attest 保护自动恢复。
+            if isInvalidKeyError(error) {
+                try? secureStore.deleteSecret(account: keyIdAccount)
+            }
             return nil
         }
         #else
         return nil
         #endif
     }
+
+    #if os(iOS) && !targetEnvironment(simulator)
+    /// DCError.invalidKey — the stored keyId no longer maps to a live App Attest key.
+    private static func isInvalidKeyError(_ error: Error) -> Bool {
+        let ns = error as NSError
+        return ns.domain == DCError.errorDomain && ns.code == DCError.invalidKey.rawValue
+    }
+    #endif
 
     private static func fetchAttestChallenge(apiBase: URL) async throws -> String {
         let url = apiBase.appendingPathComponent("api/device/attest-challenge")
