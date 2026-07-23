@@ -9,9 +9,11 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
 
     private func launchKorben(extraArgs: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-korbenShellV2", "-kenosSkipShellUnlock"] + extraArgs
+        // -kenosDevMode:开发构建下一次跳过 Face ID 壳解锁门 + HealthKit 授权 sheet
+        // (含 device Release 测试构建 —— 带 embedded.mobileprovision 即判为开发构建)。
+        app.launchArguments = ["-korbenShellV2", "-kenosDevMode"] + extraArgs
         app.launch()
-        dismissHealthAccessIfPresent(app)
+        dismissHealthAccessIfPresent(app) // 兜底:dev mode 已抑制,残留旧授权态时仍点掉
         return app
     }
 

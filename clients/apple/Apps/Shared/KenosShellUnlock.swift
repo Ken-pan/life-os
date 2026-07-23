@@ -60,13 +60,12 @@ enum KenosShellUnlock {
             return .unlockedCached
         }
 
-        #if DEBUG
-        if shouldSkipBiometricsForDebug() {
+        // 开发模式后门:仅开发构建 + 显式传参时跳过 Face ID(生产恒关,见 KenosDevMode)。
+        if KenosDevMode.skipShellUnlock {
             KenosUnlockGrantStore.rememberShell(ttl: grantTTL)
-            KenosLog.notice("shell unlock skipped — debug flag", category: .session)
+            KenosLog.notice("shell unlock skipped — dev mode", category: .session)
             return Result(ok: true, cached: false, skipped: true, message: nil)
         }
-        #endif
 
         #if targetEnvironment(simulator)
         // Simulator / XCTest must never block on LA — always grant shell unlock.
@@ -140,13 +139,6 @@ enum KenosShellUnlock {
         return Result(ok: false, cached: false, skipped: false, message: message)
         #endif
     }
-
-    #if DEBUG
-    private static func shouldSkipBiometricsForDebug() -> Bool {
-        if ProcessInfo.processInfo.environment["KENOS_SHELL_UNLOCK_SKIP"] == "1" {
-            return true
-        }
-        return ProcessInfo.processInfo.arguments.contains("-kenosSkipShellUnlock")
-    }
-    #endif
+    // 生物识别跳过统一收敛到 KenosDevMode(旧 -kenosSkipShellUnlock / KENOS_SHELL_UNLOCK_SKIP
+    // 仍兼容,由 KenosDevMode.launchArguments / environmentKeys 承接)。
 }

@@ -34,6 +34,12 @@ struct KenosApp: App {
                     KenosLog.debug("HealthKit unavailable — skip sync", category: .health)
                     return
                 }
+                // 开发模式后门:开发构建 + 显式传参时不弹 HealthKit 授权 sheet
+                // (生产恒关,见 KenosDevMode)。让自动化/手动测试不被 sheet 挡住。
+                guard !KenosDevMode.skipHealthKitPrompt else {
+                    KenosLog.notice("HealthKit prompt skipped — dev mode", category: .health)
+                    return
+                }
                 // Defer HealthKit auth until after first content frame — avoids
                 // system permission sheet colliding with launch veil.
                 try? await Task.sleep(nanoseconds: 900_000_000)
