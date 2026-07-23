@@ -42,6 +42,12 @@
           var s = JSON.parse(raw);
           if (s.settings && s.settings.theme) pref = s.settings.theme;
         }
+        // Korben Shell 下发的主题优先 —— iOS 壳的 user script 在 .atDocumentStart
+        // 注入(早于本脚本),让所有 Domain 在同一台设备上保持同一套配色。
+        // 壳外(普通浏览器)两个值都不存在,下面沿用本 app 原有逻辑。
+        var shellPref =
+          window.__KENOS_SHELL_THEME__ || document.documentElement.dataset.kenosShellTheme;
+        if (shellPref === 'light' || shellPref === 'dark' || shellPref === 'auto') pref = shellPref;
         var dark =
           pref === 'dark' ||
           (pref === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);

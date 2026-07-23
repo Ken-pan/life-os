@@ -123,12 +123,29 @@ export function isThemePreference(value) {
 }
 
 /**
+ * Korben Shell（iOS 原生壳）在 .atDocumentStart 下发的主题偏好。
+ * 壳内所有 Domain 共用壳的配色，保证「用户始终在同一个 Korben Shell」；
+ * 壳外（普通浏览器）返回 null，各 app 保持自有偏好逻辑不变。
+ * @returns {ThemePreference | null}
+ */
+export function shellThemePreference() {
+  if (typeof window === 'undefined') return null
+  const raw =
+    window.__KENOS_SHELL_THEME__ ??
+    (typeof document !== 'undefined'
+      ? document.documentElement?.dataset?.kenosShellTheme
+      : null)
+  return isThemePreference(raw) ? raw : null
+}
+
+/**
  * @param {ThemePreference | string | null | undefined} preference
  * @param {ThemePreference} [fallback='auto']
  * @returns {ResolvedTheme}
  */
 export function resolveTheme(preference, fallback = 'auto') {
-  const pref = isThemePreference(preference) ? preference : fallback
+  const shell = shellThemePreference()
+  const pref = shell ?? (isThemePreference(preference) ? preference : fallback)
   if (pref === 'auto') {
     if (typeof window === 'undefined') return 'light'
     return window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -226,7 +243,8 @@ export function bindSystemThemeChange(
   const mq = window.matchMedia('(prefers-color-scheme: dark)')
   const handler = () => {
     const pref = readPreference()
-    const effective = isThemePreference(pref) ? pref : fallback
+    const shell = shellThemePreference()
+    const effective = shell ?? (isThemePreference(pref) ? pref : fallback)
     if (effective === 'auto') onResolved(resolveTheme('auto'))
   }
   mq.addEventListener('change', handler)

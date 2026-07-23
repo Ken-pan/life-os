@@ -212,6 +212,7 @@ export declare const THEME_PREFERENCES: ThemePreference[]
 export declare function isThemePreference(
   value: string | null | undefined,
 ): value is ThemePreference
+export declare function shellThemePreference(): ThemePreference | null
 export declare function resolveTheme(
   preference: ThemePreference | string | null | undefined,
   fallback?: ThemePreference,

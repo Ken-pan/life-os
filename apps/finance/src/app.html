@@ -34,12 +34,24 @@
     (function () {
       try {
         var stored = localStorage.getItem("fos-theme");
+        // Korben Shell 下发的主题优先 —— iOS 壳的 user script 在 .atDocumentStart
+        // 注入(早于本脚本),让所有 Domain 在同一台设备上保持同一套配色。
+        // 壳外(普通浏览器)两个值都不存在,下面沿用本 app 原有逻辑。
+        var shellPref =
+          window.__KENOS_SHELL_THEME__ || document.documentElement.dataset.kenosShellTheme;
+        if (shellPref === "light" || shellPref === "dark") stored = shellPref;
+        else if (shellPref === "auto") stored = null;
         var dark =
           stored === "dark" ||
           (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
         if (dark) {
           document.documentElement.setAttribute("data-theme", "dark");
           document.documentElement.style.colorScheme = "dark";
+        } else if (shellPref) {
+          // 壳内显式钉住浅色（含 colorScheme，避免原生控件跟系统跑偏）；
+          // 壳外维持原行为：不落属性，沿用 <html data-theme="light">。
+          document.documentElement.setAttribute("data-theme", "light");
+          document.documentElement.style.colorScheme = "light";
         }
         var meta = document.getElementById("theme-color-meta");
         if (meta) meta.content = dark ? "#101211" : "#f2f4f2";
