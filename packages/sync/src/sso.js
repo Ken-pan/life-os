@@ -343,6 +343,40 @@ function bindSessionWarmOnResume(supabase) {
   })
 }
 
+/** 原生壳灌完会话 vault 时广播的事件名(Swift 侧 KenosNativeCapabilityBridge 派发)。 */
+export const KENOS_AUTH_VAULT_READY_EVENT = 'kenos:auth-vault-ready'
+
+/**
+ * 事件驱动的壳内会话恢复(长期修复,替代纯轮询):
+ * Kenos 壳在 Face ID 解锁 + 设备交换完成、vault 就绪时主动派发
+ * `kenos:auth-vault-ready`;web 侧收到后立即重放恢复,不再靠时间竞猜。
+ * 与冷启恢复互补闭环:web 先启 → 事件到达时监听已就位;原生先灌 → 冷启直接读到 vault。
+ */
+function bindNativeVaultReadyRestore(supabase) {
+  if (typeof window === 'undefined') return
+  window.addEventListener(KENOS_AUTH_VAULT_READY_EVENT, () => {
+    void (async () => {
+      try {
+        const { data } = await supabase.auth.getSession()
+        if (data?.session) {
+          mirrorSession(data.session)
+          return
+        }
+        const tokens = await fetchNativeSharedTokens()
+        if (tokens) {
+          await restoreSessionFromTokens(
+            supabase,
+            tokens,
+            'native vault (push)',
+          )
+        }
+      } catch {
+        /* 冷启恢复与壳内有界重试仍在,事件失败不致断链 */
+      }
+    })()
+  })
+}
+
 /**
  * Re-attempt shared-session restore (Cookie → native vault) after cold start.
  * Native shells (Kenos iOS/Mac) seed the vault only after Face ID unlock +
@@ -408,6 +442,7 @@ export async function setupCrossDomainSSO(supabase) {
   })
 
   bindSessionWarmOnResume(supabase)
+  bindNativeVaultReadyRestore(supabase)
 
   // 2. Cold start: restore when this origin has no session yet.
   const {

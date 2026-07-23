@@ -30,6 +30,12 @@ import {
 import { recordShadowObservation } from './readObservability.core.js'
 import { isWorkFoundationEnabled } from './workCommand.core.js'
 import { FOCUS } from './focusStore.svelte.js'
+import {
+  CONTROL_SNAPSHOT_KEY,
+  buildControlSnapshot,
+  planControlHydration,
+  refreshTransitionSourceState,
+} from './controlSnapshot.core.js'
 
 const DEMO_STATE_KEY = 'kenos_phase2_control_demo_v1'
 
@@ -58,7 +64,7 @@ const DEMO_INBOX = Object.freeze([
     detail: '等待选择归属空间',
     receivedAt: new Date(Date.now() - 12 * 60_000).toISOString(),
     actionHints: ['open_owner'],
-    deepLink: 'https://planner.kenos.space/inbox',
+    deepLink: 'https://plan.kenos.space/inbox',
   },
   {
     id: 'inbox-demo-2',
@@ -70,7 +76,7 @@ const DEMO_INBOX = Object.freeze([
     detail: '建议归入计划，并引用训练记录',
     receivedAt: new Date(Date.now() - 3 * 60 * 60_000).toISOString(),
     actionHints: ['open_owner'],
-    deepLink: 'https://fitness.kenos.space/',
+    deepLink: 'https://training.kenos.space/',
   },
 ])
 
@@ -240,6 +246,100 @@ export const CONTROL = $state({
 
 let inflight = null
 
+/* ═══ 只读快照:stale-while-revalidate(冷启秒开,不再每次现场重拉) ═══ */
+
+/** 各 source 对应的数据字段当前是否有可展示内容(刷新过渡 / 快照落盘共用)。 */
+const RETAINED_BY_SOURCE = {
+  today: () => Boolean(CONTROL.summary),
+  inbox: () => (CONTROL.inbox?.length ?? 0) > 0,
+  approvals: () => (CONTROL.approvals?.length ?? 0) > 0,
+  activity: () => (CONTROL.activities?.length ?? 0) > 0,
+  focus: () => (CONTROL.focusContexts?.length ?? 0) > 0,
+  work: () =>
+    (CONTROL.workProjects?.length ?? 0) > 0 ||
+    (CONTROL.workCards?.length ?? 0) > 0,
+}
+
+/**
+ * 冷启水合:把上次成功刷新的 projection 立即灌进 CONTROL(标 stale),
+ * 「今日 / 收件箱」等 tab 秒开;随后 refreshControlCenter 后台逐源覆盖。
+ * fail-closed:demo 模式、无 userId、快照归属不符、超龄(48h)一律不水合。
+ * @param {{ userId?: string }} [opts]
+ * @returns {boolean} 是否水合成功
+ */
+export function hydrateControlCenterFromSnapshot({ userId = '' } = {}) {
+  if (!browser) return false
+  // 已有真实数据 / 已刷新过 / demo:不覆盖
+  if (CONTROL.refreshedAt || CONTROL.summary || shouldSeedControlDemo())
+    return false
+  let plan = null
+  try {
+    plan = planControlHydration(
+      JSON.parse(localStorage.getItem(CONTROL_SNAPSHOT_KEY) ?? 'null'),
+      { userId },
+    )
+  } catch {
+    plan = null
+  }
+  if (!plan) return false
+  CONTROL.summary = plan.fields.summary
+  CONTROL.inbox = plan.fields.inbox
+  CONTROL.approvals = plan.fields.approvals
+  CONTROL.activities = plan.fields.activities
+  CONTROL.focusContexts = plan.fields.focusContexts
+  CONTROL.workProjects = plan.fields.workProjects
+  CONTROL.workCards = plan.fields.workCards
+  CONTROL.sources = { ...CONTROL.sources, ...plan.sources }
+  // 快照即视作「已有内容」:骨架只留给真正的第一次
+  CONTROL.loading = false
+  return true
+}
+
+/** 成功刷新后落盘快照(仅真实数据 + 已登录;失败静默,不影响主流程)。 */
+async function persistControlSnapshot() {
+  if (!browser || CONTROL.demo) return
+  try {
+    const { CLOUD } = await import('$lib/cloud.svelte.js')
+    const snap = buildControlSnapshot(
+      {
+        demo: CONTROL.demo,
+        summary: CONTROL.summary,
+        inbox: CONTROL.inbox,
+        approvals: CONTROL.approvals,
+        activities: CONTROL.activities,
+        focusContexts: CONTROL.focusContexts,
+        workProjects: CONTROL.workProjects,
+        workCards: CONTROL.workCards,
+        sources: CONTROL.sources,
+      },
+      { userId: CLOUD.user?.id || '' },
+    )
+    if (snap) localStorage.setItem(CONTROL_SNAPSHOT_KEY, JSON.stringify(snap))
+  } catch {
+    /* 快照是加速层,存不下不致错 */
+  }
+}
+
+/** 登出/换号:清空内存 projection(持久层由 clientSessionCleanup 统一清)。 */
+export function resetControlCenterState() {
+  CONTROL.loading = true
+  CONTROL.error = ''
+  CONTROL.summary = null
+  CONTROL.inbox = []
+  CONTROL.approvals = []
+  CONTROL.activities = []
+  CONTROL.focusContexts = []
+  CONTROL.workProjects = []
+  CONTROL.workCards = []
+  CONTROL.refreshedAt = 0
+  CONTROL.sources = Object.fromEntries(
+    Object.entries(CONTROL.sources).map(([key, state]) => [
+      key,
+      sourceState('loading', { source: state.source }),
+    ]),
+  )
+}
+
 function applySourceResult(key, value) {
   if (!value?.state) return
   const failed = ['offline', 'unavailable', 'permission_denied'].includes(
@@ -326,13 +426,16 @@ export async function refreshControlCenter({ force = false } = {}) {
     try {
       const demo = shouldSeedControlDemo()
       if (!demo) {
+        // stale-while-revalidate:已有内容的源保持可见、只标 stale,后台逐源覆盖;
+        // 无内容的源才回 loading。骨架只出现在真正的第一次加载。
+        // side 派生键(focusDeferred/focusSuggestions)由 focus settle 时统一重写,
+        // 刷新期间保持原状,避免闪 loading。
         CONTROL.sources = Object.fromEntries(
           Object.entries(CONTROL.sources).map(([key, state]) => [
             key,
-            sourceState('loading', {
-              source: state.source,
-              lastUpdated: state.lastUpdated,
-            }),
+            RETAINED_BY_SOURCE[key]
+              ? refreshTransitionSourceState(state, RETAINED_BY_SOURCE[key]())
+              : state,
           ]),
         )
       }
@@ -502,6 +605,7 @@ export async function refreshControlCenter({ force = false } = {}) {
         ),
       })
       CONTROL.refreshedAt = Date.now()
+      if (!demo) void persistControlSnapshot()
       void import('./nativeLocalAlerts.js')
         .then((m) =>
           m.syncApprovalAlerts(CONTROL.approvals || [], { demo: CONTROL.demo }),
@@ -510,7 +614,8 @@ export async function refreshControlCenter({ force = false } = {}) {
     } catch (error) {
       CONTROL.error =
         error instanceof Error ? error.message : 'Today 暂时无法刷新'
-      CONTROL.summary = null
+      // stale-while-revalidate:刷新失败保留上次内容(源状态已按 per-key 标 stale/错误),
+      // 不再整体清空 summary 把页面打回骨架。
     } finally {
       CONTROL.loading = false
       inflight = null

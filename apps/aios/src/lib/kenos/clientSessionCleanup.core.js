@@ -59,6 +59,12 @@ export const AIOS_CLIENT_STORAGE_INVENTORY = Object.freeze([
     notes: 'Sync LWW snapshot of conversation/memory ids',
   },
   {
+    key: 'aios_control_snapshot_v1',
+    classification: 'USER_SCOPED_CACHE',
+    containsUserContent: true,
+    notes: 'Control Center read-model snapshot (Today/Inbox stale-while-revalidate)',
+  },
+  {
     key: 'aios_daily_suggestions_v1',
     classification: 'USER_SCOPED_CACHE',
     containsUserContent: true,

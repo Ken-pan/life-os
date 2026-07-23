@@ -1213,6 +1213,27 @@ enum KenosNativeCapabilityBridge {
         #endif
     }
 
+    // MARK: - Auth vault broadcast
+
+    /// Session vault 就绪广播:Face ID 解锁 + 设备交换完成后通知所有活跃 WKWebView。
+    /// web 侧(@life-os/sync sso.js)监听 `kenos:auth-vault-ready` 立即重放会话恢复,
+    /// 消灭「web 冷启比 vault 灌入早 → 长期误显未登录」的竞态(事件驱动,非轮询)。
+    /// 无令牌时广播也无害:web 读 vault 得 signedIn=false 即止。
+    static func broadcastAuthVaultReady() {
+        let js = """
+        try {
+          window.dispatchEvent(new CustomEvent('kenos:auth-vault-ready'));
+        } catch (e) {}
+        """
+        #if os(iOS)
+        for webView in [KenosActiveWebRegistry.shellWebView, KenosActiveWebRegistry.domainWebView]
+            .compactMap({ $0 })
+        {
+            webView.evaluateJavaScript(js, completionHandler: nil)
+        }
+        #endif
+    }
+
     // MARK: - Reply helpers
 
     /// 局域网 HTTP 转发(Code 域 cursor-bridge 等)。

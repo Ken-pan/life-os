@@ -62,7 +62,10 @@
   import CloudGate from '$lib/components/CloudGate.svelte'
   import { t, applyLocale, setLocale } from '$lib/i18n/index.js'
   import { bindKenosShellSettings } from '@life-os/platform-web/kenos-shell-settings'
-  import { refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
+  import {
+    hydrateControlCenterFromSnapshot,
+    refreshControlCenter,
+  } from '$lib/kenos/controlCenter.svelte.js'
   import {
     canRetryReconnect,
     reconnectDelayMs,
@@ -291,6 +294,10 @@
       // Auth restore lands after the first mount read (which fails closed as
       // permission_denied) — force one refresh so cold boot doesn't sit on the
       // signed-out projection until the 30s throttle expires.
+      // 秒开:先用上次成功刷新的快照水合(标 stale 立即渲染),再后台强刷覆盖。
+      if (CLOUD.user) {
+        hydrateControlCenterFromSnapshot({ userId: CLOUD.user.id })
+      }
       if (isCloudAuthorized()) void refreshControlCenter({ force: true })
       if (CLOUD_BUILD && !isCloudAuthorized()) {
         // Auth wall: do not seed/hydrate prior-user memory

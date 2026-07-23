@@ -98,6 +98,10 @@ export function clearUserScopedSessionState() {
     void import('$lib/kenos/spaceSwitcher.svelte.js')
       .then((m) => m.clearSpaceSwitcherOnLogout())
       .catch(() => {})
+    // Control Center 内存 projection 同步清空(快照持久层随 aios_* 前缀统一清)。
+    void import('$lib/kenos/controlCenter.svelte.js')
+      .then((m) => m.resetControlCenterState())
+      .catch(() => {})
   }
   const result = clearUserScopedClientStorage({
     localStorage: browser ? localStorage : undefined,
@@ -183,7 +187,11 @@ async function syncLifeOsMcpFleet(accessToken) {
 function refreshReadProjectionsAfterAuth() {
   console.info('[kenos-auth] owner session restored — refreshing read projections')
   void import('$lib/kenos/controlCenter.svelte.js')
-    .then((m) => m.refreshControlCenter({ force: true }))
+    .then((m) => {
+      // 晚到的鉴权(壳内 vault 竞态)同样先水合快照秒出内容,再强刷覆盖
+      m.hydrateControlCenterFromSnapshot({ userId: CLOUD.user?.id || '' })
+      return m.refreshControlCenter({ force: true })
+    })
     .catch(() => {})
 }
 
