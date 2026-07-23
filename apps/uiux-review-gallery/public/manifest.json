@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-22T15:02:44.662Z",
+  "generatedAt": "2026-07-23T17:07:08.065Z",
   "git": {
-    "sha": "e7a595678",
-    "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
+    "sha": "dc47406f4",
+    "subject": "feat(kenos/korben): P5 Assist Panel 第一刀 — 上下文投影+确定性操作,真 agent 走 web Ask",
     "branch": "master"
   },
-  "baselineGit": "e7a595678",
+  "baselineGit": "dc47406f4",
   "sharedImpact": {
     "changed": true,
     "packages": [
@@ -32,7 +32,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/planner-light-desktop.jpg",
-          "generatedAt": "2026-07-22T14:59:40.659Z",
+          "generatedAt": "2026-07-23T17:04:07.897Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -41,7 +41,7 @@
         },
         "dark-desktop": {
           "file": "shots/planner-dark-desktop.jpg",
-          "generatedAt": "2026-07-22T15:01:22.105Z",
+          "generatedAt": "2026-07-23T17:05:44.994Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -49,7 +49,7 @@
           }
         }
       },
-      "name": "PLANNER.OS",
+      "name": "Kenos Plan",
       "description": "阳光感任务清单 · 轻松规划每一天",
       "screens": 7,
       "pages": [
@@ -83,8 +83,8 @@
         }
       ],
       "git": {
-        "sha": "e7a595678",
-        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
+        "sha": "dc47406f4",
+        "subject": "feat(kenos/korben): P5 Assist Panel 第一刀 — 上下文投影+确定性操作,真 agent 走 web Ask",
         "branch": "master"
       },
       "metrics": {
@@ -104,14 +104,12 @@
           "local": 17
         },
         "codeImpact": {
-          "since": "69243b01b",
-          "files": 96,
+          "since": "e7a595678",
+          "files": 12,
           "areas": [
-            "AppBar",
-            "BottomNav",
-            "DomainMusicHeader",
-            "InsightCard",
-            "PageShell"
+            "TaskGroup",
+            "/+page.svelte",
+            "/projects"
           ]
         },
         "a11y": {
@@ -139,11 +137,11 @@
           "pct": 100
         },
         "trend": {
-          "score": 1,
-          "debt": -6,
+          "score": 0,
+          "debt": 0,
           "a11yFails": 0,
-          "since": "69243b01b",
-          "sinceAt": "2026-07-18T17:07:19.126Z"
+          "since": "e7a595678",
+          "sinceAt": "2026-07-22T15:01:09.657Z"
         }
       }
     },
@@ -152,7 +150,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/finance-light-desktop.jpg",
-          "generatedAt": "2026-07-22T14:59:50.068Z",
+          "generatedAt": "2026-07-23T17:04:17.236Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -161,7 +159,7 @@
         },
         "dark-desktop": {
           "file": "shots/finance-dark-desktop.jpg",
-          "generatedAt": "2026-07-22T15:01:31.447Z",
+          "generatedAt": "2026-07-23T17:05:54.259Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -169,7 +167,7 @@
           }
         }
       },
-      "name": "FINANCE.OS",
+      "name": "Kenos Money",
       "description": "个人财务驾驶舱 · 现金流、资产与长期规划",
       "screens": 7,
       "pages": [
@@ -203,8 +201,8 @@
         }
       ],
       "git": {
-        "sha": "e7a595678",
-        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
+        "sha": "dc47406f4",
+        "subject": "feat(kenos/korben): P5 Assist Panel 第一刀 — 上下文投影+确定性操作,真 agent 走 web Ask",
         "branch": "master"
       },
       "metrics": {
@@ -218,12 +216,12 @@
         },
         "sharedAdoption": {
           "pct": 32,
-          "shared": 53,
+          "shared": 54,
           "local": 113
         },
         "a11y": {
-          "checked": 364,
-          "pass": 360,
+          "checked": 365,
+          "pass": 361,
           "issues": {
             "noAlt": 0,
             "noName": 0,
@@ -231,14 +229,14 @@
           }
         },
         "codeImpact": {
-          "since": "69243b01b",
-          "files": 28,
+          "since": "e7a595678",
+          "files": 10,
           "areas": [
-            "AppShell",
-            "AuthGate",
-            "CashflowQuickAddDrawer",
-            "DecisionStudioView",
-            "DeviceManager"
+            "AiBriefCard",
+            "AppBar",
+            "BudgetPulseCard",
+            "ExtensionSyncBridge",
+            "FinanceProviders"
           ]
         },
         "health": {
@@ -258,10 +256,10 @@
         },
         "trend": {
           "score": 0,
-          "debt": 8,
+          "debt": 0,
           "a11yFails": 0,
-          "since": "69243b01b",
-          "sinceAt": "2026-07-18T17:07:19.126Z"
+          "since": "e7a595678",
+          "sinceAt": "2026-07-22T15:01:09.657Z"
         }
       }
     },
@@ -270,7 +268,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/fitness-light-desktop.jpg",
-          "generatedAt": "2026-07-22T14:59:59.421Z",
+          "generatedAt": "2026-07-23T17:04:26.521Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -279,7 +277,7 @@
         },
         "dark-desktop": {
           "file": "shots/fitness-dark-desktop.jpg",
-          "generatedAt": "2026-07-22T15:01:40.803Z",
+          "generatedAt": "2026-07-23T17:06:03.532Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -287,7 +285,7 @@
           }
         }
       },
-      "name": "FITNESS.OS",
+      "name": "Kenos Training",
       "description": "胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先",
       "screens": 7,
       "pages": [
@@ -321,8 +319,8 @@
         }
       ],
       "git": {
-        "sha": "e7a595678",
-        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
+        "sha": "dc47406f4",
+        "subject": "feat(kenos/korben): P5 Assist Panel 第一刀 — 上下文投影+确定性操作,真 agent 走 web Ask",
         "branch": "master"
       },
       "metrics": {
@@ -338,18 +336,16 @@
         },
         "sharedAdoption": {
           "pct": 99,
-          "shared": 80,
+          "shared": 82,
           "local": 1
         },
         "codeImpact": {
-          "since": "69243b01b",
-          "files": 42,
+          "since": "e7a595678",
+          "files": 11,
           "areas": [
-            "AppBar",
-            "BottomNav",
-            "DomainMusicHeader",
-            "FitnessToolSheet",
-            "FocusSession"
+            "SideNav",
+            "/+page.svelte",
+            "/settings"
           ]
         },
         "a11y": {
@@ -378,10 +374,10 @@
         },
         "trend": {
           "score": 0,
-          "debt": 1,
+          "debt": 0,
           "a11yFails": 0,
-          "since": "69243b01b",
-          "sinceAt": "2026-07-18T17:07:19.126Z"
+          "since": "e7a595678",
+          "sinceAt": "2026-07-22T15:01:09.657Z"
         }
       }
     },
@@ -390,7 +386,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/music-light-desktop.jpg",
-          "generatedAt": "2026-07-22T15:00:09.224Z",
+          "generatedAt": "2026-07-23T17:04:35.857Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -399,7 +395,7 @@
         },
         "dark-desktop": {
           "file": "shots/music-dark-desktop.jpg",
-          "generatedAt": "2026-07-22T15:01:50.463Z",
+          "generatedAt": "2026-07-23T17:06:12.891Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -407,7 +403,7 @@
           }
         }
       },
-      "name": "MUSIC.OS",
+      "name": "Kenos Music",
       "description": "本地音乐，留在心里 · 离线播放与歌单",
       "screens": 7,
       "pages": [
@@ -441,8 +437,8 @@
         }
       ],
       "git": {
-        "sha": "e7a595678",
-        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
+        "sha": "dc47406f4",
+        "subject": "feat(kenos/korben): P5 Assist Panel 第一刀 — 上下文投影+确定性操作,真 agent 走 web Ask",
         "branch": "master"
       },
       "metrics": {
@@ -461,15 +457,9 @@
           "local": 24
         },
         "codeImpact": {
-          "since": "69243b01b",
-          "files": 30,
-          "areas": [
-            "DomainMusicHeader",
-            "MiniPlayer",
-            "QueueDrawer",
-            "/+layout.js",
-            "/+page.svelte"
-          ]
+          "since": "e7a595678",
+          "files": 3,
+          "areas": []
         },
         "a11y": {
           "checked": 389,
@@ -496,11 +486,11 @@
           "pct": 100
         },
         "trend": {
-          "score": 1,
-          "debt": -2,
+          "score": 0,
+          "debt": 0,
           "a11yFails": 0,
-          "since": "69243b01b",
-          "sinceAt": "2026-07-18T17:07:19.126Z"
+          "since": "e7a595678",
+          "sinceAt": "2026-07-22T15:01:09.657Z"
         }
       }
     },
@@ -509,7 +499,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/home-light-desktop.jpg",
-          "generatedAt": "2026-07-22T15:00:17.682Z",
+          "generatedAt": "2026-07-23T17:04:44.285Z",
           "screens": 6,
           "capture": {
             "ok": 6,
@@ -518,7 +508,7 @@
         },
         "dark-desktop": {
           "file": "shots/home-dark-desktop.jpg",
-          "generatedAt": "2026-07-22T15:01:59.012Z",
+          "generatedAt": "2026-07-23T17:06:21.370Z",
           "screens": 6,
           "capture": {
             "ok": 6,
@@ -526,7 +516,7 @@
           }
         }
       },
-      "name": "HOME.OS",
+      "name": "Kenos Home",
       "description": "居家空间规划 · 平面审计与储藏区管理",
       "screens": 6,
       "pages": [
@@ -556,8 +546,8 @@
         }
       ],
       "git": {
-        "sha": "e7a595678",
-        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
+        "sha": "dc47406f4",
+        "subject": "feat(kenos/korben): P5 Assist Panel 第一刀 — 上下文投影+确定性操作,真 agent 走 web Ask",
         "branch": "master"
       },
       "metrics": {
@@ -578,14 +568,14 @@
           "local": 3
         },
         "codeImpact": {
-          "since": "69243b01b",
-          "files": 16,
+          "since": "e7a595678",
+          "files": 10,
           "areas": [
-            "BottomNav",
-            "DomainMusicHeader",
-            "HomeTopBar",
-            "RecognitionBanner",
-            "RecognitionReview"
+            "AppBar",
+            "InventoryImport",
+            "SideNav",
+            "/settings",
+            "/tidy"
           ]
         },
         "a11y": {
@@ -616,8 +606,8 @@
           "score": 0,
           "debt": 0,
           "a11yFails": 0,
-          "since": "69243b01b",
-          "sinceAt": "2026-07-18T17:07:19.126Z"
+          "since": "e7a595678",
+          "sinceAt": "2026-07-22T15:01:09.657Z"
         }
       }
     },
@@ -626,7 +616,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/knowledge-light-desktop.jpg",
-          "generatedAt": "2026-07-22T15:00:51.568Z",
+          "generatedAt": "2026-07-23T17:05:16.014Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -635,7 +625,7 @@
         },
         "dark-desktop": {
           "file": "shots/knowledge-dark-desktop.jpg",
-          "generatedAt": "2026-07-22T15:02:28.044Z",
+          "generatedAt": "2026-07-23T17:06:51.003Z",
           "screens": 7,
           "capture": {
             "ok": 7,
@@ -643,7 +633,7 @@
           }
         }
       },
-      "name": "KNOWLEDGE.OS",
+      "name": "Kenos Library",
       "description": "第二大脑 · 收集 / 连接 / 回忆，Life OS 的长期记忆层",
       "screens": 7,
       "pages": [
@@ -677,8 +667,8 @@
         }
       ],
       "git": {
-        "sha": "e7a595678",
-        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
+        "sha": "dc47406f4",
+        "subject": "feat(kenos/korben): P5 Assist Panel 第一刀 — 上下文投影+确定性操作,真 agent 走 web Ask",
         "branch": "master"
       },
       "metrics": {
@@ -694,15 +684,9 @@
           "local": 0
         },
         "codeImpact": {
-          "since": "69243b01b",
-          "files": 29,
-          "areas": [
-            "BottomNav",
-            "CategoryChip",
-            "DomainMusicHeader",
-            "ItemList",
-            "NoteCards"
-          ]
+          "since": "e7a595678",
+          "files": 4,
+          "areas": []
         },
         "a11y": {
           "checked": 369,
@@ -732,8 +716,8 @@
           "score": 0,
           "debt": 0,
           "a11yFails": 0,
-          "since": "69243b01b",
-          "sinceAt": "2026-07-18T17:07:19.126Z"
+          "since": "e7a595678",
+          "sinceAt": "2026-07-22T15:01:09.657Z"
         }
       }
     },
@@ -742,7 +726,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/health-light-desktop.jpg",
-          "generatedAt": "2026-07-22T15:00:56.033Z",
+          "generatedAt": "2026-07-23T17:05:20.501Z",
           "screens": 3,
           "capture": {
             "ok": 3,
@@ -751,7 +735,7 @@
         },
         "dark-desktop": {
           "file": "shots/health-dark-desktop.jpg",
-          "generatedAt": "2026-07-22T15:02:32.555Z",
+          "generatedAt": "2026-07-23T17:06:55.485Z",
           "screens": 3,
           "capture": {
             "ok": 3,
@@ -759,7 +743,7 @@
           }
         }
       },
-      "name": "HEALTH.OS",
+      "name": "Kenos Health",
       "description": "个人健康与状态调节中枢 · Focus 防沉迷 · 本地优先",
       "screens": 3,
       "pages": [
@@ -777,8 +761,8 @@
         }
       ],
       "git": {
-        "sha": "e7a595678",
-        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
+        "sha": "dc47406f4",
+        "subject": "feat(kenos/korben): P5 Assist Panel 第一刀 — 上下文投影+确定性操作,真 agent 走 web Ask",
         "branch": "master"
       },
       "metrics": {
@@ -796,15 +780,9 @@
           "local": 0
         },
         "codeImpact": {
-          "since": "69243b01b",
-          "files": 18,
-          "areas": [
-            "BottomNav",
-            "DomainMusicHeader",
-            "/+page.svelte",
-            "/settings",
-            "/trends"
-          ]
+          "since": "e7a595678",
+          "files": 4,
+          "areas": []
         },
         "a11y": {
           "checked": 18,
@@ -832,10 +810,10 @@
         },
         "trend": {
           "score": 0,
-          "debt": 2,
+          "debt": 0,
           "a11yFails": 0,
-          "since": "69243b01b",
-          "sinceAt": "2026-07-18T17:07:19.126Z"
+          "since": "e7a595678",
+          "sinceAt": "2026-07-22T15:01:09.657Z"
         }
       }
     },
@@ -844,7 +822,7 @@
       "variants": {
         "light-desktop": {
           "file": "shots/aios-light-desktop.jpg",
-          "generatedAt": "2026-07-22T15:01:09.136Z",
+          "generatedAt": "2026-07-23T17:05:32.165Z",
           "screens": 8,
           "capture": {
             "ok": 8,
@@ -853,7 +831,7 @@
         },
         "dark-desktop": {
           "file": "shots/aios-dark-desktop.jpg",
-          "generatedAt": "2026-07-22T15:02:44.312Z",
+          "generatedAt": "2026-07-23T17:07:07.808Z",
           "screens": 8,
           "capture": {
             "ok": 8,
@@ -861,7 +839,7 @@
           }
         }
       },
-      "name": "Kenos Assistant",
+      "name": "Korben",
       "description": "Kenos 默认协调入口 · Today、Assistant、Inbox、审批与 Activity",
       "screens": 8,
       "pages": [
@@ -899,14 +877,14 @@
         }
       ],
       "git": {
-        "sha": "e7a595678",
-        "subject": "feat(kenos): 壳偏好云同步 — iOS/Mac 设置与 domain 状态跨设备汇合",
+        "sha": "dc47406f4",
+        "subject": "feat(kenos/korben): P5 Assist Panel 第一刀 — 上下文投影+确定性操作,真 agent 走 web Ask",
         "branch": "master"
       },
       "metrics": {
         "a11y": {
-          "checked": 203,
-          "pass": 203,
+          "checked": 216,
+          "pass": 216,
           "issues": {
             "noAlt": 0,
             "noName": 0,
@@ -926,18 +904,18 @@
         },
         "sharedAdoption": {
           "pct": 100,
-          "shared": 53,
+          "shared": 54,
           "local": 0
         },
         "codeImpact": {
-          "since": "69243b01b",
-          "files": 179,
+          "since": "e7a595678",
+          "files": 67,
           "areas": [
-            "AgentThread",
-            "BottomNav",
-            "CaptureQuick",
             "ChatSidebar",
-            "CloudGate"
+            "CloudGate",
+            "ProjectSpineToday",
+            "/+page.svelte",
+            "/approvals"
           ]
         },
         "health": {
@@ -956,11 +934,11 @@
           "pct": 100
         },
         "trend": {
-          "score": -8,
-          "debt": 98,
+          "score": 0,
+          "debt": 0,
           "a11yFails": 0,
-          "since": "69243b01b",
-          "sinceAt": "2026-07-18T17:07:19.126Z"
+          "since": "e7a595678",
+          "sinceAt": "2026-07-22T15:01:09.657Z"
         }
       }
     },
@@ -969,18 +947,18 @@
       "variants": {
         "dark-ios": {
           "file": "shots/kenos-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T16:16:00.552Z",
-          "screens": 6,
+          "generatedAt": "2026-07-23T18:14:20.671Z",
+          "screens": 9,
           "capture": {
-            "ok": 6,
-            "total": 6
+            "ok": 9,
+            "total": 9
           }
         }
       },
       "native": true,
       "name": "Kenos iOS",
-      "description": "Kenos 原生 iOS 壳（模拟器实截）：Dock · Space Shelf · 今日/问答/收件箱",
-      "screens": 6,
+      "description": "Kenos 原生 iOS 壳（模拟器实截）：Dock · Shelf · 今日/问答/收件箱 + Korben 壳 V2 预览",
+      "screens": 9,
       "pages": [
         {
           "path": "kenos://today",
@@ -1005,17 +983,29 @@
         {
           "path": "kenos://compose",
           "title": "快速捕获"
+        },
+        {
+          "path": "kenos://continue",
+          "title": "继续"
+        },
+        {
+          "path": "kenos://today",
+          "title": "Korben 壳 · 今日"
+        },
+        {
+          "path": "kenos://domain/plan",
+          "title": "Korben 壳 · 计划域"
         }
       ],
       "git": {
-        "sha": "cc8492350",
-        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
+        "sha": "89285dc22",
+        "subject": "feat(kenos/dev): KenosDevMode 开发后门 — 跳过 Face ID 壳解锁 + HealthKit 授权 sheet",
         "branch": "master"
       },
       "metrics": {
         "coverage": {
-          "ok": 6,
-          "total": 6,
+          "ok": 9,
+          "total": 9,
           "pct": 100
         }
       }
@@ -1025,7 +1015,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/plan-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T16:16:00.998Z",
+          "generatedAt": "2026-07-23T18:14:21.147Z",
           "screens": 2,
           "capture": {
             "ok": 2,
@@ -1048,8 +1038,8 @@
         }
       ],
       "git": {
-        "sha": "cc8492350",
-        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
+        "sha": "89285dc22",
+        "subject": "feat(kenos/dev): KenosDevMode 开发后门 — 跳过 Face ID 壳解锁 + HealthKit 授权 sheet",
         "branch": "master"
       },
       "metrics": {
@@ -1065,7 +1055,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/training-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T16:16:01.669Z",
+          "generatedAt": "2026-07-23T18:14:21.896Z",
           "screens": 3,
           "capture": {
             "ok": 3,
@@ -1092,8 +1082,8 @@
         }
       ],
       "git": {
-        "sha": "cc8492350",
-        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
+        "sha": "89285dc22",
+        "subject": "feat(kenos/dev): KenosDevMode 开发后门 — 跳过 Face ID 壳解锁 + HealthKit 授权 sheet",
         "branch": "master"
       },
       "metrics": {
@@ -1109,7 +1099,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/music-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T16:16:02.257Z",
+          "generatedAt": "2026-07-23T18:14:22.540Z",
           "screens": 2,
           "capture": {
             "ok": 2,
@@ -1132,8 +1122,8 @@
         }
       ],
       "git": {
-        "sha": "cc8492350",
-        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
+        "sha": "89285dc22",
+        "subject": "feat(kenos/dev): KenosDevMode 开发后门 — 跳过 Face ID 壳解锁 + HealthKit 授权 sheet",
         "branch": "master"
       },
       "metrics": {
@@ -1149,7 +1139,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/money-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T16:16:02.667Z",
+          "generatedAt": "2026-07-23T18:14:22.994Z",
           "screens": 1,
           "capture": {
             "ok": 1,
@@ -1168,8 +1158,8 @@
         }
       ],
       "git": {
-        "sha": "cc8492350",
-        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
+        "sha": "89285dc22",
+        "subject": "feat(kenos/dev): KenosDevMode 开发后门 — 跳过 Face ID 壳解锁 + HealthKit 授权 sheet",
         "branch": "master"
       },
       "metrics": {
@@ -1185,7 +1175,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/home-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T16:16:03.115Z",
+          "generatedAt": "2026-07-23T18:14:23.479Z",
           "screens": 2,
           "capture": {
             "ok": 2,
@@ -1208,8 +1198,8 @@
         }
       ],
       "git": {
-        "sha": "cc8492350",
-        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
+        "sha": "89285dc22",
+        "subject": "feat(kenos/dev): KenosDevMode 开发后门 — 跳过 Face ID 壳解锁 + HealthKit 授权 sheet",
         "branch": "master"
       },
       "metrics": {
@@ -1225,7 +1215,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/library-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T16:16:03.574Z",
+          "generatedAt": "2026-07-23T18:14:23.984Z",
           "screens": 2,
           "capture": {
             "ok": 2,
@@ -1248,8 +1238,8 @@
         }
       ],
       "git": {
-        "sha": "cc8492350",
-        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
+        "sha": "89285dc22",
+        "subject": "feat(kenos/dev): KenosDevMode 开发后门 — 跳过 Face ID 壳解锁 + HealthKit 授权 sheet",
         "branch": "master"
       },
       "metrics": {
@@ -1265,7 +1255,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/health-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T16:16:04.416Z",
+          "generatedAt": "2026-07-23T18:14:24.924Z",
           "screens": 2,
           "capture": {
             "ok": 2,
@@ -1288,8 +1278,8 @@
         }
       ],
       "git": {
-        "sha": "cc8492350",
-        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
+        "sha": "89285dc22",
+        "subject": "feat(kenos/dev): KenosDevMode 开发后门 — 跳过 Face ID 壳解锁 + HealthKit 授权 sheet",
         "branch": "master"
       },
       "metrics": {
@@ -1305,7 +1295,7 @@
       "variants": {
         "dark-ios": {
           "file": "shots/code-ios-dark-ios.jpg",
-          "generatedAt": "2026-07-22T16:16:03.972Z",
+          "generatedAt": "2026-07-23T18:14:24.427Z",
           "screens": 1,
           "capture": {
             "ok": 1,
@@ -1324,8 +1314,8 @@
         }
       ],
       "git": {
-        "sha": "cc8492350",
-        "subject": "feat(uiux-gallery): all Daily Beta companions as iOS domain entries (music+)",
+        "sha": "89285dc22",
+        "subject": "feat(kenos/dev): KenosDevMode 开发后门 — 跳过 Face ID 壳解锁 + HealthKit 授权 sheet",
         "branch": "master"
       },
       "metrics": {
@@ -1345,7 +1335,7 @@
     "totals": {
       "styleDebt": 811,
       "a11yFails": 12,
-      "a11yChecked": 1977,
+      "a11yChecked": 1991,
       "appsAudited": 8
     },
     "averages": {
@@ -1355,19 +1345,19 @@
     "worst": [
       {
         "id": "home",
-        "name": "HOME.OS",
+        "name": "Kenos Home",
         "score": 76,
         "grade": "C"
       },
       {
         "id": "finance",
-        "name": "FINANCE.OS",
+        "name": "Kenos Money",
         "score": 81,
         "grade": "B"
       },
       {
         "id": "music",
-        "name": "MUSIC.OS",
+        "name": "Kenos Music",
         "score": 85,
         "grade": "B"
       }
@@ -1392,8 +1382,8 @@
       {
         "name": "样式债务趋势",
         "target": "不新增",
-        "status": "fail",
-        "detail": "+101"
+        "status": "pass",
+        "detail": "+0"
       },
       {
         "name": "原生端覆盖",
@@ -1468,5 +1458,5 @@
       "advice": "补齐动效 Token（duration/easing）"
     }
   ],
-  "trendSince": "69243b01b"
+  "trendSince": "e7a595678"
 }

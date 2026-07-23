@@ -132,5 +132,72 @@
       "debt": 811,
       "a11yFails": 12
     }
+  },
+  {
+    "ts": "2026-07-23T17:05:32.660Z",
+    "sha": "dc47406f4",
+    "apps": {
+      "planner": {
+        "score": 88,
+        "debt": 60,
+        "a11yFails": 0,
+        "adoption": 83,
+        "coverage": 100
+      },
+      "finance": {
+        "score": 81,
+        "debt": 30,
+        "a11yFails": 4,
+        "adoption": 32,
+        "coverage": 100
+      },
+      "fitness": {
+        "score": 91,
+        "debt": 60,
+        "a11yFails": 0,
+        "adoption": 99,
+        "coverage": 100
+      },
+      "music": {
+        "score": 85,
+        "debt": 68,
+        "a11yFails": 7,
+        "adoption": 74,
+        "coverage": 100
+      },
+      "home": {
+        "score": 76,
+        "debt": 442,
+        "a11yFails": 0,
+        "adoption": 93,
+        "coverage": 100
+      },
+      "knowledge": {
+        "score": 100,
+        "debt": 0,
+        "a11yFails": 1,
+        "adoption": 100,
+        "coverage": 100
+      },
+      "health": {
+        "score": 100,
+        "debt": 2,
+        "a11yFails": 0,
+        "adoption": 100,
+        "coverage": 100
+      },
+      "aios": {
+        "score": 85,
+        "debt": 149,
+        "a11yFails": 0,
+        "adoption": 100,
+        "coverage": 100
+      }
+    },
+    "portfolio": {
+      "score": 88,
+      "debt": 811,
+      "a11yFails": 12
+    }
   }
 ]
