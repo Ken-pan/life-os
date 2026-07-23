@@ -73,13 +73,13 @@
     aria-expanded={open}
   >
     <ICONS.plus size={14} />
-    从 FinanceOS 导入清单
+    从 Kenos Money 导入清单
   </button>
 
   {#if open}
     <div class="import-panel">
       <p class="hint">
-        贴入分拣好的 JSON（<code>有</code> / <code>没有</code>，或 FinanceOS 的
+        贴入分拣好的 JSON（<code>有</code> / <code>没有</code>，或 Kenos Money 的
         <code>items</code>）。带 <code>kind</code> 的进平面图当家具，其余按类型自动归到
         储藏区 —— 归区是猜的，导入后会标「待核对」。标了 <code>disp: returned /
         cancelled</code> 的已退货、不导入；<code>maybe</code> 照导但标「退货存疑」。

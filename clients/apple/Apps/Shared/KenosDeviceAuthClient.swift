@@ -39,7 +39,7 @@ enum KenosDeviceAuthClient {
         {
             return url
         }
-        return URL(string: "https://planner.kenos.space")!
+        return URL(string: "https://plan.kenos.space")!
     }
 
     /// After shell Face ID: exchange if paired; else reconcile epoch for any residual vault.

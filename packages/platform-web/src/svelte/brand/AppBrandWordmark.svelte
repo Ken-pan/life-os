@@ -4,7 +4,7 @@
 </script>
 
 <span class={className}>
-  <span class="brand-name-base">{base}</span><span class="brand-name-accent"
-    >{accent}</span
-  >
+  <span class="brand-name-base">{base}</span>{#if accent}<span
+      class="brand-name-accent">{accent}</span
+    >{/if}
 </span>

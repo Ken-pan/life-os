@@ -47,7 +47,7 @@ describe('domainResume local daily beta', () => {
   it('rewrites production fitness URLs to local daily beta', () => {
     const env = { VITE_KENOS_LOCAL_DAILY_BETA: '1' }
     const href =
-      'https://fitness.kenos.space/day/chest/focus?kenosEx=c_fly&kenosSet=2'
+      'https://training.kenos.space/day/chest/focus?kenosEx=c_fly&kenosSet=2'
     const out = rewriteDomainHrefForLocalDailyBeta(href, env)
     assert.match(out, /^http:\/\/127\.0\.0\.1:5190\//)
     assert.match(out, /kenosEx=c_fly/)
@@ -57,7 +57,7 @@ describe('domainResume local daily beta', () => {
     const env = { VITE_KENOS_LOCAL_DAILY_BETA: '0' }
     assert.equal(
       resolveDomainOrigin('plan', env),
-      'https://planner.kenos.space',
+      'https://plan.kenos.space',
     )
   })
 })

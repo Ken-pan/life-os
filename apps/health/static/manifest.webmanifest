@@ -1,6 +1,6 @@
 {
-  "name": "HEALTH.OS",
-  "short_name": "HEALTH",
+  "name": "Kenos Health",
+  "short_name": "Health",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -34,7 +34,7 @@ describe('Kenos Phase 2 control center read model', () => {
       {
         id: 'plan-overdue',
         tone: 'critical',
-        href: 'https://planner.kenos.space/upcoming',
+        href: 'https://plan.kenos.space/upcoming',
       },
     )
     assert.deepEqual(

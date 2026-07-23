@@ -15,7 +15,7 @@ const ok = KenosResumeDescriptorSchema.safeParse({
   version: KENOS_RESUME_DESCRIPTOR_VERSION,
   userId: OWNER,
   spaceId: 'plan',
-  route: 'https://planner.kenos.space/upcoming?kenosTask=t1&kenosFilter=overdue',
+  route: 'https://plan.kenos.space/upcoming?kenosTask=t1&kenosFilter=overdue',
   entityId: 't1',
   substate: { filter: 'overdue', detailOpen: true },
   displayTitle: 'Plan',

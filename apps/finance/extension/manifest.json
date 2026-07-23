@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Finance OS Sync",
+  "name": "Kenos Money Sync",
   "version": "0.4.0",
   "description": "从 Robinhood / Rocket Money / Fidelity 抓取持仓、余额与交易，并定向抓取 Amazon / Target / Best Buy 最新订单做购买标注，同步到 Finance OS（Life OS / Supabase public schema）。交易支持登录后直连落库，无需打开 Finance OS 页面。",
   "permissions": ["storage", "activeTab", "tabs", "alarms"],
@@ -21,7 +21,7 @@
       "128": "icons/icon128.png"
     },
     "default_popup": "popup/popup.html",
-    "default_title": "Finance OS Sync"
+    "default_title": "Kenos Money Sync"
   },
   "content_scripts": [
     {
@@ -91,7 +91,7 @@
       "matches": [
         "http://localhost/*",
         "http://127.0.0.1/*",
-        "https://finance.kenos.space/*",
+        "https://money.kenos.space/*",
         "https://*.netlify.app/*"
       ],
       "js": ["content/bridge.js"],

@@ -1,7 +1,7 @@
 {
   "id": "aios",
-  "name": "Kenos Assistant",
-  "shortName": "Assistant",
+  "name": "Korben",
+  "shortName": "Korben",
   "description": {
     "zh": "Kenos 默认协调入口 · Today、Assistant、Inbox、审批与 Activity",
     "en": "The Kenos coordination entry · Today, Assistant, Inbox, approvals, and Activity"
@@ -29,6 +29,8 @@
     "light": "#5d5d5d",
     "dark": "#b4b4b4"
   },
+  "wordmarkBase": "Korben",
+  "wordmarkAccentText": "",
   "experimental": true,
   "switcherOrder": 60,
   "production": false,

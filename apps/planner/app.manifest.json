@@ -1,7 +1,7 @@
 {
   "id": "planner",
-  "name": "PLANNER.OS",
-  "shortName": "PLANNER",
+  "name": "Kenos Plan",
+  "shortName": "Plan",
   "description": {
     "zh": "阳光感任务清单 · 轻松规划每一天",
     "en": "Sunny tasks, calm planning"
@@ -15,12 +15,14 @@
   "categories": ["productivity", "utilities"],
   "workspace": "planner-os",
   "devPort": 5188,
-  "domain": "planner.kenos.space",
+  "domain": "plan.kenos.space",
   "shellType": "main-col-wrap",
   "wordmarkAccent": { "light": "#e9a832", "dark": "#f5b83d" },
+  "wordmarkBase": "Kenos",
+  "wordmarkAccentText": "Plan",
   "switcherOrder": 10,
   "registryOrder": 1,
-  "pwaName": "Planner.OS",
+  "pwaName": "Kenos Plan",
   "production": true,
   "pwaTestEnabled": true,
   "routes": [

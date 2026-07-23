@@ -19,7 +19,7 @@ const now = Date.now()
 const d = buildResumeDescriptor({
   userId: 'user-a',
   spaceId: 'training',
-  route: 'https://fitness.kenos.space/day/chest/focus',
+  route: 'https://training.kenos.space/day/chest/focus',
   entityId: 'c_fly',
   displayTitle: 'Training',
   displaySubtitle: '龙门架夹胸 · Set 2 of 4',
@@ -37,20 +37,20 @@ assert.equal(decoded?.substate?.set, 2)
 const expired = buildResumeDescriptor({
   userId: 'user-a',
   spaceId: 'plan',
-  route: 'https://planner.kenos.space/upcoming',
+  route: 'https://plan.kenos.space/upcoming',
   displayTitle: 'Plan',
   updatedAt: now - 10000,
   expiresAt: now - 1000,
 })
 assert.equal(isResumeExpired(expired, now), true)
-const fallback = fallbackResumeToHome(expired, 'https://planner.kenos.space/')
-assert.equal(fallback.route, 'https://planner.kenos.space/')
+const fallback = fallbackResumeToHome(expired, 'https://plan.kenos.space/')
+assert.equal(fallback.route, 'https://plan.kenos.space/')
 assert.equal(fallback.substate.resumeFallback, 'unsupported_or_expired')
 
 const legacy = migrateLegacyResume(
   'hosted:plan',
   {
-    lastRoute: 'https://planner.kenos.space/upcoming',
+    lastRoute: 'https://plan.kenos.space/upcoming',
     selectedEntityId: 'task-1',
     filter: 'Overdue',
     updatedAt: now,
@@ -63,7 +63,7 @@ assert.equal(legacy?.displaySubtitle, 'Overdue')
 const openUrl = resumeDescriptorToOpenUrl({
   ...d,
   spaceId: 'plan',
-  route: 'https://planner.kenos.space/upcoming',
+  route: 'https://plan.kenos.space/upcoming',
   entityId: 'task-9',
   substate: { filter: 'overdue', detailOpen: true },
 })

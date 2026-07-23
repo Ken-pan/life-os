@@ -20,7 +20,7 @@ describe('productStates.core', () => {
     assert.equal(sanitizeContinueDetail('c_fly'), '有未完成项')
     assert.equal(sanitizeContinueDetail('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'), '')
     assert.equal(sanitizeContinueDetail('Cable fly · Set 2 of 4'), 'Cable fly · Set 2 of 4')
-    assert.equal(sanitizeContinueDetail('https://fitness.kenos.space/x'), '继续上次位置')
+    assert.equal(sanitizeContinueDetail('https://training.kenos.space/x'), '继续上次位置')
   })
 
   it('formats last-synced labels', () => {

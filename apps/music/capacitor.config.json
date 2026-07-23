@@ -1,6 +1,6 @@
 {
   "appId": "os.lifeos.music",
-  "appName": "MUSIC.OS",
+  "appName": "Kenos Music",
   "webDir": "build",
   "ios": {
     "contentInset": "never",

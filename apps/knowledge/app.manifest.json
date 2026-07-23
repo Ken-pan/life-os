@@ -1,7 +1,7 @@
 {
   "id": "knowledge",
-  "name": "KNOWLEDGE.OS",
-  "shortName": "KNOWLEDGE",
+  "name": "Kenos Library",
+  "shortName": "Library",
   "description": {
     "zh": "第二大脑 · 收集 / 连接 / 回忆，Life OS 的长期记忆层",
     "en": "Second brain · capture, connect, recall — the long-term memory layer of Life OS"
@@ -23,12 +23,14 @@
   ],
   "workspace": "knowledge-os",
   "devPort": 5879,
-  "domain": "knowledge.kenos.space",
+  "domain": "library.kenos.space",
   "shellType": "main-wrap-main",
   "wordmarkAccent": {
     "light": "#4d55c7",
     "dark": "#9aa2ff"
   },
+  "wordmarkBase": "Kenos",
+  "wordmarkAccentText": "Library",
   "experimental": true,
   "switcherOrder": 55,
   "production": false,

@@ -133,25 +133,25 @@ async function main() {
 
   // Domain apps if ports live — optional
   for (const domain of [
-    { id: 'fitness-home', url: 'https://fitness.kenos.space/', vp: 'ios' },
+    { id: 'fitness-home', url: 'https://training.kenos.space/', vp: 'ios' },
     {
       id: 'fitness-active',
-      url: 'https://fitness.kenos.space/day/chest/focus',
+      url: 'https://training.kenos.space/day/chest/focus',
       vp: 'ios',
     },
     {
       id: 'planner-list',
-      url: 'https://planner.kenos.space/upcoming',
+      url: 'https://plan.kenos.space/upcoming',
       vp: 'ios',
     },
     {
       id: 'desktop-fitness',
-      url: 'https://fitness.kenos.space/',
+      url: 'https://training.kenos.space/',
       vp: 'desktop',
     },
     {
       id: 'desktop-planner',
-      url: 'https://planner.kenos.space/upcoming',
+      url: 'https://plan.kenos.space/upcoming',
       vp: 'desktop',
     },
   ]) {

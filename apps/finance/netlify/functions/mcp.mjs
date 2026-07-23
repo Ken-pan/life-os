@@ -7,7 +7,7 @@ import {
 } from '../../server/mcpFinance.mjs'
 
 /**
- * Finance MCP —— AIOS 设置 → MCP → URL `https://finance.kenos.space/api/mcp`
+ * Finance MCP —— AIOS 设置 → MCP → URL `https://money.kenos.space/api/mcp`
  * + Bearer = 用户 Life OS Supabase access_token（与云同步同一 JWT）。
  *
  * FINC.MCP.1：查本月支出/结余 + 流动现金。鉴权走 @life-os/mcp-server（PLAT.MCP.0）。

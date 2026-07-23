@@ -84,6 +84,9 @@ const accentEntries = manifests.map((m) => {
 })
 
 const wordmarkBase = manifests.filter((m) => m.wordmarkBase != null).map((m) => [m.id, J(m.wordmarkBase)])
+const wordmarkAccentText = manifests
+  .filter((m) => m.wordmarkAccentText != null)
+  .map((m) => [m.id, J(m.wordmarkAccentText)])
 const assetPrefix = manifests.filter((m) => m.brandAssetPrefix != null).map((m) => [m.id, J(m.brandAssetPrefix)])
 
 const pwaEntries = manifests.map((m) => {
@@ -154,6 +157,9 @@ export const LIFE_OS_APP_WORDMARK_ACCENT = ${obj(accentEntries, 0)}
 
 /** wordmark 主体覆盖（缺省 = shortName） @type {Partial<Record<LifeOsAppId, string>>} */
 export const LIFE_OS_WORDMARK_BASE = ${wordmarkBase.length ? obj(wordmarkBase, 0) : '{}'}
+
+/** wordmark 高亮文字覆盖（缺省 = "OS"） @type {Partial<Record<LifeOsAppId, string>>} */
+export const LIFE_OS_WORDMARK_ACCENT_TEXT = ${wordmarkAccentText.length ? obj(wordmarkAccentText, 0) : '{}'}
 
 /** 品牌资产路径前缀覆盖 @type {Partial<Record<LifeOsAppId, string>>} */
 export const LIFE_OS_BRAND_ASSET_PREFIX = ${assetPrefix.length ? obj(assetPrefix, 0) : '{}'}

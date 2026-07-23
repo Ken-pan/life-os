@@ -17,7 +17,7 @@ export { isProdPlanActivityReadEnabled }
 
 export const CANONICAL_PLAN_ACTIVITY_READ_SOURCE = 'public.kenos_list_plan_activity'
 
-const PLAN_DEEP_LINK = 'https://planner.kenos.space/inbox'
+const PLAN_DEEP_LINK = 'https://plan.kenos.space/inbox'
 const KNOWN_RESULTS = Object.freeze({
   succeeded: 'succeeded',
   failed: 'failed',

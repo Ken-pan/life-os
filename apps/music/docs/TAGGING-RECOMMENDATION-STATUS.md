@@ -4,7 +4,7 @@
 > **范围：** 三层标签架构（Identity → Audio → Semantic）+ pgvector 混合推荐 + 自动续播  
 > **对照方案：** 设计文档「方案 A+」→ **「A++ 可用闭环」** →「方案 B」  
 > **主账号 / 曲库：** `c2831538-94b0-4a57-b034-5e873a53c42e`（268 首云端曲目）  
-> **生产部署：** https://musicos-ken.netlify.app（commit `4c946d5`，2026-07-06 CLI deploy）
+> **生产部署：** https://kenos-music.netlify.app（commit `4c946d5`，2026-07-06 CLI deploy）
 
 ---
 
@@ -247,7 +247,7 @@ score ≈
 | 首页 / Quick picks 用推荐 | — | ❌ |
 | `continue_playlist` RPC 前端封装 | — | ❌ |
 
-**部署状态：** 生产站 [musicos-ken.netlify.app](https://musicos-ken.netlify.app) 最后一次 deploy 为 **Apple 风 Now Playing**（commit `5801433`），**标签/推荐/ play_events 相关代码尚未 commit & deploy**。
+**部署状态：** 生产站 [kenos-music.netlify.app](https://kenos-music.netlify.app) 最后一次 deploy 为 **Apple 风 Now Playing**（commit `5801433`），**标签/推荐/ play_events 相关代码尚未 commit & deploy**。
 
 ---
 

@@ -428,7 +428,7 @@
   }
 </script>
 
-<svelte:head><title>整理 · HOME.OS</title></svelte:head>
+<svelte:head><title>整理 · Kenos Home</title></svelte:head>
 
 <div class="tidy-page plan-top">
   <!-- 统一页面顶栏(与 /plan /storage 同一个 HomeTopBar)。此前 /tidy 没有页内

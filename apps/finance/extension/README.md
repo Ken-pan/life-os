@@ -70,7 +70,7 @@ Finance OS（旧版页面会把该 envelope 忽略进 DLQ，不会误写）。
 
 1. Chrome 打开 `chrome://extensions`，右上角开启「开发者模式」。
 2. 「加载已解压的扩展程序」→ 选择本目录（`extension/`）。
-3. 如果你的 Finance OS 部署在自定义域名（生产：`https://finance.kenos.space`），确认 `manifest.json` bridge `matches` 已包含该域名，然后在扩展页点「重新加载」。
+3. 如果你的 Finance OS 部署在自定义域名（生产：`https://money.kenos.space`），确认 `manifest.json` bridge `matches` 已包含该域名，然后在扩展页点「重新加载」。
 
 ## 日常使用
 

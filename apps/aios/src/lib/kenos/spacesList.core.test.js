@@ -24,7 +24,7 @@ describe('spacesList.core', () => {
           id: 'training',
           label: 'Training',
           detail: 'external',
-          href: 'https://fitness.kenos.space',
+          href: 'https://training.kenos.space',
         },
       ],
       warn() {},
@@ -42,7 +42,7 @@ describe('spacesList.core', () => {
     assert.equal(trainings.length, 1)
     assert.equal(trainings[0].listKey, 'hosted:training')
     assert.equal(trainings[0].external, false)
-    assert.match(trainings[0].href, /^https:\/\/fitness\.kenos\.space/)
+    assert.match(trainings[0].href, /^https:\/\/training\.kenos\.space/)
     const plan = list.find((s) => s.listKey === 'hosted:plan')
     assert.ok(plan)
     assert.match(plan.href, /\/upcoming$/)

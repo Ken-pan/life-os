@@ -69,7 +69,7 @@
     <AppBrandSwitcher
       appId="fitness"
       tagline={t('nav.brandTag')}
-      ariaLabel="FITNESS OS"
+      ariaLabel="Kenos Training"
       allowedAppIds={auth.allowedAppKeys}
       canSwitch={canSwitchApps}
     />

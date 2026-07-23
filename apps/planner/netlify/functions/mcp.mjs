@@ -11,7 +11,7 @@ import {
 } from '../../server/mcpTasks.mjs';
 
 /**
- * Planner MCP —— AIOS 设置 → MCP → URL `https://planner.kenos.space/api/mcp`
+ * Planner MCP —— AIOS 设置 → MCP → URL `https://plan.kenos.space/api/mcp`
  * + Bearer = 用户 Life OS Supabase access_token（与云同步同一 JWT）。
  *
  * 让 AIOS（推理内核）能看/建/完成你的任务。写的是你自己的 `planner_tasks`

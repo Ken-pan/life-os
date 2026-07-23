@@ -1,6 +1,6 @@
 export default {
   app: {
-    name: 'HEALTH.OS',
+    name: 'Kenos Health',
   },
   common: {
     skipToContent: 'Skip to content',

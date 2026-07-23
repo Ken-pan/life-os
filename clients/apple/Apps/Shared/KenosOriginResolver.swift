@@ -50,8 +50,8 @@ enum KenosOriginResolver {
     static let plannerPort = 5188
     static let fitnessPort = 5190
 
-    static let productionPlanner = URL(string: "https://planner.kenos.space")!
-    static let productionFitness = URL(string: "https://fitness.kenos.space")!
+    static let productionPlanner = URL(string: "https://plan.kenos.space")!
+    static let productionFitness = URL(string: "https://training.kenos.space")!
 
     /// Build a LAN origin URL for `host` + port. Host must not include scheme.
     static func origin(host: String, port: Int) -> URL? {

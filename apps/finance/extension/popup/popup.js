@@ -692,8 +692,8 @@ document.getElementById('download-log').addEventListener('click', async () => {
         isRocketMoney: /app\.rocketmoney\.com/i.test(t.url ?? ''),
         isRobinhood: /robinhood\.com/i.test(t.url ?? ''),
         isFinanceOs:
-          /finance\.kenos\.space/i.test(t.url ?? '') ||
-          /financeos-ken\.netlify\.app/i.test(t.url ?? '') ||
+          /money\.kenos\.space/i.test(t.url ?? '') ||
+          /kenos-money\.netlify\.app/i.test(t.url ?? '') ||
           (/localhost|127\.0\.0\.1|netlify\.app|kenos\.space/i.test(
             t.url ?? '',
           ) &&
@@ -746,7 +746,7 @@ document.getElementById('refresh-plan').addEventListener('click', async () => {
   }, 2000)
 })
 
-/** 打开已有 Finance OS 标签页（finance.kenos.space / financeos-ken.netlify.app / 本地 dev），或新开生产站。 */
+/** 打开已有 Finance OS 标签页（money.kenos.space / kenos-money.netlify.app / 本地 dev），或新开生产站。 */
 document.getElementById('open-app').addEventListener('click', async () => {
   const btn = document.getElementById('open-app')
   if (btn) btn.disabled = true

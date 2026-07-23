@@ -1,7 +1,7 @@
 {
   "id": "fitness",
-  "name": "FITNESS.OS",
-  "shortName": "FITNESS",
+  "name": "Kenos Training",
+  "shortName": "Training",
   "description": {
     "zh": "胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先",
     "en": "Four-day split training · arm circumference first"
@@ -16,12 +16,14 @@
   "workspace": "fitness-os",
   "devPort": 5190,
   "previewPort": 4173,
-  "domain": "fitness.kenos.space",
+  "domain": "training.kenos.space",
   "shellType": "main-wrap-main",
   "wordmarkAccent": { "light": "#c42f0a", "dark": "#ff4d2e" },
+  "wordmarkBase": "Kenos",
+  "wordmarkAccentText": "Training",
   "switcherOrder": 30,
   "registryOrder": 2,
-  "pwaName": "Fitness.OS",
+  "pwaName": "Kenos Training",
   "favicon": { "light": "/favicon-32.png" },
   "production": true,
   "pwaTestEnabled": true,

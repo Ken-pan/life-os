@@ -10,13 +10,13 @@
 
 | Site              | Package directory          | Build                                                    | Publish                           | Production URL                            | 备注                                                                                                                            |
 | ----------------- | -------------------------- | -------------------------------------------------------- | --------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| planneros-ken     | `apps/planner`             | `npm run build -w planner-os`                            | `apps/planner/build`              | https://planner.kenos.space               | 生产                                                                                                                            |
-| fitnessos-ken     | `apps/fitness`             | `npm run build -w fitness-os`                            | `apps/fitness/build`              | https://fitness.kenos.space               | 生产                                                                                                                            |
-| financeos-ken     | `apps/finance`             | `npm run build -w finance-os`                            | `apps/finance/build`              | https://finance.kenos.space               | 生产                                                                                                                            |
-| musicos-ken       | `apps/music`               | `npm run build -w music-os`                              | `apps/music/build`                | https://music.kenos.space                 | 生产                                                                                                                            |
+| kenos-plan     | `apps/planner`             | `npm run build -w planner-os`                            | `apps/planner/build`              | https://plan.kenos.space               | 生产                                                                                                                            |
+| kenos-training     | `apps/fitness`             | `npm run build -w fitness-os`                            | `apps/fitness/build`              | https://training.kenos.space               | 生产                                                                                                                            |
+| kenos-money     | `apps/finance`             | `npm run build -w finance-os`                            | `apps/finance/build`              | https://money.kenos.space               | 生产                                                                                                                            |
+| kenos-music       | `apps/music`               | `npm run build -w music-os`                              | `apps/music/build`                | https://music.kenos.space                 | 生产                                                                                                                            |
 | portal-ken        | `apps/portal`              | `npm run build -w portal`                                | `apps/portal/build`               | https://portal.kenos.space                | 启动器                                                                                                                          |
-| homeos-ken        | `apps/home`                | `npm run build -w home-os`                               | `apps/home/build`                 | https://home.kenos.space                  | **实验**                                                                                                                        |
-| knowledgeos-ken   | `apps/knowledge`           | `npm run build -w knowledge-os`                          | `apps/knowledge/build`            | https://knowledge.kenos.space             | **实验**（custom domain + SSL Ready）                                                                                           |
+| kenos-home        | `apps/home`                | `npm run build -w home-os`                               | `apps/home/build`                 | https://home.kenos.space                  | **实验**                                                                                                                        |
+| kenos-library   | `apps/knowledge`           | `npm run build -w knowledge-os`                          | `apps/knowledge/build`            | https://library.kenos.space             | **实验**（custom domain + SSL Ready）                                                                                           |
 | kenos-www         | `apps/aios`                | `npm run build -w aios-os`（`VITE_AIOS_CLOUD=1`）         | `apps/aios/build`                 | https://www.kenos.space                   | Kenos 主站（原 `aios-kenos`；apex `kenos.space` 亦绑为 alias）                                                                  |
 | kenos-uiux-review | `apps/uiux-review-gallery` | `npm run build -w @life-os/uiux-review-gallery`（no-op） | `apps/uiux-review-gallery/public` | https://kenos-uiux-review.netlify.app     | UI/UX 审核画廊（静态，site id `cadccd64-e40a-439d-865d-5be5b3741ff3`；图片提交在 public/shots，`npm run qa:uiux-gallery` 生成） |
 
@@ -29,7 +29,7 @@
 
 Push 到 `life-os` 的 `master` 分支 → Netlify 自动构建对应 Site。
 
-> **⚠️ 2026-07-15 修复：`homeos-ken` 与 `aios-kenos` 此前从未接 Git**，`build_settings.repo_url` 为 null、历史 deploy 的 `commit_ref` 全是 null —— push 到 master 对它们毫无作用，生产静默停在上次手动 CLI 部署的时间点（发现时 home 落后 48 个 commit / 2 天）。两站现已按上表方式接线。
+> **⚠️ 2026-07-15 修复：`kenos-home` 与 `aios-kenos` 此前从未接 Git**，`build_settings.repo_url` 为 null、历史 deploy 的 `commit_ref` 全是 null —— push 到 master 对它们毫无作用，生产静默停在上次手动 CLI 部署的时间点（发现时 home 落后 48 个 commit / 2 天）。两站现已按上表方式接线。
 >
 > **接线要点：** 用 API 改接线时，`updateSite` 的 **`build_settings` key 会被静默忽略**（返回 200 但不生效），必须写在 **`repo`** key 里；且必须设 `package_path: apps/<app>`（`base` 留空），否则 `apps/<app>/netlify.toml` 根本不会被读到。
 >
@@ -108,7 +108,7 @@ CI=1 npx netlify deploy --prod --no-build --filter portal --dir=apps/portal/buil
 | 项           | 状态                                                                                                 |
 | ------------ | ---------------------------------------------------------------------------------------------------- |
 | 代码         | `apps/home`（SvelteKit + adapter-static）                                                            |
-| Netlify site | `homeos-ken`（`69d4c072-d153-499c-90a8-57909df461a4`）                                               |
+| Netlify site | `kenos-home`（`69d4c072-d153-499c-90a8-57909df461a4`）                                               |
 | 生产 URL     | https://home.kenos.space                                                                             |
 | Portal       | ✅ Launcher 实验区（HOME.PORTAL.1 · 2026-07-09）                                                     |
 | Integration  | ✅ SSO + redirect；云端已有 `home.scans` / 私有照片桶 / `home.events`；可编辑 spatial 项目仍本地真源 |
@@ -133,20 +133,20 @@ CI=1 npx netlify deploy --prod --no-build --filter home-os --dir=apps/home/build
 
 ## Music 站 Git 链接
 
-生产 URL：**https://music.kenos.space**（custom domain；Netlify rollback：`https://musicos-ken.netlify.app`）
+生产 URL：**https://music.kenos.space**（custom domain；Netlify rollback：`https://kenos-music.netlify.app`）
 
 ## Netlify 子域命名（统一）
 
-六站 Netlify site name 统一为 **`{app}os-ken`** → `{app}os-ken.netlify.app`（Portal 为 `portal-ken`，Home 为 `homeos-ken`）：
+各站 Netlify site name 统一为 **`kenos-<domain>`** → `kenos-<domain>.netlify.app`（2026-07-22 品牌/域名迁移后）：
 
 | App     | Netlify site    | GoDaddy CNAME 目标          | 备注   |
 | ------- | --------------- | --------------------------- | ------ |
 | Portal  | `portal-ken`    | `portal-ken.netlify.app`    | 启动器 |
-| Home    | `homeos-ken`    | `homeos-ken.netlify.app`    | 实验   |
-| Finance | `financeos-ken` | `financeos-ken.netlify.app` |
-| Music   | `musicos-ken`   | `musicos-ken.netlify.app`   |
-| Planner | `planneros-ken` | `planneros-ken.netlify.app` |
-| Fitness | `fitnessos-ken` | `fitnessos-ken.netlify.app` |
+| Home    | `kenos-home`    | `kenos-home.netlify.app`    | 实验   |
+| Finance | `kenos-money` | `kenos-money.netlify.app` |
+| Music   | `kenos-music`   | `kenos-music.netlify.app`   |
+| Planner | `kenos-plan` | `kenos-plan.netlify.app` |
+| Fitness | `kenos-training` | `kenos-training.netlify.app` |
 
 若 Build settings 仍指向已 archive 的 `MusicOS` 仓库，在 Netlify UI 将 **Repository** 改为 `Ken-pan/life-os`、分支 `master`、Package directory `apps/music`。Deploy Key 与另外三站相同。
 

@@ -16,21 +16,21 @@ import { LIFE_OS_SITE_META } from '@life-os/theme'
 export const PORTAL_APPS = [
   {
     id: 'planner',
-    url: 'https://planner.kenos.space',
+    url: 'https://plan.kenos.space',
     iconLight: '/apps/planner-light-96.png',
     iconDark: '/apps/planner-dark-96.png',
     accent: '#c47a08',
   },
   {
     id: 'finance',
-    url: 'https://finance.kenos.space',
+    url: 'https://money.kenos.space',
     iconLight: '/apps/finance-light-96.png',
     iconDark: '/apps/finance-dark-96.png',
     accent: '#4d7c0f',
   },
   {
     id: 'fitness',
-    url: 'https://fitness.kenos.space',
+    url: 'https://training.kenos.space',
     iconLight: '/apps/fitness-light-96.png',
     iconDark: '/apps/fitness-dark-96.png',
     accent: '#ff4d2e',

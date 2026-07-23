@@ -8,7 +8,7 @@ import {
 } from '../src/lib/mcp.presets.js'
 
 assert.equal(LIFE_OS_MCP_PRESETS.length, 4)
-assert.equal(isLifeOsMcpUrl('https://finance.kenos.space/api/mcp/'), true)
+assert.equal(isLifeOsMcpUrl('https://money.kenos.space/api/mcp/'), true)
 assert.equal(isLifeOsMcpUrl('https://evil.example/api/mcp'), false)
 
 {

@@ -66,7 +66,7 @@ function createDemoStore() {
       safeTitle: 'Phase 3 brief',
       dataClassification: 'work_confidential',
       sourceAvailable: true,
-      deepLink: 'https://knowledge.kenos.space/library/b1000000-0000-4000-8000-000000000001',
+      deepLink: 'https://library.kenos.space/library/b1000000-0000-4000-8000-000000000001',
     }],
   })
   createWorkDeliverable(store, {

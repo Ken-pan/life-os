@@ -90,6 +90,10 @@ export function validateManifest(m) {
   )
   need(m.wordmarkBase == null || isStr(m.wordmarkBase), 'wordmarkBase：非空字符串（缺省 = shortName）')
   need(
+    m.wordmarkAccentText == null || typeof m.wordmarkAccentText === 'string',
+    'wordmarkAccentText：字符串（缺省 = "OS"；空字符串 = 无高亮段）',
+  )
+  need(
     m.brandAssetPrefix == null || (isStr(m.brandAssetPrefix) && m.brandAssetPrefix.startsWith('/')),
     'brandAssetPrefix：以 / 开头',
   )

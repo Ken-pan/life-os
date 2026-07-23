@@ -7,6 +7,7 @@ import { LIFE_OS_SITE_META } from './siteMeta.js'
 import {
   LIFE_OS_APP_WORDMARK_ACCENT,
   LIFE_OS_BRAND_ASSET_PREFIX,
+  LIFE_OS_WORDMARK_ACCENT_TEXT,
   LIFE_OS_WORDMARK_BASE,
 } from './generated/appRegistry.js'
 
@@ -44,7 +45,7 @@ export function getLifeOsBrand(appId) {
   return {
     appId,
     wordmarkBase: LIFE_OS_WORDMARK_BASE[appId] ?? meta.shortName,
-    wordmarkAccent: 'OS',
+    wordmarkAccent: LIFE_OS_WORDMARK_ACCENT_TEXT[appId] ?? 'OS',
     fullName: meta.name,
     assetPrefix,
     ...getBrandIconPaths(assetPrefix),

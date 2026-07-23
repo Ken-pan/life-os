@@ -14,9 +14,9 @@
 
 const FLEET = [
   { id: 'home', url: 'https://home.kenos.space/api/mcp' },
-  { id: 'planner', url: 'https://planner.kenos.space/api/mcp' },
-  { id: 'finance', url: 'https://finance.kenos.space/api/mcp' },
-  { id: 'fitness', url: 'https://fitness.kenos.space/api/mcp' },
+  { id: 'planner', url: 'https://plan.kenos.space/api/mcp' },
+  { id: 'finance', url: 'https://money.kenos.space/api/mcp' },
+  { id: 'fitness', url: 'https://training.kenos.space/api/mcp' },
 ]
 
 const BODY = JSON.stringify({

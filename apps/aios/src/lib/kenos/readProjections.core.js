@@ -1,22 +1,22 @@
 const DOMAIN_META = Object.freeze({
   plan: {
     label: 'Plan',
-    href: 'https://planner.kenos.space/inbox',
+    href: 'https://plan.kenos.space/inbox',
     classification: 'personal',
   },
   money: {
     label: 'Money',
-    href: 'https://finance.kenos.space/home/today',
+    href: 'https://money.kenos.space/home/today',
     classification: 'sensitive',
   },
   training: {
     label: 'Training',
-    href: 'https://fitness.kenos.space',
+    href: 'https://training.kenos.space',
     classification: 'personal',
   },
   library: {
     label: 'Library',
-    href: 'https://knowledge.kenos.space',
+    href: 'https://library.kenos.space',
     classification: 'personal',
   },
   home: {

@@ -34,7 +34,7 @@ final class KenosDailyBetaConfigTests: XCTestCase {
         XCTAssertTrue(KenosDailyBetaConfig.isPrivateLanHost("100.111.7.15"))
         XCTAssertFalse(KenosDailyBetaConfig.isPrivateLanHost("www.kenos.space"))
         XCTAssertFalse(KenosDailyBetaConfig.isPrivateLanHost("kenos-www.netlify.app"))
-        XCTAssertFalse(KenosDailyBetaConfig.isPrivateLanHost("planner.kenos.space"))
+        XCTAssertFalse(KenosDailyBetaConfig.isPrivateLanHost("plan.kenos.space"))
     }
 
     func testTailnetOriginKeepsContinuityPortRewrite() {
@@ -112,8 +112,8 @@ final class KenosDailyBetaConfigTests: XCTestCase {
         XCTAssertEqual(snap.networkScope, .phoneReachable)
         XCTAssertEqual(snap.shellOrigin.host, "kenos-www.netlify.app")
         XCTAssertEqual(snap.shellOrigin.scheme, "https")
-        XCTAssertEqual(snap.plannerOrigin.host, "planner.kenos.space")
-        XCTAssertEqual(snap.fitnessOrigin.host, "fitness.kenos.space")
+        XCTAssertEqual(snap.plannerOrigin.host, "plan.kenos.space")
+        XCTAssertEqual(snap.fitnessOrigin.host, "training.kenos.space")
         XCTAssertFalse(KenosDailyBetaConfig.isPrivateLanHost(snap.hostname))
     }
 
@@ -222,22 +222,22 @@ final class KenosDailyBetaConfigTests: XCTestCase {
     func testRewritePlanContinuityToProduction() {
         let lan = URL(string: "http://10.20.202.15:5188/calendar")!
         let prod = KenosDomainRegistry.rewriteToProduction(lan)
-        XCTAssertEqual(prod?.host, "planner.kenos.space")
+        XCTAssertEqual(prod?.host, "plan.kenos.space")
         XCTAssertEqual(prod?.path, "/calendar")
         XCTAssertEqual(prod?.scheme, "https")
     }
 
     func testProductionContinuityURLForTraining() {
         let url = KenosDomainRegistry.productionContinuityURL(for: "training", path: "/session")
-        XCTAssertEqual(url?.absoluteString, "https://fitness.kenos.space/session")
+        XCTAssertEqual(url?.absoluteString, "https://training.kenos.space/session")
     }
 
     func testWebAuthRelatedHosts() {
-        XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("planner.kenos.space"))
+        XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("plan.kenos.space"))
         XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("kenos.space"))
         XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("10.20.202.15"))
         XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("localhost"))
-        XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("financeos-ken.netlify.app"))
+        XCTAssertTrue(KenosSharedWebAuth.isAuthRelatedHost("kenos-money.netlify.app"))
         XCTAssertFalse(KenosSharedWebAuth.isAuthRelatedHost("example.com"))
         XCTAssertEqual(KenosSharedWebAuth.authStorageKey, "life_os_auth")
         XCTAssertEqual(KenosSharedWebAuth.ssoCookieName, "lifeos_shared_session")
@@ -296,7 +296,7 @@ final class KenosDailyBetaConfigTests: XCTestCase {
     }
 
     func testSharedWebAuthHostsCompatible() {
-        XCTAssertTrue(KenosSharedWebAuth.hostsCompatible("music.kenos.space", "finance.kenos.space"))
+        XCTAssertTrue(KenosSharedWebAuth.hostsCompatible("music.kenos.space", "money.kenos.space"))
         XCTAssertTrue(KenosSharedWebAuth.hostsCompatible("www.kenos.space", "kenos.space"))
         XCTAssertTrue(KenosSharedWebAuth.hostsCompatible("10.20.202.15", "10.20.202.15"))
         XCTAssertFalse(KenosSharedWebAuth.hostsCompatible("music.kenos.space", "evil.example"))

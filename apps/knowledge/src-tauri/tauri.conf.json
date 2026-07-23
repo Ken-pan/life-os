@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "KnowledgeOS",
+        "title": "Kenos Library",
         "width": 1280,
         "height": 820,
         "minWidth": 900,

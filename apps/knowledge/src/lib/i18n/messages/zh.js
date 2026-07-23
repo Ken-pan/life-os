@@ -1,6 +1,6 @@
 export default {
   app: {
-    name: 'KNOWLEDGE.OS',
+    name: 'Kenos Library',
   },
   common: {
     skipToContent: '跳到主要内容',

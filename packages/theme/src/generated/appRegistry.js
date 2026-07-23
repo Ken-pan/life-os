@@ -27,8 +27,8 @@
 export const LIFE_OS_SITE_META = {
   planner: {
     id: "planner",
-    name: "PLANNER.OS",
-    shortName: "PLANNER",
+    name: "Kenos Plan",
+    shortName: "Plan",
     description: {
       zh: "阳光感任务清单 · 轻松规划每一天",
       en: "Sunny tasks, calm planning",
@@ -49,8 +49,8 @@ export const LIFE_OS_SITE_META = {
   },
   fitness: {
     id: "fitness",
-    name: "FITNESS.OS",
-    shortName: "FITNESS",
+    name: "Kenos Training",
+    shortName: "Training",
     description: {
       zh: "胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先",
       en: "Four-day split training · arm circumference first",
@@ -71,8 +71,8 @@ export const LIFE_OS_SITE_META = {
   },
   finance: {
     id: "finance",
-    name: "FINANCE.OS",
-    shortName: "FINANCE",
+    name: "Kenos Money",
+    shortName: "Money",
     description: {
       zh: "个人财务驾驶舱 · 现金流、资产与长期规划",
       en: "Personal finance cockpit · cash flow, assets & long-range planning",
@@ -93,8 +93,8 @@ export const LIFE_OS_SITE_META = {
   },
   music: {
     id: "music",
-    name: "MUSIC.OS",
-    shortName: "MUSIC",
+    name: "Kenos Music",
+    shortName: "Music",
     description: {
       zh: "本地音乐，留在心里 · 离线播放与歌单",
       en: "Local music that stays with you · offline playback & playlists",
@@ -115,8 +115,8 @@ export const LIFE_OS_SITE_META = {
   },
   home: {
     id: "home",
-    name: "HOME.OS",
-    shortName: "HOME",
+    name: "Kenos Home",
+    shortName: "Home",
     description: {
       zh: "居家空间规划 · 平面审计与储藏区管理",
       en: "Home spatial planning · floor audit & storage zones",
@@ -159,8 +159,8 @@ export const LIFE_OS_SITE_META = {
   },
   aios: {
     id: "aios",
-    name: "Kenos Assistant",
-    shortName: "Assistant",
+    name: "Korben",
+    shortName: "Korben",
     description: {
       zh: "Kenos 默认协调入口 · Today、Assistant、Inbox、审批与 Activity",
       en: "The Kenos coordination entry · Today, Assistant, Inbox, approvals, and Activity",
@@ -181,8 +181,8 @@ export const LIFE_OS_SITE_META = {
   },
   health: {
     id: "health",
-    name: "HEALTH.OS",
-    shortName: "HEALTH",
+    name: "Kenos Health",
+    shortName: "Health",
     description: {
       zh: "个人健康与状态调节中枢 · Focus 防沉迷 · 本地优先",
       en: "Personal health & state regulation hub · Focus guard · local-first",
@@ -203,8 +203,8 @@ export const LIFE_OS_SITE_META = {
   },
   knowledge: {
     id: "knowledge",
-    name: "KNOWLEDGE.OS",
-    shortName: "KNOWLEDGE",
+    name: "Kenos Library",
+    shortName: "Library",
     description: {
       zh: "第二大脑 · 收集 / 连接 / 回忆，Life OS 的长期记忆层",
       en: "Second brain · capture, connect, recall — the long-term memory layer of Life OS",
@@ -227,15 +227,15 @@ export const LIFE_OS_SITE_META = {
 
 /** @type {Record<LifeOsAppId, { production: string; devPort: number }>} */
 export const LIFE_OS_APP_ORIGINS = {
-  planner: { production: "https://planner.kenos.space", devPort: 5188 },
-  fitness: { production: "https://fitness.kenos.space", devPort: 5190 },
-  finance: { production: "https://finance.kenos.space", devPort: 5180 },
+  planner: { production: "https://plan.kenos.space", devPort: 5188 },
+  fitness: { production: "https://training.kenos.space", devPort: 5190 },
+  finance: { production: "https://money.kenos.space", devPort: 5180 },
   music: { production: "https://music.kenos.space", devPort: 5189 },
   home: { production: "https://home.kenos.space", devPort: 5196 },
   portal: { production: "https://portal.kenos.space", devPort: 5195 },
   aios: { production: "https://www.kenos.space", devPort: 5197 },
   health: { production: "https://health.kenos.space", devPort: 5192 },
-  knowledge: { production: "https://knowledge.kenos.space", devPort: 5879 },
+  knowledge: { production: "https://library.kenos.space", devPort: 5879 },
 }
 
 /**
@@ -268,7 +268,26 @@ export const LIFE_OS_APP_WORDMARK_ACCENT = {
 
 /** wordmark 主体覆盖（缺省 = shortName） @type {Partial<Record<LifeOsAppId, string>>} */
 export const LIFE_OS_WORDMARK_BASE = {
-  finance: "Finance",
+  planner: "Kenos",
+  fitness: "Kenos",
+  finance: "Kenos",
+  music: "Kenos",
+  home: "Kenos",
+  aios: "Korben",
+  health: "Kenos",
+  knowledge: "Kenos",
+}
+
+/** wordmark 高亮文字覆盖（缺省 = "OS"） @type {Partial<Record<LifeOsAppId, string>>} */
+export const LIFE_OS_WORDMARK_ACCENT_TEXT = {
+  planner: "Plan",
+  fitness: "Training",
+  finance: "Money",
+  music: "Music",
+  home: "Home",
+  aios: "",
+  health: "Health",
+  knowledge: "Library",
 }
 
 /** 品牌资产路径前缀覆盖 @type {Partial<Record<LifeOsAppId, string>>} */
@@ -283,7 +302,7 @@ export const LIFE_OS_BRAND_ASSET_PREFIX = {
 export const LIFE_OS_PWA_APPS = {
   planner: {
     id: "planner",
-    name: "Planner.OS",
+    name: "Kenos Plan",
     workspace: "planner-os",
     port: 5188,
     shellType: "main-col-wrap",
@@ -299,7 +318,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   fitness: {
     id: "fitness",
-    name: "Fitness.OS",
+    name: "Kenos Training",
     workspace: "fitness-os",
     port: 4173,
     shellType: "main-wrap-main",
@@ -315,7 +334,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   finance: {
     id: "finance",
-    name: "Finance.OS",
+    name: "Kenos Money",
     workspace: "finance-os",
     port: 5180,
     shellType: "main-wrap-content",
@@ -332,7 +351,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   music: {
     id: "music",
-    name: "Music.OS",
+    name: "Kenos Music",
     workspace: "music-os",
     port: 5191,
     shellType: "main-wrap-main",
@@ -348,7 +367,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   home: {
     id: "home",
-    name: "HOME.OS",
+    name: "Kenos Home",
     workspace: "home-os",
     port: 5196,
     shellType: "main-col-wrap",
@@ -375,7 +394,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   aios: {
     id: "aios",
-    name: "Kenos Assistant",
+    name: "Korben",
     workspace: "aios-os",
     port: 5197,
     shellType: "main-wrap-main",
@@ -389,7 +408,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   health: {
     id: "health",
-    name: "HEALTH.OS",
+    name: "Kenos Health",
     workspace: "health-os",
     port: 5192,
     shellType: "main-wrap-main",
@@ -403,7 +422,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   knowledge: {
     id: "knowledge",
-    name: "KNOWLEDGE.OS",
+    name: "Kenos Library",
     workspace: "knowledge-os",
     port: 5879,
     shellType: "main-wrap-main",

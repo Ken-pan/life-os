@@ -155,7 +155,7 @@ describe('domainIntegration.core — launch + runtime', () => {
     const money = buildDomainLaunchResult('finance')
     assert.equal(money.domainId, 'money')
     assert.equal(money.kind, 'embedded_url')
-    assert.match(money.url, /finance\.kenos\.space/)
+    assert.match(money.url, /money\.kenos\.space/)
   })
 
   it('builds kenos_tab and paper missing shapes', () => {
@@ -182,7 +182,7 @@ describe('domainIntegration.core — launch + runtime', () => {
       'plan',
     )
     assert.equal(
-      domainIdFromContinuityUrl('https://fitness.kenos.space/session'),
+      domainIdFromContinuityUrl('https://training.kenos.space/session'),
       'training',
     )
     assert.equal(
@@ -190,7 +190,7 @@ describe('domainIntegration.core — launch + runtime', () => {
       'work',
     )
     assert.equal(
-      domainIdFromContinuityUrl('https://knowledge.kenos.space/library'),
+      domainIdFromContinuityUrl('https://library.kenos.space/library'),
       'library',
     )
   })

@@ -67,7 +67,7 @@ final class KenosHealthKitTests: XCTestCase {
     func testHealthInjectionScopedByOrigin() {
         let health = URL(string: "https://health.kenos.space/")!
         let shell = URL(string: "https://www.kenos.space/")!
-        let plan = URL(string: "https://planner.kenos.space/")!
+        let plan = URL(string: "https://plan.kenos.space/")!
         let work = URL(string: "https://www.kenos.space/work")!
         XCTAssertTrue(KenosDomainRegistry.allowsAppleHealthDaysInjection(for: health))
         XCTAssertTrue(KenosDomainRegistry.allowsHealthReadinessInjection(for: health))

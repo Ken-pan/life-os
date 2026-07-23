@@ -27,7 +27,7 @@
   let linkUrl = $state('')
 
   const writerOn = isProjectSpineWriterEnabled()
-  const KNOWLEDGE_ORIGIN = 'https://knowledge.kenos.space'
+  const KNOWLEDGE_ORIGIN = 'https://library.kenos.space'
 
   const cockpit = $derived(raw ? buildCockpitModel(raw) : { projects: [] })
   const spineProjects = $derived(cockpit.projects.filter((p) => p.hasContext))

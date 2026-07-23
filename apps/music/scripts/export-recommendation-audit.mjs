@@ -1316,7 +1316,7 @@ async function main() {
     .map(([k, v]) => `- ${k}: ${v}`)
     .join('\n')
 
-  const readme = `# MUSIC.OS 标签与推荐系统 · 审核导出包
+  const readme = `# Kenos Music 标签与推荐系统 · 审核导出包
 
 ## 1. 导出信息
 
@@ -1431,7 +1431,7 @@ ${eventDistLines ? `### event_type 分布\n\n${eventDistLines}` : ''}
   console.log('- Review 01_tracks_flat.csv and 12_quality_issues.csv first')
   if ((playRows?.length || 0) === 0) {
     console.log(
-      '- Production play_events still 0: use app on musicos-ken.netlify.app to generate behavior data',
+      '- Production play_events still 0: use app on kenos-music.netlify.app to generate behavior data',
     )
   }
 }

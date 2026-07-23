@@ -191,7 +191,7 @@ export async function showLocalNotification(task) {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   const reg = await navigator.serviceWorker.ready.catch(() => null);
   if (reg?.showNotification) {
-    await reg.showNotification('PLANNER.OS', {
+    await reg.showNotification('Kenos Plan', {
       body: task.title,
       icon: '/notify-192.png',
       badge: '/notify-192.png',
@@ -199,6 +199,6 @@ export async function showLocalNotification(task) {
       data: { url: '/', taskId: task.id }
     });
   } else {
-    new Notification('PLANNER.OS', { body: task.title, icon: '/notify-192.png' });
+    new Notification('Kenos Plan', { body: task.title, icon: '/notify-192.png' });
   }
 }

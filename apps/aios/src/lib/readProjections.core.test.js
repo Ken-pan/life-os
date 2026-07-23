@@ -87,7 +87,7 @@ describe('Kenos Inbox read projection', () => {
       event({ created_at: '2026-07-17T10:00:00Z' }),
     ], { now: NOW })
     assert.equal(projected.items[0].stale, true)
-    assert.equal(projected.items[0].deepLink, 'https://planner.kenos.space/inbox')
+    assert.equal(projected.items[0].deepLink, 'https://plan.kenos.space/inbox')
   })
 
   it('returns an honest empty projection', () => {
@@ -133,7 +133,7 @@ describe('Kenos Approval and Activity read projections', () => {
     assert.equal(projected.approvals[0].executorAvailable, false)
     assert.equal(projected.approvals[0].ownerDomain, 'system')
     assert.equal(projected.approvals[0].requestingDomain, 'plan')
-    assert.equal(projected.approvals[0].ownerDeepLink, 'https://planner.kenos.space/inbox')
+    assert.equal(projected.approvals[0].ownerDeepLink, 'https://plan.kenos.space/inbox')
     assert.equal(projected.approvals[0].deepLink, '/approvals#approval-approval-1')
   })
 
@@ -172,7 +172,7 @@ describe('Kenos Approval and Activity read projections', () => {
       event({ id: 'finance-1', type: 'finance.bill_due', payload: { occurrence_id: 'bill-1' } }),
     ])
     assert.equal(projected.records[0].ownerDomain, 'system')
-    assert.equal(projected.records[1].deepLink, 'https://finance.kenos.space/home/today')
+    assert.equal(projected.records[1].deepLink, 'https://money.kenos.space/home/today')
   })
 
   it('handles empty and malformed Activity sources', () => {

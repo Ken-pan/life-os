@@ -48,7 +48,7 @@ function openDb() {
     // onblocked：别的标签页占着旧版本连接时触发，且 open **永不 resolve**。
     // 没有这一路，所有照片操作会静默挂死，UI 停在「存入中…」。
     req.onblocked = () =>
-      done(reject, new Error('照片库被另一个标签页占用，关掉其它 HOME.OS 标签页再试'))
+      done(reject, new Error('照片库被另一个标签页占用，关掉其它 Kenos Home 标签页再试'))
     setTimeout(
       () => done(reject, new Error('打开本地照片库超时')),
       OPEN_TIMEOUT_MS,

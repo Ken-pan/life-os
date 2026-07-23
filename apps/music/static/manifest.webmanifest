@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "MUSIC.OS",
-  "short_name": "MUSIC",
+  "name": "Kenos Music",
+  "short_name": "Music",
   "description": "本地与云端音乐 · 离线播放、歌单与私有云备份",
   "start_url": "/",
   "scope": "/",

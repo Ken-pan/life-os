@@ -19,6 +19,6 @@ describe('moneyReadSource.core', () => {
     })
     assert.equal(projected.spentToday, 42)
     assert.equal(projected.pendingBills, 2)
-    assert.equal(projected.deepLink, 'https://finance.kenos.space')
+    assert.equal(projected.deepLink, 'https://money.kenos.space')
   })
 })

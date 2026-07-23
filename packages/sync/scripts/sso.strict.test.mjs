@@ -221,7 +221,7 @@ console.log('sso.strict — vault-only when cookie absent (LAN↔prod gap)')
     refresh_token: 'rt-vault',
     userId: 'u1',
   }
-  installEnv({ hostname: 'finance.kenos.space' })
+  installEnv({ hostname: 'money.kenos.space' })
   // empty jar — vault must win
   const money = mockClient({ session: null })
   await setupCrossDomainSSO(money)
@@ -239,7 +239,7 @@ console.log('sso.strict — refresh-only vault material')
     refresh_token: 'rt-only',
     userId: 'u1',
   }
-  installEnv({ hostname: 'planner.kenos.space' })
+  installEnv({ hostname: 'plan.kenos.space' })
   const plan = mockClient({ session: null })
   await setupCrossDomainSSO(plan)
   const { data } = await plan.auth.getSession()
@@ -253,7 +253,7 @@ console.log('sso.strict — refresh-only vault material')
 console.log('sso.strict — expired access prefers refresh')
 {
   nativeVault = null
-  installEnv({ hostname: 'fitness.kenos.space' })
+  installEnv({ hostname: 'training.kenos.space' })
   jar.set(
     LIFE_OS_SSO_COOKIE_NAME,
     encodeURIComponent(
@@ -332,7 +332,7 @@ console.log('sso.strict — malformed cookie ignored')
     access_token: encJwt({ exp: Math.floor(Date.now() / 1000) + 1000 }),
     refresh_token: 'rt-fallback',
   }
-  installEnv({ hostname: 'knowledge.kenos.space' })
+  installEnv({ hostname: 'library.kenos.space' })
   jar.set(LIFE_OS_SSO_COOKIE_NAME, '%%%not-json%%%')
   const lib = mockClient({ session: null })
   await setupCrossDomainSSO(lib)

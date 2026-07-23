@@ -48,14 +48,14 @@ final class KenosDomainHomePathTests: XCTestCase {
         XCTAssertEqual(KenosSpaceShelfLabels.homeDestination(for: "music"), "Library")
         XCTAssertEqual(KenosSpaceShelfLabels.homeDestination(for: "money"), "Overview")
 
-        let planHome = URL(string: "https://planner.kenos.space/")
+        let planHome = URL(string: "https://plan.kenos.space/")
         XCTAssertEqual(
             KenosSpaceShelfLabels.destinationLabel(for: planHome, spaceId: "plan"),
             "Tasks"
         )
         XCTAssertEqual(
             KenosSpaceShelfLabels.destinationLabel(
-                for: URL(string: "https://planner.kenos.space/calendar"),
+                for: URL(string: "https://plan.kenos.space/calendar"),
                 spaceId: "plan"
             ),
             "Calendar"
@@ -73,7 +73,7 @@ final class KenosDomainHomePathTests: XCTestCase {
         XCTAssertEqual(
             KenosSpaceShelfLabels.currentSubtitle(
                 spaceId: "training",
-                url: URL(string: "https://fitness.kenos.space/"),
+                url: URL(string: "https://training.kenos.space/"),
                 resumeSubtitle: "Chest",
                 spaceTitle: "Training",
                 catalogSubtitle: "Fitness workouts"

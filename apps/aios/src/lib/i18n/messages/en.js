@@ -1,6 +1,6 @@
 export default {
   app: {
-    name: 'Kenos Assistant',
+    name: 'Korben',
   },
   common: {
     skipToContent: 'Skip to content',

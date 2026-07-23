@@ -22,7 +22,7 @@ describe('kenosCloudPrompt v2', () => {
       writesBlocked: true,
     })
     assert.match(block, /## Role/)
-    assert.match(block, /Kenos Assistant/)
+    assert.match(block, /Korben/)
     assert.match(block, /Life OS/)
     assert.match(block, /不要自称 Kimi/)
     assert.match(block, /写权限:关闭/)

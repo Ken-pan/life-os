@@ -19,14 +19,14 @@ export function projectMoneyFromTodayFinance(financeBlock) {
       spentToday: null,
       currency: null,
       pendingBills: 0,
-      deepLink: 'https://finance.kenos.space',
+      deepLink: 'https://money.kenos.space',
     }
   }
   return {
     spentToday: financeBlock.spent_today ?? financeBlock.spentToday ?? null,
     currency: financeBlock.currency || null,
     pendingBills: Number(financeBlock.pending_bills ?? financeBlock.pendingBills ?? 0) || 0,
-    deepLink: 'https://finance.kenos.space',
+    deepLink: 'https://money.kenos.space',
   }
 }
 

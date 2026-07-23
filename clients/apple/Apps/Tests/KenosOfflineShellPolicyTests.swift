@@ -16,7 +16,7 @@ final class KenosOfflineShellPolicyTests: XCTestCase {
         )
         XCTAssertTrue(
             KenosAppBoundDomains.shouldLimitNavigations(
-                for: URL(string: "https://planner.kenos.space/")!
+                for: URL(string: "https://plan.kenos.space/")!
             )
         )
         XCTAssertTrue(

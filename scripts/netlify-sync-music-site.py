@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Align musicos-ken Netlify site with life-os monorepo (build settings + optional deploy)."""
+"""Align kenos-music Netlify site with life-os monorepo (build settings + optional deploy)."""
 import json
 import os
 import subprocess
@@ -70,7 +70,7 @@ def main():
 
     if bs.get("repo_url") != LIFE_OS_REPO:
         print(
-            "\nWARN: Git repo still not life-os. In Netlify UI → musicos-ken → Build settings,\n"
+            "\nWARN: Git repo still not life-os. In Netlify UI → kenos-music → Build settings,\n"
             "link repository to Ken-pan/life-os (branch master, base apps/music).\n"
             "Until then, use: netlify deploy --prod --no-build --site=83dfdf84... --dir=apps/music/build"
         )

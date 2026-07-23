@@ -1,6 +1,6 @@
 {
-  "name": "KNOWLEDGE.OS",
-  "short_name": "KNOWLEDGE",
+  "name": "Kenos Library",
+  "short_name": "Library",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

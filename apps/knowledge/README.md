@@ -14,7 +14,7 @@ Tauri v2 壳（同 AIOS 模式）：`npm run app:knowledge` 构建并装入
   顶层目录名 → 标签（`030_Frameworks` → `frameworks`），`.obsidian/` 等目录跳过
 - 收集 → 写 `010_Inbox/<标题>.md`（同名自动加序号，`#` 等字符从文件名清洗）；
   编辑写回原文件，改题即重命名；删除即删文件
-- 网页/云端（knowledgeos-ken.netlify.app）自动退回 localStorage 模式；
+- 网页/云端（kenos-library.netlify.app）自动退回 localStorage 模式；
   同一套 UI，`state.svelte.js` 按 `isTauri()` 分流后端
 - localStorage 在原生模式只存 settings（437 篇 4.3MB 会爆配额，绝不入内）
 

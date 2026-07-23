@@ -100,7 +100,7 @@
     if (p === '/tidy') return { title: '整理', subtitle: '按顺序做,一次一件' }
     if (p === '/tidy/go') return { title: '专注模式', subtitle: '' }
     if (p === '/settings') return { title: '设置', subtitle: '' }
-    return { title: 'HOME.OS', subtitle: '' }
+    return { title: 'Kenos Home', subtitle: '' }
   })
 
   // Continuity resume — refresh on every Home route (room/item/organize context).
@@ -177,7 +177,7 @@
   navigationKey={page.url.pathname}
   focusOnNavigate="main"
   {mainClass}
-  mainLabel="HOME.OS 主内容"
+  mainLabel="Kenos Home 主内容"
   skipLinkLabel="跳到主内容"
   testIdPrefix="home-shell"
 >

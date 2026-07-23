@@ -93,7 +93,7 @@
         <img src="/brand-square-light-96.png" class="mark-light" width="24" height="24" alt="" />
         <img src="/brand-square-dark-96.png" class="mark-dark" width="24" height="24" alt="" />
       </span>
-      <span class="brand-word">Kenos</span>
+      <span class="brand-word">Korben</span>
     </span>
     <div class="sidebar-head-actions">
       <button

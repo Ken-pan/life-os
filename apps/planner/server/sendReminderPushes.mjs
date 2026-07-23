@@ -75,7 +75,7 @@ export async function sendDueReminderPushes() {
       if (existing) continue
 
       const payload = JSON.stringify({
-        title: 'PLANNER.OS 提醒',
+        title: 'Kenos Plan 提醒',
         body: job.title,
         taskId: job.id,
         url: `/?task=${encodeURIComponent(job.id)}`,

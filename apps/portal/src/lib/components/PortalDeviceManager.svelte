@@ -20,7 +20,7 @@
    * }} TrustedDeviceRow */
 
   const plannerOrigin =
-    PORTAL_APPS.find((a) => a.id === 'planner')?.url ?? 'https://planner.kenos.space'
+    PORTAL_APPS.find((a) => a.id === 'planner')?.url ?? 'https://plan.kenos.space'
 
   /** @type {TrustedDeviceRow[]} */
   let devices = $state([])

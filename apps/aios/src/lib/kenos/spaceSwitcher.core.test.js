@@ -74,11 +74,11 @@ describe('spaceSwitcher.core', () => {
   it('restores same-origin external deep links (Fitness / Planner)', () => {
     let state = emptySpaceSwitcherState()
     state = rememberSpaceRoute(state, 'external:training', {
-      lastRoute: 'https://fitness.kenos.space/day/chest/focus',
+      lastRoute: 'https://training.kenos.space/day/chest/focus',
       filter: 'Push Day · active',
     })
     state = rememberSpaceRoute(state, 'external:plan', {
-      lastRoute: 'https://planner.kenos.space/upcoming',
+      lastRoute: 'https://plan.kenos.space/upcoming',
       filter: '逾期任务',
     })
     assert.equal(
@@ -87,12 +87,12 @@ describe('spaceSwitcher.core', () => {
           listKey: 'external:training',
           id: 'training',
           label: 'Training',
-          href: 'https://fitness.kenos.space',
+          href: 'https://training.kenos.space',
           external: true,
         },
         state,
       ),
-      'https://fitness.kenos.space/day/chest/focus',
+      'https://training.kenos.space/day/chest/focus',
     )
     assert.equal(
       resolveSpaceOpenHref(
@@ -100,12 +100,12 @@ describe('spaceSwitcher.core', () => {
           listKey: 'external:plan',
           id: 'plan',
           label: 'Plan',
-          href: 'https://planner.kenos.space',
+          href: 'https://plan.kenos.space',
           external: true,
         },
         state,
       ),
-      'https://planner.kenos.space/upcoming',
+      'https://plan.kenos.space/upcoming',
     )
     // Cross-origin resume rejected
     state = rememberSpaceRoute(state, 'external:plan', {
@@ -117,19 +117,19 @@ describe('spaceSwitcher.core', () => {
           listKey: 'external:plan',
           id: 'plan',
           label: 'Plan',
-          href: 'https://planner.kenos.space',
+          href: 'https://plan.kenos.space',
           external: true,
         },
         state,
       ),
-      'https://planner.kenos.space',
+      'https://plan.kenos.space',
     )
   })
 
   it('hosted bridge can resume into known domain https URL', () => {
     let state = emptySpaceSwitcherState()
     state = rememberSpaceRoute(state, 'hosted:plan', {
-      lastRoute: 'https://planner.kenos.space/upcoming',
+      lastRoute: 'https://plan.kenos.space/upcoming',
       filter: 'Upcoming',
     })
     assert.equal(
@@ -143,20 +143,20 @@ describe('spaceSwitcher.core', () => {
         },
         state,
       ),
-      'https://planner.kenos.space/upcoming',
+      'https://plan.kenos.space/upcoming',
     )
   })
 
   it('does not clobber known-domain resume when visiting bridge path', () => {
     let state = emptySpaceSwitcherState()
     state = rememberSpaceRoute(state, 'hosted:plan', {
-      lastRoute: 'https://planner.kenos.space/upcoming',
+      lastRoute: 'https://plan.kenos.space/upcoming',
       filter: 'Upcoming',
     })
     state = applySpaceVisit(state, '/spaces/plan')
     assert.equal(
       state.resume['hosted:plan'].route,
-      'https://planner.kenos.space/upcoming',
+      'https://plan.kenos.space/upcoming',
     )
     assert.equal(state.currentListKey, 'hosted:plan')
     assert.equal(state.recent[0], 'hosted:plan')
@@ -185,7 +185,7 @@ describe('spaceSwitcher.core', () => {
         resume: {
           'hosted:plan': {
             listKey: 'hosted:plan',
-            lastRoute: 'https://planner.kenos.space/upcoming',
+            lastRoute: 'https://plan.kenos.space/upcoming',
             selectedEntityId: 'task-1',
             filter: 'Overdue · task open',
             updatedAt: now - 1000,
@@ -203,7 +203,7 @@ describe('spaceSwitcher.core', () => {
     assert.equal(Object.keys(state.resume).length, 0)
 
     const expired = rememberSpaceRoute(emptySpaceSwitcherState(), 'hosted:training', {
-      lastRoute: 'https://fitness.kenos.space/day/chest/focus',
+      lastRoute: 'https://training.kenos.space/day/chest/focus',
       filter: 'Cable fly · Set 2 of 4',
       now: now - 1000,
       expiresAt: now - 500,
@@ -213,13 +213,13 @@ describe('spaceSwitcher.core', () => {
         listKey: 'hosted:training',
         id: 'training',
         label: 'Training',
-        href: 'https://fitness.kenos.space/',
+        href: 'https://training.kenos.space/',
         external: false,
       },
       expired,
       { now },
     )
-    assert.equal(href, 'https://fitness.kenos.space/')
+    assert.equal(href, 'https://training.kenos.space/')
   })
 
   it('switchSpace leads with System Today, then Pinned / Recent / All Domains', () => {
@@ -301,7 +301,7 @@ describe('spaceSwitcher.core', () => {
     let state = emptySpaceSwitcherState()
     state = touchRecentSpace(state, 'hosted:training')
     state = rememberSpaceRoute(state, 'hosted:training', {
-      lastRoute: 'https://fitness.kenos.space/day/x',
+      lastRoute: 'https://training.kenos.space/day/x',
       displaySubtitle: 'Cable fly',
       entityId: 'demo-overdue-task',
       now: Date.now() - 1000,
@@ -415,7 +415,7 @@ describe('spaceSwitcher.core', () => {
     )
     let state = emptySpaceSwitcherState()
     state = rememberSpaceRoute(state, 'hosted:training', {
-      lastRoute: 'https://fitness.kenos.space/day/chest/focus',
+      lastRoute: 'https://training.kenos.space/day/chest/focus',
       filter: 'Cable fly · Set 2 of 4',
       now: now - 12 * 60 * 1000,
     })
@@ -424,7 +424,7 @@ describe('spaceSwitcher.core', () => {
         listKey: 'hosted:training',
         id: 'training',
         label: 'Training',
-        href: 'https://fitness.kenos.space/',
+        href: 'https://training.kenos.space/',
         detail: 'Fitness',
       },
       state,

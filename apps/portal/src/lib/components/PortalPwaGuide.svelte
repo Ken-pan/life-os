@@ -3,9 +3,9 @@
   import { ExternalLink } from '@lucide/svelte'
 
   const PWA_APPS = [
-    { id: 'planner', url: 'https://planner.kenos.space', experimental: false },
-    { id: 'finance', url: 'https://finance.kenos.space', experimental: false },
-    { id: 'fitness', url: 'https://fitness.kenos.space', experimental: false },
+    { id: 'planner', url: 'https://plan.kenos.space', experimental: false },
+    { id: 'finance', url: 'https://money.kenos.space', experimental: false },
+    { id: 'fitness', url: 'https://training.kenos.space', experimental: false },
     { id: 'music', url: 'https://music.kenos.space', experimental: false },
     { id: 'portal', url: 'https://portal.kenos.space', experimental: false },
     { id: 'home', url: 'https://home.kenos.space', experimental: true },

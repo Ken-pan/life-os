@@ -313,17 +313,17 @@ enum KenosDailyBetaConfig {
     }
 
     static var plannerOrigin: URL {
-        if useProductionOverride { return URL(string: "https://planner.kenos.space")! }
+        if useProductionOverride { return URL(string: "https://plan.kenos.space")! }
         return originSnapshot.plannerOrigin
     }
 
     static var fitnessOrigin: URL {
-        if useProductionOverride { return URL(string: "https://fitness.kenos.space")! }
+        if useProductionOverride { return URL(string: "https://training.kenos.space")! }
         return originSnapshot.fitnessOrigin
     }
 
     static var financeOrigin: URL {
-        domainOrigin(port: 5180, production: "https://finance.kenos.space")
+        domainOrigin(port: 5180, production: "https://money.kenos.space")
     }
 
     static var musicOrigin: URL {
@@ -335,7 +335,7 @@ enum KenosDailyBetaConfig {
     }
 
     static var knowledgeOrigin: URL {
-        domainOrigin(port: 5879, production: "https://knowledge.kenos.space")
+        domainOrigin(port: 5879, production: "https://library.kenos.space")
     }
 
     static var healthOrigin: URL {

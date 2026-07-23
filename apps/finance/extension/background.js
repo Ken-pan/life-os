@@ -36,10 +36,10 @@ const RH_ENRICH_TAB_GAP_MS = 400
 /** @type {Promise<void> | null} */
 let rhEnrichChain = null
 
-const FINANCE_OS_PRODUCTION_URL = 'https://finance.kenos.space/home/today'
+const FINANCE_OS_PRODUCTION_URL = 'https://money.kenos.space/home/today'
 const FINANCE_OS_PRODUCTION_HOSTS = [
-  'finance.kenos.space',
-  'financeos-ken.netlify.app',
+  'money.kenos.space',
+  'kenos-money.netlify.app',
 ]
 const TAB_EDIT_RETRY_ATTEMPTS = 8
 const TAB_EDIT_RETRY_MS = 250
@@ -144,7 +144,7 @@ async function focusFinanceOsTab() {
     url: [
       'http://localhost/*',
       'http://127.0.0.1/*',
-      'https://finance.kenos.space/*',
+      'https://money.kenos.space/*',
       'https://*.netlify.app/*',
     ],
   })

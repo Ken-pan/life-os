@@ -58,7 +58,7 @@ function wireDeployScript(siteId) {
 function wireNetlifyDoc(siteId) {
   const row = `| ${siteName} | \`apps/${id}\` | \`npm run build -w ${m.workspace}\` | \`apps/${id}/build\` | https://${m.domain} | 新站（site id \`${siteId}\`） |`
   const s = readFileSync(netlifyDocPath, 'utf8')
-  const homeRow = s.match(/\n\| homeos-ken[^\n]*/)
+  const homeRow = s.match(/\n\| kenos-home[^\n]*/)
   if (!homeRow) return null
   writeFileSync(netlifyDocPath, s.replace(homeRow[0], () => `${homeRow[0]}\n${row}`))
   return row
@@ -114,5 +114,5 @@ try {
 
 console.log(`✅ ${wireDeployScript(siteId)}`)
 const row = wireNetlifyDoc(siteId)
-console.log(row ? `✅ docs/ops/netlify.md 已加行` : '⚠️ docs/ops/netlify.md 找不到 homeos-ken 参照行，手动加。')
+console.log(row ? `✅ docs/ops/netlify.md 已加行` : '⚠️ docs/ops/netlify.md 找不到 kenos-home 参照行，手动加。')
 console.log(manualSteps(siteId))

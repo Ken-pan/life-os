@@ -533,7 +533,7 @@ export function convertWorkActionProposalToPlanTask(store, input, options = {}) 
         safeTitle: existing.proposedTaskTitle,
         completionProjection: 'open',
         freshness: nowIso(),
-        deepLink: `https://planner.kenos.space/tasks/${task.id}`,
+        deepLink: `https://plan.kenos.space/tasks/${task.id}`,
       }
     }
   }

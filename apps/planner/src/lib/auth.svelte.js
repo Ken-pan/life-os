@@ -19,7 +19,7 @@ function clearUserSessionSurfaces() {
   clearSessionUserData(buildSignedOutState)
   if (typeof localStorage !== 'undefined') clearOfflineQueue(localStorage)
   if (typeof document !== 'undefined' && /·/.test(document.title || '')) {
-    document.title = 'PLANNER.OS'
+    document.title = 'Kenos Plan'
   }
 }
 

@@ -29,7 +29,7 @@ export default {
     close: 'Close',
     back: 'Back',
     bodyweight: 'BW',
-    brand: 'FITNESS.OS',
+    brand: 'Kenos Training',
     skipToContent: 'Skip to main content',
     sets: 'sets',
     min: 'min',
@@ -52,7 +52,7 @@ export default {
     titleFocus: '{day} · Focus',
     titleSummary: '{day} · Summary',
     titleDayOverview: '{day} Overview',
-    titleDefault: 'FITNESS.OS',
+    titleDefault: 'Kenos Training',
     autoFinalize: 'Auto-logged {count} unfinished workout(s)',
   },
   home: {

@@ -20,7 +20,7 @@ export function projectTrainingFromTodayFitness(fitnessBlock) {
       lastSessionAt: null,
       bodyParts: [],
       sessionCount: 0,
-      deepLink: 'https://fitness.kenos.space',
+      deepLink: 'https://training.kenos.space',
     }
   }
   const bodyParts = Array.isArray(fitnessBlock.body_parts)
@@ -33,7 +33,7 @@ export function projectTrainingFromTodayFitness(fitnessBlock) {
     lastSessionAt: fitnessBlock.last_session_at || fitnessBlock.lastSessionAt || null,
     bodyParts,
     sessionCount: Number(fitnessBlock.session_count ?? fitnessBlock.sessionCount ?? 0) || 0,
-    deepLink: 'https://fitness.kenos.space',
+    deepLink: 'https://training.kenos.space',
   }
 }
 

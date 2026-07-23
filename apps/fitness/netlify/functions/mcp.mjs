@@ -6,7 +6,7 @@ import {
 } from '../../server/mcpFitness.mjs'
 
 /**
- * Fitness MCP —— AIOS 设置 → MCP → URL `https://fitness.kenos.space/api/mcp`
+ * Fitness MCP —— AIOS 设置 → MCP → URL `https://training.kenos.space/api/mcp`
  * + Bearer = 用户 Life OS Supabase access_token。
  *
  * GYMS.MCP.1：今日训练 / 最近训练 / 恢复度粗提示。鉴权走 PLAT.MCP.0。

@@ -17,8 +17,8 @@ export function buildAiPrompt(kind, locale = S.settings.locale) {
   if (kind === 'dailyBrief') {
     return {
       system: zh
-        ? '你是 PLANNER.OS 任务教练。用 2-4 句中文给出今日优先建议，语气阳光、简洁，不要 markdown。'
-        : 'You are PLANNER.OS task coach. Reply in 2-4 concise sunny sentences. No markdown.',
+        ? '你是 Kenos Plan 任务教练。用 2-4 句中文给出今日优先建议，语气阳光、简洁，不要 markdown。'
+        : 'You are Kenos Plan task coach. Reply in 2-4 concise sunny sentences. No markdown.',
       user: zh
         ? `今天 ${today}。逾期 ${overdue.length} 项，今日到期 ${todayList.length} 项。\n任务：\n${summary || '（空）'}`
         : `Today ${today}. Overdue ${overdue.length}, due today ${todayList.length}.\nTasks:\n${summary || '(empty)'}`

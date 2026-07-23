@@ -9,7 +9,7 @@ import {
   isFatalAuthRestoreError,
 } from '../src/sso.js'
 
-assert.equal(resolveSsoCookieDomain('planner.kenos.space'), '.kenos.space')
+assert.equal(resolveSsoCookieDomain('plan.kenos.space'), '.kenos.space')
 assert.equal(resolveSsoCookieDomain('kenos.space'), '.kenos.space')
 assert.equal(resolveSsoCookieDomain('localhost'), '')
 assert.equal(resolveSsoCookieDomain('127.0.0.1'), '')
@@ -142,7 +142,7 @@ function mockSupabase({ session = null } = {}) {
 
 {
   const bag = installCookieJar({
-    hostname: 'planner.kenos.space',
+    hostname: 'plan.kenos.space',
     protocol: 'https:',
   })
   const sb = mockSupabase()
@@ -161,7 +161,7 @@ function mockSupabase({ session = null } = {}) {
 }
 
 {
-  installCookieJar({ hostname: 'fitness.kenos.space', protocol: 'https:' })
+  installCookieJar({ hostname: 'training.kenos.space', protocol: 'https:' })
   document.cookie = `${LIFE_OS_SSO_COOKIE_NAME}=${encodeURIComponent(
     JSON.stringify({ access_token: 'from-cookie', refresh_token: 'refresh' }),
   )}; path=/; max-age=99`
@@ -193,7 +193,7 @@ function mockSupabase({ session = null } = {}) {
 
 {
   // Native vault restore when cookie is absent (iOS Continuity cross-origin).
-  installCookieJar({ hostname: 'finance.kenos.space', protocol: 'https:' })
+  installCookieJar({ hostname: 'money.kenos.space', protocol: 'https:' })
   let reported = null
   let getHost = null
   window.__KENOS_NATIVE_BRIDGE__ = {
@@ -219,11 +219,11 @@ function mockSupabase({ session = null } = {}) {
   await setupCrossDomainSSO(sb)
   const { data } = await sb.auth.getSession()
   assert.equal(data.session?.access_token, 'from-native')
-  assert.equal(getHost, 'finance.kenos.space')
+  assert.equal(getHost, 'money.kenos.space')
   // SIGNED_IN from setSession should also report back to native.
   assert.equal(reported?.signedIn, true)
   assert.equal(reported?.access_token, 'from-native')
-  assert.equal(reported?.host, 'finance.kenos.space')
+  assert.equal(reported?.host, 'money.kenos.space')
 }
 
 {

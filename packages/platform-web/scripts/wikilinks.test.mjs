@@ -26,8 +26,8 @@ assert.deepEqual(parseWikilinks('[[笔记#小节]]'), [{ target: '笔记', label
 
 // knowledgeNoteUrl：origin 去尾斜杠 + 目标编码
 assert.equal(
-  knowledgeNoteUrl('床垫研究', 'https://knowledge.kenos.space'),
-  'https://knowledge.kenos.space/library?title=%E5%BA%8A%E5%9E%AB%E7%A0%94%E7%A9%B6',
+  knowledgeNoteUrl('床垫研究', 'https://library.kenos.space'),
+  'https://library.kenos.space/library?title=%E5%BA%8A%E5%9E%AB%E7%A0%94%E7%A9%B6',
 )
 assert.equal(knowledgeNoteUrl('A B', 'https://k.example/'), 'https://k.example/library?title=A%20B')
 

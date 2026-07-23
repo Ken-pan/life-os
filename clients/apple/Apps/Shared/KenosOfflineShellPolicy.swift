@@ -8,10 +8,10 @@ import KenosDesign
 enum KenosAppBoundDomains {
     static let productionHosts: [String] = [
         "www.kenos.space",
-        "planner.kenos.space",
-        "fitness.kenos.space",
-        "finance.kenos.space",
-        "knowledge.kenos.space",
+        "plan.kenos.space",
+        "training.kenos.space",
+        "money.kenos.space",
+        "library.kenos.space",
         "music.kenos.space",
         "home.kenos.space",
         "health.kenos.space",

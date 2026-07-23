@@ -39,9 +39,10 @@ info "core_profiles rows: $PROFILES"
 if [[ -n "$TOKEN" ]]; then
   URI_LIST=$(curl -sS -H "Authorization: Bearer $TOKEN" "https://api.supabase.com/v1/projects/${PROJECT_REF}/config/auth" \
     | python3 -c "import sys,json; print(json.load(sys.stdin).get('uri_allow_list',''))")
-  for host in finance.kenos.space music.kenos.space planner.kenos.space fitness.kenos.space portal.kenos.space home.kenos.space \
-              financeos-ken.netlify.app musicos-ken.netlify.app planneros-ken.netlify.app fitnessos-ken.netlify.app \
-              portal-ken.netlify.app homeos-ken.netlify.app; do
+  for host in money.kenos.space plan.kenos.space training.kenos.space library.kenos.space \
+              music.kenos.space portal.kenos.space home.kenos.space \
+              kenos-money.netlify.app kenos-music.netlify.app kenos-plan.netlify.app kenos-training.netlify.app \
+              portal-ken.netlify.app kenos-home.netlify.app; do
     echo "$URI_LIST" | grep -q "$host" && pass "redirect URL contains $host" || fail "redirect URL missing $host"
   done
   echo "$URI_LIST" | grep -q 'kenos.space/\*\*' && info "site_url left as localhost (P0 OK — no apex portal yet)" || true
@@ -54,12 +55,12 @@ if [[ "${VERIFY_SKIP_NETLIFY:-}" == "1" ]]; then
   info "Skip Netlify env check (VERIFY_SKIP_NETLIFY=1)"
 elif command -v netlify >/dev/null && netlify api listSites >/dev/null 2>&1; then
   declare -A SITE_IDS=(
-    [planneros-ken]=82a6cadc-03f9-443c-85f7-26bd4a90f83f
-    [fitnessos-ken]=0394cf19-7fb7-4fea-81d7-d4a9d025fab3
-    [financeos-ken]=fc92f305-8dcf-46c3-82f5-ef511597df1c
-    [musicos-ken]=83dfdf84-095a-4b8a-955d-106d046a314b
+    [kenos-plan]=82a6cadc-03f9-443c-85f7-26bd4a90f83f
+    [kenos-training]=0394cf19-7fb7-4fea-81d7-d4a9d025fab3
+    [kenos-money]=fc92f305-8dcf-46c3-82f5-ef511597df1c
+    [kenos-music]=83dfdf84-095a-4b8a-955d-106d046a314b
     [portal-ken]=a5df5c3e-0e42-4f82-aca8-8d6802da357f
-    [homeos-ken]=69d4c072-d153-499c-90a8-57909df461a4
+    [kenos-home]=69d4c072-d153-499c-90a8-57909df461a4
   )
   for site in "${!SITE_IDS[@]}"; do
     PRESENT=$(netlify env:list --site "$site" --json 2>/dev/null \

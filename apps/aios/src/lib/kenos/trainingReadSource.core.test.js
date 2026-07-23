@@ -21,7 +21,7 @@ describe('trainingReadSource.core', () => {
     })
     assert.equal(projected.trainedToday, true)
     assert.deepEqual(projected.bodyParts, ['push'])
-    assert.equal(projected.deepLink, 'https://fitness.kenos.space')
+    assert.equal(projected.deepLink, 'https://training.kenos.space')
   })
 
   it('returns empty-ready shape when fitness block missing', async () => {

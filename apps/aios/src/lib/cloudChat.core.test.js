@@ -66,7 +66,7 @@ describe('KIMI_CLOUD_SYSTEM_NOTE re-export', () => {
       await import('./cloudChat.core.js')
     assert.equal(KENOS_CLOUD_PROMPT_VERSION, 'kenos-cloud-v2')
     assert.match(KIMI_CLOUD_SYSTEM_NOTE, /## Role/)
-    assert.match(KIMI_CLOUD_SYSTEM_NOTE, /Kenos Assistant/)
+    assert.match(KIMI_CLOUD_SYSTEM_NOTE, /Korben/)
     assert.match(KIMI_CLOUD_SYSTEM_NOTE, /life_os_today/)
     assert.match(KIMI_CLOUD_SYSTEM_NOTE, /## Final/)
     assert.ok(

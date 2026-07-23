@@ -16,7 +16,7 @@ describe('space continuity adapters (descriptor shape)', () => {
     const d = buildResumeDescriptor({
       userId: 'u1',
       spaceId: 'plan',
-      route: 'https://planner.kenos.space/upcoming',
+      route: 'https://plan.kenos.space/upcoming',
       entityId: 'task-demo',
       displayTitle: 'Plan',
       displaySubtitle: 'Upcoming · Overdue · 测试任务',
@@ -33,7 +33,7 @@ describe('space continuity adapters (descriptor shape)', () => {
     const d = buildResumeDescriptor({
       userId: 'u1',
       spaceId: 'training',
-      route: 'https://fitness.kenos.space/day/chest/focus',
+      route: 'https://training.kenos.space/day/chest/focus',
       entityId: 'c_fly',
       displayTitle: 'Training',
       displaySubtitle: '龙门架夹胸 · Set 2 of 4',
@@ -50,15 +50,15 @@ describe('space continuity adapters (descriptor shape)', () => {
     const d = buildResumeDescriptor({
       userId: 'u1',
       spaceId: 'training',
-      route: 'https://fitness.kenos.space/day/chest/focus?kenosEx=c_fly',
+      route: 'https://training.kenos.space/day/chest/focus?kenosEx=c_fly',
       displayTitle: 'Training',
       displaySubtitle: 'Cable fly · Set 2 of 4',
       updatedAt: now - 5000,
       expiresAt: now - 1000,
     })
     assert.equal(isResumeExpired(d, now), true)
-    const fb = fallbackResumeToHome(d, 'https://fitness.kenos.space/')
-    assert.equal(fb.route, 'https://fitness.kenos.space/')
+    const fb = fallbackResumeToHome(d, 'https://training.kenos.space/')
+    assert.equal(fb.route, 'https://training.kenos.space/')
     assert.equal(fb.displayTitle, 'Training')
     assert.ok(fb.substate.priorRoute.includes('/day/chest/focus'))
   })

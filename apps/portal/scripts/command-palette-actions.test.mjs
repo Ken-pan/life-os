@@ -14,15 +14,15 @@ const plannerToday = PORTAL_DEEP_LINKS.find((l) => l.id === 'planner-today')
 assert.ok(plannerToday)
 assert.equal(
   buildPortalDeepLinkUrl('planner', '/'),
-  'https://planner.kenos.space/',
+  'https://plan.kenos.space/',
 )
-assert.equal(buildPlannerInboxUrl(), 'https://planner.kenos.space/inbox')
+assert.equal(buildPlannerInboxUrl(), 'https://plan.kenos.space/inbox')
 
 const financeToday = PORTAL_DEEP_LINKS.find((l) => l.id === 'finance-today')
 assert.ok(financeToday)
 assert.equal(
   buildPortalDeepLinkUrl('finance', '/home/today'),
-  'https://finance.kenos.space/home/today',
+  'https://money.kenos.space/home/today',
 )
 
 const filtered = buildPortalCommandActions({

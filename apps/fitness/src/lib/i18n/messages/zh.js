@@ -29,7 +29,7 @@ export default {
     close: '关闭',
     back: '返回',
     bodyweight: '自重',
-    brand: 'FITNESS.OS',
+    brand: 'Kenos Training',
     skipToContent: '跳到主内容',
     sets: '组',
     min: 'min',
@@ -52,7 +52,7 @@ export default {
     titleFocus: '{day} · 专注模式',
     titleSummary: '{day} · 训练总结',
     titleDayOverview: '{day} 训练概览',
-    titleDefault: 'FITNESS.OS',
+    titleDefault: 'Kenos Training',
     autoFinalize: '已自动补记 {count} 次未完成的训练',
   },
   home: {
