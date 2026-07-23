@@ -30,6 +30,23 @@ struct KorbenBottomChrome: View {
         prefersChinese ? "记录、查找或交办…" : "Capture, find, or delegate…"
     }
 
+    // ── Glass 背景抑制(Gate4 P1:静止态下层内容透出可读半行)──
+    // Owner 裁决:保留浮层语义(内容从 Glass 后方滚过),不加 inset、不做不透明
+    // 占位 Dock。因此只在**材质侧**收口,三件套:
+    //   ① 每片 chrome 的材质下垫一层页面画布色(材质模糊的是「画布底 + 内容」的
+    //      合成结果,而非直接的内容像素)——通透仍在,但透出的是散射光不是字。
+    //   ② Dock 上沿一条 14pt 渐隐 scrim,内容接近 chrome 时先淡入画布色再进入
+    //      模糊区,消掉「贴着上沿被裁切的半行」。
+    //   ③ 二者都用 chromeAppearance 的画布色,亮/暗域自适应(与顶部 scrim 同源)。
+    private var canvasTint: Color { model.chromeAppearance.canvasColor }
+
+    /// 材质下垫层不透明度:0.42 是实拍上「文字不可辨 / 仍能看出下方色块流动」
+    /// 的分界。再高就读作不透明占位板(Owner 明确否决)。
+    private let glassBackingOpacity: Double = 0.42
+    /// 上沿渐隐带高度(spec 给的 8–16pt 区间取中)。纯视觉,不进任何布局计算,
+    /// 故 KorbenShellMetrics.bottomObstruction 无需改动(其 5 个单测不受影响)。
+    private let scrimFadeHeight: CGFloat = 14
+
     var body: some View {
         VStack(spacing: 0) {
             // P2: runtime chrome 归 System Strip(顶部)——Korben 壳不再渲染
@@ -50,16 +67,43 @@ struct KorbenBottomChrome: View {
                         domainDestinationCapsule
                             .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
-                    intentDock
+                    // P0-2:Ask 页自带 composer 时不叠 Intent Dock —— 否则同屏
+                    // 两个输入口、两个发送键(真机 review 实拍)。Orb 保留。
+                    if KorbenShellProjection.make(from: model).showsIntentDock {
+                        intentDock
+                    }
                 }
             }
+            // Orb 是持久的**左下**全局锚点 —— Intent Dock 隐藏(Ask 页自带 composer)
+            // 后 HStack 只剩 Orb 会居中,锚点跳位。显式左对齐钉住。
+            .frame(maxWidth: .infinity, alignment: .leading)
             .animation(
                 KenosMotion.selection(reduceMotion: reduceMotion),
                 value: model.liveAccessoryMinimized
             )
             .padding(.horizontal, KorbenShellMetrics.chromeHorizontalInset)
             .padding(.bottom, KorbenShellMetrics.bottomSafeAreaGap)
+            .background(alignment: .bottom) { bottomScrim }
         }
+    }
+
+    /// 上沿渐隐 + 全带轻抑制。用 `.background` 而非插入布局节点,故不改变 chrome
+    /// 的任何几何;负 top padding 让渐隐带长在 chrome 外侧(仍不占位)。
+    /// 0.38 是刻意的「轻」——玻璃后方仍看得见内容在动(浮层语义),只是不再
+    /// 出现能读出字的半行。
+    private var bottomScrim: some View {
+        VStack(spacing: 0) {
+            LinearGradient(
+                colors: [canvasTint.opacity(0), canvasTint.opacity(0.38)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: scrimFadeHeight)
+            canvasTint.opacity(0.38)
+        }
+        .padding(.top, -scrimFadeHeight)
+        .ignoresSafeArea(edges: .bottom)
+        .allowsHitTesting(false)
     }
 
     // ── Domain destination capsule ──
@@ -77,6 +121,9 @@ struct KorbenBottomChrome: View {
         // 降权靠「更矮 + 更淡 + 更弱描边 + 更小图标字」:胶囊 ~48pt vs Dock 56pt,
         // 未选中项为 secondary 灰,整体从属于全局 Dock。
         .background(.ultraThinMaterial, in: Capsule())
+        // 垫层在材质**之后**声明 = 排在材质之下:材质模糊的是「画布底+内容」的
+        // 合成,而不是内容像素本身。降权胶囊用 0.8× 抑制,保持它比 Dock 更轻。
+        .background(Capsule().fill(canvasTint.opacity(glassBackingOpacity * 0.8)))
         .overlay(Capsule().strokeBorder(.white.opacity(0.05), lineWidth: 0.5))
         .frame(maxWidth: .infinity)
         .shadow(color: .black.opacity(0.10), radius: 3, y: 1)
@@ -128,6 +175,9 @@ struct KorbenBottomChrome: View {
     // ── Space Orb(P3:Tap / Hold Fan / Hold+Drag / SwipeUp / DragRight)──
     private var spaceOrb: some View {
         ZStack {
+            // 画布底垫在材质下(同 Dock 的处理),Orb 才不会在滚动内容上"开洞"。
+            Circle()
+                .fill(canvasTint.opacity(glassBackingOpacity))
             Circle()
                 .fill(.ultraThinMaterial)
             Circle()
@@ -283,7 +333,10 @@ struct KorbenBottomChrome: View {
             HStack(spacing: 10) {
                 Text(dockPlaceholder)
                     .font(.system(size: 15))
-                    .foregroundStyle(.secondary)
+                    // .secondary 在浅色内容透上来时会掉到 3:1 以下;Dock 是全局
+                    // 入口,占位文案必须在任何背景下都读得出 → 提到 primary 的
+                    // 0.62,视觉重量仍是"占位"而非"已输入"。
+                    .foregroundStyle(.primary.opacity(0.62))
                     .lineLimit(1)
                 Spacer(minLength: 0)
                 Image(systemName: "mic")
@@ -297,6 +350,7 @@ struct KorbenBottomChrome: View {
             .frame(height: KorbenShellMetrics.intentDockHeight)
             .frame(maxWidth: .infinity)
             .background(.ultraThinMaterial, in: Capsule())
+            .background(Capsule().fill(canvasTint.opacity(glassBackingOpacity)))
             .overlay(Capsule().strokeBorder(.white.opacity(0.08), lineWidth: 0.5))
             .contentShape(Capsule())
         }
