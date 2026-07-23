@@ -1203,6 +1203,12 @@ struct SpaceSwitcherSheet: View {
         model.spaceChromeMode == .quickSwitch
     }
 
+    /// 跟随 Continuity 壳语言(与 GlobalDock 的 prefersChinese 同源)——
+    /// 切换器此前全英文,与其余中文界面混用(真机 review P0-3)。
+    private var zh: Bool {
+        KenosShellSettingsStore.current.resolvedLocale() == "zh"
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -1250,7 +1256,7 @@ struct SpaceSwitcherSheet: View {
     private var title: String {
         switch model.spaceChromeMode {
         case .continueRecent: return "Continue"
-        case .switchSpace: return "Switch Space"
+        case .switchSpace: return zh ? "切换空间" : "Switch Space"
         case .quickSwitch: return "Quick Switch"
         }
     }
@@ -1281,14 +1287,14 @@ struct SpaceSwitcherSheet: View {
             }
         }
         if !filteredContinue.isEmpty {
-            Section("Resume") {
+            Section(zh ? "继续" : "Resume") {
                 ForEach(filteredContinue, id: \.key) { item in
                     resumeButton(item)
                 }
             }
         }
         if !filteredRecent.isEmpty {
-            Section("Recent Spaces") {
+            Section(zh ? "最近空间" : "Recent Spaces") {
                 ForEach(filteredRecent) { entry in
                     spaceButton(entry, meta: "recent")
                 }
@@ -1298,7 +1304,7 @@ struct SpaceSwitcherSheet: View {
 
     @ViewBuilder
     private var switchSections: some View {
-        Section("System") {
+        Section(zh ? "系统" : "System") {
             Button("Today") {
                 // 从域内点 Today 必须先退出 domain 模式 —— returnToSystem 只改
                 // selectedTab,不翻 shellMode,会把域面/域胶囊留在原地(真机 Device
@@ -1310,14 +1316,14 @@ struct SpaceSwitcherSheet: View {
             .accessibilityIdentifier("kenos.switcher.system.today")
         }
         if !filteredPinned.isEmpty {
-            Section("Pinned") {
+            Section(zh ? "已固定" : "Pinned") {
                 ForEach(filteredPinned) { entry in
                     spaceRowWithPin(entry, meta: "pinned")
                 }
             }
         }
         if !filteredRecent.isEmpty {
-            Section("Recent") {
+            Section(zh ? "最近使用" : "Recent") {
                 ForEach(filteredRecent) { entry in
                     spaceButton(entry, meta: "recent")
                 }
@@ -1339,7 +1345,7 @@ struct SpaceSwitcherSheet: View {
             }
         }
         #else
-        Section("All Domains") {
+        Section(zh ? "全部空间" : "All Domains") {
             ForEach(filteredCatalog) { entry in
                 spaceRowWithPin(entry, meta: meta(for: entry))
             }
@@ -1350,25 +1356,25 @@ struct SpaceSwitcherSheet: View {
     @ViewBuilder
     private var quickSwitchSections: some View {
         if !filteredContinue.isEmpty {
-            Section("Recent objects") {
+            Section(zh ? "最近对象" : "Recent objects") {
                 ForEach(filteredContinue, id: \.key) { item in
                     resumeButton(item)
                 }
             }
         }
         if !filteredPinned.isEmpty {
-            Section("Pinned") {
+            Section(zh ? "已固定" : "Pinned") {
                 ForEach(filteredPinned) { entry in
                     spaceButton(entry, meta: "pinned")
                 }
             }
         }
-        Section("Spaces") {
+        Section(zh ? "空间" : "Spaces") {
             ForEach(filteredCatalog) { entry in
                 spaceButton(entry, meta: meta(for: entry))
             }
         }
-        Section("System") {
+        Section(zh ? "系统" : "System") {
             ForEach(KenosAppModel.Tab.allCases) { tab in
                 if matches(tab.title) {
                     Button(tab.title) {

@@ -65,6 +65,22 @@ struct KorbenShellProjection {
             && !isDomainImmersive
             && !isDomainOverlayActive
     }
+
+    /// **当前 web 面自带主输入条** —— Ask(问答)页底部常驻自己的 composer
+    /// (Scope chip + 输入 + 发送)。此时再叠 Korben Intent Dock 会出现
+    /// 「同屏两个输入口、两个发送键」(真机 review P0-2 实拍)。
+    ///
+    /// 与 `hidesBottomChromeForConversation` 的区别:后者依赖 web 上报
+    /// `liveState=conversation`,只在**已开始对话**后为真;Ask **落地页**不上报,
+    /// 双输入条照常出现。这里按「路由即事实」判定,不依赖 web 上报。
+    var surfaceOwnsComposer: Bool {
+        shellMode != .domain && selectedTab == .assistant
+    }
+
+    /// Intent Dock 是否显示。Orb 不受影响 —— 它是全局导航,不是输入口。
+    var showsIntentDock: Bool {
+        showsKorbenChrome && !surfaceOwnsComposer
+    }
 }
 
 #endif

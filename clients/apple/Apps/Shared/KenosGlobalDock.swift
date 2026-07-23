@@ -380,7 +380,7 @@ struct KenosGlobalDock: View {
         case "Status": return "状态"
         case "Trends": return "趋势"
         case "Accounts": return "账户"
-        case "Money": return "财务"
+        case "Money", "Finance": return "财务"
         case "Music": return "音乐"
         case "Work", "Deep Work": return "工作"
         case "Plan": return "计划"
