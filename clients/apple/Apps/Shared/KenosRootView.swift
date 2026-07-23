@@ -29,6 +29,14 @@ struct KenosRootView: View {
                 NavigationStack {
                     FocusSessionView(model: model)
                 }
+            } else if KorbenShellV2Feature.isEnabledOniOS {
+                // Korben Shell V2 (P1 skeleton) — frozen at launch; hosts the
+                // SAME persistent Web surfaces (see KorbenSpaceSurfaceHost).
+                #if os(iOS)
+                KorbenShellView(model: model)
+                #else
+                macSidebar
+                #endif
             } else {
                 #if os(iOS)
                 KenosLaunchVeilHost {

@@ -208,6 +208,8 @@ struct KenosWebSurfaceView: UIViewRepresentable {
     var chrome: KenosWebChrome = .kenosTabs
     /// Extra bottom pad for Live Accessory above the dock (0 when absent).
     var accessoryBottomPadPx: Int = 0
+    /// Extra top pad for external chrome (Korben System Strip); 0 in legacy.
+    var topExtraPadPx: Int = 0
     /// Dual-layer keep-alive: inactive surfaces hide (GPU) instead of opacity-only.
     var isActive: Bool = true
 
@@ -245,7 +247,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             config.mediaTypesRequiringUserActionForPlayback = .all
         }
 
-        let topPad = chrome.topPadPx
+        let topPad = chrome.topPadPx + topExtraPadPx
         let bottomPad = KenosWebChrome.resolvedBottomPadPx(
             chrome: chrome,
             accessoryExtraPx: accessoryBottomPadPx
@@ -633,10 +635,12 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         } else {
             KenosActiveWebRegistry.shellWebView = view
         }
+        KorbenSurfaceLifecycleLog.didCreate(view, kind: stayInApp ? "domain" : "shell")
         return view
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {
+        KorbenSurfaceLifecycleLog.didUpdate(uiView, kind: stayInApp ? "domain" : "shell")
         context.coordinator.stayInApp = stayInApp
         if stayInApp {
             KenosDomainWebBridge.activeWebView = uiView
@@ -652,7 +656,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         context.coordinator.applyActivation(isActive, on: uiView)
         // Keep scroll padding in sync when Focus / Live Accessory chrome changes —
         // skip when pads unchanged (dock tab switches spam updateUIView).
-        let topPad = chrome.topPadPx
+        let topPad = chrome.topPadPx + topExtraPadPx
         let bottomPad = KenosWebChrome.resolvedBottomPadPx(
             chrome: chrome,
             accessoryExtraPx: accessoryBottomPadPx
@@ -742,6 +746,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
     }
 
     static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
+        KorbenSurfaceLifecycleLog.didDismantle(uiView, kind: coordinator.stayInApp ? "domain" : "shell")
         coordinator.teardown(uiView)
     }
 
@@ -968,6 +973,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         /// HIG: peer destinations swap instantly (no ink veil / page-enter travel).
         /// Falls back to hard load if path stuck.
         func softNavigate(_ webView: WKWebView, to url: URL) {
+            KorbenSurfaceLifecycleLog.didNavigate(webView, kind: stayInApp ? "domain" : "shell", event: .softNav)
             softNavFallbackWorkItem?.cancel()
             // Drop any leftover veil from an older path (hard-load / interrupted).
             endSoftVeil(on: webView, animated: false)
@@ -1082,6 +1088,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         /// Seed Keychain → WKCookieStore before Continuity hard loads so Cookie SSO
         /// works on Music/Finance/etc. without a second interactive login.
         func loadSeedingSSO(on webView: WKWebView, url: URL) {
+            KorbenSurfaceLifecycleLog.didNavigate(webView, kind: stayInApp ? "domain" : "shell", event: .hardLoad)
             loadedURL = url
             Task { @MainActor [weak self, weak webView] in
                 await KenosSharedWebAuth.seedSharedSessionCookies()
@@ -1348,6 +1355,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             _ webView: WKWebView,
             didStartProvisionalNavigation navigation: WKNavigation!
         ) {
+            KorbenSurfaceLifecycleLog.didNavigate(webView, kind: stayInApp ? "domain" : "shell", event: .start)
             // Only reinforce cover when we already started a protected nav.
             // Unconditional ink here blanks back-forward / in-page navigations.
             if webView.viewWithTag(Self.freezeOverlayTag) != nil
@@ -1358,6 +1366,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            KorbenSurfaceLifecycleLog.didNavigate(webView, kind: stayInApp ? "domain" : "shell", event: .finish)
             loadRetryCount = 0
             softNavFallbackWorkItem?.cancel()
             softNavFallbackWorkItem = nil
@@ -1437,6 +1446,7 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         }
 
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+            KorbenSurfaceLifecycleLog.didNavigate(webView, kind: stayInApp ? "domain" : "shell", event: .processTerm)
             loadRetryCount = 0
             beginProtectedNavigation(on: webView, freezePixels: false)
             KenosLog.breadcrumb("webview process terminated — reloading", category: .web, metadata: [
@@ -1593,6 +1603,8 @@ struct KenosDailyBetaSurface: View {
     var accessoryBottomPadPx: Int = 0
     /// Defaults to `.kenosTabs`; Ask conversation uses `.kenosConversation` (dock hidden).
     var chrome: KenosWebChrome = .kenosTabs
+    /// External top chrome (Korben System Strip) pad; 0 in legacy shell.
+    var topExtraPadPx: Int = 0
     @State private var hardUnreachable = false
     @State private var syncPaused = false
     @State private var shellDidPaint = false
@@ -1638,6 +1650,7 @@ struct KenosDailyBetaSurface: View {
                     },
                     chrome: chrome,
                     accessoryBottomPadPx: accessoryBottomPadPx,
+                    topExtraPadPx: topExtraPadPx,
                     isActive: isActive
                 )
                 .id("\(surfaceEpoch)-\(originEpoch)-\(url.host ?? "")")

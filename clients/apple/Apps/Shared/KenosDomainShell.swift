@@ -23,6 +23,11 @@ struct KenosDomainModeShell: View {
     @ObservedObject var model: KenosAppModel
     /// Dual-layer keep-alive: false while Kenos Mode is foreground.
     var isActive: Bool = true
+    /// Korben Shell V2 owns global chrome when `.externalKorbenShell` — this
+    /// shell then renders content + domain-specific overlays only.
+    var globalChromePolicy: KenosGlobalChromePolicy = .legacyOwned
+    /// External top chrome (Korben System Strip) pad; 0 in legacy shell.
+    var topExtraPadPx: Int = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var webCanGoBack = false
     @State private var loadProgress: Double = 0
@@ -44,9 +49,15 @@ struct KenosDomainModeShell: View {
         return KenosDomainRegistry.isDomainHomePath(url.path, domainId: model.domainSpaceId)
     }
 
+    private var ownsGlobalChrome: Bool {
+        globalChromePolicy == .legacyOwned
+    }
+
     /// Navigation v2: Back beats Shelf; Shelf only at true domain home with empty back stack.
+    /// Korben-owned chrome: shelf trigger is global — external shell owns switching.
     private var allowsShelfEdgeOpen: Bool {
-        atDomainHome && !webCanNavigateBack && !model.showSpaceShelf && !hideDomainDock
+        ownsGlobalChrome && atDomainHome && !webCanNavigateBack
+            && !model.showSpaceShelf && !hideDomainDock
     }
 
     /// Peer tab / deep path with no WK history — full leading edge pops to domain home.
@@ -93,7 +104,9 @@ struct KenosDomainModeShell: View {
         return model.liveAccessoryMinimized ? 52 : 80
     }
 
-    private static func isImmersiveWebPath(_ raw: String) -> Bool {
+    /// Internal: Korben shell projection reuses this to hide external chrome
+    /// on immersive web routes (Focus / Summary / organize-go).
+    static func isImmersiveWebPath(_ raw: String) -> Bool {
         let path = raw.lowercased()
         if path == "/session" || path == "/focus" { return true }
         if path == "/tidy/go" || path.hasSuffix("/tidy/go") { return true }
@@ -176,18 +189,21 @@ struct KenosDomainModeShell: View {
             .zIndex(1)
 
             // 3) Shelf above web — must outrank WKWebView.
-            KenosSpaceShelfChrome(
-                model: model,
-                openDragX: $openDragX,
-                dismissDragX: $dismissDragX,
-                progress: $shelfProgress
-            )
-            .zIndex(2)
+            // Global chrome — only when this shell owns it (legacy policy).
+            if ownsGlobalChrome {
+                KenosSpaceShelfChrome(
+                    model: model,
+                    openDragX: $openDragX,
+                    dismissDragX: $dismissDragX,
+                    progress: $shelfProgress
+                )
+                .zIndex(2)
+            }
 
             // 4) Dock above WKWebView + Shelf (zIndex 5) so Spaces Orb remains the close anchor.
             // Same bottom geometry as Kenos Mode: dock sits above home indicator
             // (+ dockBottomInset). Web canvas alone is edge-to-edge.
-            if !hideDomainDock, !model.showSettingsSheet {
+            if ownsGlobalChrome, !hideDomainDock, !model.showSettingsSheet {
                 KenosBottomChromeBar(model: model)
                     // Match content: 1:1 while dragging; spring only on settle.
                     .animation(isDraggingShelf ? nil : openAnimation, value: shelfProgress)
@@ -299,7 +315,13 @@ struct KenosDomainModeShell: View {
                     },
                     // Keep status top pad while editing; only Focus/Summary go fully immersive.
                     chrome: isWebFocusSurface ? .none : .domainDock,
-                    accessoryBottomPadPx: model.liveAccessoryWebBottomExtraPx,
+                    // Korben chrome (P1B) stacks a domain capsule above the dock —
+                    // widen the scroll-end clearance accordingly.
+                    accessoryBottomPadPx: model.liveAccessoryWebBottomExtraPx
+                        + (ownsGlobalChrome || isWebFocusSurface
+                            ? 0
+                            : KorbenShellMetrics.domainCapsuleWebExtraPadPx),
+                    topExtraPadPx: isWebFocusSurface ? 0 : topExtraPadPx,
                     isActive: isActive
                 )
                 .id(domainSurfaceEpoch)
