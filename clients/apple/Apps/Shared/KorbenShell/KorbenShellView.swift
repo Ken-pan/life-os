@@ -83,6 +83,10 @@ struct KorbenShellView: View {
                     detent: $shellState.quickCaptureDetent
                 )
             }
+            // P5 Korben Assist Panel(Orb 右拉 ≥132pt / VO action 触达)。
+            .sheet(isPresented: $shellState.showsAssist) {
+                KorbenAssistPanel(model: model, shellState: shellState)
+            }
             // P4B Undo pill — 创建后 10s 可撤(撤销恢复输入,不丢 Draft)。
             .overlay(alignment: .bottom) {
                 if let receipt = shellState.undoReceipt {

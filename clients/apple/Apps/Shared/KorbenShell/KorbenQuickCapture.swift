@@ -124,10 +124,23 @@ struct KorbenQuickCaptureSheet: View {
             Text("Korben Canvas")
                 .font(.system(size: 20, weight: .semibold))
             Text(prefersChinese
-                ? "多轮协作、批量操作与 Agent 执行将在这里进行(P5)。下滑回到快速记录。"
-                : "Multi-turn collaboration, batch actions and agent runs land here (P5). Swipe down for Quick Capture.")
+                ? "多轮协作、批量操作与 Agent 执行将在这里进行。下滑回到快速记录。"
+                : "Multi-turn collaboration, batch actions and agent runs land here. Swipe down for Quick Capture.")
                 .font(.system(size: 14))
                 .foregroundStyle(.secondary)
+            Button {
+                dismiss()
+                model.open(urlString: "kenos://assistant")
+            } label: {
+                Text(prefersChinese ? "展开对话(Ask)" : "Open conversation (Ask)")
+                    .font(.system(size: 15, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color(red: 0.357, green: 0.549, blue: 1.0), in: Capsule())
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("korben.canvas.openConversation")
             Spacer(minLength: 0)
         }
         .accessibilityIdentifier("korben.canvas.placeholder")

@@ -155,8 +155,8 @@ struct KorbenBottomChrome: View {
         .accessibilityAction(named: prefersChinese ? "最近空间" : "Recent Spaces") {
             model.openContinue()
         }
-        .accessibilityAction(named: prefersChinese ? "打开 Ask" : "Open Ask") {
-            model.open(urlString: "kenos://assistant")
+        .accessibilityAction(named: prefersChinese ? "打开 Korben" : "Open Korben") {
+            shellState.showsAssist = true
         }
     }
 
@@ -217,7 +217,7 @@ struct KorbenBottomChrome: View {
                 case .dragRight:
                     if value.translation.width >= KorbenOrbGestureResolver.assistCommitDistance {
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        model.open(urlString: "kenos://assistant") // Assist 真身 P5 接管
+                        shellState.showsAssist = true // P5 Assist Panel(真 agent 经「展开对话」)
                     }
                 }
             }

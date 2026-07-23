@@ -69,6 +69,9 @@ final class KorbenShellState: ObservableObject {
 
     // ── P4B Receipt / Undo(10s 窗口)──
     @Published var undoReceipt: KorbenActionReceipt?
+
+    // ── P5 Korben Assist ──
+    @Published var showsAssist = false
 }
 
 #endif

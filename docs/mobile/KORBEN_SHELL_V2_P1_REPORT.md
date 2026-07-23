@@ -331,5 +331,17 @@ P4B CAPTURE RELIABILITY: IMPLEMENTED
 - **Receipt + Undo**:`korbenSubmitCapture()` 返回 `KorbenActionReceipt`(draftId + idempotencyKey + 原文);Undo pill 10s 窗口——撤销 = 队列 `cancel`(仅 pending)+ 文本回填重开输入;**入队失败自动回填文本,Draft 永不丢**。
 - 提交管线仍是现有 `KenosOfflineActionQueue`(幂等/重试/R3R4 拒绝),零新写路径。
 
+## 8g. P5 Korben Assist Panel(第一刀,已实现,2026-07-23)
+
+```
+P5 ASSIST: IMPLEMENTED(第一刀)
+状态:编译绿。真 agent 经「展开对话」→ 现有 web Ask 面(真身);
+原生 250ms 假流 stub(AssistantView)不再是 Korben 壳的 Assist 路径。
+```
+
+- 新增 `KorbenAssistPanel.swift`(55% sheet):**确定性上下文投影**(当前 Space / runtime / 待确认数——本地事实,文案不冒充 AI 判断)+ 2–3 个可执行建议(整理待确认→openApprovals / 继续刚才的事→openContinue / 记录交办→Quick Capture)+ 「展开对话」→ `kenos://assistant`(web 真 agent)。
+- 入口:Orb Drag Right ≥132pt(P3 手势换接此面板)/ Orb VO action「打开 Korben」;Canvas 档(82%)加同样的「展开对话」入口。
+- **诚实边界**:规范里「我已经查看当前情况」式管家话术只允许真 agent 说;原生面板只列事实与确定性操作。原生流式 Assist(替换 web 承载)是 P5 后续,需接 AIOS agent 后端,留待 Owner 定接口。
+
 ## 9. Device Gate 通过后的 P2 边界(预告,未开工)
 只做 System Strip(Runtime + Attention 投影)+ System Tray:高度 ≤36pt、无状态 0pt、同一条最多 3 单元(`♪ Daily Mix · 1:42 | 专注 · 18:23 | 2 待确认`),不做大型顶部 Runtime 卡。**不碰**:Orb 新手势、Intent 分类、Korben Assist、App Group、Lens、Per-Space WebView Pool。能力支线并行:App Group closure(先于 Live Activity/Widget 扩展)、Music Runtime 审计(先于后台音频 entitlement)。
