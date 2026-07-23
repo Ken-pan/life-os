@@ -26,8 +26,12 @@ struct KorbenSpaceSurfaceHost: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// P2 System Strip 可见时,web 顶部加余隙(34pt 条 + 10px 缓冲)。
+    /// 必须与 Strip 的真实渲染条件同源:hasUnits 有内容「且」chrome 未被抑制
+    /// (会话 composer / Domain overlay 态会隐藏 chrome)—— 否则为一条没画出来
+    /// 的 Strip 预留 44px 幽灵内边距,把 web 内容下压。
     private var stripTopPadPx: Int {
-        KorbenSystemStrip.hasUnits(model: model) ? 44 : 0
+        guard KorbenSystemStrip.hasUnits(model: model) else { return 0 }
+        return KorbenShellProjection.make(from: model).showsKorbenChrome ? 44 : 0
     }
 
     var body: some View {

@@ -132,11 +132,15 @@ struct KorbenBottomChrome: View {
         .contentShape(Circle().scale(KorbenShellMetrics.minHitTarget / KorbenShellMetrics.orbVisualSize))
         .background(
             // Fan 绘制与命中共用同一坐标系的 Orb 圆心。
+            // 持续上报(非一次性 onAppear):进入/离开 Domain 时域胶囊出现会把
+            // Orb 上顶,圆心必须随布局更新,否则扇形/气泡/命中判定整体偏移。
             GeometryReader { geo in
-                Color.clear.onAppear {
-                    let f = geo.frame(in: .named("korben.shell"))
-                    shellState.orbCenter = CGPoint(x: f.midX, y: f.midY)
-                }
+                let f = geo.frame(in: .named("korben.shell"))
+                Color.clear
+                    .onAppear { shellState.orbCenter = CGPoint(x: f.midX, y: f.midY) }
+                    .onChange(of: f) { _, nf in
+                        shellState.orbCenter = CGPoint(x: nf.midX, y: nf.midY)
+                    }
             }
         )
         .gesture(orbGesture)
@@ -200,8 +204,10 @@ struct KorbenBottomChrome: View {
                 case .pressing, .idle:
                     let dt = orbPressStart.map { Date().timeIntervalSince($0) } ?? 0
                     let moved = hypot(value.translation.width, value.translation.height)
+                    // Tap = 位移小「且」时间短(spec:<8pt 且 <250ms)。用 AND —
+                    // OR 会把向下/向左的快速轻甩(位移大、耗时短、方向锁不住)误判成点击。
                     if moved < KorbenOrbGestureResolver.tapMaxMovement
-                        || dt < KorbenOrbGestureResolver.tapMaxDuration
+                        && dt < KorbenOrbGestureResolver.tapMaxDuration
                     {
                         model.openSpaceSwitcher() // Tap → Peek(P1 起的点击路径)
                     }

@@ -30,7 +30,9 @@ enum KorbenSurfaceLifecycleLog {
     private(set) static var liveByKind: [String: Set<String>] = [:]
 
     private static func instanceTag(_ webView: WKWebView) -> String {
-        String(UInt(bitPattern: ObjectIdentifier(webView).hashValue) % 0xFFFF, radix: 16)
+        // 用完整 ObjectIdentifier 哈希做集合键 —— 之前 %0xFFFF 压到 65535 桶,
+        // 两个活实例可能撞同 tag 被 Set 去重,liveCount 偏低误导「是否重建」判读。
+        String(UInt(bitPattern: ObjectIdentifier(webView).hashValue), radix: 16)
     }
 
     static func didCreate(_ webView: WKWebView, kind: String) {

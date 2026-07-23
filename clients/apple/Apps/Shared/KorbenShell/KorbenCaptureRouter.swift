@@ -116,20 +116,28 @@ extension KenosAppModel {
                 correlationId: draft.correlationId
             )
         } catch {
-            // 失败不丢 Draft:文本回填,让用户重试。
+            // 失败不丢 Draft:文本回填,让用户重试。lastCapture 也回滚 ——
+            // 否则它指向一条从未入队的 draft,别处会当「最近已保存」误显。
             captureText = text
+            if lastCapture?.id == draft.id { lastCapture = nil }
             return nil
         }
         return KorbenActionReceipt(draftId: draft.id, idempotencyKey: key, text: text)
     }
 
-    /// P4B Undo:撤销队列项(pending 才可撤)+ 恢复输入文本。
-    func korbenUndoCapture(_ receipt: KorbenActionReceipt) {
-        if let action = queue.actions.first(where: { $0.idempotencyKey == receipt.idempotencyKey }) {
-            try? queue.cancel(action.id)
-        }
+    /// P4B Undo:仅当队列项仍 pending(未派发)才撤销 + 恢复输入文本。
+    /// 已派发的动作 cancel 无效 —— 此时不回填/不重开,避免用户以为已撤销
+    /// 又重新「创建」造成重复 capture。
+    /// - Returns: true 表示确实撤销;false 表示已派发无法撤销。
+    @discardableResult
+    func korbenUndoCapture(_ receipt: KorbenActionReceipt) -> Bool {
+        let action = queue.actions.first { $0.idempotencyKey == receipt.idempotencyKey }
+        let cancellable = action.map { $0.status == .pending || $0.status == .retry || $0.status == .failed } ?? false
+        guard let action, cancellable else { return false }
+        try? queue.cancel(action.id)
         if lastCapture?.id == receipt.draftId { lastCapture = nil }
         captureText = receipt.text
+        return true
     }
 }
 
@@ -153,11 +161,13 @@ struct KorbenUndoPill: View {
             Text(prefersChinese ? "已保存草稿" : "Draft saved")
                 .font(.system(size: 13, weight: .medium))
             Button(prefersChinese ? "撤销" : "Undo") {
-                model.korbenUndoCapture(receipt)
+                let undone = model.korbenUndoCapture(receipt)
                 shellState.undoReceipt = nil
-                // 撤销后重开输入,文本已回填。
-                shellState.quickCaptureDetent = KorbenQuickCaptureSheet.captureDetent
-                shellState.showsQuickCapture = true
+                // 仅真正撤销(仍 pending)才重开输入;已派发则保持现状。
+                if undone {
+                    shellState.quickCaptureDetent = KorbenQuickCaptureSheet.captureDetent
+                    shellState.showsQuickCapture = true
+                }
             }
             .font(.system(size: 13, weight: .semibold))
             .foregroundStyle(Color(red: 0.357, green: 0.549, blue: 1.0))

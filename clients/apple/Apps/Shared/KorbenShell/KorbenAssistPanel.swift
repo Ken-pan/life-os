@@ -87,9 +87,13 @@ struct KorbenAssistPanel: View {
                     icon: "square.and.pencil",
                     title: prefersChinese ? "记录或交办一件事" : "Capture or delegate something"
                 ) {
-                    dismiss()
+                    // 关本 sheet 后再开 Quick Capture —— 同容器上两个 .sheet 若在
+                    // 前者关闭动画途中 present 后者,SwiftUI 会吞掉新 present。
                     shellState.quickCaptureDetent = KorbenQuickCaptureSheet.captureDetent
-                    shellState.showsQuickCapture = true
+                    dismiss()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        shellState.showsQuickCapture = true
+                    }
                 }
             }
 

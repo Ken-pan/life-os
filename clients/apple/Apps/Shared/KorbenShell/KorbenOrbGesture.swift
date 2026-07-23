@@ -106,6 +106,8 @@ struct KorbenOrbFanOverlay: View {
         )
         ZStack {
             ForEach(Array(shellState.orbFanTargets.enumerated()), id: \.element.id) { i, target in
+                // 守卫:centers 只有 min(count,4) 个,越界即崩溃。
+                if centers.indices.contains(i) {
                 let highlighted = shellState.orbFanHighlight == i
                 VStack(spacing: 4) {
                     ZStack {
@@ -127,6 +129,7 @@ struct KorbenOrbFanOverlay: View {
                 .scaleEffect(highlighted && !reduceMotion ? 1.08 : 1.0)
                 .animation(.easeOut(duration: 0.12), value: highlighted)
                 .position(x: centers[i].x, y: centers[i].y)
+                }
             }
         }
         .accessibilityHidden(true) // VO 走 Orb 的 accessibilityActions
