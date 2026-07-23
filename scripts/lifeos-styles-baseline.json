@@ -1,5 +1,5 @@
 {
-  "apps/planner/src|raw-hex": 31,
+  "apps/planner/src|raw-hex": 32,
   "apps/planner/src|raw-font-size": 24,
   "apps/planner/src|reserved-ds-class": 5,
   "apps/fitness/src|raw-hex": 32,
@@ -15,7 +15,7 @@
   "apps/home/src|reserved-ds-class": 15,
   "apps/health/src|raw-hex": 2,
   "apps/aios/src|raw-font-size": 85,
-  "apps/aios/src|raw-hex": 47,
+  "apps/aios/src|raw-hex": 48,
   "apps/aios/src|reserved-ds-class": 15,
   "apps/aios/src|raw-motion": 2,
   "packages/theme/src|raw-motion": 1,
