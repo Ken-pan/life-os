@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Kenos Train GPT Image Runner",
+  "version": "0.1.0",
+  "description": "定时驱动 ChatGPT 生成 Kenos Train 动作示范图：图锚定参考 + 保守节奏 + 限流自动退避",
+  "permissions": ["storage", "alarms", "downloads", "tabs", "scripting"],
+  "host_permissions": ["https://chatgpt.com/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["refs/*"],
+      "matches": ["https://chatgpt.com/*"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Kenos Train 图库跑手"
+  }
+}

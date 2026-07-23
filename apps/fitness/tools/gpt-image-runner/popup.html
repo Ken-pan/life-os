@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<style>
+  body { font: 13px/1.5 -apple-system, "PingFang SC", sans-serif; width: 320px; margin: 0; padding: 12px; color: #1a1a1a; }
+  h1 { font-size: 14px; margin: 0 0 8px; }
+  .row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  button { padding: 5px 12px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; }
+  button.primary { background: #1a7f37; color: #fff; border-color: #1a7f37; }
+  input[type="number"] { width: 52px; }
+  ul { list-style: none; margin: 8px 0; padding: 0; max-height: 260px; overflow-y: auto; }
+  li { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #f0f0f0; gap: 6px; }
+  li .st { flex-shrink: 0; }
+  .done { color: #1a7f37; } .failed { color: #c62828; } .running { color: #b26a00; } .pending { color: #888; }
+  li button { padding: 0 6px; font-size: 11px; }
+  #meta, #logs { color: #666; font-size: 11px; white-space: pre-wrap; }
+  #logs { max-height: 90px; overflow-y: auto; background: #f7f7f7; border-radius: 6px; padding: 6px; }
+</style>
+</head>
+<body>
+<h1>Kenos Train 图库跑手</h1>
+<div class="row">
+  <button id="start" class="primary">开始</button>
+  <button id="pause">暂停</button>
+  <button id="runNow">立即跑下一张</button>
+  <button id="clearStuck" title="清除僵死的运行态/退避">解卡</button>
+</div>
+<div class="row">
+  间隔 <input id="interval" type="number" min="5" step="1" /> 分钟（±25% 抖动）
+</div>
+<div id="meta"></div>
+<ul id="jobs"></ul>
+<div id="logs"></div>
+<script type="module" src="popup.js"></script>
+</body>
+</html>
