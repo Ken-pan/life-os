@@ -485,7 +485,9 @@ final class KenosAppModel: ObservableObject {
         await KenosSharedWebAuth.seedSharedSessionCookies()
         // vault + cookie 就绪 → 主动通知已启动的 web 面重放会话恢复
         // (web 冷启常早于设备交换完成;事件驱动握手取代 web 侧竞态轮询)
+        #if os(iOS)
         KenosNativeCapabilityBridge.broadcastAuthVaultReady()
+        #endif
         // 解锁 + 会话就绪后拉一轮壳偏好(pin/最近使用/续播)
         KenosShellStateSync.shared.scheduleSync(after: 1)
         return true
