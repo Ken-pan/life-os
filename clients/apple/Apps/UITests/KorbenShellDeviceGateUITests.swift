@@ -35,6 +35,15 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         }
     }
 
+    /// 模拟器首次弹键盘会盖一层 QuickPath 教学浮层(「Speed up your typing…」),
+    /// 会遮住被截图的 sheet。点 Continue 关掉;真机通常不出现。
+    private func dismissKeyboardTutorialIfPresent(_ app: XCUIApplication) {
+        for label in ["Continue", "继续"] {
+            let btn = app.buttons[label].firstMatch
+            if btn.exists, btn.isHittable { btn.tap(); sleep(1); return }
+        }
+    }
+
     /// Switcher sheet 存在性(identifier 命中类型不稳,叠加标题文本兜底)。
     private func switcherVisible(_ app: XCUIApplication, timeout: TimeInterval) -> Bool {
         let byId = app.descendants(matching: .any)["kenos.spaceSwitcher"]
@@ -374,6 +383,168 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
             assertSingleKorbenChrome(app, context: "after-runtime-tap")
             attachScreenshot(app, name: "STRIP-2-runtime-activated")
         }
+    }
+
+    // MARK: Review 采集 — 全部主要交互状态(合成三张 review 表)
+
+    /// A 组:壳与空间。
+    func testReviewShotsA_ShellAndSpaces() {
+        let app = launchKorben()
+        XCTAssertTrue(app.buttons["korben.orb"].waitForExistence(timeout: 15))
+        sleep(3)
+        attachScreenshot(app, name: "RA-1-today-rest")
+        for _ in 0..<10 { app.swipeUp() }
+        sleep(2)
+        attachScreenshot(app, name: "RA-2-today-bottom")
+
+        switchSpace(app, rowText: "Plan")
+        sleep(2)
+        attachScreenshot(app, name: "RA-3-plan-top")
+        for _ in 0..<8 { app.swipeUp() }
+        sleep(2)
+        attachScreenshot(app, name: "RA-4-plan-bottom")
+
+        switchSpace(app, rowText: "Fitness")
+        sleep(2)
+        attachScreenshot(app, name: "RA-5-fitness")
+
+        switchSpace(app, rowText: "Money")
+        sleep(3)
+        attachScreenshot(app, name: "RA-6-finance-locked")
+    }
+
+    /// B 组:交互与手势(含从未视觉验证过的 Orb 右拉 → Assist)。
+    func testReviewShotsB_Interactions() {
+        let app = launchKorben()
+        let orb = app.buttons["korben.orb"]
+        XCTAssertTrue(orb.waitForExistence(timeout: 15))
+        sleep(2)
+
+        // B1 Orb 轻点 → Space Switcher
+        orb.tap()
+        _ = switcherVisible(app, timeout: 5)
+        attachScreenshot(app, name: "RB-1-space-switcher")
+        app.buttons["Close"].firstMatch.tap()
+        _ = orb.waitForExistence(timeout: 5)
+
+        // B2 Orb 右拉 → Korben Assist 面板(短按后立即右拖,避开 280ms 长按判定)
+        let start = orb.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 210, dy: 0)))
+        sleep(2)
+        if app.descendants(matching: .any)["korben.assistPanel"].waitForExistence(timeout: 5) {
+            attachScreenshot(app, name: "RB-2-assist-panel")
+            app.swipeDown(velocity: .fast)
+            _ = orb.waitForExistence(timeout: 5)
+        }
+
+        // B3 Intent Dock → Quick Capture + 键盘
+        app.buttons["korben.intentDock"].tap()
+        let byId = app.descendants(matching: .any)["korben.quickCapture.text"]
+        let field = byId.waitForExistence(timeout: 6)
+            ? byId
+            : (app.textViews.firstMatch.exists ? app.textViews.firstMatch : app.textFields.firstMatch)
+        if field.waitForExistence(timeout: 4) {
+            field.tap()
+            _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
+            field.typeText("Review 采集")
+            sleep(1)
+            attachScreenshot(app, name: "RB-3-quick-capture")
+        }
+        app.swipeDown(velocity: .fast)
+        sleep(1)
+        app.swipeDown(velocity: .fast)
+        _ = orb.waitForExistence(timeout: 6)
+
+        // B4 Canvas 档 —— 用 Intent Dock **深上滑**(>120pt)直接开在 Canvas 档,
+        // 比在已展开的 sheet 上再上滑可靠(后者会滑到 web)。
+        dismissKeyboardTutorialIfPresent(app)
+        let dock = app.buttons["korben.intentDock"]
+        if dock.waitForExistence(timeout: 6) {
+            let from = dock.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: -220)))
+            sleep(2)
+            dismissKeyboardTutorialIfPresent(app)
+            attachScreenshot(app, name: "RB-4-canvas-detent")
+            app.swipeDown(velocity: .fast)
+            sleep(1)
+            app.swipeDown(velocity: .fast)
+            _ = orb.waitForExistence(timeout: 6)
+        }
+
+        // B5 域胶囊切换(Plan → 日历)
+        switchSpace(app, rowText: "Plan")
+        let slot1 = app.buttons["korben.domainCapsule.1"]
+        if slot1.waitForExistence(timeout: 8), slot1.isHittable {
+            slot1.tap()
+            sleep(4)
+            attachScreenshot(app, name: "RB-5-capsule-calendar")
+        }
+        let slot0 = app.buttons["korben.domainCapsule.0"]
+        if slot0.exists, slot0.isHittable {
+            slot0.tap()
+            sleep(3)
+            attachScreenshot(app, name: "RB-6-capsule-tasks")
+        }
+    }
+
+    /// C 组:状态与边界(Strip / Tray / Undo / Dynamic Type / 前后台)。
+    func testReviewShotsC_States() {
+        var app = launchKorben()
+        XCTAssertTrue(app.buttons["korben.orb"].waitForExistence(timeout: 15))
+        sleep(3)
+        attachScreenshot(app, name: "RC-1-system-strip")
+
+        // C2 System Tray(从 attention / 次要 runtime 单元展开)
+        func byId(_ id: String) -> XCUIElement { app.descendants(matching: .any)[id] }
+        let trayOpener = byId("korben.strip.attention").exists
+            ? byId("korben.strip.attention")
+            : byId("korben.strip.secondaryRuntimes")
+        if trayOpener.exists, trayOpener.isHittable {
+            trayOpener.tap()
+            if byId("korben.systemTray").waitForExistence(timeout: 5) {
+                attachScreenshot(app, name: "RC-2-system-tray")
+                app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9)).tap()
+                sleep(1)
+            }
+        }
+
+        // C3 Undo pill —— 创建一条 capture 后 10s 内可撤销
+        app.buttons["korben.intentDock"].tap()
+        let f = app.descendants(matching: .any)["korben.quickCapture.text"]
+        let field = f.waitForExistence(timeout: 6)
+            ? f
+            : (app.textViews.firstMatch.exists ? app.textViews.firstMatch : app.textFields.firstMatch)
+        if field.waitForExistence(timeout: 4) {
+            field.tap()
+            _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
+            field.typeText("Undo 证据")
+            let create = app.descendants(matching: .any)["korben.quickCapture.create"]
+            if create.exists, create.isHittable {
+                create.tap()
+                sleep(2)
+                attachScreenshot(app, name: "RC-3-undo-pill")
+            }
+        }
+
+        // C4 前后台往返
+        XCUIDevice.shared.press(.home)
+        sleep(4)
+        app.activate()
+        _ = app.buttons["korben.orb"].waitForExistence(timeout: 10)
+        sleep(2)
+        attachScreenshot(app, name: "RC-4-after-background")
+
+        // C5/C6 Dynamic Type 辅助功能大号(需带参重启)
+        app.terminate()
+        app = launchKorben(extraArgs: [
+            "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityL",
+        ])
+        _ = app.buttons["korben.orb"].waitForExistence(timeout: 15)
+        sleep(3)
+        attachScreenshot(app, name: "RC-5-dynamic-type-today")
+        switchSpace(app, rowText: "Plan")
+        sleep(2)
+        attachScreenshot(app, name: "RC-6-dynamic-type-plan")
     }
 
     // MARK: Test 7 — Dynamic Type(辅助功能大号)

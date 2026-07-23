@@ -22,6 +22,26 @@ struct KorbenAssistPanel: View {
         KorbenShellProjection.make(from: model)
     }
 
+    /// 上下文行数(空间恒有 + runtime? + 待确认?)
+    private var contextRowCount: Int {
+        1 + (model.liveAccessory != nil ? 1 : 0) + (model.pendingApprovalCount > 0 ? 1 : 0)
+    }
+
+    /// 操作行数(待确认时多一条)
+    private var actionRowCount: Int {
+        2 + (model.pendingApprovalCount > 0 ? 1 : 0)
+    }
+
+    /// 按内容推导 sheet 高度 —— 行数会随待确认/runtime 变化,不能写死 fraction。
+    private var contentHeight: CGFloat {
+        let padding: CGFloat = 18 * 2
+        let header: CGFloat = 24 + 16
+        let context = CGFloat(contextRowCount) * 21 + 12 * 2 + 16
+        let actions = CGFloat(actionRowCount) * 48 + CGFloat(max(0, actionRowCount - 1)) * 8 + 16
+        let cta: CGFloat = 44
+        return padding + header + context + actions + cta
+    }
+
     private var spaceLabel: String {
         if projection.shellMode == .domain {
             return KenosDomainRegistry.shelfDomainDefinitions
@@ -97,9 +117,8 @@ struct KorbenAssistPanel: View {
                 }
             }
 
-            Spacer(minLength: 0)
-
-            // ── 真 agent 入口(web Ask 面)──
+            // ── 真 agent 入口(web Ask 面)——紧跟内容,不用 Spacer 顶到底部
+            // (真机 review B2:55% 固定高 + Spacer 把按钮吊在底部,中间一大片空白)。
             Button {
                 dismiss()
                 model.open(urlString: "kenos://assistant")
@@ -115,7 +134,8 @@ struct KorbenAssistPanel: View {
             .accessibilityIdentifier("korben.assist.expand")
         }
         .padding(18)
-        .presentationDetents([.fraction(0.55)])
+        // 内容自适应高度 —— 固定 55% 对当前内容量太空(真机 review B2)。
+        .presentationDetents([.height(contentHeight)])
         .presentationDragIndicator(.visible)
         .presentationBackground(.ultraThinMaterial)
         .accessibilityIdentifier("korben.assistPanel")
