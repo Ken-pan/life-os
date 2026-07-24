@@ -453,8 +453,14 @@
   }
 
   // URL is source of truth for open chat (supports history.back / WK goBack).
+  // Empty sentinel so the first run counts as a navigation (normal initial
+  // reconcile); only later same-URL re-evals skip the destructive 'clear'.
+  let lastReconcileUrl = ''
   $effect(() => {
     if (isApplyingAssistantFromUrl()) return
+    const curUrl = `${page.url.pathname}${page.url.search}`
+    const urlChanged = curUrl !== lastReconcileUrl
+    lastReconcileUrl = curUrl
     const fromUrl = conversationIdFromSearch(page.url.searchParams)
     const action = reconcileUrlToState({
       urlConversationId: fromUrl,
@@ -466,6 +472,15 @@
       ),
     })
     if (action === 'noop') return
+    // 'clear' = URL dropped ?c= → treat as history-back → return home.
+    // Only honor that on a REAL navigation. When this effect re-runs from a
+    // state change (activeId just set by send/select) while the URL sync is
+    // still pending — or was swallowed by the native shell, where goto(?c=)
+    // doesn't stick — the URL is merely stale, not a back-nav. Nuking the
+    // active conversation then bounces send/select straight back to the list
+    // (bug_logs: 发送后弹回列表 / 点对话没反应). Never destroy state on a
+    // non-navigation re-eval.
+    if (action === 'clear' && !urlChanged) return
     beginAssistantUrlApply()
     if (action === 'select' && fromUrl) selectConversation(fromUrl)
     else if (action === 'clear') startNewChat()
