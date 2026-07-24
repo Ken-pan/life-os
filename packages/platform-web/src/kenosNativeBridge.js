@@ -316,10 +316,34 @@ export function nativeNowPlayingClear() {
 }
 
 /**
+ * 构造持久化表面(灵动岛 / widget / 通知)的**具体会话**跳转目标。
+ *
+ * 为什么必须带它:这些表面点击若落到静态 kind 通用链(如 `kenos://training`),
+ * 会经域内 resume 解析到「上一个挂起的会话」——可能是**错误的实例**(用户报
+ * 「点灵动岛去到错误的训练 day」的整类根因)。带上具体 path,点击就直达它
+ * 视觉上代表的那个会话,确定性、不经 resume 猜测。
+ *
+ * @param {{ domain: string, path?: string }} opts
+ * @returns {string} `kenos://<domain>?path=<path>` 或 `kenos://<domain>`(空 domain→'')
+ */
+export function liveActivityDeepLink({ domain, path } = {}) {
+  const d = String(domain || '').trim()
+  if (!d) return ''
+  const p = String(path || '').trim()
+  if (!p) return `kenos://${d}`
+  const norm = p.startsWith('/') ? p : `/${p}`
+  return `kenos://${d}?path=${encodeURIComponent(norm)}`
+}
+
+/**
  * Upsert a Live Activity snapshot.
  * Always safe to call. Refreshes in-shell Live Accessory; when the user has
  * Live Activities enabled, also drives Lock Screen / Dynamic Island via ActivityKit.
  * Returns `{ ok, gated, enabled, status }` — `gated: true` means shell-only.
+ *
+ * `deepLink`:本次会话的具体跳转目标(见 `liveActivityDeepLink`)。**强烈建议**
+ * 所有发布者带上 —— 缺省时原生回退到静态 kind 落地页(可能经 resume 落到错误
+ * 实例)。此前本函数漏转发 deepLink,是灵动岛点击落错会话的直接原因之一。
  *
  * @param {{
  *   kind: 'training'|'focus'|'tidy',
@@ -328,9 +352,11 @@ export function nativeNowPlayingClear() {
  *   progress?: number,
  *   endsAt?: string,
  *   endsAtMs?: number,
+ *   deepLink?: string,
  * }} payload
  */
 export function nativeLiveActivityUpsert(payload = {}) {
+  const deepLink = String(payload.deepLink || '').trim()
   return call('liveActivityUpsert', {
     kind: String(payload.kind || ''),
     title: String(payload.title || ''),
@@ -344,6 +370,8 @@ export function nativeLiveActivityUpsert(payload = {}) {
       payload.endsAtMs == null || Number.isNaN(Number(payload.endsAtMs))
         ? undefined
         : Number(payload.endsAtMs),
+    // 只转发 kenos:// scheme,防注入任意 URL 到点击目标。
+    deepLink: deepLink.startsWith('kenos://') ? deepLink : undefined,
   })
 }
 

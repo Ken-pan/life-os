@@ -48,7 +48,7 @@ struct KenosTrainingWidgetView: View {
                 domainId: "training",
                 title: "Training",
                 subtitle: "Start workout",
-                deepLink: "kenos://training/session",
+                deepLink: "kenos://training?path=/program",
                 accentRGB: 0xC45C4A,
                 systemImage: "figure.strengthtraining.traditional"
             )

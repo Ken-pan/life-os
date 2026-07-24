@@ -25,7 +25,7 @@ struct KenosWidgetStartTrainingIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult {
         let store = KenosAppGroupStore(ownerId: nil)
-        KenosWidgetGlanceBridge.postPendingDeepLink("kenos://training/session", store: store)
+        KenosWidgetGlanceBridge.postPendingDeepLink("kenos://training?path=/program", store: store)
         return .result()
     }
 }

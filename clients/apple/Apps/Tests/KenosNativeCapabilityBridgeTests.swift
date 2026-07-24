@@ -330,7 +330,7 @@ final class KenosNativeCapabilityBridgeTests: XCTestCase {
         #if canImport(ActivityKit)
         XCTAssertEqual(
             KenosDomainActivityAttributes(kind: .training).deepLinkURL.absoluteString,
-            "kenos://training/session"
+            "kenos://training?path=/program"
         )
         XCTAssertEqual(
             KenosDomainActivityAttributes(kind: .focus).deepLinkURL.absoluteString,

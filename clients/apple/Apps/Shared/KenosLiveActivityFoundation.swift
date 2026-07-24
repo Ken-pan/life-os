@@ -162,11 +162,28 @@ enum KenosLiveActivityFoundation {
         return upsertActivityKit(snapshot)
     }
 
+    /// **实例作用域**的 kind(代表某个具体会话/实体,点击落错实例风险高)——
+    /// 这类活动应带具体 `deepLink`。与 `KenosDomainActivityAttributes.isInstanceScoped`
+    /// 同义,在此重列一份以免 widget target 反向依赖 app target。
+    static let instanceScopedKinds: Set<Kind> = [.training]
+
     @discardableResult
     static func upsert(params: [String: Any]) -> (ok: Bool, enabled: Bool, kind: String) {
         guard let snapshot = Snapshot(dict: params) else {
             return (false, isEnabled, "")
         }
+        #if DEBUG
+        // 复发守卫:实例作用域活动缺具体 deepLink → 点击会回退到静态落地页(可能
+        // 经 resume 落到错误实例)。这正是「点灵动岛去到错误的训练 day」那类 bug。
+        // DEBUG 下记一笔,开发期就能发现新发布者漏带 path,而不是等线上 bug report。
+        if instanceScopedKinds.contains(snapshot.kind), (snapshot.deepLink ?? "").isEmpty {
+            KenosLog.notice(
+                "live activity missing concrete deepLink — tap may resolve to wrong instance",
+                category: .shell,
+                metadata: ["kind": snapshot.kind.rawValue]
+            )
+        }
+        #endif
         let started = upsert(snapshot)
         return (true, isEnabled && started, snapshot.kind.rawValue)
     }

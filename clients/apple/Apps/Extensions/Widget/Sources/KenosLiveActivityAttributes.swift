@@ -57,11 +57,16 @@ public struct KenosDomainActivityAttributes: ActivityAttributes {
         Kind(rawValue: kind)
     }
 
-    /// Tap target → Kenos Continuity deep link.
+    /// 静态**回退**落地页(当 ContentState 未带具体会话深链时用)。
+    ///
+    /// 关键:回退目标必须是**确定性落地页**,不能是会经域内 resume 猜测「上一个
+    /// 挂起会话」的路径 —— 否则缺 deepLink 的旧活动一点就可能落到错误实例
+    /// (training 曾用 `kenos://training/session`,正是这个 resume 陷阱)。
+    /// training 回退到 `/program`(选练日的确定性入口),不是进行中的某个 session。
     public var deepLinkURL: URL {
         switch resolvedKind {
         case .training:
-            return URL(string: "kenos://training/session")!
+            return URL(string: "kenos://training?path=/program")!
         case .focus:
             return URL(string: "kenos://work")!
         case .tidy:
@@ -69,6 +74,12 @@ public struct KenosDomainActivityAttributes: ActivityAttributes {
         case .none:
             return URL(string: "kenos://today")!
         }
+    }
+
+    /// 该 kind 是否**实例作用域**(代表某个具体会话/实体,存在"落到错误实例"风险)。
+    /// 这类活动 upsert 时应带具体 `deepLink`;缺失会被 DEBUG 守卫记一笔。
+    public var isInstanceScoped: Bool {
+        resolvedKind == .training
     }
 
     public var systemImageName: String {

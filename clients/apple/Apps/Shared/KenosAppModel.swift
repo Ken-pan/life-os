@@ -716,12 +716,14 @@ final class KenosAppModel: ObservableObject {
 
         if let snap = KenosLiveActivityFoundation.lastSnapshot {
             switch snap.kind {
+            // glance 优先用 Live Activity 快照里的**具体会话深链**;缺失才回退到
+            // 确定性落地页(training → /program 选练日,不是 resume-prone 的 /session)。
             case .training:
                 upsert(
                     "training",
                     title: snap.title.isEmpty ? "Training" : snap.title,
                     subtitle: snap.subtitle.isEmpty ? "In progress" : snap.subtitle,
-                    deepLink: "kenos://training/session",
+                    deepLink: snap.deepLink ?? "kenos://training?path=/program",
                     progress: snap.progress
                 )
             case .focus:
@@ -729,7 +731,7 @@ final class KenosAppModel: ObservableObject {
                     "work",
                     title: snap.title.isEmpty ? "Deep Work" : snap.title,
                     subtitle: snap.subtitle.isEmpty ? "Focus" : snap.subtitle,
-                    deepLink: "kenos://work",
+                    deepLink: snap.deepLink ?? "kenos://work",
                     progress: snap.progress
                 )
             case .tidy:
@@ -737,7 +739,7 @@ final class KenosAppModel: ObservableObject {
                     "home",
                     title: snap.title.isEmpty ? "Tidy" : snap.title,
                     subtitle: snap.subtitle.isEmpty ? "Organize" : snap.subtitle,
-                    deepLink: "kenos://domain/home?path=/tidy/go",
+                    deepLink: snap.deepLink ?? "kenos://domain/home?path=/tidy/go",
                     progress: snap.progress
                 )
             }

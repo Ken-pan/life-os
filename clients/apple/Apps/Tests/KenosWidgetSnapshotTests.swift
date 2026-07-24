@@ -9,7 +9,7 @@ final class KenosWidgetSnapshotTests: XCTestCase {
         XCTAssertFalse(domains["money"]?.subtitle.contains("$") == true)
         XCTAssertFalse(domains["money"]?.subtitle.contains("¥") == true)
         XCTAssertEqual(domains["health"]?.deepLink, "kenos://domain/health")
-        XCTAssertEqual(domains["training"]?.deepLink, "kenos://training/session")
+        XCTAssertEqual(domains["training"]?.deepLink, "kenos://training?path=/program")
         XCTAssertTrue(domains["home"]?.deepLink.contains("tidy") == true)
         XCTAssertFalse(domains["health"]?.subtitle.lowercased().contains("hrv") == true)
         XCTAssertFalse(domains["health"]?.subtitle.lowercased().contains("bpm") == true)

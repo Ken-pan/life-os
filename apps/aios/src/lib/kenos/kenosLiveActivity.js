@@ -4,6 +4,7 @@
  * refresh in-shell Live Accessory (`gated: true`) — not system Dynamic Island.
  */
 import {
+  liveActivityDeepLink,
   nativeLiveActivityEnd,
   nativeLiveActivityUpsert,
 } from '@life-os/platform-web/kenos-native-bridge'
@@ -39,6 +40,9 @@ export function publishFocusLiveActivity(focus) {
     title,
     subtitle,
     progress: status === 'ending' ? 1 : undefined,
+    // 点击目标带上域落地页(work / training),而非依赖静态 kind 链经 resume
+    // 猜实例。Deep Work 单会话歧义小,给域落地即可;有具体 focus 路由时可扩展。
+    deepLink: liveActivityDeepLink({ domain: kind === 'training' ? 'training' : 'work' }),
   })
 }
 

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import {
+  liveActivityDeepLink,
   isNativeBridgeAvailable,
   getNativeCapabilities,
   nativeHaptic,
@@ -128,5 +129,28 @@ const dispose = installNavManifestPublisher(() => ({
 }))
 assert.equal(typeof dispose, 'function')
 dispose()
+
+
+// —— liveActivityDeepLink 共享 builder(持久表面点击目标契约)——
+assert.equal(
+  liveActivityDeepLink({ domain: 'training', path: '/day/abs/focus' }),
+  'kenos://training?path=' + encodeURIComponent('/day/abs/focus'),
+)
+// path 不以 / 开头也归一化
+assert.equal(
+  liveActivityDeepLink({ domain: 'home', path: 'tidy/go' }),
+  'kenos://home?path=' + encodeURIComponent('/tidy/go'),
+)
+// 无 path → 域落地
+assert.equal(liveActivityDeepLink({ domain: 'work' }), 'kenos://work')
+// 空 domain → 空串(调用方据此省略 deepLink)
+assert.equal(liveActivityDeepLink({}), '')
+assert.equal(liveActivityDeepLink({ domain: '  ' }), '')
+// 解码后即原始 path(原生 URLComponents 会 percent-decode)
+{
+  const link = liveActivityDeepLink({ domain: 'training', path: '/day/abs/focus' })
+  const u = new URL(link.replace('kenos://', 'https://x/'))
+  assert.equal(u.searchParams.get('path'), '/day/abs/focus')
+}
 
 console.log('kenosNativeBridge.test.mjs: ok')

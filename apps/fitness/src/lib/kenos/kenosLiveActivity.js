@@ -4,6 +4,7 @@
  * preview only (`gated: true`), not system Dynamic Island.
  */
 import {
+  liveActivityDeepLink,
   nativeLiveActivityEnd,
   nativeLiveActivityUpsert,
 } from '@life-os/platform-web/kenos-native-bridge'
@@ -48,12 +49,11 @@ export function publishTrainingLiveActivity(opts) {
       Number(timer.remain) > 0
         ? Date.now() + Number(timer.remain) * 1000
         : undefined,
-    // 本次会话的具体深链 —— 灵动岛点击直达**这个** day 的 focus,而不是走
-    // 静态通用链 `kenos://training/session`(会经 resume 解析到上一个挂起的
-    // day,用户报的「点灵动岛去到错误的那个」根因)。无 dayId 时省略,原生
-    // 回退到 kind 静态链。
+    // 本次会话的具体深链(共享 builder)—— 灵动岛点击直达**这个** day 的 focus,
+    // 而不是走静态通用链经 resume 落到上一个挂起的 day(用户报的「点灵动岛去到
+    // 错误的那个」根因)。无 dayId 时省略,原生回退到 kind 静态链。
     deepLink: dayId
-      ? `kenos://training?path=/day/${encodeURIComponent(dayId)}/focus`
+      ? liveActivityDeepLink({ domain: 'training', path: `/day/${dayId}/focus` })
       : undefined,
   }
   const key = JSON.stringify([

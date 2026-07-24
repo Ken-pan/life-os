@@ -3,6 +3,7 @@
  * Owner-gated ActivityKit → in-shell Live Accessory preview until enabled.
  */
 import {
+  liveActivityDeepLink,
   nativeLiveActivityEnd,
   nativeLiveActivityUpsert,
 } from '@life-os/platform-web/kenos-native-bridge'
@@ -22,6 +23,8 @@ export function publishTidyLiveActivity(opts = {}) {
     title: 'Home',
     subtitle,
     progress: total > 0 ? Math.min(1, done / total) : undefined,
+    // 点击直达整理流,而非依赖静态 kind 链。
+    deepLink: liveActivityDeepLink({ domain: 'home', path: '/tidy/go' }),
   })
 }
 
