@@ -43,7 +43,7 @@ function createDemoStore() {
   const project = createWorkProject(store, {
     id: 'a1000000-0000-4000-8000-000000000001',
     ownerId: DEMO_OWNER,
-    title: 'Kenos Phase 3',
+    title: 'Korben Phase 3',
     safeSummary: 'Work loop foundation · local simulation only',
     status: 'active',
     priority: 'high',

@@ -27,12 +27,12 @@ describe('workSpaceAdapter', () => {
     const d = suspendWorkSpace({
       pathname: '/work',
       projectId: 'proj-1',
-      projectTitle: 'Kenos IA',
+      projectTitle: 'Korben IA',
     })
     assert.equal(d.spaceId, 'work')
     assert.equal(d.displayTitle, 'Work')
     assert.equal(d.entityId, 'proj-1')
-    assert.match(d.displaySubtitle, /Kenos IA/)
+    assert.match(d.displaySubtitle, /Korben IA/)
     assert.ok(!/\b(token|password|secret)\b/i.test(JSON.stringify(d)))
   })
 

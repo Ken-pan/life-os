@@ -21,12 +21,12 @@ describe('focusAssistantTools', () => {
     assert.match(formatFocusStatus(state), /没有进行中/)
     const started = applyStartFocus(state, {
       mode: 'deep_work',
-      title: 'Kenos IA',
+      title: 'Korben IA',
     })
     assert.equal(started.ok, true)
     state = started.state
     assert.equal(state.focus?.status, 'active')
-    assert.match(formatFocusStatus(state), /Kenos IA/)
+    assert.match(formatFocusStatus(state), /Korben IA/)
     const ended = applyEndFocus(state, { notes: 'done' })
     assert.equal(ended.ok, true)
     assert.match(ended.message, /已结束/)

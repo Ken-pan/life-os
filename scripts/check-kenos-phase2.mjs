@@ -53,8 +53,11 @@ const requiredRoutes = new Map([
   ['/activity', 'activity'],
 ])
 
-if (manifest.name !== 'Kenos Assistant')
-  fail('AIOS strangler host must present the Kenos Assistant product name')
+// 用户面产品名已统一为 Korben(Kenos 只做内部平台名),manifest 随之更名,
+// 这条守卫却还锁着旧值 —— 它守的是「壳宿主必须自报为那个产品」,而不是
+// 「必须叫 Kenos」,所以跟着改值即可,不必放宽成不检查。
+if (manifest.name !== 'Korben')
+  fail('AIOS strangler host must present the Korben product name')
 if (manifest.production !== false || manifest.experimental !== true) {
   fail(
     'Assistant must remain experimental and non-production during the local beta',

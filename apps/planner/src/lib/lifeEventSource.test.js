@@ -7,7 +7,7 @@ vi.mock('@life-os/theme', () => ({
 
 const t = (key) =>
   ({
-    'task.lifeEventFinance': '来自 Finance',
+    'task.lifeEventFinance': '来自 Money',
     'task.lifeEventFitness': '来自 Fitness',
   })[key] ?? key
 
@@ -21,7 +21,7 @@ describe('getLifeEventSource', () => {
     )
     expect(source).toEqual({
       domain: 'finance',
-      label: '来自 Finance',
+      label: '来自 Money',
       href: 'https://finance.example.test/#/today',
     })
   })

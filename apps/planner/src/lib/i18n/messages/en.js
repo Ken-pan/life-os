@@ -126,7 +126,7 @@ export default {
     mapRootNote:
       '{count} active projects · click a category to drill in, hover for details',
     mapBackHint: 'Click to return to all projects',
-    cat_lifeos: 'Life OS products',
+    cat_lifeos: 'Korben products',
     cat_portfolio: 'Portfolio / Products',
     cat_work: 'Work · Ingram',
     cat_tools: 'Tools / Plugins',
@@ -377,7 +377,7 @@ export default {
     syncDesc:
       'Sign in with your Korben account to back up tasks and sync across devices.',
     cloudSsoHint:
-      'Same Korben account as Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
+      'Same Korben account as Fitness / Money / Music / Home — sign in once on this device and the other sites can pick it up.',
     notSignedIn: 'Not signed in',
     syncAuto: 'Auto-sync after sign-in',
     syncUnavailable: 'Supabase is not configured; cloud sync is unavailable',
@@ -464,7 +464,7 @@ export default {
     kindFocus: 'Focus',
     kindHabit: 'Habit',
     unscheduledLine: 'Today · unscheduled',
-    lifeEventFinance: 'From Finance',
+    lifeEventFinance: 'From Money',
     lifeEventFitness: 'From Fitness',
     unscheduledOnly: 'Unscheduled',
     overdueDue: 'Overdue · due {date}',
@@ -532,7 +532,7 @@ export default {
     errNetwork: 'Network error — check your connection',
     errGeneric: 'Something went wrong',
     footnote:
-      'Same Korben account as Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
+      'Same Korben account as Fitness / Money / Music / Home — sign in once on this device and the other sites can pick it up.',
   },
   sync: {
     now: 'Sync now',

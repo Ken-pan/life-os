@@ -140,8 +140,8 @@ export const LIFE_OS_SITE_META = {
     name: "PORTAL.OS",
     shortName: "PORTAL",
     description: {
-      zh: "Korben 统一入口 · 在同一账号下切换 Planner / Finance / Fitness / Music",
-      en: "Korben portal · switch between Planner, Finance, Fitness, and Music",
+      zh: "Korben 统一入口 · 在同一账号下切换 Planner / Money / Fitness / Music",
+      en: "Korben portal · switch between Planner, Money, Fitness, and Music",
     },
     themeColor: {
       light: "#f3f6f8",

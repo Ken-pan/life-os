@@ -245,7 +245,7 @@ export default {
     notSignedIn: '未登录',
     signInDesc: '登录后可将训练数据备份到云端，防止清缓存或换手机后丢失。',
     cloudSsoHint:
-      '与 Planner / Finance / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
+      '与 Planner / Money / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
     signInLink: '登录 / 注册',
     programTemplate: '训练计划模板',
     programPick: '切换计划',
@@ -491,7 +491,7 @@ export default {
     noAccount: '还没有账号？',
     hasAccount: '已有账号？',
     footnote:
-      '与 Planner / Finance / Music / Home 等共用同一 Korben 账号。登录后可将训练记录备份到云端，换设备也能恢复；数据仅你本人可见。',
+      '与 Planner / Money / Music / Home 等共用同一 Korben 账号。登录后可将训练记录备份到云端，换设备也能恢复；数据仅你本人可见。',
     signUpSuccess: '注册成功，已登录',
     signInSuccess: '登录成功',
     syncSwitchedLoaded: '已切换账号，并载入该账号的云端数据',

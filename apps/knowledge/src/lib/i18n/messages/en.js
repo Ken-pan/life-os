@@ -164,7 +164,7 @@ export default {
     title: 'Cloud linkage',
     desc: 'Sign in with the unified Korben account and the Projects view reads Planner projects & tasks directly (read-only, RLS scoped to you).',
     ssoHint:
-      'Same Korben account as Planner / Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
+      'Same Korben account as Planner / Fitness / Money / Music / Home — sign in once on this device and the other sites can pick it up.',
     email: 'Email',
     password: 'Password',
     signIn: 'Sign in',

@@ -44,7 +44,7 @@
       suspendWorkSpace({
         pathname: '/spaces/work',
         focusActive: true,
-        projectTitle: 'Kenos IA',
+        projectTitle: 'Korben IA',
         projectId: 'a1000000-0000-4000-8000-000000000001',
       }),
     )
@@ -61,7 +61,7 @@
       void goto('/focus')
       return
     }
-    startDeepWork({ title: 'Kenos IA', projectId: 'a1000000-0000-4000-8000-000000000001' })
+    startDeepWork({ title: 'Korben IA', projectId: 'a1000000-0000-4000-8000-000000000001' })
     void goto('/focus')
   }
 
@@ -100,7 +100,7 @@
     <p class="intro">进入当前项目的专注模式。只保留与这次工作相关的上下文。</p>
 
     <section class="project">
-      <h2>Kenos IA</h2>
+      <h2>Korben IA</h2>
       <p>导航信息架构与 Focus 上下文</p>
       <ul>
         <li>下一步：Focus contracts</li>

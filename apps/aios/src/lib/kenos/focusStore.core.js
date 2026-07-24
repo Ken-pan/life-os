@@ -137,7 +137,7 @@ export function startDeepWorkFocus(state, options = {}) {
   const result = startFocusSession(state.focus && isForegroundFocus(state.focus) ? state.focus : null, {
     ownerId: state.ownerId,
     mode: 'deep_work',
-    title: options.title || 'Kenos IA',
+    title: options.title || 'Korben IA',
     safeSummary: options.safeSummary || 'Local Deep Work Focus simulation',
     activeSessionRef: sessionRef,
     classification: 'work_confidential',

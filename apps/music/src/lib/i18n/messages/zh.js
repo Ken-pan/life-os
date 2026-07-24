@@ -382,7 +382,7 @@ export default {
     confirmHint: '确认后即可登录并同步歌单元数据。',
     backSignIn: '返回登录',
     footnote:
-      '与 Planner / Fitness / Finance / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
+      '与 Planner / Fitness / Money / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
     errInvalidCredentials: '邮箱或密码不正确',
     errEmailNotConfirmed: '请先验证邮箱',
     errAlreadyRegistered: '该邮箱已注册',

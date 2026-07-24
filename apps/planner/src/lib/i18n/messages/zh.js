@@ -125,7 +125,7 @@ export default {
     mapTitle: '项目鸟瞰',
     mapRootNote: '{count} 个进行中项目 · 点分类逐层钻进去,悬浮看说明',
     mapBackHint: '点这里返回全部项目',
-    cat_lifeos: 'Life OS 产品',
+    cat_lifeos: 'Korben 产品',
     cat_portfolio: '作品集 / 产品',
     cat_work: '工作 · Ingram',
     cat_tools: '工具 / 插件',
@@ -366,7 +366,7 @@ export default {
     sync: '云同步',
     syncDesc: '登录 Korben 账号后可把任务备份到云端，并在多设备间同步。',
     cloudSsoHint:
-      '与 Fitness / Finance / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
+      '与 Fitness / Money / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
     notSignedIn: '未登录',
     syncAuto: '登录后自动同步',
     syncUnavailable: '未配置 Supabase，云同步不可用',
@@ -451,7 +451,7 @@ export default {
     kindFocus: '关键',
     kindHabit: '习惯',
     unscheduledLine: '今天 · 未排程',
-    lifeEventFinance: '来自 Finance',
+    lifeEventFinance: '来自 Money',
     lifeEventFitness: '来自 Fitness',
     unscheduledOnly: '未排程',
     overdueDue: '已逾期 · 截止 {date}',
@@ -518,7 +518,7 @@ export default {
     errNetwork: '网络错误，请检查连接',
     errGeneric: '操作失败，请重试',
     footnote:
-      '与 Fitness / Finance / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
+      '与 Fitness / Money / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
   },
   sync: {
     now: '立即同步',

@@ -53,7 +53,7 @@ const GALLERY_DIR = join(REPO_ROOT, 'apps/uiux-review-gallery/public')
 const ACCENT = LIFE_OS_APP_WORDMARK_ACCENT.aios ?? { light: '#5c7cfa', dark: '#8aa3ff' }
 
 /**
- * 原生画廊条目 —— 像 Web 端一样「一个条目 = 一张卡」：Kenos 壳一张，
+ * 原生画廊条目 —— 像 Web 端一样「一个条目 = 一张卡」：Korben 壳一张，
  * 每个可达 Domain（Daily Beta 伴侣）各一张。screens 的 link 为深链，
  * settle 为截图前静置毫秒；leave 在条目截完后发送（退出 Domain 复位）。
  *
@@ -67,12 +67,12 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
   return [
     {
       id: `kenos-${V}`,
-      name: `Kenos ${L}`,
+      name: `Korben ${L}`,
       accentId: 'aios',
       description:
         platform === 'ios'
-          ? 'Kenos 原生 iOS 壳（模拟器实截）：Dock · Shelf · 今日/问答/收件箱 + Korben 壳 V2 预览'
-          : 'Kenos Mac Command Center（真实窗口截图）：侧栏 + 详情 · Spaces · Capture',
+          ? 'Korben 原生 iOS 壳（模拟器实截）：Dock · Shelf · 今日/问答/收件箱 + Korben 壳 V2 预览'
+          : 'Korben Mac Command Center（真实窗口截图）：侧栏 + 详情 · Spaces · Capture',
       screens: [
         { link: 'kenos://today', title: '今日', path: 'kenos://today', settle: 5000 },
         { link: 'kenos://assistant', title: '问答', path: 'kenos://assistant', settle: shellSettle },
@@ -106,7 +106,7 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       id: `plan-${V}`,
       name: `计划 · ${L}`,
       accentId: 'planner',
-      description: `Planner 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：任务 · 日历`,
+      description: `Planner 在 Korben ${L} Domain 模式（Daily Beta 伴侣实截）：任务 · 日历`,
       screens: [
         { link: 'kenos://domain/plan?path=%2F%3Fdemo%3D1', title: '任务', path: 'kenos://domain/plan', settle: 7000 },
         { link: 'kenos://domain/plan?path=/calendar', title: '日历', path: 'kenos://domain/plan?path=/calendar', settle: 4000 },
@@ -117,7 +117,7 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       id: `training-${V}`,
       name: `训练 · ${L}`,
       accentId: 'fitness',
-      description: `Fitness 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：今日训练 · 计划 · 资源库`,
+      description: `Fitness 在 Korben ${L} Domain 模式（Daily Beta 伴侣实截）：今日训练 · 计划 · 资源库`,
       screens: [
         { link: 'kenos://domain/training', title: '今日训练', path: 'kenos://domain/training', settle: 7000 },
         { link: 'kenos://domain/training?path=/program', title: '训练计划', path: 'kenos://domain/training?path=/program', settle: 4000 },
@@ -129,7 +129,7 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       id: `music-${V}`,
       name: `音乐 · ${L}`,
       accentId: 'music',
-      description: `Music 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：播放 · 音乐库`,
+      description: `Music 在 Korben ${L} Domain 模式（Daily Beta 伴侣实截）：播放 · 音乐库`,
       screens: [
         { link: 'kenos://domain/music?path=%2F%3Fdemo%3D1', title: '播放', path: 'kenos://domain/music', settle: 7000 },
         { link: 'kenos://domain/music?path=/library', title: '音乐库', path: 'kenos://domain/music?path=/library', settle: 4000 },
@@ -140,7 +140,7 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       id: `money-${V}`,
       name: `财务 · ${L}`,
       accentId: 'finance',
-      description: `Finance 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：今日财务 · 账户`,
+      description: `Money 在 Korben ${L} Domain 模式（Daily Beta 伴侣实截）：今日财务 · 账户`,
       screens: [
         { link: 'kenos://domain/money?path=%2Fhome%2Ftoday%3Fdemo%3D1', title: '今日财务', path: 'kenos://domain/money', settle: 8000 },
       ],
@@ -150,7 +150,7 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       id: `home-${V}`,
       name: `家 · ${L}`,
       accentId: 'home',
-      description: `Home 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：户型 · 储物`,
+      description: `Home 在 Korben ${L} Domain 模式（Daily Beta 伴侣实截）：户型 · 储物`,
       screens: [
         { link: 'kenos://domain/home', title: '户型规划', path: 'kenos://domain/home', settle: 7000 },
         { link: 'kenos://domain/home?path=/storage', title: '储物', path: 'kenos://domain/home?path=/storage', settle: 4000 },
@@ -161,7 +161,7 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       id: `library-${V}`,
       name: `知识库 · ${L}`,
       accentId: 'knowledge',
-      description: `Knowledge 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：书库 · 项目`,
+      description: `Knowledge 在 Korben ${L} Domain 模式（Daily Beta 伴侣实截）：书库 · 项目`,
       screens: [
         { link: 'kenos://domain/library?path=%2Flibrary%3Fdemo%3D1', title: '书库', path: 'kenos://domain/library', settle: 7000 },
         { link: 'kenos://domain/library?path=/projects', title: '项目现状', path: 'kenos://domain/library?path=/projects', settle: 4000 },
@@ -172,7 +172,7 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       id: `code-${V}`,
       name: `Code · ${L}`,
       accentId: 'aios',
-      description: `Code 在 Kenos ${L} Domain 模式（AIOS 壳路由实截）：Cursor 对话`,
+      description: `Code 在 Korben ${L} Domain 模式（AIOS 壳路由实截）：Cursor 对话`,
       screens: [
         { link: 'kenos://domain/code', title: 'Cursor 对话', path: 'kenos://domain/code', settle: 6000 },
       ],
@@ -182,7 +182,7 @@ function nativeEntries(/** @type {'ios'|'mac'} */ platform) {
       id: `health-${V}`,
       name: `健康 · ${L}`,
       accentId: 'health',
-      description: `Health 在 Kenos ${L} Domain 模式（Daily Beta 伴侣实截）：状态 · 趋势`,
+      description: `Health 在 Korben ${L} Domain 模式（Daily Beta 伴侣实截）：状态 · 趋势`,
       screens: [
         { link: 'kenos://domain/health?path=%2F%3Fdemo%3D1', title: '状态', path: 'kenos://domain/health', settle: 7000 },
         { link: 'kenos://domain/health?path=/trends', title: '趋势', path: 'kenos://domain/health?path=/trends', settle: 4000 },

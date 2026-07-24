@@ -30,7 +30,8 @@ const PORTFOLIO_NAMES = new Set([
 export function categoryOf(p) {
   if (p.areaId && CATEGORY_IDS.has(p.areaId)) return p.areaId
   const title = p.title || ''
-  if (/^Life OS|^PaperOS/.test(title)) return 'lifeos'
+  // 展示名已改叫 Korben,但存量项目标题仍写 "Life OS ..." —— 新旧前缀一起认,别让老项目掉出分类。
+  if (/^Korben|^Life OS|^PaperOS/.test(title)) return 'lifeos'
   if (/^Ingram/.test(title)) return 'work'
   if (PORTFOLIO_NAMES.has(title)) return 'portfolio'
   if (/作品集|已发布|上架|Product Hunt|users|求职|平台|社区|视觉|动画/.test(p.summary || '')) {

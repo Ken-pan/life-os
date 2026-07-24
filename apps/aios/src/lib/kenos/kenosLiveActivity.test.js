@@ -9,7 +9,7 @@ describe('kenosLiveActivity (Focus)', () => {
   it('maps deep_work to focus kind and training mode to training', async () => {
     const deep = await publishFocusLiveActivity({
       mode: 'deep_work',
-      title: 'Kenos IA',
+      title: 'Korben IA',
       status: 'active',
       safeSummary: 'Deep Work',
     })

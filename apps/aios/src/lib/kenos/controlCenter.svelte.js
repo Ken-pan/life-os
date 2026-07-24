@@ -133,7 +133,7 @@ const DEMO_ACTIVITY = Object.freeze([
     id: 'activity-demo-1',
     status: 'succeeded',
     actionType: 'plan.create_task',
-    summary: '创建任务「审核 Kenos Phase 1」',
+    summary: '创建任务「审核 Korben Phase 1」',
     result: 'Plan 已接受；Outbox 已记录',
     source: 'Assistant',
     occurredAt: new Date(Date.now() - 44 * 60_000).toISOString(),

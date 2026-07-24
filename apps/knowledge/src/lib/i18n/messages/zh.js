@@ -160,7 +160,7 @@ export default {
     title: '云端联动',
     desc: '登录 Korben 统一账号后，项目视图可直读 Planner 的项目与任务（只读，RLS 只放行本人数据）。',
     ssoHint:
-      '与 Planner / Fitness / Finance / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
+      '与 Planner / Fitness / Money / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
     email: '邮箱',
     password: '密码',
     signIn: '登录',
