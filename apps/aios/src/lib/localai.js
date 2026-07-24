@@ -647,6 +647,120 @@ function isNearSilentBuffer(buf) {
 }
 
 /** 逐句合成时,把整句流式 PCM 累积成一个 AudioBuffer(顺序播,句界清晰、便于跟读高亮) */
+/* ── 句级 TTS 音频缓存(手机本地内存 + CacheStorage)──
+ * 出声慢的两大来源:模型被 llama-swap 换出后的冷载、以及首句合成本身。
+ * 缓存直接消掉「重复句」(开场白/常用短句)的全部网络+合成时间;配合流式期间
+ * 的首句预热(见 prewarmSpeechAudio),等 LLM 说完时首句音频往往已经就绪。 */
+const speechMemCache = new Map() // key -> ArrayBuffer(wav bytes)
+const SPEECH_MEM_MAX = 24
+const SPEECH_CACHE_NAME = 'kenos-tts-v1'
+
+/** djb2 → hex(缓存键用,非安全场景) */
+function ttsHash(str) {
+  let h = 5381
+  const s = String(str || '')
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0
+  return (h >>> 0).toString(36)
+}
+
+/** 与 synth() 的语种推断保持同一逻辑,键才对得上 */
+function effectiveLangCode(text, langCode) {
+  if (langCode) return langCode
+  if (/[一-鿿]/.test(text)) return 'z'
+  if (/[A-Za-z]/.test(text)) return 'a'
+  return ''
+}
+
+/** 缓存键(导出供单测锁定稳定性) */
+export function speechCacheKey({ text, voice, instruct, langCode } = {}) {
+  const t = String(text || '')
+  return `v1|${voice || DEFAULT_TTS_VOICE}|${effectiveLangCode(t, langCode)}|${ttsHash(instruct || '')}|${ttsHash(t)}|${t.length}`
+}
+
+function speechCacheRequest(key) {
+  return new Request(`https://kenos-tts.cache.local/${encodeURIComponent(key)}`)
+}
+
+/** @returns {Promise<ArrayBuffer|null>} */
+async function speechCacheGet(key) {
+  const mem = speechMemCache.get(key)
+  if (mem) return mem
+  try {
+    // CacheStorage 需要安全上下文(https);Daily Beta http origin 自动降级为纯内存
+    const cache = await caches.open(SPEECH_CACHE_NAME)
+    const hit = await cache.match(speechCacheRequest(key))
+    if (!hit) return null
+    const bytes = await hit.arrayBuffer()
+    speechMemCache.set(key, bytes)
+    return bytes
+  } catch {
+    return null
+  }
+}
+
+function speechCachePut(key, bytes) {
+  if (!bytes || bytes.byteLength < 1600) return
+  speechMemCache.set(key, bytes)
+  while (speechMemCache.size > SPEECH_MEM_MAX) {
+    const oldest = speechMemCache.keys().next().value
+    speechMemCache.delete(oldest)
+  }
+  try {
+    void caches
+      .open(SPEECH_CACHE_NAME)
+      .then((c) =>
+        c.put(
+          speechCacheRequest(key),
+          new Response(bytes.slice(0), {
+            headers: { 'Content-Type': 'audio/wav' },
+          }),
+        ),
+      )
+  } catch {
+    /* 非安全上下文/隐私模式:仅内存 */
+  }
+}
+
+/** 预热去重:全局最多一条在飞,绝不轰炸网关(网关被并发合成打挂过) */
+let prewarmInflight = null
+
+/**
+ * 预热一句话的 TTS:流式回答期间先把**首句**合成好放进缓存,LLM 说完时
+ * createSpeechSession 的 synth(0) 直接命中 → 几乎立即出声。
+ * 同时天然完成 speech-tts 模型的按需加载(llama-swap 冷载也发生在等待期)。
+ * @param {string} text
+ * @param {{ voice?: string, instruct?: string, langCode?: string }} [opts]
+ */
+export async function prewarmSpeechAudio(text, opts = {}) {
+  const t = String(text || '').trim()
+  if (!browser || !t) return false
+  const voice = opts.voice || DEFAULT_TTS_VOICE
+  const key = speechCacheKey({ text: t, voice, instruct: opts.instruct, langCode: opts.langCode })
+  if (speechMemCache.has(key)) return true
+  if (prewarmInflight) return false
+  prewarmInflight = (async () => {
+    try {
+      if (await speechCacheGet(key)) return true
+      const body = { ...ttsRequestBody(t, voice, opts.instruct), stream: false }
+      const lang = effectiveLangCode(t, opts.langCode)
+      if (lang) body.lang_code = lang
+      const res = await fetch(`${GATEWAY}/v1/audio/speech`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) return false
+      speechCachePut(key, await res.arrayBuffer())
+      return true
+    } catch {
+      return false
+    } finally {
+      prewarmInflight = null
+    }
+  })()
+  return prewarmInflight
+}
+
 async function pcmStreamToBuffer(res, ctx) {
   const sr = Number(res.headers.get('x-sample-rate')) || 24000
   const reader = res.body.getReader()
@@ -805,6 +919,22 @@ export function createSpeechSession(text, opts = {}) {
       if (langCode) body.lang_code = langCode
       else if (/[一-鿿]/.test(sentences[i])) body.lang_code = 'z'
       else if (/[A-Za-z]/.test(sentences[i])) body.lang_code = 'a'
+
+      // 缓存直击:预热过的首句 / 重复句(开场白等)零网络零合成,立即可播
+      const cacheKey = speechCacheKey({
+        text: sentences[i],
+        voice,
+        instruct,
+        langCode,
+      })
+      const cachedBytes = await speechCacheGet(cacheKey)
+      if (cachedBytes) {
+        try {
+          return await ctx.decodeAudioData(cachedBytes.slice(0))
+        } catch {
+          /* 缓存损坏则照常走网络 */
+        }
+      }
 
       const fetchOnce = () =>
         fetch(`${GATEWAY}/v1/audio/speech`, {

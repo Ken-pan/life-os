@@ -22,7 +22,12 @@
 
   const ime = createImeGuard()
   import { toolIcon } from '$lib/tools.js'
-  import { createSpeechSession, unlockSpeechAudio } from '$lib/localai.js'
+  import {
+    createSpeechSession,
+    prewarmSpeechAudio,
+    splitSentences,
+    unlockSpeechAudio,
+  } from '$lib/localai.js'
   import { S, save } from '$lib/state.svelte.js'
   import {
     isLeoPersona,
@@ -488,6 +493,30 @@
       requestLeoListen(LEO_VOICE.postTtsDelayMs)
     }
   }
+
+  /* Leo 提速:流式还在跑时就预热**首句**语音 —— 等 LLM 说完,首句音频往往
+     已在本地缓存里,点播/自动朗读近乎立即出声(同时完成 TTS 模型冷载)。
+     与 startSpeak 完全同参(prepareText/instruct/voice/langCode/coalesce),
+     否则缓存键对不上白热。每条消息只热一次;非 Leo 或关自动朗读不热。 */
+  let leoPrewarmedFor = ''
+  $effect(() => {
+    if (!streamingThis) return
+    if (!isLeoPersona(S.settings) || !leoAutoSpeakEnabled(S.settings)) return
+    const raw = parts.answer || ''
+    if (!raw.trim() || leoPrewarmedFor === message.id) return
+    const speech = resolveSpeechPersona(S.settings)
+    const prepared = speech.prepareText(raw, { codeOmitted: t('chat.codeOmitted') })
+    if (!prepared) return
+    const sentences = splitSentences(prepared, { coalesceBreathBeats: true })
+    // 首句要「稳定」才热:句 2 出现说明句 1 已完整,不会热到半截句
+    if (sentences.length < 2) return
+    leoPrewarmedFor = message.id
+    void prewarmSpeechAudio(sentences[0], {
+      voice: speech.voice,
+      instruct: speech.instructFor?.(prepared),
+      langCode: 'a',
+    })
+  })
 
   /* Leo:开场白 / 流式结束 / 本地 aftercare 自动朗读 */
   let leoWasStreaming = false
