@@ -68,9 +68,11 @@ struct KorbenAssistPanel: View {
 
     private var spaceLabel: String {
         if projection.shellMode == .domain {
-            return KenosDomainRegistry.shelfDomainDefinitions
+            let raw = KenosDomainRegistry.shelfDomainDefinitions
                 .first(where: { $0.id == projection.currentSpaceId })?.label
                 ?? projection.currentSpaceId
+            // 不本地化会出现「当前:Plan · 任务」这种半中半英(真机实拍)。
+            return KenosLocalizedTitles.navigation(raw, chinese: prefersChinese)
         }
         return prefersChinese ? "今日" : "Today"
     }
@@ -126,7 +128,8 @@ struct KorbenAssistPanel: View {
                 ForEach(sectionJumps, id: \.index) { section in
                     actionRow(
                         icon: "arrow.turn.up.right",
-                        title: prefersChinese ? "去 \(section.title)" : "Go to \(section.title)"
+                        // 中文动词与宾语之间不加空格(「去 日历」读着像两个词)。
+                        title: prefersChinese ? "去\(section.title)" : "Go to \(section.title)"
                     ) {
                         dismiss()
                         model.selectDomainDockSlot(section.index)

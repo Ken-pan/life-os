@@ -48,10 +48,10 @@ enum KorbenStripFixture {
         case .attention:
             return (2, nil, 0)
         case .runtime:
-            return (0, "Training · 上肢", 1)
+            return (0, "训练 · 上肢", 1)
         case .both:
             // 规范优先级的关键验证点:Attention 必须排在 Runtime 前面。
-            return (2, "Training · 上肢", 3)
+            return (2, "训练 · 上肢", 3)
         }
     }
 }

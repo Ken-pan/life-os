@@ -22,7 +22,10 @@ struct KorbenQuickCaptureSheet: View {
     /// fraction detent 不会为键盘让位,0.44 的 sheet 被压到只剩一条边(真机 Gate4-5
     /// 实测),输入区不可用。既然「打开即可打字」是这层的定义,就按**键盘态**定尺寸:
     /// 0.72 在键盘之上仍留 ~290pt,足够「标题+Scope+输入框+识别行+操作」完整可见。
-    static let captureDetent = PresentationDetent.fraction(0.72)
+    /// 0.72 是为键盘让位定的,但内容只占其中约一半 —— 真机实拍在输入区与
+    /// 键盘之间空出 ~160pt 的洞。按「键盘高 + 实际内容高」回算到 0.60,
+    /// 仍留约 25pt 缓冲吸收各机型键盘高度差。
+    static let captureDetent = PresentationDetent.fraction(0.60)
     static let canvasDetent = PresentationDetent.fraction(0.95)
 
     private var prefersChinese: Bool {
@@ -45,21 +48,29 @@ struct KorbenQuickCaptureSheet: View {
     private var scopeLabel: String {
         let projection = KorbenShellProjection.make(from: model)
         if projection.shellMode == .domain {
-            return KenosDomainRegistry.shelfDomainDefinitions
+            let raw = KenosDomainRegistry.shelfDomainDefinitions
                 .first(where: { $0.id == projection.currentSpaceId })?.label
                 ?? projection.currentSpaceId
+            return KenosLocalizedTitles.navigation(raw, chinese: prefersChinese)
         }
         return prefersChinese ? "今日" : "Today"
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            // 两档共用同一套 capture UI —— Canvas 档不再是空占位(真机 review B4:
-            // 一句说明撑满 95% 屏高完全不成立),多出的高度**真正用于书写**:
-            // 输入区行数放大,并在底部给出真 agent 入口。
-            captureLayer(expanded: detent == Self.canvasDetent)
+        // 键盘在时可用高度会低于内容总高,VStack 会**挤压**首个元素 ——
+        // 真机实拍里 Canvas 档的标题行就这么被压成了 0 高凭空消失。
+        // 超高就该滚动,不该压扁。
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                // 两档共用同一套 capture UI —— Canvas 档不再是空占位(真机 review B4:
+                // 一句说明撑满 95% 屏高完全不成立),多出的高度**真正用于书写**:
+                // 输入区行数放大,并在底部给出真 agent 入口。
+                captureLayer(expanded: detent == Self.canvasDetent)
+            }
+            .padding(18)
         }
-        .padding(18)
+        .scrollBounceBehavior(.basedOnSize)
+        .scrollDismissesKeyboard(.never)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .presentationDetents(
             [Self.captureDetent, Self.canvasDetent],
@@ -91,7 +102,10 @@ struct KorbenQuickCaptureSheet: View {
                 axis: .vertical
             )
             .focused($textFocused)
-            .lineLimit(expanded ? (10...20) : (3...5))
+            // Canvas 档原为 10...20:书写区独占 44% 屏高,把拆分预览和主按钮
+            // 一起顶到键盘之下(真机实拍连"创建 N 条"都要滚动才看得到)。
+            // 6...12 仍比 Capture 档大一倍,同时给预览留出位置。
+            .lineLimit(expanded ? (6...12) : (3...5))
             .textFieldStyle(.plain)
             .padding(12)
             .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
@@ -111,6 +125,13 @@ struct KorbenQuickCaptureSheet: View {
             .foregroundStyle(.secondary)
             .animation(.easeInOut(duration: 0.15), value: model.captureText.isEmpty)
             .accessibilityIdentifier("korben.quickCapture.recognition")
+
+            // Canvas 档的**能力层**(P1-3):把这段脑内倾倒按行拆成多条各自定向的
+            // 草稿,并在创建**前**就把结果摊开给你核对 —— 这才是 Canvas 与
+            // Quick Capture 的实质区别(此前它只是同一个输入框拉高到 95%)。
+            if expanded, canvasItems.count > 1 {
+                canvasBreakdown
+            }
 
             HStack {
                 Button(prefersChinese ? "取消" : "Cancel") {
@@ -137,13 +158,6 @@ struct KorbenQuickCaptureSheet: View {
                     model.captureText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 )
                 .accessibilityIdentifier("korben.quickCapture.create")
-            }
-
-            // Canvas 档的**能力层**(P1-3):把这段脑内倾倒按行拆成多条各自定向的
-            // 草稿,并在创建**前**就把结果摊开给你核对 —— 这才是 Canvas 与
-            // Quick Capture 的实质区别(此前它只是同一个输入框拉高到 95%)。
-            if expanded, canvasItems.count > 1 {
-                canvasBreakdown
             }
 
             // Canvas 档:多出的高度给书写区之后,底部给真 agent 入口。

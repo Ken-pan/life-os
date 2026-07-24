@@ -10,6 +10,10 @@ struct KorbenSystemStrip: View {
     @ObservedObject var model: KenosAppModel
     @ObservedObject var shellState: KorbenShellState
 
+    /// 右侧留给 web 页头控件的比例上限(实测 Plan/Fitness/Finance 的页头操作
+    /// 区都落在右起 ~38% 内)。
+    static let maxStripWidthFraction: CGFloat = 0.64
+
     private var prefersChinese: Bool {
         KenosShellSettingsStore.current.resolvedLocale() == "zh"
     }
@@ -69,7 +73,15 @@ struct KorbenSystemStrip: View {
             .frame(height: 34)
             .background(.ultraThinMaterial, in: Capsule())
             .overlay(Capsule().strokeBorder(.white.opacity(0.08), lineWidth: 0.5))
+            // Strip 与 web 页头共用屏幕顶部这一行,而 web 页头是 fixed 定位 ——
+            // 给 web 的 topExtraPad 推不动它。三单元满态时 Strip 会一路铺到右侧,
+            // 直接盖掉 web 自己的操作按钮(真机实拍:Plan 的 ≡ 和 + 被吃掉)。
+            // 故**靠左并限宽**,右侧那条始终留给页面自己的控件。
+            // 彻底解法是 web 页头为壳让位,那要改 web 并部署,不在原生侧。
+            .frame(maxWidth: Self.maxStripWidthFraction * UIScreen.main.bounds.width,
+                   alignment: .leading)
             .padding(.horizontal, KorbenShellMetrics.chromeHorizontalInset)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .frame(maxHeight: KorbenShellMetrics.topChromeMaxHeight)
             .transition(.opacity.combined(with: .move(edge: .top)))
             // `.contain` —— 只给容器 identifier 会让 SwiftUI 把子单元合并进容器,
@@ -106,6 +118,8 @@ struct KorbenSystemStrip: View {
         } label: {
             Text(prefersChinese ? "+\(count) 进行中" : "+\(count) running")
                 .font(.system(size: 12, weight: .medium))
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
                 .foregroundStyle(.primary.opacity(0.75))
                 .padding(.horizontal, 12)
                 .frame(maxHeight: .infinity)
@@ -184,13 +198,17 @@ struct KorbenSystemStrip: View {
             HStack(spacing: 5) {
                 Text(prefersChinese ? "\(count) 待确认" : "\(count) pending")
                     .font(.system(size: 12, weight: .medium))
+                    // 限宽后这条会折成「2 待 / 确认」两行并撑破 34pt 胶囊
+                    // (真机实拍)——单行 + 缩字,绝不换行。
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
                 Circle()
                     .fill(Color(red: 0.95, green: 0.72, blue: 0.29))
                     .frame(width: 5, height: 5)
                     .accessibilityHidden(true)
             }
             .foregroundStyle(.primary.opacity(0.88))
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 10)
             .frame(maxHeight: .infinity)
             .contentShape(Rectangle())
         }

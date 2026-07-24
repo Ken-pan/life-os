@@ -100,6 +100,9 @@ struct KorbenShellView: View {
                         KorbenSystemTray(model: model, shellState: shellState)
                         Spacer(minLength: 0)
                     }
+                    // Tray 要落在 **Strip 下方**:它是从 Strip 点开的,盖住锚点会
+                    // 让人失去「从哪来」的线索(真机实拍:一点 Strip,Strip 就没了)。
+                    .padding(.top, KorbenShellMetrics.topChromeMaxHeight + 14)
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }

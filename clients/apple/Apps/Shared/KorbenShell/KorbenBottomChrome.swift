@@ -123,7 +123,10 @@ struct KorbenBottomChrome: View {
         .background(.ultraThinMaterial, in: Capsule())
         // 垫层在材质**之后**声明 = 排在材质之下:材质模糊的是「画布底+内容」的
         // 合成,而不是内容像素本身。降权胶囊用 0.8× 抑制,保持它比 Dock 更轻。
-        .background(Capsule().fill(canvasTint.opacity(glassBackingOpacity * 0.8)))
+        // 0.8× 的降权在实拍里不够:胶囊下方的任务标题仍能一字一字读出来
+        // (Gate4 的收口目标是"透出散射光,不透出字")。降权改由更矮/更淡的
+        // 描边与字重承担,垫层本身与 Dock 同强度。
+        .background(Capsule().fill(canvasTint.opacity(glassBackingOpacity)))
         .overlay(Capsule().strokeBorder(.white.opacity(0.05), lineWidth: 0.5))
         .frame(maxWidth: .infinity)
         .shadow(color: .black.opacity(0.10), radius: 3, y: 1)
@@ -144,7 +147,9 @@ struct KorbenBottomChrome: View {
             VStack(spacing: 2) {
                 Image(systemName: item.systemImage)
                     .font(.system(size: 14, weight: selected ? .medium : .regular))
-                Text(item.title)
+                // 走共享映射:registry 的 title 是英文 SSOT(Tasks/Calendar/Inbox),
+                // 直接渲染会让中文界面的胶囊全是英文(真机实拍)。
+                Text(KenosLocalizedTitles.navigation(item.title, chinese: prefersChinese))
                     .font(.system(size: 10, weight: selected ? .semibold : .regular))
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
@@ -164,7 +169,7 @@ struct KorbenBottomChrome: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(KenosPressStyle(reduceMotion: reduceMotion))
-        .accessibilityLabel(item.title)
+        .accessibilityLabel(KenosLocalizedTitles.navigation(item.title, chinese: prefersChinese))
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
         .accessibilityIdentifier("korben.domainCapsule.\(index)")
     }

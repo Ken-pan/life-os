@@ -36,7 +36,10 @@ enum KorbenCaptureRouter {
     /// 域关键词 → targetHint(保守:一个都不确定就不给)。
     private static let domainHints: [(pattern: String, hint: String)] = [
         ("训练|健身|深蹲|卧推|workout|gym", "training"),
-        ("买|花了|支出|预算|账单|spent|budget|bill", "money"),
+        // 「买」单字太弱:「买跑鞋」是一件待办,不是一笔账,却会被判进财务
+        // (真机实拍)。要求**已发生**的记账语气(买了/花了/付了)或明确的
+        // 财务名词,把未来动作留给通用草稿。
+        ("买了|花了|付了|支出|预算|账单|报销|spent|budget|bill|expense", "money"),
         ("笔记|资料|文档|note|research", "library"),
         ("听|歌|playlist|music", "music"),
     ]
@@ -72,12 +75,14 @@ enum KorbenCaptureRouter {
                 : "Looks like a plan task — saved as draft, confirm in Inbox"
         case .captureDraft:
             if let hint = routing.targetHint {
+                // 中文文案里不留「Capture」这种内部术语(真机实拍:
+                // 「将保存为 Capture 草稿」半中半英)。
                 return chinese
-                    ? "识别到「\(hint)」相关 · 保存为 Capture 草稿"
+                    ? "识别到「\(hint)」相关 · 保存为草稿"
                     : "Related to \(hint) — saved as capture draft"
             }
             return chinese
-                ? "将保存为 Capture 草稿,稍后在收件箱整理"
+                ? "将保存为草稿,稍后在收件箱整理"
                 : "Saves as a capture draft — triage later in Inbox"
         }
     }
