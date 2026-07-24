@@ -438,5 +438,54 @@ Strip 容器只设了 `accessibilityIdentifier` 而未声明 `.accessibilityElem
 → SwiftUI 把三个状态单元**合并进容器**:单元不可单独寻址/聚焦,**VoiceOver 会把整条
 读成一坨**。这个缺陷只有跑 UI 测试才暴露(看截图 strip 显示完全正常)。已修。
 
+## 8k. GATE 5A / 5B 收口(2026-07-23)
+
+```
+P0-1 主题一致性: PASS(端到端实测 Plan 由浅转深,与 Today/Fitness 一致)
+P0-2 双输入层:   PASS(Ask 页隐藏 Intent Dock,同屏单一输入口)
+P0-3 命名统一:   原生 PASS / web PASS(两侧均已落地)
+Gate5B 状态机:   PASS(每态单一输入源 + 单一主动作)
+```
+
+### P0-1 主题 —— 根因不是「注入过晚」
+**壳从不下发主题**:每个 app 在 `<head>` 阻塞脚本里各自解析,用各自默认值
+(`apps/planner` 默认 `light`、`apps/aios` 默认 `dark`),于是同机 Plan 浅 Today 深。
+- 原生半边(`84ce994b`):壳 user script 在 `.atDocumentStart`(早于各 app 的 `<head>`
+  解析器)下发 `window.__KENOS_SHELL_THEME__` / `dataset.kenosShellTheme`,源为
+  `KenosShellSettingsStore.current.theme`。
+- web 半边(`1c3f657d`):10 个 `app.html` 的解析器优先读该值;仍在阻塞脚本内,
+  首帧即生效无闪变;壳外两值不存在 → 沿用各 app 原逻辑,向后兼容。
+
+### P0-2 双输入层 —— 根因也与初判不同
+不是 Quick Capture sheet 叠 Dock,而是 **Ask 页自带 composer**(Scope+输入+发送)时
+Korben Intent Dock 又叠上去。旧的 `hideGlobalDockForAssistantConversation` 依赖 web 上报
+`liveState=conversation`,只在**已开始对话**后为真,Ask 落地页不上报 → 双输入条常驻。
+新增 `projection.surfaceOwnsComposer`(**按路由判定,不依赖 web 上报**)→ `showsIntentDock`。
+Orb 保留(导航,不是输入口)。
+
+### Gate5B 状态机
+- Capture/Canvas 展开时底部 chrome **显式让位**(此前只是碰巧被 0.72 detent 遮住,
+  下滑 detent 或无键盘时会露出第二个入口)。
+- Canvas 的主动作恒为「创建」;转对话降为次要文字入口(此前两个同色蓝胶囊并列,
+  用户分不清谁是主)。
+
+### 连带修复(截图暴露,纯代码审查发现不了)
+- **Orb 锚点跳位**:Dock 隐藏后 HStack 只剩 Orb 会居中 → 显式左对齐钉住。
+- **测试流程飘移**:B2 的 Assist 面板会导航到 Ask 页,导致 B3/B4 一直在测**网页的**
+  输入框而非 Quick Capture(RB-4 因此从未采集成功)。改为重启取干净 Today 态。
+
+### 底部 Glass 抑制(Gate4 P1,`6b7c2fd5`)
+按 Owner 裁决**只在材质侧**收口:chrome 材质下垫页面画布色(模糊「画布底+内容」的
+合成结果而非内容像素)+ Dock 上沿 14pt 渐隐。纯视觉,不进布局计算,
+`bottomObstruction` 的 5 个单测不受影响。
+
+### 仍 OPEN(未做)
+- **P1-1 Space Peek**:Orb Tap 目前打开的是接近全屏的 Space Center,不是「从 Orb 原点
+  生长、82–86% 宽、保留当前页 12–20% 可见」的 Peek。
+- **P1-2 Assist 内容仍通用**:未利用当前页面可见信息(如「账户未连接 → 收件箱不可用」)。
+- **P1-3 Canvas 能力**:仍只是大号 Capture,缺文件/对象/计划/Agent 进度。
+- **P1-5 Plan 标题**:Space 名与其中一个筛选区同名(都叫「今日」)。
+- **System Strip ACTIVE/TRAY/MULTI-RUNTIME**:需造 fixture 才能证明。
+
 ## 9. Device Gate 通过后的 P2 边界(预告,未开工)
 只做 System Strip(Runtime + Attention 投影)+ System Tray:高度 ≤36pt、无状态 0pt、同一条最多 3 单元(`♪ Daily Mix · 1:42 | 专注 · 18:23 | 2 待确认`),不做大型顶部 Runtime 卡。**不碰**:Orb 新手势、Intent 分类、Korben Assist、App Group、Lens、Per-Space WebView Pool。能力支线并行:App Group closure(先于 Live Activity/Widget 扩展)、Music Runtime 审计(先于后台音频 entitlement)。
