@@ -2110,6 +2110,22 @@ struct DailyBetaSettingsView: View {
                 .font(KenosTypography.caption)
             }
 
+            // Leo 模式 —— 把助手从管家(Korben)切成陪伴向角色(Leo)。
+            // 写壳偏好并广播给 web 助手(与主题/语言同一链路)。
+            Section {
+                KenosLeoModeRow(prefersChinese: zh)
+            } header: {
+                Text(L("Assistant", "助手"))
+            } footer: {
+                Text(
+                    L(
+                        "Leo mode gives the assistant a companion persona and a face. Korben is the default butler.",
+                        "Leo 模式让助手换成陪伴向的角色与形象。默认是管家 Korben。"
+                    )
+                )
+                .font(KenosTypography.caption)
+            }
+
             // Korben Shell V2 dogfood 开关 —— 只在开发构建里出现。
             // flag 是 `static let`(冻结在启动那一刻),中途翻转会拆掉当前壳并
             // 重挂 WebView(丢登录/滚动/历史),所以这里只写偏好、下次启动生效。

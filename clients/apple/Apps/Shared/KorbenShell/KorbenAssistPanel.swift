@@ -22,6 +22,20 @@ struct KorbenAssistPanel: View {
         KorbenShellProjection.make(from: model)
     }
 
+    /// 当前助手人设(Korben / Leo)。
+    private var persona: KorbenAssistantPersona {
+        KorbenAssistantPersona.normalize(KenosShellSettingsStore.current.persona)
+    }
+
+    /// Leo 在场表情 —— 由壳信号推断(有 runtime=在想 / 待确认=认真 / 否则温柔)。
+    private var leoExpression: KorbenLeoExpression {
+        KorbenLeoPresence.expression(for: .init(
+            hasActiveRuntime: model.liveAccessory != nil,
+            hasPendingAttention: model.pendingApprovalCount > 0,
+            justActedPositively: false
+        ))
+    }
+
     /// Gate5C-2:面板内容由**当前路由**推导,不再只知道 Space。
     private var context: KorbenAssistContext {
         // **只在域内**推导区名。域外(Today)`domainDockItems` 会退回一组兜底项
@@ -79,12 +93,26 @@ struct KorbenAssistPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 8) {
-                Image(systemName: "sparkle")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(Color(red: 0.357, green: 0.549, blue: 1.0))
-                Text("Korben")
-                    .font(.system(size: 18, weight: .semibold))
+            // 人设感知的头部:Korben(sparkle)/ Leo(头像 + 表情)。点头像/名字
+            // 一键在两个人设间切换 —— 现代陪伴向 App 把"我是谁在陪你"放在最显眼处。
+            HStack(spacing: 10) {
+                KorbenPersonaBadge(
+                    persona: persona,
+                    size: persona.isLeo ? 40 : 30,
+                    leoExpression: leoExpression,
+                    live: persona.isLeo
+                )
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(persona.displayName)
+                        .font(.system(size: 18, weight: .semibold))
+                    if persona.isLeo {
+                        Text(prefersChinese ? "陪伴模式" : "Companion mode")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer(minLength: 0)
+                personaSwitch
             }
 
             // ── 上下文摘要(本地投影事实,非 AI 生成)──
@@ -183,6 +211,47 @@ struct KorbenAssistPanel: View {
         // 声明为容器后子元素才保持独立可寻址。
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("korben.assistPanel")
+    }
+
+    /// 人设切换 —— 紧凑双段胶囊(Korben ⇄ Leo)。切换即写壳偏好并广播给 web,
+    /// 让 web 助手人设跟着变(与主题/语言同一广播链路)。
+    private var personaSwitch: some View {
+        HStack(spacing: 2) {
+            personaSegment(.korben, symbol: "sparkle")
+            personaSegment(.leo, symbol: "heart.fill")
+        }
+        .padding(2)
+        .background(.white.opacity(0.06), in: Capsule())
+        .overlay(Capsule().strokeBorder(.white.opacity(0.08), lineWidth: 0.5))
+        .accessibilityIdentifier("korben.assist.personaSwitch")
+    }
+
+    private func personaSegment(_ target: KorbenAssistantPersona, symbol: String) -> some View {
+        let selected = persona == target
+        return Button {
+            guard persona != target else { return }
+            let snap = KenosShellSettingsStore.update(persona: target.rawValue)
+            KenosNativeCapabilityBridge.broadcastShellSettings(snap)
+        } label: {
+            Image(systemName: symbol)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(
+                    selected
+                        ? AnyShapeStyle(.white)
+                        : AnyShapeStyle(.secondary)
+                )
+                .frame(width: 30, height: 26)
+                .background {
+                    if selected {
+                        Capsule().fill(Color(red: 0.357, green: 0.549, blue: 1.0))
+                    }
+                }
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(target.displayName)
+        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityIdentifier("korben.assist.persona.\(target.rawValue)")
     }
 
     private func contextRow(icon: String, text: String) -> some View {

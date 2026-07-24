@@ -230,6 +230,10 @@ struct KenosWebSurfaceView: UIViewRepresentable {
         KenosShellSettingsStore.current.theme
     }
 
+    private var shellPersonaPreference: String {
+        KenosShellSettingsStore.current.persona
+    }
+
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .default()
@@ -272,6 +276,13 @@ struct KenosWebSurfaceView: UIViewRepresentable {
             window.__KENOS_SHELL_THEME__ = '\(shellThemePreference)';
             try {
               document.documentElement.dataset.kenosShellTheme = '\(shellThemePreference)';
+            } catch (e) {}
+            // 助手人设(Leo 模式)下发 —— 与主题同一注入点(.atDocumentStart,早于
+            // web hydrate)。web 侧 assistant 初始化时读它设 S.settings.assistantPersona,
+            // 让「原生切到 Leo」真正驱动 web 助手人设。壳外不注入则各 app 走自身默认。
+            window.__KENOS_ASSISTANT_PERSONA__ = '\(shellPersonaPreference)';
+            try {
+              document.documentElement.dataset.kenosAssistantPersona = '\(shellPersonaPreference)';
             } catch (e) {}
             try {
               document.documentElement.dataset.iosNativeShell = 'true';

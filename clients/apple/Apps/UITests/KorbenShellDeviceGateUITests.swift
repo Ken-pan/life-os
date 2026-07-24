@@ -388,11 +388,18 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
             )
             attachScreenshot(app, name: "STRIP-3-tray-closed")
         } else {
-            // 只有主 runtime 单元(无 attention/次要):点它应回到运行中的会话,
-            // 不应崩溃或留下悬空 overlay。
+            // 只有主 runtime 单元(无 attention/次要):点它 = 激活运行中的会话。
+            // **激活会导航进那个会话**,而它可能是沉浸式面(如正在进行的训练播放器,
+            // 真机实拍 STRIP-2:绳索夹胸),按设计沉浸态**会隐藏 Korben chrome** ——
+            // 所以这里不能断言「Orb 恰好一个」(那是早先数据恰好有 attention 单元、
+            // 走了 Tray 分支才成立的巧合)。真正的保证是:激活不崩、不留悬空 overlay。
             runtime.tap()
             sleep(3)
-            assertSingleKorbenChrome(app, context: "after-runtime-tap")
+            XCTAssertEqual(app.state, .runningForeground, "激活 runtime 后 app 应仍在前台")
+            XCTAssertFalse(
+                app.descendants(matching: .any)["korben.systemTray"].exists,
+                "激活 runtime 不应留下悬空的 System Tray"
+            )
             attachScreenshot(app, name: "STRIP-2-runtime-activated")
         }
     }

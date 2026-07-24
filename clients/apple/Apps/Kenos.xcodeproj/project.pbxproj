@@ -12,6 +12,7 @@
 		04CD875143463869CE4CE74E /* KenosLogViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBEABC287A21EB6E09C2D057 /* KenosLogViewer.swift */; };
 		04E9C79FD19520B7EBC632B7 /* KenosHealthKitReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F78E60EE66C55BD7A280F7AB /* KenosHealthKitReader.swift */; };
 		05616CA4E41F3C33DB3EA3C2 /* KenosDomainShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7C78949E09970FDA03771B /* KenosDomainShell.swift */; };
+		05C77027220B7C393987EC29 /* KorbenLeoPersona.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49614F9936AA02691DBF0C4A /* KorbenLeoPersona.swift */; };
 		05CC2F7A928FFF1820F65AAE /* KenosActions in Frameworks */ = {isa = PBXBuildFile; productRef = FDBDE0CF8D88356F8F96B9AC /* KenosActions */; };
 		06EDE4D2AFC075058B331CB8 /* KorbenStripFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 175D67A956696484BCA34013 /* KorbenStripFixtureTests.swift */; };
 		08B3B4342BB62BDBB810BA81 /* KenosMacDomainSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148CE672B4EB8215CCC76DC3 /* KenosMacDomainSurface.swift */; };
@@ -56,6 +57,7 @@
 		44F90FA5FF2BCF5490319AB2 /* KenosContracts in Frameworks */ = {isa = PBXBuildFile; productRef = 7D849C01496E233548C4A75D /* KenosContracts */; };
 		465FE7149C58E1259467DA60 /* KenosDomainWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2105A6320CFFF76DE96897F0 /* KenosDomainWidgets.swift */; };
 		467A42A6167E42493DE3A1FA /* KenosCrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CAD2C9113F058043ED56AA /* KenosCrashReporter.swift */; };
+		46C31E83E9E651CF886812AE /* KorbenLeoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9F1D6EBB724153EB160E26 /* KorbenLeoUITests.swift */; };
 		46CE230D49D63E77AA90B632 /* KorbenSpacePeek.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45ACFEBD00523AD1DF14C965 /* KorbenSpacePeek.swift */; };
 		486FF779FDBD655CA9F890F5 /* KenosHealthKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B495F9FF01844DB972476AC4 /* KenosHealthKitTests.swift */; };
 		4990161E4658829FB16459D9 /* KenosOfflineShellPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FB9EFA0C624D38A8B9EAD02 /* KenosOfflineShellPolicyTests.swift */; };
@@ -68,6 +70,7 @@
 		51FFCB32AE07F7020AAC0FC8 /* KenosRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1099739904B12B45B69933 /* KenosRootView.swift */; };
 		521D9D3CB18BA439D9D6BBE1 /* KorbenSystemStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED7D4DB1BD618F37704E7C7 /* KorbenSystemStrip.swift */; };
 		53A6656ECCDF8DE1515AC0DA /* KenosLogViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBEABC287A21EB6E09C2D057 /* KenosLogViewer.swift */; };
+		53D4862CE7C31F304412291E /* KorbenLeoPersonaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFB48CFDE1B93FD7C8E5B09 /* KorbenLeoPersonaTests.swift */; };
 		541CAC162E7FBFDA906F3C1D /* KenosHealthSyncer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6D927931148E055366AB7BF /* KenosHealthSyncer.swift */; };
 		551C926097A3EB48364E29CC /* KenosWidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25CE7CB629E138E476725831 /* KenosWidgetIntents.swift */; };
 		557C53E698668252C8710A1A /* KenosClient in Frameworks */ = {isa = PBXBuildFile; productRef = 5797B330531BE4867846CF72 /* KenosClient */; };
@@ -85,15 +88,19 @@
 		5F3474DC1FFE2A9335614B92 /* KorbenCanvasComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7357BC9DA16DF61A57239F /* KorbenCanvasComposition.swift */; };
 		60FB917F8E8A23EFFF5B3284 /* KorbenStripFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD44563487B802489183D5E0 /* KorbenStripFixture.swift */; };
 		61DF76E246D31231247F380C /* KenosAppleHealthSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915F758E97934E28325394B0 /* KenosAppleHealthSettingsSection.swift */; };
+		63865D5E97B10EC4884724E0 /* KorbenLeoPersona.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49614F9936AA02691DBF0C4A /* KorbenLeoPersona.swift */; };
 		63C5CB4B586D496997A633A0 /* KenosDiagnosticsLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D727D487B94FD2AE68BE87 /* KenosDiagnosticsLifecycle.swift */; };
 		64759DF2958AB1E212295402 /* KenosNotifications in Frameworks */ = {isa = PBXBuildFile; productRef = C2A29248101B64640EF744DF /* KenosNotifications */; };
 		651F7D37F82A64C88B665C2F /* KorbenOrbGesture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ACCEE4613B6457CFE00554F /* KorbenOrbGesture.swift */; };
 		65AC75A9CD37495E8553DFCB /* KorbenAssistContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA51C76B58846B0797AF57D8 /* KorbenAssistContextTests.swift */; };
 		687FD395E965CC5048A53E3C /* KenosTodayWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B799636D4D76E882AAE2BB4F /* KenosTodayWidget.swift */; };
 		68AE53C36B23619CBD606977 /* KorbenGate5CDUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F635CDFAF82A01E8837CDC25 /* KorbenGate5CDUITests.swift */; };
+		69D8FD93FBEAC029E3BDD400 /* KorbenLeoPersonaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFB48CFDE1B93FD7C8E5B09 /* KorbenLeoPersonaTests.swift */; };
+		6D4F62163AC2171FCA33A2CE /* KorbenLeoAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E713182DD346B3F09D70E573 /* KorbenLeoAvatar.swift */; };
 		6DF508E274C225EFED011B56 /* KorbenBottomChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6C9772F70DE5464065B2BD2 /* KorbenBottomChrome.swift */; };
 		6EC1BFC3FA7BC2B688177EDA /* KenosDesign in Frameworks */ = {isa = PBXBuildFile; productRef = B9ACC1FC6516430BD38C0A70 /* KenosDesign */; };
 		70C8AB82746FE1C88A0AF362 /* KenosSpaceShelfChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2C4D932D05497F6528ECF58 /* KenosSpaceShelfChrome.swift */; };
+		719A599B7CBA434F5C31DB14 /* KorbenLeoAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E713182DD346B3F09D70E573 /* KorbenLeoAvatar.swift */; };
 		71DD05507AB5BA262FF252A8 /* KenosHealthDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 622035903BB67B93EE54A831 /* KenosHealthDay.swift */; };
 		734156DA3DD30F65B092C5D7 /* KenosLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2892F8BA4E9954E6D6884C /* KenosLiveActivityWidget.swift */; };
 		7354860EAB53BB3534222248 /* KenosShellUnlockGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D50B93334AB70D06F9D65241 /* KenosShellUnlockGate.swift */; };
@@ -330,6 +337,7 @@
 		296F47B17BD383FE7DEF1BA4 /* KenosLogCloudSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosLogCloudSync.swift; sourceTree = "<group>"; };
 		29BF8A7A8B5D43060284BE8A /* KenosDomainRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosDomainRegistry.swift; sourceTree = "<group>"; };
 		2ACCEE4613B6457CFE00554F /* KorbenOrbGesture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KorbenOrbGesture.swift; sourceTree = "<group>"; };
+		2BFB48CFDE1B93FD7C8E5B09 /* KorbenLeoPersonaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KorbenLeoPersonaTests.swift; sourceTree = "<group>"; };
 		2D44AC292BD04B8217BBE22C /* KenosIOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KenosIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2E49368CC7144413C665B257 /* KorbenExperienceAuditUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KorbenExperienceAuditUITests.swift; sourceTree = "<group>"; };
 		2F7C78949E09970FDA03771B /* KenosDomainShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosDomainShell.swift; sourceTree = "<group>"; };
@@ -345,6 +353,7 @@
 		4542F792082740DACB562E52 /* KorbenStripModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KorbenStripModel.swift; sourceTree = "<group>"; };
 		45ACFEBD00523AD1DF14C965 /* KorbenSpacePeek.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KorbenSpacePeek.swift; sourceTree = "<group>"; };
 		45D91382462E733CBBA7EAAD /* KenosDesign */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KenosDesign; path = ../Packages/KenosDesign; sourceTree = SOURCE_ROOT; };
+		49614F9936AA02691DBF0C4A /* KorbenLeoPersona.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KorbenLeoPersona.swift; sourceTree = "<group>"; };
 		4D1099739904B12B45B69933 /* KenosRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosRootView.swift; sourceTree = "<group>"; };
 		50FC9B550D021F3AE74E4F87 /* KenosMetricKitSubscriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosMetricKitSubscriber.swift; sourceTree = "<group>"; };
 		5506F84240D330BC27AAF36D /* KenosPerfStateReporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosPerfStateReporterTests.swift; sourceTree = "<group>"; };
@@ -362,6 +371,7 @@
 		6858F9431CF8D45E68F4626A /* KenosPushTokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosPushTokenStore.swift; sourceTree = "<group>"; };
 		68853DDFC293E73029EC2CFC /* KenosOriginResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosOriginResolver.swift; sourceTree = "<group>"; };
 		69D455E167842282BAD214D7 /* KenosWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KenosWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B9F1D6EBB724153EB160E26 /* KorbenLeoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KorbenLeoUITests.swift; sourceTree = "<group>"; };
 		6C2D8C6E2880D9A8DBB71156 /* KenosSpacesWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosSpacesWidget.swift; sourceTree = "<group>"; };
 		6E3D456D83E65E986765437B /* KenosBugReportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosBugReportTests.swift; sourceTree = "<group>"; };
 		75FA4F2C9AA4C8831D177C0A /* KenosMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosMacApp.swift; sourceTree = "<group>"; };
@@ -428,6 +438,7 @@
 		E1E4B1B5DE4FBEBA512B45F0 /* KenosLiveActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosLiveActivityAttributes.swift; sourceTree = "<group>"; };
 		E2C4D932D05497F6528ECF58 /* KenosSpaceShelfChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosSpaceShelfChrome.swift; sourceTree = "<group>"; };
 		E5CB2A95BFFBB76E1A0AA3EF /* KenosLiveActivityFoundation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosLiveActivityFoundation.swift; sourceTree = "<group>"; };
+		E713182DD346B3F09D70E573 /* KorbenLeoAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KorbenLeoAvatar.swift; sourceTree = "<group>"; };
 		E9915F52F16A9CC950813BBA /* KenosHandoff */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KenosHandoff; path = ../Packages/KenosHandoff; sourceTree = SOURCE_ROOT; };
 		EB9D1F1BB62D7F3AD52184CC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F02887AE566C8854A2C04642 /* KenosWebWarmupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosWebWarmupTests.swift; sourceTree = "<group>"; };
@@ -617,6 +628,7 @@
 				BA51C76B58846B0797AF57D8 /* KorbenAssistContextTests.swift */,
 				135693404B2E5D50731E78CA /* KorbenCanvasCompositionTests.swift */,
 				7B1EE765D2C47B30E66B7E65 /* KorbenCaptureRouterTests.swift */,
+				2BFB48CFDE1B93FD7C8E5B09 /* KorbenLeoPersonaTests.swift */,
 				CC8E67BCCE243609397527E4 /* KorbenOrbGestureResolverTests.swift */,
 				B78DFFC4662370A03ED2759E /* KorbenShellMetricsTests.swift */,
 				945B0038955DA557A035CA61 /* KorbenShellV2FeatureTests.swift */,
@@ -790,6 +802,8 @@
 				C6C9772F70DE5464065B2BD2 /* KorbenBottomChrome.swift */,
 				FA7357BC9DA16DF61A57239F /* KorbenCanvasComposition.swift */,
 				DBF9693E65DC9A37BE7FE9C1 /* KorbenCaptureRouter.swift */,
+				E713182DD346B3F09D70E573 /* KorbenLeoAvatar.swift */,
+				49614F9936AA02691DBF0C4A /* KorbenLeoPersona.swift */,
 				2ACCEE4613B6457CFE00554F /* KorbenOrbGesture.swift */,
 				AC2570DE872D125BC85BF602 /* KorbenQuickCapture.swift */,
 				C323E44ED1CEF1D7FC8CAF53 /* KorbenShellProjection.swift */,
@@ -811,6 +825,7 @@
 			children = (
 				2E49368CC7144413C665B257 /* KorbenExperienceAuditUITests.swift */,
 				F635CDFAF82A01E8837CDC25 /* KorbenGate5CDUITests.swift */,
+				6B9F1D6EBB724153EB160E26 /* KorbenLeoUITests.swift */,
 				9FBDAF209B46420F1B933394 /* KorbenOriginSmokeUITests.swift */,
 				28776B9C96103EE1F5431C90 /* KorbenShellDeviceGateUITests.swift */,
 			);
@@ -1204,6 +1219,8 @@
 				5A12F4497CD2F0946E9B5E55 /* KorbenBottomChrome.swift in Sources */,
 				F104C583A0977B0DCA20EF6A /* KorbenCanvasComposition.swift in Sources */,
 				743E6D9806AB01A0756E41CB /* KorbenCaptureRouter.swift in Sources */,
+				719A599B7CBA434F5C31DB14 /* KorbenLeoAvatar.swift in Sources */,
+				63865D5E97B10EC4884724E0 /* KorbenLeoPersona.swift in Sources */,
 				B3973A9DD2F5A0F52538E8A8 /* KorbenOrbGesture.swift in Sources */,
 				F5D0BA0F944D45F0B9B91D9D /* KorbenQuickCapture.swift in Sources */,
 				309581799C1252648DBEF50F /* KorbenShellProjection.swift in Sources */,
@@ -1247,6 +1264,7 @@
 				F3904598BB7B3FC39103A12B /* KorbenAssistContextTests.swift in Sources */,
 				EC507FB4A970D4D5A6FE5D76 /* KorbenCanvasCompositionTests.swift in Sources */,
 				9A3E3363AF72FB1DB7C4FEEB /* KorbenCaptureRouterTests.swift in Sources */,
+				69D8FD93FBEAC029E3BDD400 /* KorbenLeoPersonaTests.swift in Sources */,
 				0BC17FD7734DD9DB6CD081BC /* KorbenOrbGestureResolverTests.swift in Sources */,
 				F198863FF17799318DB28034 /* KorbenShellMetricsTests.swift in Sources */,
 				AD90E518AB931EF310F40C91 /* KorbenShellV2FeatureTests.swift in Sources */,
@@ -1270,6 +1288,7 @@
 			files = (
 				F3F6399E4D9E4230CFB0A3AC /* KorbenExperienceAuditUITests.swift in Sources */,
 				68AE53C36B23619CBD606977 /* KorbenGate5CDUITests.swift in Sources */,
+				46C31E83E9E651CF886812AE /* KorbenLeoUITests.swift in Sources */,
 				F6CDA23CC68D7E5BA95CAAA8 /* KorbenOriginSmokeUITests.swift in Sources */,
 				81E303FE08E8A14F7649839B /* KorbenShellDeviceGateUITests.swift in Sources */,
 			);
@@ -1299,6 +1318,7 @@
 				65AC75A9CD37495E8553DFCB /* KorbenAssistContextTests.swift in Sources */,
 				2A79697733A9C33EF8D62572 /* KorbenCanvasCompositionTests.swift in Sources */,
 				5BD687E31EB2C0AA1250652E /* KorbenCaptureRouterTests.swift in Sources */,
+				53D4862CE7C31F304412291E /* KorbenLeoPersonaTests.swift in Sources */,
 				42578658453D6627C2B8D9F6 /* KorbenOrbGestureResolverTests.swift in Sources */,
 				D2A01AD4F8E95B69161D96E8 /* KorbenShellMetricsTests.swift in Sources */,
 				A252FF8375A83BAC653780B1 /* KorbenShellV2FeatureTests.swift in Sources */,
@@ -1363,6 +1383,8 @@
 				6DF508E274C225EFED011B56 /* KorbenBottomChrome.swift in Sources */,
 				5F3474DC1FFE2A9335614B92 /* KorbenCanvasComposition.swift in Sources */,
 				4D51AB29F6F4E020548EB020 /* KorbenCaptureRouter.swift in Sources */,
+				6D4F62163AC2171FCA33A2CE /* KorbenLeoAvatar.swift in Sources */,
+				05C77027220B7C393987EC29 /* KorbenLeoPersona.swift in Sources */,
 				651F7D37F82A64C88B665C2F /* KorbenOrbGesture.swift in Sources */,
 				BF7DCCB5B66B1A8C2236AD0D /* KorbenQuickCapture.swift in Sources */,
 				9243F905C0C12C8D02AB647F /* KorbenShellProjection.swift in Sources */,
