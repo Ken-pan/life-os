@@ -74,6 +74,15 @@ extension KorbenOrbGestureResolver {
 struct KorbenFanTarget: Identifiable, Equatable {
     let id: String
     let title: String
+    /// 空间图标(SF Symbol)。Fan 圆里放图标而非首字 —— 单字(「训」「计」「音」)
+    /// 在半透明圆里一眼认不出(Owner 真机反馈:Fan 按钮太难辨识)。图标与域 Dock
+    /// / 切换器同源,识别度一致。
+    let systemImage: String
+
+    @MainActor
+    private static func icon(for id: String) -> String {
+        KenosDomainRegistry.definition(for: id)?.systemImage ?? "circle.grid.2x2"
+    }
 
     @MainActor
     static func recents(model: KenosAppModel) -> [KorbenFanTarget] {
@@ -83,12 +92,12 @@ struct KorbenFanTarget: Identifiable, Equatable {
         for id in model.recentSpaceIds where !seen.contains(id) {
             guard let entry = catalog.first(where: { $0.id == id }) else { continue }
             seen.insert(id)
-            out.append(.init(id: entry.id, title: entry.title))
+            out.append(.init(id: entry.id, title: entry.title, systemImage: icon(for: entry.id)))
             if out.count == 4 { break }
         }
         // 冷启动无 recent:给目录前 4 个,Fan 永远可用。
         if out.isEmpty {
-            out = catalog.prefix(4).map { .init(id: $0.id, title: $0.title) }
+            out = catalog.prefix(4).map { .init(id: $0.id, title: $0.title, systemImage: icon(for: $0.id)) }
         }
         return out
     }
@@ -111,20 +120,26 @@ struct KorbenOrbFanOverlay: View {
                 let highlighted = shellState.orbFanHighlight == i
                 VStack(spacing: 4) {
                     ZStack {
+                        // 实体玻璃 + 画布墨色垫层:半透明材质在深色内容上对比太低,
+                        // 圆几乎看不见(Owner 真机:Fan 难辨识)。垫一层不透明底提亮。
                         Circle().fill(.ultraThinMaterial)
+                        Circle().fill(.black.opacity(highlighted ? 0.28 : 0.42))
                         Circle().strokeBorder(
-                            highlighted ? Color.white.opacity(0.5) : .white.opacity(0.12),
-                            lineWidth: highlighted ? 1.5 : 0.5
+                            highlighted ? Color.white.opacity(0.85) : .white.opacity(0.35),
+                            lineWidth: highlighted ? 2 : 1
                         )
-                        Text(String(target.title.prefix(1)))
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(.primary.opacity(0.9))
+                        // 空间图标而非首字 —— 图标自明,与域 Dock/切换器一致。
+                        Image(systemName: target.systemImage)
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(.white.opacity(highlighted ? 1.0 : 0.85))
                     }
                     .frame(width: 56, height: 56)
+                    .shadow(color: .black.opacity(0.35), radius: 6, y: 2)
                     Text(target.title)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.primary.opacity(highlighted ? 0.95 : 0.7))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white.opacity(highlighted ? 1.0 : 0.82))
                         .lineLimit(1)
+                        .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
                 }
                 .scaleEffect(highlighted && !reduceMotion ? 1.08 : 1.0)
                 .animation(.easeOut(duration: 0.12), value: highlighted)
