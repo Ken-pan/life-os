@@ -70,11 +70,20 @@ enum KenosAppAttest {
                 challenge: challenge
             )
         } catch {
-            KenosLog.notice(
-                "app attest prepare failed",
-                category: .session,
-                metadata: ["error": String(describing: error)]
-            )
+            // 同 prepareAssertion:开发构建 attest 预期失败,降噪到 debug。
+            if KenosDevMode.isDevelopmentBuild {
+                KenosLog.debug(
+                    "app attest prepare failed — expected on development build",
+                    category: .session,
+                    metadata: ["error": String(describing: error)]
+                )
+            } else {
+                KenosLog.notice(
+                    "app attest prepare failed",
+                    category: .session,
+                    metadata: ["error": String(describing: error)]
+                )
+            }
             return nil
         }
         #else
@@ -91,11 +100,23 @@ enum KenosAppAttest {
             let assertion = try await generateAssertion(keyId: keyId, clientDataHash: hash)
             return assertion.base64EncodedString()
         } catch {
-            KenosLog.notice(
-                "app attest assertion failed",
-                category: .session,
-                metadata: ["error": String(describing: error)]
-            )
+            // 开发签名构建跑「开发态」App Attest,被生产校验的服务端拒
+            // (DCError Code=2 invalidInput),每次启动必失败 —— 这是预期、非致命
+            // (device exchange 会照常用 secure enclave 恢复会话)。开发构建降到
+            // debug 免污染诊断/崩溃流、掩盖真正的**生产** attest 失败。
+            if KenosDevMode.isDevelopmentBuild {
+                KenosLog.debug(
+                    "app attest assertion failed — expected on development build",
+                    category: .session,
+                    metadata: ["error": String(describing: error)]
+                )
+            } else {
+                KenosLog.notice(
+                    "app attest assertion failed",
+                    category: .session,
+                    metadata: ["error": String(describing: error)]
+                )
+            }
             // 密钥本体已失效(通常是卸载重装):清掉残留 keyId,
             // 下次 pair 会注册新 key,attest 保护自动恢复。
             if isInvalidKeyError(error) {
