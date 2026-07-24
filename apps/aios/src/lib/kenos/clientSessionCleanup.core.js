@@ -164,6 +164,15 @@ export const DEVICE_SETTINGS_KEEP = Object.freeze([
   'temperature',
   'ttsVoice',
   'ttsRate',
+  'assistantPersona',
+  'leoIntensity',
+  'leoStyle',
+  'leoScenario',
+  'leoPace',
+  'leoSafeword',
+  'leoAutoSpeak',
+  'leoHandsFree',
+  'leoNotes',
   'dailyBrief',
 ])
 

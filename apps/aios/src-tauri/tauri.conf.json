@@ -10,8 +10,10 @@
     "beforeBuildCommand": "npm run build"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
+        "label": "main",
         "title": "Korben",
         "width": 1280,
         "height": 820,

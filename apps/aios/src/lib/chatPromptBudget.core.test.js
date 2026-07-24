@@ -22,8 +22,23 @@ describe('detectLocalAssistNeeds', () => {
   it('detects notes / daily / browser / image', () => {
     assert.equal(detectLocalAssistNeeds('我上次定的发布策略是什么').notes, true)
     assert.equal(detectLocalAssistNeeds('今天怎么样，有什么会').daily, true)
+    assert.equal(
+      detectLocalAssistNeeds('今天怎么样', { companionMode: true }).daily,
+      false,
+    )
+    assert.equal(detectLocalAssistNeeds('今日动态 / 日报').daily, true)
+    assert.equal(
+      detectLocalAssistNeeds('今日动态', { companionMode: true }).daily,
+      true,
+    )
     assert.equal(detectLocalAssistNeeds('查一下最新 iPhone 价格').browser, true)
     assert.equal(detectLocalAssistNeeds('帮我生成一张海报').image, true)
+    assert.equal(
+      detectLocalAssistNeeds('画一张现在这一幕，要像你：同一张脸、同一副身材。')
+        .image,
+      true,
+    )
+    assert.equal(detectLocalAssistNeeds('Draw this moment — look like you').image, true)
   })
 
   it('expands from prior tool names', () => {

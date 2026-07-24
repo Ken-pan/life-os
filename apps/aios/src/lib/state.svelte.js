@@ -12,6 +12,11 @@ import {
 } from '$lib/profile.js'
 import { DEFAULT_TTS_VOICE } from '$lib/localai.js'
 import { dataChanged } from '$lib/syncBus.js'
+import {
+  enterLeoQuietMode,
+  exitLeoQuietMode,
+  isLeoQuietModeOn,
+} from '$lib/kenos/leoVoice.core.js'
 
 const DEFAULTS = {
   settings: {
@@ -25,6 +30,19 @@ const DEFAULTS = {
     temperature: 0.7,
     ttsVoice: DEFAULT_TTS_VOICE, // 朗读音色(Qwen3-TTS 内置 9 声)
     ttsRate: 1, // 朗读播放速度(迷你播放器里循环切换,记住偏好)
+    assistantPersona: 'korben', // 'korben' | 'leo' — Leo 模式覆盖助手人设
+    leoIntensity: 'flirty', // 'flirty' | 'explicit'
+    leoStyle: 'chat', // 'chat' | 'roleplay'
+    leoScenario: 'none', // LEO_SCENARIOS id
+    leoPace: 'normal', // 'slow' | 'normal' | 'fast'
+    leoSafeword: '红灯', // 自定义安全词;空则回退默认
+    leoAutoSpeak: true, // Leo 回复/开场白自动朗读;公共场合可关
+    leoHandsFree: true, // Leo 对讲:语音说完即发 + 朗读后自动再听
+    leoPetEnabled: true, // Codex 式桌宠：应用内浮层（Leo 人格时）
+    leoPetDesktop: false, // Tauri 透明置顶小窗（显式 opt-in）
+    leoPetSize: 'md', // sm | md | lg
+    leoPetPosition: { right: 24, bottom: 96 }, // 浮层距右/底 (px)
+    leoNotes: '', // 关系笔记(喜欢/雷点/称呼 或自由文本),注入 Leo system
     customPrompt: '', // 自定义指令
     location: '', // 当前所在地(常驻注入,用于天气/本地/时区判断;跟随账号同步)
     dailyBrief: { enabled: false, time: '08:00' }, // 早晨今日简报:开着 app 时定时/追让式原生通知
@@ -140,6 +158,28 @@ export function applyShellSettingsSilently(partial) {
   if (!changed) return
   persistence.save(S)
   applyTheme()
+}
+
+// 安静模式快照:进入前的 autoSpeak/handsFree 原值,仅内存(会话级),不落盘、不跟云同步——
+// 公共场合一键静音是个临时动作,不该把"我曾经关过"这件事本身当成需要持久化的偏好。
+let leoQuietSnapshot = null
+
+/** @returns {boolean} */
+export function isLeoQuietMode() {
+  return isLeoQuietModeOn(S.settings)
+}
+
+/** 公共场合一键静音:关闭 Leo 自动朗读 + 免键盘对讲;再点一下恢复进入前的状态。 */
+export function setLeoQuietMode(next) {
+  if (next) {
+    const { snapshot, patch } = enterLeoQuietMode(S.settings)
+    leoQuietSnapshot = snapshot
+    Object.assign(S.settings, patch)
+  } else {
+    Object.assign(S.settings, exitLeoQuietMode(leoQuietSnapshot))
+    leoQuietSnapshot = null
+  }
+  save()
 }
 
 const THEME_APPLY_OPTIONS = {

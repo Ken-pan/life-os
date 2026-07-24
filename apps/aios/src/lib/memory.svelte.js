@@ -3,6 +3,11 @@ import { embed, cosine, tinyComplete } from '$lib/localai.js'
 import { SEED_MEMORIES } from '$lib/profile.js'
 import { dataChanged } from '$lib/syncBus.js'
 import { S } from '$lib/state.svelte.js'
+import {
+  buildLeoBondExtractPrompt,
+  normalizeLeoBondFact,
+} from '$lib/kenos/leoMemory.core.js'
+import { isLeoPersona } from '$lib/kenos/leoPersona.core.js'
 
 /**
  * 持久记忆(ChatGPT memory 风格):
@@ -278,6 +283,51 @@ export async function autoExtractMemories(userText, assistantText) {
     /* 静默 */
   } finally {
     extracting = false
+  }
+}
+
+let extractingLeoBond = false
+
+/**
+ * Leo 模式下额外抽取 Ken↔Leo 关系偏好,写入「Leo关系:」前缀记忆。
+ * @param {string} userText
+ * @param {string} assistantText
+ */
+export async function autoExtractLeoBond(userText, assistantText) {
+  if (!browser || extractingLeoBond) return
+  if (!S.settings.memory) return
+  if (!isLeoPersona(S.settings)) return
+  const u = (userText || '').trim()
+  if (u.length < 8) return
+  extractingLeoBond = true
+  try {
+    const raw = await tinyComplete(
+      buildLeoBondExtractPrompt(u, assistantText),
+      { maxTokens: 300, temperature: 0.2, timeoutMs: 30000 },
+    )
+    if (!raw) return
+    let facts
+    try {
+      const jsonText = raw.replace(/^[\s\S]*?(\[[\s\S]*\])[\s\S]*$/, '$1')
+      const parsed = JSON.parse(jsonText)
+      if (!Array.isArray(parsed)) return
+      facts = parsed
+        .map((f) =>
+          typeof f === 'string' ? f : typeof f?.text === 'string' ? f.text : null,
+        )
+        .map((f) => (f ? normalizeLeoBondFact(f) : null))
+        .filter((f) => Boolean(f))
+        .slice(0, 2)
+    } catch {
+      return
+    }
+    for (const fact of facts) {
+      await addMemory(fact)
+    }
+  } catch {
+    /* 静默 */
+  } finally {
+    extractingLeoBond = false
   }
 }
 

@@ -586,5 +586,33 @@ Orb Tap 从「开 Switcher」改成「开 Peek」后,旧 Device Gate 套件里 *
 修法上顺手把定位从**可见文案**换成 **Space id**(`korben.spacePeek.tile.plan`):
 展示名会随界面语言变(「计划」/「Plan」),按文案找会在切语言后整套变红。
 
+## 8n. 生产部署 + 「Daily Beta shell offline」永久修复(2026-07-23/24)
+
+### 离线门根因(与网络无关,是构建配置)
+Debug 构建把 **Mac 的 Tailscale dev origin**(`…ts.net:5219`,project.yml 注入)
+烧进 bundle 当默认 origin。手机不在 Mac 旁 / dev server 没开 → 冷启动连不上 →
+整屏硬门。**卸载重装清 UserDefaults,每次干净安装必复现**;异步的生产回退被
+硬门抢先整屏挡住。
+
+修(`539218028`):
+- `ensurePhoneHomeBaseDefault()` 在 `didFinishLaunching` 最前(早于任何 Web 面
+  读 origin)——首启、用户没手配过 origin、且配置 origin 是 LAN 依赖时,把默认
+  落到生产,幂等一次。要回 Daily Beta 仍可在设置「重试 LAN」切回。
+- `ProbeContext.canAutoFallbackToProduction`:LAN 冷启动+自动回退时用非阻塞
+  横幅代替整屏硬门。
+- 冒烟 `KorbenOriginSmokeUITests`:默认冷启动不再停离线门(停在正常 Face ID 门)。
+
+### 全量生产部署(Owner 批准全部)
+`git push origin master`(37 commit,fast-forward)触发 Netlify Git CD。
+authoritative 部署状态(`netlify api listSiteDeploys`,commit `53921802`):
+```
+plan / money / www(Today·aios)/ portal / training / home / music … ready
+library(knowledge)……… Git CD 未挂钩(历次 deploy 无 commit_ref)→ CLI 手动
+                        部署 build 产物到 kenos-library 站(6a62ec01…),已上线
+```
+**教训**:`kenos-library` 站不是 Git 构建型(deploy 无 commit_ref),push 不会
+触发它;改 knowledge 后需 `netlify deploy --dir apps/knowledge/build --site <id>`
+手动推。其余站是 Git CD,push 即建。
+
 ## 9. Device Gate 通过后的 P2 边界(预告,未开工)
 只做 System Strip(Runtime + Attention 投影)+ System Tray:高度 ≤36pt、无状态 0pt、同一条最多 3 单元(`♪ Daily Mix · 1:42 | 专注 · 18:23 | 2 待确认`),不做大型顶部 Runtime 卡。**不碰**:Orb 新手势、Intent 分类、Korben Assist、App Group、Lens、Per-Space WebView Pool。能力支线并行:App Group closure(先于 Live Activity/Widget 扩展)、Music Runtime 审计(先于后台音频 entitlement)。

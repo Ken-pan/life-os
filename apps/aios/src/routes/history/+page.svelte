@@ -10,6 +10,12 @@
   } from '$lib/chat.svelte.js'
   import { buildAssistantHref } from '$lib/kenos/assistantShell.core.js'
   import { page } from '$app/state'
+  import { isLeoConversation, isLeoPersona } from '$lib/kenos/leoPersona.core.js'
+  import { leoAvatarSrc } from '$lib/kenos/leoAvatar.core.js'
+  import { S } from '$lib/state.svelte.js'
+
+  const leoOn = $derived(isLeoPersona(S.settings))
+  const leoAvatar = $derived(leoAvatarSrc({ expression: 'neutral' }))
 
   function formatTime(ts) {
     const date = new Date(ts)
@@ -45,10 +51,10 @@
   }
 
   function newChat() {
-    startNewChat()
+    startNewChat({ seedLeo: true })
     void goto(
       buildAssistantHref({
-        conversationId: null,
+        conversationId: C.activeId,
         currentSearch: page.url.search,
       }),
     )
@@ -57,8 +63,20 @@
 
 <div class="wrap">
   <button type="button" class="new-chat" onclick={newChat}>
-    <Icon name="plus" size={17} strokeWidth={2} />
-    {t('chat.newChat')}
+    {#if leoOn}
+      <img
+        class="new-chat-leo-avatar"
+        src={leoAvatar}
+        alt=""
+        width="18"
+        height="18"
+        aria-hidden="true"
+        decoding="async"
+      />
+    {:else}
+      <Icon name="plus" size={17} strokeWidth={2} />
+    {/if}
+    {leoOn ? t('chat.newLeoChat') : t('chat.newChat')}
   </button>
 
   {#if C.conversations.length === 0}
@@ -66,10 +84,25 @@
   {:else}
     <div class="list" role="list">
       {#each C.conversations as conversation (conversation.id)}
+        {@const conversationIsLeo = isLeoConversation(conversation)}
         <div class="item" role="listitem">
           <button type="button" class="item-main" onclick={() => open(conversation.id)}>
             <span class="item-head">
-              <span class="item-title">{conversation.title || t('chat.newChat')}</span>
+              <span class="item-title-row">
+                {#if conversationIsLeo}
+                  <img
+                    class="item-leo-avatar"
+                    src={leoAvatar}
+                    alt=""
+                    width="16"
+                    height="16"
+                    aria-hidden="true"
+                    decoding="async"
+                    loading="lazy"
+                  />
+                {/if}
+                <span class="item-title">{conversation.title || t('chat.newChat')}</span>
+              </span>
               <span class="item-time">{formatTime(conversation.updatedAt)}</span>
             </span>
             <span class="item-preview">{preview(conversation)}</span>
@@ -107,6 +140,13 @@
     cursor: pointer;
   }
   .new-chat:hover {
+    background: var(--card);
+  }
+  .new-chat-leo-avatar {
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 18%;
+    border: 1px solid var(--border-l);
     background: var(--card);
   }
 
@@ -154,7 +194,24 @@
     justify-content: space-between;
     gap: var(--space-3, 12px);
   }
+  .item-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex: 1;
+  }
+  .item-leo-avatar {
+    flex: 0 0 auto;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 18%;
+    border: 1px solid color-mix(in srgb, var(--t1) 18%, transparent);
+    background: var(--card);
+  }
   .item-title {
+    flex: 1;
+    min-width: 0;
     font-size: var(--text-base, 15px);
     font-weight: 550;
     white-space: nowrap;

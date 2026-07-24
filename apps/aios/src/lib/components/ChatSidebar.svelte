@@ -5,11 +5,21 @@
   import { t } from '$lib/i18n/index.js'
   import { C, startNewChat, selectConversation, deleteConversation } from '$lib/chat.svelte.js'
   import { AG, openAgent, closeAgent } from '$lib/agents.svelte.js'
+  import { S } from '$lib/state.svelte.js'
+  import {
+    isLeoConversation,
+    isLeoPersona,
+  } from '$lib/kenos/leoPersona.core.js'
+  import { leoAvatarSrc } from '$lib/kenos/leoAvatar.core.js'
   import { isSystemNavActive, systemNavItems, SYSTEM_NAV_HREFS } from '$lib/kenos/systemNav.js'
   import { TODAY_SPACE_SHORTCUTS, spaceListKey } from '$lib/kenos/spacesList.core.js'
   import { clearAssistantContext } from '$lib/kenos/assistantContext.svelte.js'
   import { SPACE_SWITCHER, launchSpace } from '$lib/kenos/spaceSwitcher.svelte.js'
   import { buildAssistantHref } from '$lib/kenos/assistantShell.core.js'
+  import {
+    beginAssistantUrlApply,
+    endAssistantUrlApply,
+  } from '$lib/kenos/assistantUrlSync.svelte.js'
 
   /** @type {{ onCapture?: () => void, onSpaceSwitcher?: (e?: Event) => void, onSwitchSpace?: (e?: Event) => void }} */
   let {
@@ -19,6 +29,8 @@
   } = $props()
 
   const onChatRoute = $derived(page.url.pathname === '/assistant')
+  const leoOn = $derived(isLeoPersona(S.settings))
+  const leoListAvatar = $derived(leoAvatarSrc({ expression: 'smile' }))
   const primaryItems = $derived(systemNavItems(t))
   const recentSpaces = $derived.by(() => {
     const fromStore = SPACE_SWITCHER.recentItems
@@ -51,24 +63,29 @@
     )
   })
 
-  function openConversation(id) {
+  async function openConversation(id) {
     closeAgent()
+    beginAssistantUrlApply()
     selectConversation(id)
-    void goto(
-      buildAssistantHref({
-        conversationId: id,
-        currentSearch: page.url.search,
-      }),
-      { keepFocus: true, noScroll: true },
-    )
+    try {
+      await goto(
+        buildAssistantHref({
+          conversationId: id,
+          currentSearch: page.url.search,
+        }),
+        { keepFocus: true, noScroll: true },
+      )
+    } finally {
+      endAssistantUrlApply()
+    }
   }
 
   function newChat() {
     closeAgent()
-    startNewChat()
+    startNewChat({ seedLeo: true })
     void goto(
       buildAssistantHref({
-        conversationId: null,
+        conversationId: C.activeId,
         currentSearch: page.url.search,
       }),
       { keepFocus: true, noScroll: true },
@@ -117,12 +134,23 @@
       </button>
       <button
         type="button"
-        class="icon-btn"
-        title={t('chat.newChat')}
-        aria-label={t('chat.newChat')}
+        class="icon-btn new-chat-btn"
+        title={leoOn ? t('chat.newLeoChat') : t('chat.newChat')}
+        aria-label={leoOn ? t('chat.newLeoChat') : t('chat.newChat')}
         onclick={newChat}
       >
         <Icon name="compose" size={18} strokeWidth={1.75} />
+        {#if leoOn}
+          <img
+            class="new-chat-leo-dot"
+            src={leoListAvatar}
+            alt=""
+            width="10"
+            height="10"
+            aria-hidden="true"
+            decoding="async"
+          />
+        {/if}
       </button>
     </div>
   </div>
@@ -205,18 +233,30 @@
         <p class="chat-list-empty">{query ? t('chat.searchNoResults') : t('history.empty')}</p>
       {:else}
         {#each filtered as conversation (conversation.id)}
-          <div
-            class="chat-item"
-            class:active={!AG.active && C.activeId === conversation.id}
-            role="listitem"
-          >
+          {@const isActiveChat = !AG.active && C.activeId === conversation.id}
+          {@const conversationIsLeo = isLeoConversation(conversation)}
+          <div class="chat-item" class:active={isActiveChat} role="listitem">
             <button
               type="button"
               class="chat-item-main"
               onclick={() => openConversation(conversation.id)}
               title={conversation.title}
             >
+              {#if conversationIsLeo}
+                <img
+                  class="chat-item-leo"
+                  src={leoListAvatar}
+                  alt=""
+                  width="18"
+                  height="18"
+                  decoding="async"
+                  loading="lazy"
+                />
+              {/if}
               <span class="chat-item-title">{conversation.title || t('chat.newChat')}</span>
+              {#if isActiveChat && conversationIsLeo}
+                <span class="chat-item-leo-badge">{t('chat.leoBadge')}</span>
+              {/if}
             </button>
             <button
               type="button"
@@ -326,6 +366,22 @@
     cursor: pointer;
   }
   .icon-btn:hover {
+    background: var(--sidebar-accent);
+  }
+
+  .new-chat-btn {
+    position: relative;
+  }
+  .new-chat-leo-dot {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 18%;
+    border: 1.5px solid var(--sidebar);
     background: var(--sidebar-accent);
   }
 
@@ -505,6 +561,9 @@
   .chat-item-main {
     flex: 1;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     border: none;
     background: transparent;
     text-align: start;
@@ -514,13 +573,37 @@
     border-radius: 8px;
   }
 
+  .chat-item-leo {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 18%;
+    border: 1px solid color-mix(in srgb, var(--sidebar-foreground) 18%, transparent);
+    background: var(--sidebar-accent);
+  }
+
   .chat-item-title {
     display: block;
+    min-width: 0;
+    flex: 1;
     font-size: var(--text-sm, 13px);
     line-height: 1.35;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .chat-item-leo-badge {
+    flex: 0 0 auto;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    color: var(--sidebar-foreground);
+    background: color-mix(in srgb, var(--sidebar-foreground) 14%, transparent);
   }
 
   .chat-item-del {

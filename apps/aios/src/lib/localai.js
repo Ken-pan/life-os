@@ -40,6 +40,16 @@ function pageHostname() {
   }
 }
 
+/** 壳注入的 tailnet HTTPS 网关(iOS 壳 atDocumentStart 写入;非壳环境为空)。 */
+function injectedGateway() {
+  if (!browser) return ''
+  try {
+    return String(window.__KENOS_LOCALAI_GATEWAY__ || '')
+  } catch {
+    return ''
+  }
+}
+
 function initGateway() {
   if (!browser) return DEFAULT_GATEWAY
   try {
@@ -47,6 +57,7 @@ function initGateway() {
       override: localStorage.getItem(GATEWAY_KEY),
       envGateway: import.meta.env.VITE_AIOS_GATEWAY,
       hostname: pageHostname(),
+      injected: injectedGateway(),
     })
   } catch {
     return DEFAULT_GATEWAY
@@ -69,6 +80,7 @@ export function setGateway(url) {
     GATEWAY = resolveGatewayUrl({
       envGateway: browser ? import.meta.env.VITE_AIOS_GATEWAY : '',
       hostname: pageHostname(),
+      injected: injectedGateway(),
     })
     return
   }
@@ -492,9 +504,10 @@ export function cosine(a, b) {
 /**
  * 语音转写(Qwen3-ASR,中文最准)。
  * @param {Blob} blob 录音数据
+ * @param {{ prompt?: string } | null | undefined} [opts]
  * @returns {Promise<string>}
  */
-export async function transcribe(blob) {
+export async function transcribe(blob, opts = {}) {
   const form = new FormData()
   form.append('model', TRANSCRIBE_MODEL)
   const ext = blob.type.includes('mp4')
@@ -503,6 +516,8 @@ export async function transcribe(blob) {
       ? 'ogg'
       : 'webm'
   form.append('file', blob, `recording.${ext}`)
+  const hint = typeof opts?.prompt === 'string' ? opts.prompt.trim() : ''
+  if (hint) form.append('prompt', hint.slice(0, 224))
   const res = await fetchWithColdRetry(() =>
     fetch(`${GATEWAY}/v1/audio/transcriptions`, {
       method: 'POST',
@@ -519,6 +534,7 @@ export const TTS_MODEL = 'mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit'
 
 /** 朗读音色(Qwen3-TTS 内置 9 声),设置页可选,名字文案在 i18n ttsVoice.* */
 export const TTS_VOICES = [
+  { id: 'leo', nameKey: 'ttsVoice.leo' },
   { id: 'dylan', nameKey: 'ttsVoice.dylan' },
   { id: 'ryan', nameKey: 'ttsVoice.ryan' },
   { id: 'aiden', nameKey: 'ttsVoice.aiden' },
@@ -549,12 +565,12 @@ function ttsInstruct(text) {
     : 'Speak in a relaxed, natural conversational tone, like chatting with a friend.'
 }
 
-function ttsRequestBody(text, voice) {
+function ttsRequestBody(text, voice, instruct) {
   return {
     model: TTS_MODEL,
     input: text,
     voice,
-    instruct: ttsInstruct(text),
+    instruct: instruct || ttsInstruct(text),
   }
 }
 
@@ -563,9 +579,10 @@ function ttsRequestBody(text, voice) {
  * 规则:中英句末标点/换行处断句(保留标点);过短碎片并入上一句(免闪烁);
  * 过长且无标点的按逗号或硬长度再切(单句音频不至于太久、跟读粒度更细)。
  * @param {string} text
+ * @param {{ coalesceBreathBeats?: boolean }} [opts]
  * @returns {string[]}
  */
-export function splitSentences(text) {
+export function splitSentences(text, opts = {}) {
   const clean = (text || '').replace(/\s+/g, ' ').trim()
   if (!clean) return []
   // 句末标点后断开:中(。!?;…)或 英(.!? 后需空白,避免切断小数/缩写)
@@ -586,7 +603,47 @@ export function splitSentences(text) {
     if (out.length && seg.length < 4) out[out.length - 1] += ' ' + seg
     else out.push(seg)
   }
+  if (opts.coalesceBreathBeats) return coalesceBreathBeats(out)
   return out
+}
+
+/**
+ * Leo 亲密朗读:把 mmh…/短中文标签并回上一句,避免逐句合成时中英 lang 切换变声。
+ * @param {string[]} parts
+ */
+function coalesceBreathBeats(parts) {
+  /** @type {string[]} */
+  const out = []
+  for (const raw of parts) {
+    const p = String(raw || '').trim()
+    if (!p) continue
+    const breathOnly =
+      /^(?:mm+h*|nn+h*|a+h*|o+h*|h{2,}|嗯+|啊+|哈+|呼+)…?$/i.test(p) ||
+      p.length < 12
+    const zhTagOnly = /^[\u4e00-\u9fff….\s。！？!?]{1,10}$/.test(p)
+    if (out.length && (breathOnly || zhTagOnly)) {
+      out[out.length - 1] = `${out[out.length - 1]} ${p}`.replace(/\s+/g, ' ').trim()
+    } else {
+      out.push(p)
+    }
+  }
+  return out
+}
+
+/** 检测近静音缓冲(冷启动偶发全零 PCM) */
+function isNearSilentBuffer(buf) {
+  if (!buf?.length || !buf.numberOfChannels) return true
+  const data = buf.getChannelData(0)
+  const n = data.length
+  if (!n) return true
+  let peak = 0
+  const step = Math.max(1, Math.floor(n / 4000))
+  for (let i = 0; i < n; i += step) {
+    const a = Math.abs(data[i])
+    if (a > peak) peak = a
+    if (peak > 0.01) return false
+  }
+  return peak <= 0.01
 }
 
 /** 逐句合成时,把整句流式 PCM 累积成一个 AudioBuffer(顺序播,句界清晰、便于跟读高亮) */
@@ -629,6 +686,38 @@ async function pcmStreamToBuffer(res, ctx) {
 /** 全局仅一个朗读会话在放:新会话开始前停掉上一个,避免两条人声叠着响 */
 let activeSpeech = null
 
+/** 跨会话复用 AudioContext:保持「已解锁」,Leo 流式结束后才能自动出声 */
+let sharedSpeechCtx = null
+
+/**
+ * 在用户手势内调用(发送/点喇叭/点 Leo chip),解锁朗读用 AudioContext。
+ * @returns {Promise<boolean>}
+ */
+export async function unlockSpeechAudio() {
+  if (typeof window === 'undefined') return false
+  const AC = window.AudioContext || window.webkitAudioContext
+  if (!AC) return false
+  if (!sharedSpeechCtx || sharedSpeechCtx.state === 'closed') {
+    sharedSpeechCtx = new AC()
+  }
+  if (sharedSpeechCtx.state === 'suspended') {
+    try {
+      await sharedSpeechCtx.resume()
+    } catch {
+      /* 无手势时可能失败 */
+    }
+  }
+  return sharedSpeechCtx.state === 'running'
+}
+
+function getSpeechAudioContext() {
+  const AC = window.AudioContext || window.webkitAudioContext
+  if (!sharedSpeechCtx || sharedSpeechCtx.state === 'closed') {
+    sharedSpeechCtx = new AC()
+  }
+  return sharedSpeechCtx
+}
+
 /**
  * 创建一个朗读会话:逐句合成、顺序播放,支持暂停/续播、变速、逐句跟读回调。
  *
@@ -636,11 +725,13 @@ let activeSpeech = null
  * 合成远快于播放,句间基本无缝。暂停用 AudioContext.suspend(冻结播放时钟),
  * 变速改 playbackRate(实时生效)。旧后端返回整段 WAV 时自动回退解码。
  *
- * 必须在用户手势(点击)内调用:AudioContext 的创建/恢复受自动播放策略约束。
+ * 建议先在用户手势内调用 {@link unlockSpeechAudio},以便 Leo 自动朗读可用。
  *
  * @param {string} text
  * @param {{
- *   voice?: string, rate?: number,
+ *   voice?: string, rate?: number, instruct?: string,
+ *   langCode?: string,
+ *   coalesceBreathBeats?: boolean,
  *   onStart?: () => void,                       // 首句开始出声(加载→播放)
  *   onSentence?: (index: number, text: string) => void, // 每句开播时(驱动高亮/滚动)
  *   onStateChange?: (state: 'playing'|'paused') => void,
@@ -658,14 +749,17 @@ export function createSpeechSession(text, opts = {}) {
   const {
     voice = DEFAULT_TTS_VOICE,
     rate = 1,
+    instruct,
+    langCode,
+    coalesceBreathBeats = false,
     onStart,
     onSentence,
     onStateChange,
     onEnd,
     onError,
   } = opts
-  const sentences = splitSentences(text)
-  const ctx = new (window.AudioContext || window.webkitAudioContext)()
+  const sentences = splitSentences(text, { coalesceBreathBeats })
+  const ctx = getSpeechAudioContext()
   const buffers = new Map() // index -> Promise<AudioBuffer|null>
   const aborters = new Map() // index -> AbortController
   let idx = -1
@@ -674,6 +768,28 @@ export function createSpeechSession(text, opts = {}) {
   let paused = false
   let started = false
   let ended = false
+  /** 下一句在 AudioContext 时间线上的起始点(无缝衔接) */
+  let nextStartAt = 0
+  /** 防 timer/onended 双触发 */
+  let nextToPlay = 0
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let advanceTimer = null
+
+  const clearAdvanceTimer = () => {
+    if (advanceTimer) {
+      clearTimeout(advanceTimer)
+      advanceTimer = null
+    }
+  }
+
+  const scheduleAdvance = (fromIndex) => {
+    clearAdvanceTimer()
+    const leadMs = Math.max(0, (nextStartAt - ctx.currentTime) * 1000 - 40)
+    advanceTimer = setTimeout(() => {
+      advanceTimer = null
+      if (!ended && !paused) playFrom(fromIndex + 1)
+    }, leadMs)
+  }
 
   const synth = (i) => {
     if (i < 0 || i >= sentences.length) return Promise.resolve(null)
@@ -681,20 +797,49 @@ export function createSpeechSession(text, opts = {}) {
     const ac = new AbortController()
     aborters.set(i, ac)
     const p = (async () => {
-      const res = await fetch(`${GATEWAY}/v1/audio/speech`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...ttsRequestBody(sentences[i], voice),
-          stream: true,
-        }),
-        signal: ac.signal,
-      })
+      const body = {
+        ...ttsRequestBody(sentences[i], voice, instruct),
+        stream: true,
+      }
+      // 固定 lang_code 避免句间中英切换「变声」;Leo/Aiden 整段钉英式
+      if (langCode) body.lang_code = langCode
+      else if (/[一-鿿]/.test(sentences[i])) body.lang_code = 'z'
+      else if (/[A-Za-z]/.test(sentences[i])) body.lang_code = 'a'
+
+      const fetchOnce = () =>
+        fetch(`${GATEWAY}/v1/audio/speech`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: ac.signal,
+        })
+
+      let res = await fetchOnce()
+      // 语音壳冷启动偶发 500/502
+      if (res.status === 500 || res.status === 502) {
+        await new Promise((r) => setTimeout(r, 2000))
+        if (ac.signal.aborted) throw new DOMException('Aborted', 'AbortError')
+        res = await fetchOnce()
+      }
       if (!res.ok || !res.body) throw new Error(`tts ${res.status}`)
       const ctype = res.headers.get('content-type') ?? ''
-      if (ctype.includes('audio/pcm')) return await pcmStreamToBuffer(res, ctx)
-      // 旧后端:整段 WAV
-      return await ctx.decodeAudioData(await (await res.blob()).arrayBuffer())
+      let buf
+      if (ctype.includes('audio/pcm')) buf = await pcmStreamToBuffer(res, ctx)
+      else buf = await ctx.decodeAudioData(await (await res.blob()).arrayBuffer())
+
+      // 冷启动偶发「全静音 PCM」:丢弃并非流式重试一次
+      if (buf && isNearSilentBuffer(buf)) {
+        const retry = await fetch(`${GATEWAY}/v1/audio/speech`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...body, stream: false }),
+          signal: ac.signal,
+        })
+        if (retry.ok) {
+          buf = await ctx.decodeAudioData(await (await retry.blob()).arrayBuffer())
+        }
+      }
+      return buf
     })().catch((e) => {
       if (e?.name !== 'AbortError') console.warn('tts synth', e)
       return null
@@ -703,37 +848,55 @@ export function createSpeechSession(text, opts = {}) {
     return p
   }
 
+  const prefetchAround = (i) => {
+    synth(i + 1)
+    synth(i + 2)
+  }
+
   const playFrom = async (i) => {
-    if (ended) return
+    if (ended || paused) return
+    if (i !== nextToPlay) return
+    nextToPlay = i + 1
     idx = i
     if (i >= sentences.length) {
       terminate(true)
       return
     }
     onSentence?.(i, sentences[i])
-    synth(i + 1) // 预取下一句,句间不断
+    prefetchAround(i)
     const buf = await synth(i)
-    if (ended) return
+    if (ended || paused) return
     if (!buf) {
-      playFrom(i + 1) // 这句合成失败,跳过继续
+      playFrom(i + 1)
       return
     }
     const src = ctx.createBufferSource()
     src.buffer = buf
     src.playbackRate.value = curRate
     src.connect(ctx.destination)
-    src.onended = () => {
-      if (!ended && src === curSource) playFrom(i + 1)
-    }
+    const duration = buf.duration / Math.max(curRate, 0.01)
+    const startAt = Math.max(ctx.currentTime + 0.015, nextStartAt)
+    nextStartAt = startAt + duration
     curSource = src
     if (!started) {
       started = true
       onStart?.()
     }
-    src.start()
+    try {
+      src.start(startAt)
+    } catch (e) {
+      console.warn('tts start', e)
+      playFrom(i + 1)
+      return
+    }
+    scheduleAdvance(i)
+    src.onended = () => {
+      if (!ended && !paused && advanceTimer == null) playFrom(i + 1)
+    }
   }
 
   const cleanup = () => {
+    clearAdvanceTimer()
     for (const ac of aborters.values()) {
       try {
         ac.abort()
@@ -748,8 +911,9 @@ export function createSpeechSession(text, opts = {}) {
       } catch {
         /* 已结束 */
       }
+      curSource = null
     }
-    ctx.close().catch(() => {})
+    // 不 close 共享 AudioContext,保留解锁状态供 Leo 自动朗读
   }
 
   // 唯一收尾出口:自然播完 / 用户停止 / 被新会话顶掉 都经此,onEnd 只回调一次
@@ -766,29 +930,46 @@ export function createSpeechSession(text, opts = {}) {
     pause() {
       if (paused || ended) return
       paused = true
+      clearAdvanceTimer()
       ctx.suspend()
       onStateChange?.('paused')
     },
     resume() {
       if (!paused || ended) return
       paused = false
-      ctx.resume()
-      onStateChange?.('playing')
+      ctx.resume().then(() => {
+        if (ended) return
+        onStateChange?.('playing')
+        // AudioContext 时钟暂停期间 wall timer 会漂移,按音频时间重排下一句
+        if (idx >= 0 && idx < sentences.length) scheduleAdvance(idx)
+      })
     },
     togglePause() {
       paused ? this.resume() : this.pause()
     },
     isPaused: () => paused,
     setRate(r) {
+      const prev = curRate
       curRate = r
       if (curSource) curSource.playbackRate.value = r
+      // 按新速率重估剩余时间线
+      if (started && !ended && nextStartAt > ctx.currentTime && prev > 0) {
+        const remain = (nextStartAt - ctx.currentTime) * (prev / Math.max(r, 0.01))
+        nextStartAt = ctx.currentTime + remain
+        if (!paused && idx >= 0) scheduleAdvance(idx)
+      }
     },
     getRate: () => curRate,
     currentIndex: () => idx,
     stop: () => terminate(true),
+    /** 打断且不回调 onEnd(发送/开麦 barge-in,避免误续听) */
+    discard: () => terminate(false),
   }
 
-  activeSpeech?.stop()
+  if (activeSpeech) {
+    if (typeof activeSpeech.discard === 'function') activeSpeech.discard()
+    else activeSpeech.stop()
+  }
   activeSpeech = controller
   ;(async () => {
     if (!sentences.length) {
@@ -800,13 +981,30 @@ export function createSpeechSession(text, opts = {}) {
       try {
         await ctx.resume()
       } catch {
-        /* 自动播放策略:点击手势内一般无碍 */
+        /* 自动播放策略 */
       }
     }
+    if (ctx.state === 'suspended') {
+      terminate(false)
+      onError?.(new Error('audio_autoplay_blocked'))
+      return
+    }
+    nextStartAt = ctx.currentTime
+    // 立刻预热前两句,缩短首声等待
+    prefetchAround(-1)
     playFrom(0)
   })()
 
   return controller
+}
+
+/**
+ * 打断当前朗读。
+ * @param {{ silent?: boolean }} [opts] silent=true 时不触发 onEnd(避免对讲误续听)
+ */
+export function stopActiveSpeech(opts = {}) {
+  if (opts.silent) activeSpeech?.discard?.()
+  else activeSpeech?.stop()
 }
 
 /**
@@ -947,15 +1145,22 @@ export async function generateTitle(userText, assistantText, locale = 'zh') {
 /**
  * 语音转写后处理:较长且缺标点的转写用小模型补标点断句。
  * 只在必要时调用(已有标点直接返回),防呆失败一律退回原文。
+ * 英文转写用英文指令,避免被润色成中文。
  * @returns {Promise<string>}
  */
 export async function polishTranscript(text) {
   const trimmed = text.trim()
-  if (trimmed.length < 16 || /[。,,.!?!?;;]/.test(trimmed)) return trimmed
-  const polished = await tinyComplete(
-    `给这段语音转写加上标点并合理断句。不要改动用字,不要增删内容,只输出处理后的文本:\n\n${trimmed.slice(0, 1000)}`,
-    { maxTokens: 1024, temperature: 0.1 },
-  )
+  if (trimmed.length < 16 || /[。,.!?;；]/.test(trimmed)) return trimmed
+  const zh = (trimmed.match(/[\u4e00-\u9fff]/g) || []).length
+  const en = (trimmed.match(/[A-Za-z]/g) || []).length
+  const mostlyEn = en >= 8 && en >= zh
+  const prompt = mostlyEn
+    ? `Add punctuation and sentence breaks to this speech transcript. Do not change words, do not translate, output only the polished text:\n\n${trimmed.slice(0, 1000)}`
+    : `给这段语音转写加上标点并合理断句。不要改动用字,不要翻译,不要增删内容,只输出处理后的文本:\n\n${trimmed.slice(0, 1000)}`
+  const polished = await tinyComplete(prompt, {
+    maxTokens: 1024,
+    temperature: 0.1,
+  })
   // 长度偏差过大说明模型自由发挥了,退回原文
   if (
     !polished ||

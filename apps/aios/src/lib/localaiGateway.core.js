@@ -49,10 +49,31 @@ export function shouldUseSameOriginLocalAiProxy(hostname) {
 }
 
 /**
+ * 壳注入的网关(`window.__KENOS_LOCALAI_GATEWAY__`)是否可用作候选。
+ * 只收 https(生产页是 https,http 会被混合内容拦截)且指向 tailnet 主机 ——
+ * 这是「离开 Mac 也能用本地 AI」的通道:手机 Tailscale 在线时,从任何网络
+ * 都能经 tailscale-serve 的 HTTPS 反代打到 Mac 上的网关。
+ * @param {string} url
+ * @returns {boolean}
+ */
+export function isUsableInjectedGateway(url) {
+  const v = String(url || '').trim().replace(/\/$/, '')
+  if (!v) return false
+  try {
+    const u = new URL(v)
+    if (u.protocol !== 'https:') return false
+    return u.hostname.toLowerCase().endsWith('.ts.net')
+  } catch {
+    return false
+  }
+}
+
+/**
  * @param {{
  *   override?: string | null,
  *   envGateway?: string | null,
  *   hostname?: string | null,
+ *   injected?: string | null,
  * }} [opts]
  * @returns {string}
  */
@@ -65,6 +86,11 @@ export function resolveGatewayUrl(opts = {}) {
   if (shouldUseSameOriginLocalAiProxy(opts.hostname ?? '')) {
     return SAME_ORIGIN_GATEWAY
   }
+  // 生产/公网 origin 上,壳注入的 tailnet HTTPS 网关取代「手机上必死的
+  // loopback 默认」——同一份代码在 Mac 桌面(loopback 可达)与手机(tailnet
+  // 可达)上都自动选对,用户无感。
+  const injected = String(opts.injected ?? '').trim().replace(/\/$/, '')
+  if (isUsableInjectedGateway(injected)) return injected
   return DEFAULT_GATEWAY
 }
 

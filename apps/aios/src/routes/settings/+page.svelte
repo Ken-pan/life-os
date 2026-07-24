@@ -2,7 +2,13 @@
   import Icon from '@life-os/platform-web/svelte/icon'
   import SettingsSyncBlock from '@life-os/platform-web/svelte/settings/sync-block'
   import SettingsAppearanceBlock from '@life-os/platform-web/svelte/settings/appearance-block'
-  import { S, save, applyTheme } from '$lib/state.svelte.js'
+  import {
+    S,
+    save,
+    applyTheme,
+    isLeoQuietMode,
+    setLeoQuietMode,
+  } from '$lib/state.svelte.js'
   import { t, setLocale } from '$lib/i18n/index.js'
   import {
     publishShellTheme,
@@ -14,7 +20,18 @@
     GATEWAY,
     DEFAULT_GATEWAY,
     setGateway,
+    unlockSpeechAudio,
   } from '$lib/localai.js'
+  import {
+    LEO_DEFAULT_TTS_VOICE,
+    LEO_SCENARIOS,
+    isLeoPersona,
+    normalizeLeoIntensity,
+    normalizeLeoPace,
+    normalizeLeoSafeword,
+    normalizeLeoScenarioId,
+    normalizeLeoStyle,
+  } from '$lib/kenos/leoPersona.core.js'
   import { CLOUD_BUILD } from '$lib/env.js'
   import { C, refreshGateway, clearAllConversations } from '$lib/chat.svelte.js'
   import {
@@ -42,6 +59,8 @@
     resolveProductSessionState,
   } from '$lib/kenos/productSessionState.core.js'
   import { isNative } from '$lib/native.js'
+  import { isTauriRuntime } from '$lib/kenos/leoPetDesktop.js'
+  import { normalizeLeoPetSize } from '$lib/kenos/leoPet.core.js'
   import { dailyBriefDeliveryAvailable } from '$lib/proactive.svelte.js'
   import {
     loadServers,
@@ -94,6 +113,83 @@
   function setModel(value) {
     S.settings.model = value
     save()
+  }
+
+  function toggleLeoMode() {
+    const next = isLeoPersona(S.settings) ? 'korben' : 'leo'
+    S.settings.assistantPersona = next
+    if (next === 'leo') {
+      if (!S.settings.leoIntensity) S.settings.leoIntensity = 'flirty'
+      // 进 Leo 模式一律带上 Leo 克隆音色；用户之后仍可手动改
+      S.settings.ttsVoice = LEO_DEFAULT_TTS_VOICE
+      void unlockSpeechAudio()
+    }
+    save()
+  }
+
+  function setLeoIntensity(value) {
+    S.settings.leoIntensity = normalizeLeoIntensity(value)
+    save()
+  }
+
+  function setLeoPace(value) {
+    S.settings.leoPace = normalizeLeoPace(value)
+    save()
+  }
+
+  function setLeoStyle(value) {
+    S.settings.leoStyle = normalizeLeoStyle(value)
+    save()
+  }
+
+  function setLeoScenario(value) {
+    S.settings.leoScenario = normalizeLeoScenarioId(value)
+    save()
+  }
+
+  function saveLeoSafeword() {
+    S.settings.leoSafeword = normalizeLeoSafeword(S.settings.leoSafeword)
+    save()
+  }
+
+  function toggleLeoAutoSpeak() {
+    S.settings.leoAutoSpeak = S.settings.leoAutoSpeak === false
+    save()
+  }
+
+  async function toggleLeoPetEnabled() {
+    S.settings.leoPetEnabled = S.settings.leoPetEnabled === false
+    save()
+    const { syncLeoPetDesktopWindow } = await import(
+      '$lib/kenos/leoPetDesktop.js'
+    )
+    void syncLeoPetDesktopWindow(S.settings)
+  }
+
+  async function toggleLeoPetDesktop() {
+    S.settings.leoPetDesktop = S.settings.leoPetDesktop === true ? false : true
+    save()
+    const { syncLeoPetDesktopWindow } = await import(
+      '$lib/kenos/leoPetDesktop.js'
+    )
+    void syncLeoPetDesktopWindow(S.settings)
+  }
+
+  /** @param {'sm'|'md'|'lg'} size */
+  function setLeoPetSize(size) {
+    S.settings.leoPetSize = size
+    save()
+  }
+
+  function toggleLeoHandsFree() {
+    S.settings.leoHandsFree = S.settings.leoHandsFree === false
+    save()
+  }
+
+  const leoQuietOn = $derived(isLeoQuietMode())
+
+  function toggleLeoQuietMode() {
+    setLeoQuietMode(!leoQuietOn)
   }
 
   function toggle(key) {
@@ -546,6 +642,7 @@
         class="voice-select"
         bind:value={S.settings.ttsVoice}
         onchange={save}
+        disabled={isLeoPersona(S.settings)}
         aria-label={t('settings.ttsVoice')}
       >
         {#each TTS_VOICES as voice (voice.id)}
@@ -553,6 +650,118 @@
         {/each}
       </select>
     </div>
+    {#if isLeoPersona(S.settings)}
+      <p class="note">{t('settings.leoVoiceHint')}</p>
+
+      <button
+        type="button"
+        class="quiet-mode-row"
+        class:on={leoQuietOn}
+        onclick={toggleLeoQuietMode}
+      >
+        <span class="toggle-text">
+          <span class="toggle-label quiet-mode-label">
+            {t('settings.leoQuietMode')}
+          </span>
+          <span class="toggle-desc">
+            {leoQuietOn
+              ? t('settings.leoQuietModeOnDesc')
+              : t('settings.leoQuietModeOffDesc')}
+          </span>
+        </span>
+        <span
+          class="switch"
+          class:on={leoQuietOn}
+          role="switch"
+          aria-checked={leoQuietOn}
+          aria-label={t('settings.leoQuietMode')}
+        ></span>
+      </button>
+
+      <button type="button" class="toggle-row" onclick={toggleLeoAutoSpeak}>
+        <span class="toggle-text">
+          <span class="toggle-label">{t('settings.leoAutoSpeak')}</span>
+          <span class="toggle-desc">{t('settings.leoAutoSpeakDesc')}</span>
+        </span>
+        <span
+          class="switch"
+          class:on={S.settings.leoAutoSpeak !== false}
+          role="switch"
+          aria-checked={S.settings.leoAutoSpeak !== false}
+          aria-label={t('settings.leoAutoSpeak')}
+        ></span>
+      </button>
+      <button type="button" class="toggle-row" onclick={toggleLeoHandsFree}>
+        <span class="toggle-text">
+          <span class="toggle-label">{t('settings.leoHandsFree')}</span>
+          <span class="toggle-desc">{t('settings.leoHandsFreeDesc')}</span>
+        </span>
+        <span
+          class="switch"
+          class:on={S.settings.leoHandsFree !== false}
+          role="switch"
+          aria-checked={S.settings.leoHandsFree !== false}
+          aria-label={t('settings.leoHandsFree')}
+        ></span>
+      </button>
+      <button type="button" class="toggle-row" onclick={toggleLeoPetEnabled}>
+        <span class="toggle-text">
+          <span class="toggle-label">{t('settings.leoPet')}</span>
+          <span class="toggle-desc">{t('settings.leoPetDesc')}</span>
+        </span>
+        <span
+          class="switch"
+          class:on={S.settings.leoPetEnabled !== false}
+          role="switch"
+          aria-checked={S.settings.leoPetEnabled !== false}
+          aria-label={t('settings.leoPet')}
+        ></span>
+      </button>
+      <div class="row">
+        <span class="row-label">{t('settings.leoPetSize')}</span>
+        <div class="seg" role="group" aria-label={t('settings.leoPetSize')}>
+          <button
+            type="button"
+            class:on={normalizeLeoPetSize(S.settings.leoPetSize) === 'sm'}
+            aria-pressed={normalizeLeoPetSize(S.settings.leoPetSize) === 'sm'}
+            onclick={() => setLeoPetSize('sm')}
+          >
+            {t('settings.leoPetSizeSm')}
+          </button>
+          <button
+            type="button"
+            class:on={normalizeLeoPetSize(S.settings.leoPetSize) === 'md'}
+            aria-pressed={normalizeLeoPetSize(S.settings.leoPetSize) === 'md'}
+            onclick={() => setLeoPetSize('md')}
+          >
+            {t('settings.leoPetSizeMd')}
+          </button>
+          <button
+            type="button"
+            class:on={normalizeLeoPetSize(S.settings.leoPetSize) === 'lg'}
+            aria-pressed={normalizeLeoPetSize(S.settings.leoPetSize) === 'lg'}
+            onclick={() => setLeoPetSize('lg')}
+          >
+            {t('settings.leoPetSizeLg')}
+          </button>
+        </div>
+      </div>
+      {#if isTauriRuntime()}
+        <button type="button" class="toggle-row" onclick={toggleLeoPetDesktop}>
+          <span class="toggle-text">
+            <span class="toggle-label">{t('settings.leoPetDesktop')}</span>
+            <span class="toggle-desc">{t('settings.leoPetDesktopDesc')}</span>
+          </span>
+          <span
+            class="switch"
+            class:on={S.settings.leoPetDesktop === true}
+            role="switch"
+            aria-checked={S.settings.leoPetDesktop === true}
+            aria-label={t('settings.leoPetDesktop')}
+          ></span>
+        </button>
+      {/if}
+    {/if}
 
     <div class="row">
       <span class="row-label">{t('settings.ttsRate')}</span>
@@ -567,6 +776,143 @@
         {/each}
       </select>
     </div>
+
+    <button type="button" class="toggle-row" onclick={toggleLeoMode}>
+      <span class="toggle-text">
+        <span class="toggle-label">{t('settings.personaLeo')}</span>
+        <span class="toggle-desc">{t('settings.personaDesc')}</span>
+      </span>
+      <span
+        class="switch"
+        class:on={isLeoPersona(S.settings)}
+        role="switch"
+        aria-checked={isLeoPersona(S.settings)}
+        aria-label={t('settings.personaLeo')}
+      ></span>
+    </button>
+
+    {#if isLeoPersona(S.settings)}
+      <div class="row">
+        <span class="row-label">{t('settings.leoIntensity')}</span>
+        <div class="seg" role="group" aria-label={t('settings.leoIntensity')}>
+          <button
+            type="button"
+            class:on={normalizeLeoIntensity(S.settings.leoIntensity) === 'flirty'}
+            aria-pressed={normalizeLeoIntensity(S.settings.leoIntensity) ===
+              'flirty'}
+            onclick={() => setLeoIntensity('flirty')}
+          >
+            {t('settings.leoIntensityFlirty')}
+          </button>
+          <button
+            type="button"
+            class:on={normalizeLeoIntensity(S.settings.leoIntensity) ===
+              'explicit'}
+            aria-pressed={normalizeLeoIntensity(S.settings.leoIntensity) ===
+              'explicit'}
+            onclick={() => setLeoIntensity('explicit')}
+          >
+            {t('settings.leoIntensityExplicit')}
+          </button>
+        </div>
+      </div>
+      <p class="note">{t('settings.leoIntensityDesc')}</p>
+
+      <div class="row">
+        <span class="row-label">{t('settings.leoPace')}</span>
+        <div class="seg" role="group" aria-label={t('settings.leoPace')}>
+          <button
+            type="button"
+            class:on={normalizeLeoPace(S.settings.leoPace) === 'slow'}
+            aria-pressed={normalizeLeoPace(S.settings.leoPace) === 'slow'}
+            onclick={() => setLeoPace('slow')}
+          >
+            {t('settings.leoPaceSlow')}
+          </button>
+          <button
+            type="button"
+            class:on={normalizeLeoPace(S.settings.leoPace) === 'normal'}
+            aria-pressed={normalizeLeoPace(S.settings.leoPace) === 'normal'}
+            onclick={() => setLeoPace('normal')}
+          >
+            {t('settings.leoPaceNormal')}
+          </button>
+          <button
+            type="button"
+            class:on={normalizeLeoPace(S.settings.leoPace) === 'fast'}
+            aria-pressed={normalizeLeoPace(S.settings.leoPace) === 'fast'}
+            onclick={() => setLeoPace('fast')}
+          >
+            {t('settings.leoPaceFast')}
+          </button>
+        </div>
+      </div>
+      <p class="note">{t('settings.leoPaceDesc')}</p>
+
+      <div class="row">
+        <span class="row-label">{t('settings.leoStyle')}</span>
+        <div class="seg" role="group" aria-label={t('settings.leoStyle')}>
+          <button
+            type="button"
+            class:on={normalizeLeoStyle(S.settings.leoStyle) === 'chat'}
+            aria-pressed={normalizeLeoStyle(S.settings.leoStyle) === 'chat'}
+            onclick={() => setLeoStyle('chat')}
+          >
+            {t('settings.leoStyleChat')}
+          </button>
+          <button
+            type="button"
+            class:on={normalizeLeoStyle(S.settings.leoStyle) === 'roleplay'}
+            aria-pressed={normalizeLeoStyle(S.settings.leoStyle) === 'roleplay'}
+            onclick={() => setLeoStyle('roleplay')}
+          >
+            {t('settings.leoStyleRoleplay')}
+          </button>
+        </div>
+      </div>
+      <p class="note">{t('settings.leoStyleDesc')}</p>
+
+      <div class="row">
+        <span class="row-label">{t('settings.leoScenario')}</span>
+        <select
+          class="voice-select"
+          value={normalizeLeoScenarioId(S.settings.leoScenario)}
+          onchange={(e) => setLeoScenario(e.currentTarget.value)}
+          aria-label={t('settings.leoScenario')}
+        >
+          {#each LEO_SCENARIOS as sc (sc.id)}
+            <option value={sc.id}>{t(sc.labelKey)}</option>
+          {/each}
+        </select>
+      </div>
+      <p class="note">{t('settings.leoScenarioDesc')}</p>
+
+      <div class="field">
+        <span class="field-label">{t('settings.leoSafeword')}</span>
+        <input
+          type="text"
+          class="text-input"
+          placeholder={t('settings.leoSafewordHint')}
+          bind:value={S.settings.leoSafeword}
+          onblur={saveLeoSafeword}
+          aria-label={t('settings.leoSafeword')}
+        />
+        <p class="note">{t('settings.leoSafewordDesc')}</p>
+      </div>
+
+      <div class="field">
+        <span class="field-label">{t('settings.leoNotes')}</span>
+        <textarea
+          rows="4"
+          placeholder={t('settings.leoNotesHint')}
+          bind:value={S.settings.leoNotes}
+          onblur={save}
+          aria-label={t('settings.leoNotes')}
+        ></textarea>
+        <p class="note">{t('settings.leoNotesDesc')}</p>
+      </div>
+    {/if}
+
     <p class="note">{t('settings.gatewayNote')}</p>
   </section>
 
@@ -1085,6 +1431,29 @@
     font-size: var(--text-xs, 12px);
     color: var(--t3);
   }
+  /* —— 安静模式(公共场合一键)—— 比普通 toggle-row 更显眼:边框 + 底色高亮 */
+  .quiet-mode-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3, 12px);
+    width: 100%;
+    border: 1px solid var(--warning, #d29922);
+    background: color-mix(in srgb, var(--warning, #d29922) 10%, transparent);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-block: 4px 8px;
+    cursor: pointer;
+    text-align: start;
+  }
+  .quiet-mode-row.on {
+    border-color: var(--positive, #3fb950);
+    background: color-mix(in srgb, var(--positive, #3fb950) 12%, transparent);
+  }
+  .quiet-mode-label {
+    font-weight: 600;
+  }
+
   /* 命名避开主题包全局 .toggle 组件(settings-ext.css),防止样式互相泄漏 */
   .switch {
     flex: 0 0 auto;
@@ -1134,6 +1503,7 @@
     accent-color: var(--accent);
   }
   textarea,
+  .text-input,
   .memory-add input {
     width: 100%;
     border: 1px solid var(--border-l);
@@ -1143,10 +1513,13 @@
     font: inherit;
     font-size: var(--text-sm, 14px);
     padding: 10px 12px;
-    resize: vertical;
     outline: none;
   }
+  textarea {
+    resize: vertical;
+  }
   textarea:focus,
+  .text-input:focus,
   .memory-add input:focus {
     border-color: var(--t3);
   }

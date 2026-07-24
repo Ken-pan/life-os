@@ -65,7 +65,8 @@ export const LIFE_OS_WRITE_TOOL_NAMES = Object.freeze([
 
 /**
  * @param {string} [text]
- * @param {{ priorToolNames?: string[] }} [opts]
+ * @param {{ priorToolNames?: string[], companionMode?: boolean }} [opts]
+ *   companionMode: Leo 陪伴闲聊 — 抑制「今天怎么样」类 soft daily(那是男友寒暄,不是 Obsidian 日报)
  * @returns {LocalAssistNeeds}
  */
 export function detectLocalAssistNeeds(text = '', opts = {}) {
@@ -81,11 +82,16 @@ export function detectLocalAssistNeeds(text = '', opts = {}) {
       t,
     )
 
-  const daily =
-    hasPrior('read_note', 'search_notes', 'ask_notes') ||
-    /今天怎么样|今日动态|今天有什么|日报|会议|邮件|teams|outlook|jira|rss|忙什么|在做哪些项目|开发进展|git.?pulse|提交记录|近几天.*项目/i.test(
+  const dailyHard =
+    /今日动态|日报|会议|邮件|teams|outlook|jira|rss|在做哪些项目|开发进展|git.?pulse|提交记录|近几天.*项目/i.test(
       t,
     )
+  const dailySoft =
+    /今天怎么样|今天有什么|忙什么/i.test(t)
+  const daily =
+    hasPrior('read_note', 'search_notes', 'ask_notes') ||
+    dailyHard ||
+    (!opts.companionMode && dailySoft)
 
   const browser =
     hasPrior(...BROWSER_TOOL_NAMES) ||
@@ -95,7 +101,7 @@ export function detectLocalAssistNeeds(text = '', opts = {}) {
 
   const image =
     hasPrior(...IMAGE_TOOL_NAMES) ||
-    /画图|画画|生图|生成图片|插画|海报|壁纸|头像|照片风格|generate_image|角色一致性|list_characters/i.test(
+    /画图|画画|画一张|配一张|再画|出图|生图|生成(?:一张)?图|生成图片|要像你|插画|海报|壁纸|头像|照片风格|draw this|draw a|also draw|generate_image|角色一致性|list_characters/i.test(
       t,
     )
 

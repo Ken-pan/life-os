@@ -11,6 +11,7 @@
     startNewChat,
     selectConversation,
     sendMessage,
+    shareLeoStill,
     conversationToMarkdown,
   } from '$lib/chat.svelte.js'
   import Composer from '$lib/components/Composer.svelte'
@@ -28,6 +29,12 @@
     warmLocalAiAssist,
     warmLocalAiHeavy,
   } from '$lib/localai.js'
+  import {
+    isLeoConversation,
+    isLeoPersona,
+    normalizeLeoScenarioId,
+  } from '$lib/kenos/leoPersona.core.js'
+  import { leoPresenceStill } from '$lib/kenos/leoStills.core.js'
   import {
     isIosNativeShell,
     publishNavManifest,
@@ -61,6 +68,12 @@
     reconcileStateToUrl,
     readLocalModeAccepted,
   } from '$lib/kenos/assistantShell.core.js'
+  import {
+    beginAssistantUrlApply,
+    endAssistantUrlApply,
+    isApplyingAssistantFromUrl,
+  } from '$lib/kenos/assistantUrlSync.svelte.js'
+  import { leoHomeOpeners } from '$lib/kenos/leoSuggest.core.js'
 
   const scopeUi = $derived(
     resolveAssistantScopeLabel({
@@ -197,12 +210,6 @@
     return (last.suggestions ?? []).slice(0, 2)
   })
 
-  const recentChats = $derived(
-    C.conversations
-      .filter((c) => c.messages?.length)
-      .slice(0, 5),
-  )
-
   const homeGreeting = $derived.by(() => {
     const h = new Date().getHours()
     const en = S.settings.locale === 'en'
@@ -231,6 +238,29 @@
     return en ? `${hi}, ${name}` : `${hi}，${name}`
   })
 
+  const leoOn = $derived(isLeoPersona(S.settings))
+  const leoScenario = $derived(normalizeLeoScenarioId(S.settings.leoScenario))
+  const leoHomeStill = $derived(
+    leoPresenceStill({
+      scenarioId: leoScenario,
+    }),
+  )
+  // 空态陪伴 chips — 与 Composer 的 quick openers 同源(见 leoSuggest.core.js)。
+  const leoHomeChips = $derived(leoOn ? leoHomeOpeners(S.settings) : [])
+  const recentChats = $derived(
+    C.conversations
+      .filter((c) => c.messages?.length)
+      .filter((c) => (leoOn ? isLeoConversation(c) : true))
+      .slice(0, 5),
+  )
+
+  function openLeoPresence() {
+    shareLeoStill({
+      stillId: leoHomeStill.id,
+      scenarioId: S.settings.leoScenario,
+    })
+  }
+
   const placeholderKind = $derived(
     surface === 'locked' ||
       (session.authenticationState === 'signed_out' && localModeAccepted)
@@ -245,7 +275,11 @@
         : t('chat.placeholderAll'),
   )
   const composerContextLabel = $derived(
-    scopeUi.entity ? `${scopeUi.space} · ${scopeUi.entity}` : scopeUi.space,
+    scopeUi.kind === 'global'
+      ? undefined
+      : scopeUi.entity
+        ? `${scopeUi.space} · ${scopeUi.entity}`
+        : scopeUi.space,
   )
   const composerContextMeta = $derived(
     scopeUi.kind === 'context' ? t('chat.contextReadonly') : '',
@@ -259,9 +293,6 @@
   let moreMenu = $state(/** @type {HTMLElement | null} */ (null))
   /** @type {ReturnType<typeof setTimeout> | null} */
   let exportTimer = null
-  /** Suppress state→URL while applying URL→state (history.back). */
-  let applyingFromUrl = false
-
   let spacerH = $state(0)
   // Intentionally non-reactive bookkeeping for scroll-anchor (not UI state).
   let liveAnchor = false
@@ -331,7 +362,7 @@
     }
   }
 
-  function syncAssistantUrl(conversationId) {
+  async function syncAssistantUrl(conversationId) {
     const next = buildAssistantHref({
       pathname: page.url.pathname || '/assistant',
       conversationId,
@@ -339,16 +370,15 @@
     })
     const cur = `${page.url.pathname}${page.url.search}`
     if (cur === next) return
-    void goto(next, { replaceState: true, noScroll: true, keepFocus: true })
+    await goto(next, { replaceState: true, noScroll: true, keepFocus: true })
   }
 
   function returnHome() {
     moreOpen = false
-    applyingFromUrl = true
+    beginAssistantUrlApply()
     startNewChat()
-    syncAssistantUrl(null)
-    queueMicrotask(() => {
-      applyingFromUrl = false
+    void syncAssistantUrl(null).finally(() => {
+      endAssistantUrlApply()
     })
   }
 
@@ -357,9 +387,14 @@
     void goto('/history')
   }
 
-  function openRecent(id) {
+  async function openRecent(id) {
+    beginAssistantUrlApply()
     selectConversation(id)
-    syncAssistantUrl(id)
+    try {
+      await syncAssistantUrl(id)
+    } finally {
+      endAssistantUrlApply()
+    }
   }
 
   function acceptLocalMode() {
@@ -419,6 +454,7 @@
 
   // URL is source of truth for open chat (supports history.back / WK goBack).
   $effect(() => {
+    if (isApplyingAssistantFromUrl()) return
     const fromUrl = conversationIdFromSearch(page.url.searchParams)
     const action = reconcileUrlToState({
       urlConversationId: fromUrl,
@@ -430,18 +466,18 @@
       ),
     })
     if (action === 'noop') return
-    applyingFromUrl = true
+    beginAssistantUrlApply()
     if (action === 'select' && fromUrl) selectConversation(fromUrl)
     else if (action === 'clear') startNewChat()
-    else if (action === 'clear-url') syncAssistantUrl(null)
+    else if (action === 'clear-url') void syncAssistantUrl(null)
     queueMicrotask(() => {
-      applyingFromUrl = false
+      endAssistantUrlApply()
     })
   })
 
   // Mirror UI-owned changes into URL — never fight history.back.
   $effect(() => {
-    if (applyingFromUrl) return
+    if (isApplyingAssistantFromUrl()) return
     const id = C.activeId
     const urlId = conversationIdFromSearch(page.url.searchParams)
     const action = reconcileStateToUrl({
@@ -569,7 +605,13 @@
 
 <svelte:window onresize={onResize} />
 
-<div class="chat" data-surface={surface} data-testid="assistant-shell">
+<div
+  class="chat"
+  class:leo-mode={leoOn}
+  data-surface={surface}
+  data-leo-scenario={leoOn ? leoScenario : undefined}
+  data-testid="assistant-shell"
+>
   <div class="chat-main">
     {#if AG.active}
       <AgentThread />
@@ -590,7 +632,9 @@
               {conversation?.title || t('chat.title')}
             </p>
           {:else}
-            <p class="chat-title chat-title--home">{t('chat.homeTitle')}</p>
+            <p class="chat-title chat-title--home">
+              {leoOn ? t('chat.leoHomeTitle') : t('chat.homeTitle')}
+            </p>
           {/if}
         </div>
         <div class="chat-top-right">
@@ -611,8 +655,8 @@
             <button
               type="button"
               class="top-btn"
-              title={t('chat.newChat')}
-              aria-label={t('chat.newChat')}
+              title={leoOn ? t('chat.newLeoChat') : t('chat.newChat')}
+              aria-label={leoOn ? t('chat.newLeoChat') : t('chat.newChat')}
               onclick={returnHome}
             >
               <Icon name="compose" size={15} strokeWidth={1.75} />
@@ -679,37 +723,88 @@
           </div>
         </div>
       {:else if !inConversation}
-        <div class="hero hero--home" data-testid="assistant-home">
-          <h1 class="home-greeting">{homeGreeting}</h1>
-          <section
-            class="attention-brief"
-            aria-label={t('chat.attentionLabel')}
-          >
-            <p class="attention-ask">{attention.ask}</p>
-            {#if attention.bullets.length}
-              <ul class="attention-list">
-                {#each attention.bullets as bullet (bullet)}
-                  <li>{bullet}</li>
-                {/each}
-              </ul>
-            {/if}
-          </section>
-          <div class="suggestions" aria-labelledby="assistant-suggestions-label">
-            <p class="suggestions-label" id="assistant-suggestions-label">
-              {t('chat.suggestionsLabel')}
-            </p>
-            {#each suggestions as item (item.text)}
-              <button
-                type="button"
-                class="assistant-chip"
-                onclick={() => sendMessage(item.text)}
+        <div class="hero hero--home" class:hero--leo={leoOn} data-testid="assistant-home">
+          {#if leoOn}
+            <button
+              type="button"
+              class="leo-presence"
+              data-testid="leo-presence"
+              title={t('chat.leoStillHint')}
+              aria-label={t('chat.leoStillHint')}
+              onclick={openLeoPresence}
+            >
+              <span class="leo-presence-float">
+                <img
+                  class="leo-presence-img"
+                  src={leoHomeStill.src}
+                  alt={t('chat.leoPresenceAlt')}
+                  width="168"
+                  height="210"
+                  decoding="async"
+                  loading="eager"
+                />
+              </span>
+              <span class="leo-presence-caption"
+                >{S.settings.locale === 'en'
+                  ? leoHomeStill.labelEn
+                  : leoHomeStill.labelZh}</span
               >
-                <Icon name={item.icon} size={14} strokeWidth={1.75} />
-                <span>{item.text}</span>
-              </button>
-            {/each}
+            </button>
+          {/if}
+          <h1 class="home-greeting">{homeGreeting}</h1>
+          {#if leoOn}
+            <p class="leo-home-subtitle">{t('chat.leoHomeSubtitle')}</p>
+          {:else}
+            <section
+              class="attention-brief"
+              aria-label={t('chat.attentionLabel')}
+            >
+              <p class="attention-ask">{attention.ask}</p>
+              {#if attention.bullets.length}
+                <ul class="attention-list">
+                  {#each attention.bullets as bullet (bullet)}
+                    <li>{bullet}</li>
+                  {/each}
+                </ul>
+              {/if}
+            </section>
+          {/if}
+          <div
+            class="suggestions"
+            class:suggestions--leo={leoOn}
+            aria-labelledby={leoOn ? undefined : 'assistant-suggestions-label'}
+            aria-label={leoOn ? t('chat.leoSuggestionsLabel') : undefined}
+          >
+            {#if !leoOn}
+              <p class="suggestions-label" id="assistant-suggestions-label">
+                {t('chat.suggestionsLabel')}
+              </p>
+            {/if}
+            {#if leoOn}
+              {#each leoHomeChips as item, i (item.id)}
+                <button
+                  type="button"
+                  class="assistant-chip leo-chip leo-chip--plain"
+                  style="--leo-stagger: {i}"
+                  onclick={() => sendMessage(item.text)}
+                >
+                  <span>{item.text}</span>
+                </button>
+              {/each}
+            {:else}
+              {#each suggestions as item (item.text)}
+                <button
+                  type="button"
+                  class="assistant-chip"
+                  onclick={() => sendMessage(item.text)}
+                >
+                  <Icon name={item.icon} size={14} strokeWidth={1.75} />
+                  <span>{item.text}</span>
+                </button>
+              {/each}
+            {/if}
           </div>
-          {#if recentChats.length}
+          {#if recentChats.length && !leoOn}
             <section
               class="recent"
               aria-labelledby="assistant-recent-label"
@@ -734,8 +829,12 @@
               {/each}
             </section>
           {/if}
-          <p class="hint hint--empty">{chatHint}</p>
-          <p class="hint hint--trust">{t('chat.emptyTrust')}</p>
+          {#if !leoOn}
+            <p class="hint hint--empty">{chatHint}</p>
+            <p class="hint hint--trust">{t('chat.emptyTrust')}</p>
+          {:else}
+            <p class="hint hint--trust hint--leo">{t('chat.leoHomeTrust')}</p>
+          {/if}
         </div>
         <div class="dock dock--home">
           <div class="dock-col">
@@ -745,6 +844,7 @@
               contextLabel={composerContextLabel}
               contextMeta={composerContextMeta}
               onClearContext={scopeUi.kind === 'context' ? clearScope : undefined}
+              leoOpeners={!leoOn}
             />
           </div>
         </div>
@@ -813,19 +913,22 @@
 
 <style>
   .chat {
+    flex: 1 1 auto;
+    min-height: 0;
     height: 100%;
     display: flex;
     flex-direction: row;
-    min-height: 0;
   }
 
   .chat-main {
     position: relative;
     flex: 1;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
     min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: hidden;
   }
 
   .chat-top {
@@ -865,6 +968,7 @@
   .chat-title {
     margin: 0;
     min-width: 0;
+    flex: 1 1 auto;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1105,7 +1209,11 @@
   }
 
   .hero {
-    flex: 1;
+    position: relative;
+    z-index: 10;
+    grid-row: 1;
+    grid-column: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -1115,8 +1223,365 @@
     margin-inline: auto;
     padding: calc(var(--safe-top-effective, 0px) + 56px) 0 3vh;
     overflow-y: auto;
-    min-height: 0;
   }
+
+  .leo-presence {
+    position: relative;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 8px 0 4px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: center;
+    color: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .leo-presence:focus-visible {
+    outline: 2px solid color-mix(in oklab, #c45c26 45%, transparent);
+    outline-offset: 5px;
+    border-radius: 28px;
+  }
+  .leo-presence-float {
+    display: block;
+    will-change: transform;
+  }
+  .leo-presence-img {
+    display: block;
+    width: min(48vw, 176px);
+    height: auto;
+    aspect-ratio: 4 / 5;
+    border-radius: 28px;
+    object-fit: cover;
+    object-position: center 16%;
+    border: 0;
+    background: var(--bg-2);
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, #fff 8%, transparent),
+      0 20px 50px color-mix(in oklab, #000 55%, transparent),
+      0 0 60px color-mix(in oklab, #c45c26 14%, transparent);
+    transition:
+      transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 240ms ease;
+  }
+  .leo-presence:hover .leo-presence-img,
+  .leo-presence:active .leo-presence-img {
+    transform: scale(1.025);
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, #fff 12%, transparent),
+      0 24px 56px color-mix(in oklab, #000 58%, transparent),
+      0 0 72px color-mix(in oklab, #c45c26 20%, transparent);
+  }
+  .leo-presence-caption {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .hero--leo {
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding-bottom: calc(3vh + 140px);
+  }
+  .hero--leo .home-greeting {
+    margin-top: 10px;
+    font-size: 26px;
+    font-weight: 650;
+    letter-spacing: -0.04em;
+    line-height: 1.15;
+  }
+  .hero--leo .leo-home-subtitle {
+    max-width: 22em;
+    margin-inline: auto;
+    font-size: 14px;
+    line-height: 1.45;
+    color: color-mix(in srgb, var(--t1) 58%, transparent);
+  }
+  .hero--leo .suggestions {
+    width: 100%;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .hero--leo .assistant-chip.leo-chip--plain {
+    justify-content: center;
+    min-height: 46px;
+    padding: 12px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: color-mix(in srgb, #c45c26 14%, color-mix(in srgb, var(--t1) 7%, transparent));
+    color: color-mix(in srgb, var(--t1) 92%, transparent);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #c45c26 22%, transparent);
+    transition:
+      background 160ms ease,
+      transform 160ms ease,
+      box-shadow 160ms ease;
+  }
+  .hero--leo .assistant-chip.leo-chip--plain:hover {
+    background: color-mix(in srgb, #c45c26 20%, color-mix(in srgb, var(--t1) 8%, transparent));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #c45c26 32%, transparent);
+    transform: translateY(-1px);
+  }
+  .hero--leo .assistant-chip.leo-chip--plain:active {
+    transform: translateY(1px) scale(0.985);
+  }
+  .hint--leo {
+    text-align: center;
+    color: color-mix(in srgb, var(--t1) 36%, transparent);
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    margin-top: 4px;
+  }
+
+  /* —— 动效系统：入场编排 / 氛围呼吸 / 在场微动 ——
+     行业：Replika / CAI 式 staggered rise + 慢氛围光，不用弹跳 */
+  .hero--leo .leo-presence,
+  .hero--leo .home-greeting,
+  .hero--leo .leo-home-subtitle,
+  .hero--leo .assistant-chip.leo-chip--plain,
+  .hero--leo .hint--leo {
+    animation: leo-rise-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hero--leo .leo-presence {
+    animation-delay: 40ms;
+  }
+  .hero--leo .home-greeting {
+    animation-delay: 120ms;
+  }
+  .hero--leo .leo-home-subtitle {
+    animation-delay: 180ms;
+  }
+  .hero--leo .assistant-chip.leo-chip--plain {
+    animation-delay: calc(240ms + var(--leo-stagger, 0) * 55ms);
+  }
+  .hero--leo .hint--leo {
+    animation-delay: 420ms;
+  }
+  .hero--leo .leo-presence-float {
+    animation: leo-presence-float 6.5s ease-in-out 0.7s infinite;
+  }
+
+  @keyframes leo-rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.985);
+      filter: blur(2px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+  }
+  @keyframes leo-presence-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  /* —— Leo 沉浸氛围:克制暖光,场景换色 —— */
+  .chat.leo-mode {
+    --leo-ambience: color-mix(in oklab, #c45c26 11%, transparent);
+    --leo-ink: #c45c26;
+    position: relative;
+    isolation: isolate;
+  }
+  .chat.leo-mode::before {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(
+        110% 55% at 50% -8%,
+        var(--leo-ambience),
+        transparent 62%
+      ),
+      radial-gradient(
+        70% 40% at 100% 100%,
+        color-mix(in oklab, #120a06 40%, transparent),
+        transparent 65%
+      );
+    opacity: 0.92;
+    animation: leo-ambience-breathe 9s ease-in-out infinite;
+  }
+  @keyframes leo-ambience-breathe {
+    0%,
+    100% {
+      opacity: 0.78;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  .chat.leo-mode[data-leo-scenario='late_night'] {
+    --leo-ambience: color-mix(in oklab, #5a3a78 13%, transparent);
+  }
+  .chat.leo-mode[data-leo-scenario='shower'] {
+    --leo-ambience: color-mix(in oklab, #2f5a72 13%, transparent);
+  }
+  .chat.leo-mode[data-leo-scenario='gym_after'] {
+    --leo-ambience: color-mix(in oklab, #8a4728 14%, transparent);
+  }
+  .chat.leo-mode[data-leo-scenario='couch'] {
+    --leo-ambience: color-mix(in oklab, #c45c26 14%, transparent);
+  }
+  .chat.leo-mode .chat-main,
+  .chat.leo-mode .chat-top,
+  .chat.leo-mode .dock {
+    position: relative;
+    z-index: 1;
+  }
+  .chat.leo-mode .chat-top {
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--bg) 92%, transparent) 55%,
+      transparent
+    );
+    border-bottom: 0;
+    backdrop-filter: blur(16px) saturate(1.15);
+    -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  }
+  .chat.leo-mode .chat-title--home {
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: none;
+    font-size: 13px;
+    color: color-mix(in srgb, var(--t1) 62%, transparent);
+  }
+  .chat.leo-mode .dock-col :global(.composer) {
+    background: color-mix(in srgb, var(--bg) 42%, color-mix(in srgb, #1c1210 58%, transparent));
+    border: 1px solid color-mix(in srgb, #fff 7%, transparent);
+    backdrop-filter: blur(22px) saturate(1.2);
+    -webkit-backdrop-filter: blur(22px) saturate(1.2);
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #fff 6%, transparent) inset,
+      0 12px 40px color-mix(in oklab, #000 35%, transparent);
+    transition:
+      border-color 220ms ease,
+      box-shadow 220ms ease,
+      background 220ms ease,
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .chat.leo-mode .dock-col :global(.composer:focus-within) {
+    border-color: color-mix(in srgb, #c45c26 28%, transparent);
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #fff 8%, transparent) inset,
+      0 0 0 1px color-mix(in srgb, #c45c26 18%, transparent),
+      0 16px 48px color-mix(in oklab, #000 40%, transparent),
+      0 0 36px color-mix(in oklab, #c45c26 16%, transparent);
+    transform: translateY(-1px);
+  }
+  .chat.leo-mode .dock-col :global(.composer.recording) {
+    border-color: color-mix(in srgb, #c45c26 40%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, #c45c26 22%, transparent),
+      0 0 28px color-mix(in oklab, #c45c26 22%, transparent);
+  }
+  .chat.leo-mode .dock-col :global(.context-chip) {
+    background: color-mix(in srgb, #fff 5%, transparent);
+    color: color-mix(in srgb, var(--t1) 72%, transparent);
+    min-height: 26px;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition:
+      background 160ms ease,
+      color 160ms ease,
+      transform 160ms ease;
+  }
+  .chat.leo-mode .dock-col :global(button.context-chip:active) {
+    transform: scale(0.96);
+  }
+  .chat.leo-mode .dock-col :global(button.leo-chip) {
+    background: color-mix(in srgb, #c45c26 18%, transparent);
+    color: color-mix(in srgb, #f0b089 88%, var(--t1));
+  }
+  .chat.leo-mode .dock-col :global(button.leo-control-stop) {
+    background: color-mix(in srgb, #a33a4a 14%, transparent);
+    color: color-mix(in srgb, #e8a0a8 80%, var(--t1));
+  }
+  .chat.leo-mode .dock-col :global(.leo-chip-on) {
+    background: color-mix(in srgb, #c45c26 26%, transparent);
+    color: color-mix(in srgb, #ffd0b0 90%, var(--t1));
+  }
+  .chat.leo-mode .follow-ups {
+    animation: leo-rise-in 420ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+  }
+  .chat.leo-mode .follow-chip {
+    border: 0;
+    background: color-mix(in srgb, #c45c26 9%, color-mix(in srgb, var(--t1) 4%, transparent));
+    color: color-mix(in srgb, var(--t1) 78%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #c45c26 12%, transparent);
+    transition:
+      background 160ms ease,
+      color 160ms ease,
+      transform 160ms ease;
+  }
+  .chat.leo-mode .follow-chip:hover {
+    background: color-mix(in srgb, #c45c26 14%, transparent);
+    color: var(--t1);
+    transform: translateY(-1px);
+  }
+  .chat.leo-mode .follow-chip:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .leo-presence-img,
+    .leo-presence-float,
+    .hero--leo .leo-presence,
+    .hero--leo .leo-presence-float,
+    .hero--leo .home-greeting,
+    .hero--leo .leo-home-subtitle,
+    .hero--leo .assistant-chip.leo-chip--plain,
+    .hero--leo .hint--leo,
+    .chat.leo-mode::before,
+    .chat.leo-mode .follow-ups,
+    .chat.leo-mode .dock-col :global(.composer) {
+      animation: none !important;
+      transition: none !important;
+      filter: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+    .hero--leo .assistant-chip.leo-chip--plain:hover,
+    .hero--leo .assistant-chip.leo-chip--plain:active,
+    .leo-presence:hover .leo-presence-img,
+    .leo-presence:active .leo-presence-img {
+      transform: none;
+    }
+  }
+
+  .leo-home-subtitle {
+    margin: 0 2px;
+    color: color-mix(
+      in srgb,
+      var(--t1) calc(var(--kenos-emphasis-secondary, 0.68) * 100%),
+      transparent
+    );
+    font-size: var(--kenos-type-body, 15px);
+    line-height: 1.4;
+  }
+
   .hero--locked {
     justify-content: center;
     gap: 12px;
@@ -1169,7 +1634,10 @@
   }
 
   .thread {
-    flex: 1;
+    position: relative;
+    z-index: 1;
+    grid-row: 1;
+    grid-column: 1;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -1220,7 +1688,12 @@
   }
 
   .dock {
-    flex: 0 0 auto;
+    position: relative;
+    z-index: 20;
+    grid-row: 2;
+    grid-column: 1;
+    flex-shrink: 0;
+    pointer-events: none;
     background: linear-gradient(
       to top,
       var(--bg) 70%,
@@ -1230,6 +1703,7 @@
   }
   .dock-col {
     position: relative;
+    pointer-events: auto;
     width: min(100% - 32px, 680px);
     margin-inline: auto;
     padding-bottom: max(8px, var(--safe-bottom, 0px));
@@ -1332,5 +1806,13 @@
     ) {
     background: color-mix(in srgb, var(--card, #fff) 82%, transparent);
     border-color: color-mix(in srgb, var(--t1) 10%, transparent);
+  }
+
+  /* Assistant fills locked main — establish flex height chain for grid dock. */
+  :global(#main-content:has([data-testid='assistant-shell'])) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
   }
 </style>

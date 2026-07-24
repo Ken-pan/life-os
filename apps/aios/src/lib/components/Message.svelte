@@ -1,4 +1,5 @@
 <script>
+  import { untrack } from 'svelte'
   import Icon from '@life-os/platform-web/svelte/icon'
   import { createImeGuard } from '@life-os/theme'
   import { t } from '$lib/i18n/index.js'
@@ -15,13 +16,29 @@
     continueGenerating,
     switchBranch,
     activeConversation,
+    requestLeoListen,
+    cancelLeoListen,
   } from '$lib/chat.svelte.js'
 
   const ime = createImeGuard()
   import { toolIcon } from '$lib/tools.js'
-  import { createSpeechSession } from '$lib/localai.js'
+  import { createSpeechSession, unlockSpeechAudio } from '$lib/localai.js'
   import { S, save } from '$lib/state.svelte.js'
+  import {
+    isLeoPersona,
+    leoAutoSpeakEnabled,
+    leoHandsFreeEnabled,
+    resolveSpeechPersona,
+  } from '$lib/kenos/leoPersona.core.js'
+  import { LEO_VOICE, leoVoiceStatusText } from '$lib/kenos/leoVoice.core.js'
+  import {
+    inferLeoExpression,
+    leoAvatarSrc,
+    stabilizeLeoExpression,
+  } from '$lib/kenos/leoAvatar.core.js'
   import { summarizeToolActivity } from '$lib/kenos/toolActivity.core.js'
+  import { setLeoPetSpeaking } from '$lib/kenos/leoPet.svelte.js'
+  import LeoAvatar from './LeoAvatar.svelte'
   import {
     openArtifact,
     openUrl,
@@ -34,6 +51,16 @@
   /** @type {{ message: import('$lib/chat.svelte.js').ChatMessage, index?: number, isLast?: boolean }} */
   let { message, index = 0, isLast = false } = $props()
 
+  /**
+   * 本条消息是否正在流式输出。`C.streaming` 是全局「有流在跑」布尔,而流式只会
+   * 发生在最后一条 assistant 消息上,所以「本条在流」= 全局在流 且 本条是末轮
+   * assistant。此前多处直接引用 `streamingThis` 却漏了这行声明,导致
+   * `ReferenceError: streamingThis is not defined`(运行时日志 Message.svelte $effect)。
+   */
+  const streamingThis = $derived(
+    C.streaming && isLast && message.role === 'assistant',
+  )
+
   let copied = $state(false)
   let editing = $state(false)
   let editText = $state('')
@@ -41,19 +68,34 @@
   let seenEditSignal = C.editSignal
   let ttsState = $state('idle') // 'idle' | 'loading' | 'playing' | 'paused'
   let ttsSession = null // createSpeechSession 句柄
+
+  // 桌宠「朗读中」状态桥接:本条开始播报→speak 帧;停播/卸载→复位
+  $effect(() => {
+    if (ttsState !== 'playing') return
+    setLeoPetSpeaking(true)
+    return () => setLeoPetSpeaking(false)
+  })
   let ttsIndex = $state(0) // 当前朗读到第几句(0-based)
   let ttsTotal = $state(0) // 总句数,进度显示用
   let mdEl = $state(null) // .md 容器,逐句高亮的定位范围
   let followScroll = true // 跟读自动滚动;用户手动滚动即脱离,直到下次朗读
   let ttsAnnounce = $state('') // aria-live 播报文本
+  let ttsErrorFlash = $state(false) // 朗读失败:在朗读按钮旁短暂露出可见文案(非仅屏幕阅读器)
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let ttsWatchdog = null
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let ttsErrorFlashTimer = null
 
   const parts = $derived(splitThinking(message.content))
   const thinkingText = $derived(
     [message.reasoning, parts.thinking].filter(Boolean).join('\n'),
   )
-  const streamingThis = $derived(
-    C.streaming && isLast && message.role === 'assistant',
-  )
+  const leoMsgEnter = $derived.by(() => {
+    if (!isLeoPersona(S.settings)) return false
+    const created = Number(message.createdAt) || 0
+    // 仅新消息入场,避免打开历史时整页齐刷刷升起
+    return created > 0 && Date.now() - created < 2500
+  })
   /* —— 回答版本翻页:找到触发本轮的用户消息,读它挂着的分支(仅末轮可切换)—— */
   const turnUser = $derived.by(() => {
     if (!isLast || message.role !== 'assistant') return null
@@ -95,6 +137,39 @@
       }))
     }),
   )
+  /** 现成 Leo 静帧（shareLeoStill）；与生图分流，直接挂 message.images */
+  const stillImages = $derived(
+    message.role === 'assistant' && message.leoStillId && message.images?.length
+      ? message.images
+      : [],
+  )
+
+  /** 流式过程中稳住表情，避免来回闪 */
+  let leoExprSticky = $state('neutral')
+  const leoAvatar = $derived.by(() => {
+    if (message.role !== 'assistant' || !isLeoPersona(S.settings)) return null
+    const raw = inferLeoExpression(parts.answer || message.content)
+    // sticky 只作「上一帧表情」输入,用 untrack 读 —— 否则下面的 $effect 回写
+    // leoExprSticky 会反过来让本 derived 重算,与 effect 形成读写环,触发
+    // `effect_update_depth_exceeded`(运行时日志)。真正的依赖是 raw / streaming。
+    const previous = untrack(() => leoExprSticky)
+    const expression = stabilizeLeoExpression(previous, raw, {
+      streaming: streamingThis,
+    })
+    return {
+      src: leoAvatarSrc({ expression }),
+      expression,
+    }
+  })
+  $effect(() => {
+    if (!leoAvatar) {
+      if (leoExprSticky !== 'neutral') leoExprSticky = 'neutral'
+      return
+    }
+    if (leoAvatar.expression !== leoExprSticky) {
+      leoExprSticky = leoAvatar.expression
+    }
+  })
 
   /* —— 工具调用的人性化呈现(对齐 Claude/ChatGPT:每步自带上下文)—— */
   function argsOf(tc) {
@@ -291,17 +366,69 @@
   const TTS_RATES = [1, 1.25, 1.5, 2, 0.75]
   const fmtRate = (r) => `${r}×`
 
+  /** 当前会话是否为自动朗读(用于结束后是否续听) */
+  let ttsWasAuto = false
+
   function toggleSpeak() {
     if (ttsState !== 'idle') {
+      ttsWasAuto = false // 手动打断 → 不自动开麦
       ttsSession?.stop() // 触发 onEnd → endSpeak,统一收尾
       return
     }
-    ttsState = 'loading' // 等首句出声
+    startSpeak()
+  }
+
+  /** @param {{ auto?: boolean }} [opts] */
+  async function startSpeak(opts = {}) {
+    if (ttsState !== 'idle') return
+    const answer = parts.answer
+    if (!answer?.trim()) return
+    // 发送手势里已 unlock;这里再兜底一次(点喇叭)
+    if (!opts.auto) await unlockSpeechAudio()
+    // 新朗读开始前取消排队开麦,避免叠录
+    cancelLeoListen()
+    ttsWasAuto = !!opts.auto
+    ttsState = 'loading'
     ttsIndex = 0
-    ttsSession = createSpeechSession(ttsText(), {
-      voice: S.settings.ttsVoice,
-      rate: S.settings.ttsRate, // 记住的偏好速度
+    if (ttsErrorFlashTimer) {
+      clearTimeout(ttsErrorFlashTimer)
+      ttsErrorFlashTimer = null
+    }
+    ttsErrorFlash = false
+    if (ttsWatchdog) clearTimeout(ttsWatchdog)
+    ttsWatchdog = setTimeout(() => {
+      if (ttsState === 'loading') {
+        ttsWasAuto = false
+        ttsSession?.stop()
+        endSpeak({ error: true })
+      }
+    }, 60000)
+    const speech = resolveSpeechPersona(S.settings)
+    const speakText =
+      speech.persona === 'leo'
+        ? speech.prepareText(answer, {
+            codeOmitted: t('chat.codeOmitted'),
+          })
+        : ttsText()
+    if (!speakText) {
+      endSpeak()
+      return
+    }
+    const sessionOpts = {
+      voice: speech.voice,
+      rate:
+        speech.persona === 'leo'
+          ? speech.resolveRate(S.settings.ttsRate)
+          : S.settings.ttsRate,
+      // Leo/Aiden:整段钉英式语种 + 合并气声碎片,避免句间「换人」感
+      ...(speech.persona === 'leo'
+        ? { langCode: 'a', coalesceBreathBeats: true }
+        : {}),
       onStart() {
+        if (ttsWatchdog) {
+          clearTimeout(ttsWatchdog)
+          ttsWatchdog = null
+        }
         ttsState = 'playing'
         ttsAnnounce = t('chat.speaking')
         startFollow()
@@ -314,18 +441,84 @@
         ttsState = st // 'playing' | 'paused'
       },
       onEnd: endSpeak,
-      onError: endSpeak,
-    })
+      onError: () => {
+        ttsWasAuto = false
+        endSpeak({ error: true })
+      },
+    }
+    const instruct = speech.instructFor?.(speakText)
+    if (instruct) sessionOpts.instruct = instruct
+    ttsSession = createSpeechSession(speakText, sessionOpts)
     ttsTotal = ttsSession.sentences.length
+    if (opts.auto && !ttsTotal) endSpeak()
   }
 
-  function endSpeak() {
+  /** @param {{ error?: boolean }} [opts] */
+  function endSpeak(opts = {}) {
+    if (ttsWatchdog) {
+      clearTimeout(ttsWatchdog)
+      ttsWatchdog = null
+    }
+    const shouldListen =
+      !opts.error && // 朗读没成功就别接着自动开麦,先让用户看到/听到失败提示
+      ttsWasAuto &&
+      isLast &&
+      !message.leoLocal && // 安全词硬停后不自动开麦,等用户主动再开
+      isLeoPersona(S.settings) &&
+      leoAutoSpeakEnabled(S.settings) &&
+      leoHandsFreeEnabled(S.settings) &&
+      !C.streaming
+    ttsWasAuto = false
     ttsState = 'idle'
     ttsSession = null
-    ttsAnnounce = t('chat.speechEnded')
+    ttsAnnounce = opts.error
+      ? leoVoiceStatusText('ttsFailed', t)
+      : t('chat.speechEnded')
+    if (opts.error) {
+      ttsErrorFlash = true
+      if (ttsErrorFlashTimer) clearTimeout(ttsErrorFlashTimer)
+      ttsErrorFlashTimer = setTimeout(() => {
+        ttsErrorFlash = false
+        ttsErrorFlashTimer = null
+      }, 3200)
+    }
     clearHighlight()
     stopFollow()
+    if (shouldListen) {
+      requestLeoListen(LEO_VOICE.postTtsDelayMs)
+    }
   }
+
+  /* Leo:开场白 / 流式结束 / 本地 aftercare 自动朗读 */
+  let leoWasStreaming = false
+  let leoBootSpoke = false
+  let leoLocalSpoke = false
+  $effect(() => {
+    if (streamingThis) {
+      leoWasStreaming = true
+      return
+    }
+    if (
+      !isLast ||
+      message.role !== 'assistant' ||
+      message.error ||
+      !isLeoPersona(S.settings) ||
+      !leoAutoSpeakEnabled(S.settings) ||
+      !parts.answer?.trim() ||
+      ttsState !== 'idle'
+    ) {
+      return
+    }
+    const afterStream = leoWasStreaming
+    if (afterStream) leoWasStreaming = false
+    const msgs = activeConversation()?.messages ?? []
+    const bootGreeting = !leoBootSpoke && msgs.length === 1
+    const localAftercare = Boolean(message.leoLocal) && !leoLocalSpoke
+    if (!afterStream && !bootGreeting && !localAftercare) return
+    if (bootGreeting) leoBootSpoke = true
+    if (localAftercare) leoLocalSpoke = true
+    queueMicrotask(() => startSpeak({ auto: true }))
+  })
 
   function togglePause() {
     ttsSession?.togglePause()
@@ -433,13 +626,26 @@
 
   $effect(() => () => {
     ttsSession?.stop()
+    if (ttsWatchdog) {
+      clearTimeout(ttsWatchdog)
+      ttsWatchdog = null
+    }
+    if (ttsErrorFlashTimer) {
+      clearTimeout(ttsErrorFlashTimer)
+      ttsErrorFlashTimer = null
+    }
     stopFollow()
     clearHighlight()
   })
 </script>
 
 {#if message.role === 'user'}
-  <div class="row user" data-role="user">
+  <div
+    class="row user"
+    class:leo-user={isLeoPersona(S.settings)}
+    class:leo-msg-enter={leoMsgEnter}
+    data-role="user"
+  >
     {#if message.images?.length}
       <div class="user-images">
         {#each message.images as src, i (i)}
@@ -517,7 +723,22 @@
     {/if}
   </div>
 {:else}
-  <div class="row assistant" data-role="assistant">
+  <div
+    class="row assistant"
+    class:leo-row={Boolean(leoAvatar)}
+    class:leo-msg-enter={Boolean(leoAvatar) && leoMsgEnter}
+    data-role="assistant"
+  >
+    {#if leoAvatar}
+      <LeoAvatar
+        src={leoAvatar.src}
+        expression={leoAvatar.expression}
+        alt={t('chat.leoAvatarAlt')}
+        size={42}
+        live={streamingThis || ttsState === 'playing'}
+      />
+    {/if}
+    <div class="assistant-main">
     {#if thinkingText}
       <div class="think" class:open={thinkOpen}>
         <button
@@ -646,6 +867,25 @@
               </div>
             </div>
           {/if}
+        {/each}
+      </div>
+    {/if}
+
+    {#if stillImages.length}
+      <div class="gen-images leo-stills">
+        {#each stillImages as src, i (src + ':' + i)}
+          <button
+            type="button"
+            class="gen-image-btn"
+            title={t('chat.viewImage')}
+            onclick={() =>
+              openImage({
+                src,
+                title: t('chat.leoStillImage'),
+              })}
+          >
+            <img src={src} alt={t('chat.leoStillImage')} loading="lazy" />
+          </button>
         {/each}
       </div>
     {/if}
@@ -848,6 +1088,11 @@
               class={ttsState === 'loading' ? 'life-os-spin' : undefined}
             />
           </button>
+          {#if ttsErrorFlash}
+            <span class="tts-error-hint" role="status">
+              {leoVoiceStatusText('ttsFailed', t)}
+            </span>
+          {/if}
           {#if ttsState === 'playing' || ttsState === 'paused'}
             <button
               type="button"
@@ -904,12 +1149,13 @@
             <Icon name="refresh" size={14} strokeWidth={1.75} />
           </button>
         {/if}
-        {#if message.durationMs}
+        {#if message.durationMs && !leoAvatar}
           <span class="duration">{(message.durationMs / 1000).toFixed(1)}s</span
           >
         {/if}
       </div>
     {/if}
+    </div>
   </div>
 {/if}
 
@@ -917,6 +1163,83 @@
   .row {
     display: flex;
     flex-direction: column;
+  }
+
+  :global(.chat.leo-mode) .row.user .bubble {
+    background: color-mix(in srgb, #c45c26 16%, color-mix(in srgb, var(--card) 70%, var(--bg)));
+    border: 0;
+    border-radius: 20px 20px 6px 20px;
+    padding: 10px 15px;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #c45c26 12%, transparent);
+  }
+
+  .row.assistant.leo-row {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .row.assistant.leo-row.leo-msg-enter,
+  .row.user.leo-user.leo-msg-enter {
+    animation: leo-msg-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes leo-msg-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .row.assistant.leo-row .assistant-main {
+    gap: 8px;
+    padding-top: 2px;
+  }
+
+  /* Leo 回复:少一点工具感,多一点贴耳私聊 */
+  .row.assistant.leo-row :global(.md) {
+    font-size: 15.5px;
+    line-height: 1.58;
+    letter-spacing: -0.012em;
+  }
+
+  .row.assistant.leo-row :global(.md em) {
+    color: color-mix(in srgb, var(--t1) 70%, #c45c26);
+    font-style: italic;
+  }
+
+  .row.assistant.leo-row :global(.actions) {
+    opacity: 0.55;
+    transition: opacity 180ms ease;
+  }
+  .row.assistant.leo-row:hover :global(.actions),
+  .row.assistant.leo-row:focus-within :global(.actions),
+  .row.assistant.leo-row:last-child :global(.actions) {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .row.assistant.leo-row.leo-msg-enter,
+    .row.user.leo-user.leo-msg-enter {
+      animation: none;
+    }
+  }
+
+  .assistant-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .leo-stills .gen-image-btn img {
+    object-position: center 20%;
   }
 
   .row.user {
@@ -1806,7 +2129,8 @@
     cursor: default;
   }
   .row.assistant:has(.actions button.speaking) .actions,
-  .row.assistant:has(.actions button.tts-loading) .actions {
+  .row.assistant:has(.actions button.tts-loading) .actions,
+  .row.assistant:has(.actions .tts-error-hint) .actions {
     opacity: 1;
   }
   /* 变速按钮:显示当前倍率(1×/1.5×…),等宽数字免抖动 */
@@ -1848,6 +2172,12 @@
     font-size: var(--text-xs, 11px);
     color: var(--t3);
     font-variant-numeric: tabular-nums;
+  }
+  /* 朗读失败:按钮旁短暂露出的可见提示(不止 aria-live,肉眼也看得到) */
+  .actions .tts-error-hint {
+    font-size: var(--text-xs, 12px);
+    color: var(--critical, #f85149);
+    white-space: nowrap;
   }
   /* 逐句跟读高亮(CSS Custom Highlight API,不改 DOM) */
   ::highlight(tts) {

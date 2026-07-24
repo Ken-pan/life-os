@@ -2,7 +2,8 @@
   import '../app.css'
   import 'katex/dist/katex.min.css'
   import { onMount, setContext } from 'svelte'
-  import { afterNavigate } from '$app/navigation'
+  import { afterNavigate, goto } from '$app/navigation'
+  import { resolve } from '$app/paths'
   import { page } from '$app/state'
   import LifeOsAppShell from '@life-os/platform-web/svelte/app-shell'
   import LifeOsAppBar from '@life-os/platform-web/svelte/app-bar'
@@ -76,6 +77,12 @@
     isIosNativeShell,
     markIosNativeShellDom,
   } from '$lib/kenos/iosNativeShell.js'
+  import LeoPetOverlay from '$lib/components/LeoPetOverlay.svelte'
+  import {
+    PET,
+    bindLeoPetCrossWindow,
+    bumpLeoPetActivity,
+  } from '$lib/kenos/leoPet.svelte.js'
 
   let { children } = $props()
 
@@ -86,9 +93,11 @@
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
   const isAssistant = $derived(page.url.pathname === '/assistant')
+  const isPetRoute = $derived(page.url.pathname === '/pet')
   const knownRoutes = new Set([
     '/',
     '/assistant',
+    '/pet',
     '/chat',
     '/spaces',
     '/spaces/training',
@@ -166,6 +175,7 @@
     if (p === '/uiux-states') return 'UIUX States'
     if (p === '/') return t('nav.today')
     if (p === '/assistant' || p === '/chat') return t('chat.title')
+    if (p === '/pet') return 'Leo'
     return '页面未找到'
   })
 
@@ -274,6 +284,12 @@
       applyTheme,
       getLocale: () => S.settings.locale,
       setLocale,
+      // 原生壳的 Korben/Leo 切换经 shell-settings 通道驱动 web 助手人设。
+      getPersona: () => S.settings.assistantPersona,
+      setPersona: (persona) => {
+        S.settings.assistantPersona = persona === 'leo' ? 'leo' : 'korben'
+        save()
+      },
     })
     hydrateFocusStore()
     hydrateSpaceSwitcher()
@@ -355,6 +371,8 @@
       getSupabase: () => supabase,
     })
 
+    const unbindPet = bindLeoPetCrossWindow()
+
     return () => {
       clearTimeout(dreamTimer)
       clearReconnectTimer()
@@ -365,6 +383,7 @@
       cleanupAuthResume()
       disposeAppLogs()
       stopDailyBriefScheduler()
+      unbindPet()
       window.removeEventListener('offline', onWindowOffline)
       window.removeEventListener('online', onWindowOnline)
     }
@@ -373,6 +392,18 @@
   $effect(() => {
     S.settings.locale
     applyLocale()
+  })
+
+  // 桌宠小窗点击 → 打开助理
+  let seenPetOpen = PET.openAssistantSignal
+  $effect(() => {
+    if (PET.openAssistantSignal === seenPetOpen) return
+    seenPetOpen = PET.openAssistantSignal
+    if (gated || isPetRoute) return
+    bumpLeoPetActivity()
+    if (page.url.pathname !== '/assistant') {
+      void goto(resolve('/assistant'))
+    }
   })
 
   afterNavigate(() => {
@@ -387,7 +418,9 @@
 
 <svelte:window onkeydown={onGlobalKeydown} />
 
-{#if gated}
+{#if isPetRoute}
+  {@render children()}
+{:else if gated}
   <CloudGate />
 {:else}
   {#if !online}
@@ -400,6 +433,7 @@
   {#if showReturnBanner && page.url.pathname !== '/focus'}
     <FocusSessionShell />
   {/if}
+  <LeoPetOverlay />
   <LifeOsAppShell
     navigationKey={page.url.pathname}
     focusOnNavigate="main"

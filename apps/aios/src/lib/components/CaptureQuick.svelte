@@ -7,10 +7,17 @@
     setDraft,
     activeConversation,
   } from '$lib/chat.svelte.js'
+  import { buildAssistantHref } from '$lib/kenos/assistantShell.core.js'
   import { isCaptureIngestWriterEnabled } from '$lib/kenos/captureWriters.core.js'
   import { ingestCaptureViaHostedKenosWriter } from '$lib/kenos/captureWriters.host.js'
+  import { isLeoPersona } from '$lib/kenos/leoPersona.core.js'
+  import { leoAvatarSrc } from '$lib/kenos/leoAvatar.core.js'
+  import { S } from '$lib/state.svelte.js'
 
   let { open = $bindable(false) } = $props()
+
+  const leoOn = $derived(isLeoPersona(S.settings))
+  const leoAvatar = $derived(leoAvatarSrc({ expression: 'neutral' }))
 
   let draft = $state('')
   let saving = $state(false)
@@ -52,11 +59,15 @@
   function sendToAssistant() {
     const text = draft.trim()
     close()
-    startNewChat()
+    startNewChat({ seedLeo: true })
     const conversation = activeConversation()
     if (text && conversation?.id) setDraft(conversation.id, text)
     draft = ''
-    void goto('/assistant')
+    void goto(
+      buildAssistantHref({
+        conversationId: conversation?.id ?? null,
+      }),
+    )
   }
 
   function onKeydown(event) {
@@ -115,8 +126,21 @@
         type="button"
         class="primary"
         disabled={saving}
-        onclick={sendToAssistant}>{t('nav.captureToAssistant')}</button
+        onclick={sendToAssistant}
       >
+        {#if leoOn}
+          <img
+            class="capture-leo-avatar"
+            src={leoAvatar}
+            alt=""
+            width="16"
+            height="16"
+            aria-hidden="true"
+            decoding="async"
+          />
+        {/if}
+        {leoOn ? t('nav.captureToLeo') : t('nav.captureToAssistant')}
+      </button>
     </div>
   </div>
 {/if}
@@ -182,6 +206,10 @@
     flex-wrap: wrap;
   }
   .capture-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     min-height: 36px;
     padding: 0 12px;
     border-radius: 8px;
@@ -195,6 +223,13 @@
     border-color: transparent;
     background: var(--t1);
     color: var(--bg);
+  }
+  .capture-leo-avatar {
+    flex: 0 0 auto;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 18%;
+    border: 1px solid color-mix(in srgb, var(--bg) 40%, transparent);
   }
   .capture-icon-btn {
     display: grid;
