@@ -130,9 +130,10 @@ struct KorbenSystemStrip: View {
                 Text(title)
                     .font(.system(size: 12, weight: .medium))
                     .lineLimit(1)
+                    .minimumScaleFactor(0.82)
             }
             .foregroundStyle(.primary.opacity(0.88))
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 10)
             .frame(maxHeight: .infinity)
             .contentShape(Rectangle())
         }
@@ -160,6 +161,9 @@ struct KorbenSystemStrip: View {
                     Text(live.title)
                         .font(.system(size: 12, weight: .medium))
                         .lineLimit(1)
+                        // 三单元同屏时中间的 runtime 最先被挤("Train…",真机实拍)。
+                        // 允许小幅缩字优先于省略号 —— 读得出比排得齐重要。
+                        .minimumScaleFactor(0.82)
                 }
             }
             .foregroundStyle(.primary.opacity(0.88))

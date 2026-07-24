@@ -24,10 +24,18 @@ struct KorbenAssistPanel: View {
 
     /// Gate5C-2:面板内容由**当前路由**推导,不再只知道 Space。
     private var context: KorbenAssistContext {
-        KorbenAssistContext.make(
+        // **只在域内**推导区名。域外(Today)`domainDockItems` 会退回一组兜底项
+        // (Home / Browse / Library),路由匹配必然命中 "Home" —— 真机实拍出现过
+        // 「当前:今日 · Home」这种不存在的位置。域外只说 Space,不编造区。
+        let inDomain = projection.shellMode == .domain
+        return KorbenAssistContext.make(
             spaceLabel: spaceLabel,
-            path: model.continuityURL?.path ?? "/",
-            items: model.domainDockItems.map { ($0.title, $0.path ?? "/") },
+            path: inDomain ? (model.continuityURL?.path ?? "/") : "/",
+            items: inDomain
+                ? model.domainDockItems.map {
+                    (KenosLocalizedTitles.navigation($0.title, chinese: prefersChinese), $0.path ?? "/")
+                }
+                : [],
             runtimeTitle: model.liveAccessory?.title,
             pendingApprovals: model.pendingApprovalCount
         )
@@ -167,6 +175,10 @@ struct KorbenAssistPanel: View {
         .presentationDetents([.height(contentHeight)])
         .presentationDragIndicator(.visible)
         .presentationBackground(.ultraThinMaterial)
+        // 与 System Strip 同一个坑:只给容器 identifier 会让 SwiftUI 把子元素
+        // 合并进容器 —— 位置行/跳转行既查不到也读不出(VoiceOver 把整块读成一坨)。
+        // 声明为容器后子元素才保持独立可寻址。
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("korben.assistPanel")
     }
 

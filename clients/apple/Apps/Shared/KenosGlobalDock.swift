@@ -346,49 +346,10 @@ struct KenosGlobalDock: View {
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
 
+    /// 委派给共享映射(Space Peek 消费同一份)——此前这份 switch 私有在此,
+    /// 导致 Peek 只能显示英文名。
     private func localizedDockTitle(_ title: String) -> String {
-        // English SSOT titles → zh (Round 1: full Chinese UI except Kenos / Paper brands).
-        guard prefersChinese else {
-            // Training hub SSOT title is Resources; show product name Library.
-            if title == "Discover" || title == "Explore" || title == "Resources" {
-                return "Library"
-            }
-            return title
-        }
-        switch title {
-        case "Spaces": return "空间"
-        case "Close Spaces": return "关闭空间"
-        case "Tasks": return "任务"
-        case "Calendar": return "日历"
-        case "Inbox": return "收件箱"
-        case "More": return "更多"
-        case "Today": return "今日"
-        case "Program": return "计划"
-        case "Discover", "Explore", "Resources": return "资料"
-        case "Library": return "资料库"
-        case "Exercises": return "动作库"
-        case "Workout", "Training": return "训练"
-        case "History": return "历史"
-        case "Focus": return "专注"
-        case "Ask", "Assistant": return "问答"
-        case "Settings": return "设置"
-        case "Home": return "家"
-        case "Search": return "搜索"
-        case "Rooms": return "房间"
-        case "Items": return "物品"
-        case "Organize": return "整理"
-        case "Status": return "状态"
-        case "Trends": return "趋势"
-        case "Accounts": return "账户"
-        case "Money", "Finance": return "财务"
-        case "Music": return "音乐"
-        case "Work", "Deep Work": return "工作"
-        case "Plan": return "计划"
-        case "Current": return "当前"
-        case "Recent": return "最近"
-        case "Other Spaces", "All Spaces": return "其他空间"
-        default: return title
-        }
+        KenosLocalizedTitles.navigation(title, chinese: prefersChinese)
     }
 
     private func isCapsuleSelected(index: Int, item: KenosAppModel.DomainDockItem) -> Bool {

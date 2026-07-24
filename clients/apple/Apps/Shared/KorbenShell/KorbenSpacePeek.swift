@@ -140,9 +140,10 @@ struct KorbenSpacePeek: View {
     }
 
     private var currentSpaceLabel: String {
-        KenosDomainRegistry.shelfDomainDefinitions
+        let raw = KenosDomainRegistry.shelfDomainDefinitions
             .first(where: { $0.id == projection.currentSpaceId })?.label
             ?? projection.currentSpaceId
+        return KenosLocalizedTitles.navigation(raw, chinese: prefersChinese)
     }
 
     private func spaceTile(_ entry: KenosAppModel.SpaceCatalogEntry) -> some View {
@@ -155,13 +156,18 @@ struct KorbenSpacePeek: View {
                     .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(.primary.opacity(0.9))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.title)
+                    Text(KenosLocalizedTitles.navigation(entry.title, chinese: prefersChinese))
                         .font(.system(size: 14, weight: .semibold))
                         .lineLimit(1)
-                    Text(entry.subtitle)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                    // 副标题是英文一句话描述,中文界面下与卡片名混排读起来割裂,
+                    // 且在两列网格里必被截断("Cash flow and decisio…")—— 中文界面
+                    // 直接不显示,名字本身已经够识别。
+                    if !prefersChinese {
+                        Text(entry.subtitle)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -170,7 +176,7 @@ struct KorbenSpacePeek: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(KenosPressStyle(reduceMotion: reduceMotion))
-        .accessibilityLabel(entry.title)
+        .accessibilityLabel(KenosLocalizedTitles.navigation(entry.title, chinese: prefersChinese))
         .accessibilityHint(entry.subtitle)
         .accessibilityIdentifier("korben.spacePeek.tile.\(entry.id)")
     }
