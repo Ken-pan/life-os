@@ -37,14 +37,19 @@
   --kenos-title-crossfade: 180ms;
 }
 
+/*
+  Chrome (domain header title / action bubble) enter — transform only.
+  MUST NOT gate opacity from 0: WKWebView freezes the animation clock when the
+  surface mounts while backgrounded, and `both` fill would pin the element at the
+  `from` opacity forever → permanently invisible chrome (see life-os memory
+  "css-entrance-anim-no-opacity-gate"). Rise settles the motion; content stays lit.
+*/
 @keyframes kenos-chrome-enter {
   from {
-    opacity: 0;
     transform: translateY(6px);
   }
 
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }
