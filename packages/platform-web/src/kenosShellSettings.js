@@ -130,8 +130,10 @@ export function bindKenosShellSettings(adapters = {}) {
     if (disposed || !snap || applying) return
     applying = true
     try {
-      const theme = normalizeShellTheme(snap.theme)
-      if (typeof adapters.setTheme === 'function') {
+      // 按字段存在性分别应用 —— 允许「只带 persona」的偏快照(冷启注入),
+      // 不会把没带的 theme/locale 误重置成默认(auto/system)。
+      if (snap.theme != null && typeof adapters.setTheme === 'function') {
+        const theme = normalizeShellTheme(snap.theme)
         const current =
           typeof adapters.getTheme === 'function' ? String(adapters.getTheme() || '') : ''
         if (normalizeShellTheme(current) !== theme) {
@@ -141,17 +143,26 @@ export function bindKenosShellSettings(adapters = {}) {
           adapters.applyTheme?.()
         }
       }
-      const resolved =
-        snap.resolvedLocale === 'zh' || snap.resolvedLocale === 'en'
-          ? snap.resolvedLocale
-          : resolveShellLocale(
-              snap.locale,
-              window.navigator?.language || window.navigator?.languages?.[0] || '',
-            )
-      if (typeof adapters.setLocale === 'function') {
+      if ((snap.locale != null || snap.resolvedLocale != null) &&
+          typeof adapters.setLocale === 'function') {
+        const resolved =
+          snap.resolvedLocale === 'zh' || snap.resolvedLocale === 'en'
+            ? snap.resolvedLocale
+            : resolveShellLocale(
+                snap.locale,
+                window.navigator?.language || window.navigator?.languages?.[0] || '',
+              )
         const current =
           typeof adapters.getLocale === 'function' ? String(adapters.getLocale() || '') : ''
         if (current !== resolved) adapters.setLocale(resolved)
+      }
+      // 助手人设(Leo 模式)—— 原生壳切 Korben/Leo 后经此通道真正驱动 web 助手。
+      // 只在快照带 persona 时应用(旧壳不带则不动),korben/leo 之外一律回退 korben。
+      if (typeof adapters.setPersona === 'function' && snap.persona != null) {
+        const persona = String(snap.persona).toLowerCase() === 'leo' ? 'leo' : 'korben'
+        const current =
+          typeof adapters.getPersona === 'function' ? String(adapters.getPersona() || '') : ''
+        if (current !== persona) adapters.setPersona(persona)
       }
     } finally {
       applying = false
@@ -194,11 +205,19 @@ export function bindKenosShellSettings(adapters = {}) {
       theme: detail.theme,
       locale: detail.locale,
       resolvedLocale: detail.resolvedLocale,
+      persona: detail.persona,
     })
   }
 
   const onVisibility = () => {
     if (document.visibilityState === 'visible') pull()
+  }
+
+  // 冷启动首帧:pull() 异步落地前,先用原生 atDocumentStart 注入的 persona
+  // 立即水合,避免「进来先是 Korben、半秒后才变 Leo」的闪。
+  const injectedPersona = String(window.__KENOS_ASSISTANT_PERSONA__ || '')
+  if (injectedPersona && typeof adapters.setPersona === 'function') {
+    applySnapshot({ persona: injectedPersona })
   }
 
   pull()
