@@ -78,6 +78,8 @@ export async function pullKenosShellSettings() {
     resolvedLocale,
     hasTheme: settings.hasTheme === true,
     hasLocale: settings.hasLocale === true,
+    persona: String(settings.persona || '').toLowerCase() === 'leo' ? 'leo' : 'korben',
+    hasPersona: settings.hasPersona === true,
     // 原生壳最后一次真实变更的毫秒时间戳(旧壳无此字段 → 0),供 LWW 对账。
     updatedAt: Number(settings.updatedAt) > 0 ? Number(settings.updatedAt) : 0,
   }
@@ -93,6 +95,10 @@ export async function pushKenosShellSettings(partial = {}) {
   const payload = {}
   if (partial.theme != null) payload.theme = normalizeShellTheme(partial.theme)
   if (partial.locale != null) payload.locale = normalizeShellLocaleMode(partial.locale)
+  if (partial.persona != null) {
+    payload.persona =
+      String(partial.persona).toLowerCase() === 'leo' ? 'leo' : 'korben'
+  }
   if (!Object.keys(payload).length) {
     return { ok: false, skipped: true, code: 'empty_patch' }
   }
@@ -104,6 +110,10 @@ export async function pushKenosShellSettings(partial = {}) {
     theme: normalizeShellTheme(settings.theme ?? payload.theme),
     locale: normalizeShellLocaleMode(settings.locale ?? payload.locale),
     resolvedLocale: settings.resolvedLocale,
+    persona:
+      String(settings.persona ?? payload.persona ?? '').toLowerCase() === 'leo'
+        ? 'leo'
+        : 'korben',
   }
 }
 
@@ -182,6 +192,13 @@ export function bindKenosShellSettings(adapters = {}) {
         const local = String(adapters.getLocale() || '')
         if (local === 'zh' || local === 'en') seed.locale = local
       }
+      // persona 同理:壳从未存过人设时,以 web 本地选择为准回种 —— 否则壳默认
+      // korben 会把用户在 web 里开的 Leo 每次 pull 都碾回去(真机实反馈:
+      // 「完全用不了 Leo」的根因)。
+      if (!snap.hasPersona && typeof adapters.getPersona === 'function') {
+        const local = String(adapters.getPersona() || '').toLowerCase()
+        if (local === 'leo' || local === 'korben') seed.persona = local
+      }
       if (Object.keys(seed).length) {
         const pushed = await pushKenosShellSettings(seed)
         if (disposed) return
@@ -190,6 +207,7 @@ export function bindKenosShellSettings(adapters = {}) {
             theme: pushed.theme ?? seed.theme ?? snap.theme,
             locale: pushed.locale ?? seed.locale ?? snap.locale,
             resolvedLocale: pushed.resolvedLocale ?? snap.resolvedLocale,
+            persona: pushed.persona ?? seed.persona ?? snap.persona,
           })
           return
         }
@@ -246,6 +264,16 @@ export async function publishShellTheme(theme, persistLocal) {
  * @param {'zh'|'en'|string} locale
  * @param {(locale: 'zh'|'en') => void} [persistLocal]
  */
+/**
+ * web 端切换助手人设后调用:立即写回壳 SSOT,否则下一次 pull 会用壳里的旧值
+ * 把本地切换碾回去。
+ * @param {'korben'|'leo'} persona
+ */
+export async function publishShellPersona(persona) {
+  const next = String(persona || '').toLowerCase() === 'leo' ? 'leo' : 'korben'
+  return pushKenosShellSettings({ persona: next })
+}
+
 export async function publishShellLocale(locale, persistLocal) {
   const next = normalizeShellLocaleMode(locale)
   const resolved = next === 'system' ? resolveShellLocale('system') : next

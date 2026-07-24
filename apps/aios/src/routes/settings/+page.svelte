@@ -13,6 +13,7 @@
   import {
     publishShellTheme,
     publishShellLocale,
+    publishShellPersona,
   } from '$lib/kenos/iosNativeShell.js'
   import {
     MODELS,
@@ -118,6 +119,9 @@
   function toggleLeoMode() {
     const next = isLeoPersona(S.settings) ? 'korben' : 'leo'
     S.settings.assistantPersona = next
+    // 壳内必须立刻写回原生 SSOT —— 否则下一次 pull 会用壳里的旧 persona
+    // 把这次切换碾回去(「完全用不了 Leo」的根因)。壳外此调用自动 no-op。
+    void publishShellPersona(next)
     if (next === 'leo') {
       if (!S.settings.leoIntensity) S.settings.leoIntensity = 'flirty'
       // 进 Leo 模式一律带上 Leo 克隆音色；用户之后仍可手动改

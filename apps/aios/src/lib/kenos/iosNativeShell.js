@@ -58,6 +58,7 @@ export {
   bindKenosShellSettings,
   publishShellTheme,
   publishShellLocale,
+  publishShellPersona,
   publishNotificationCategoryEnabled,
   readNotificationCategoryEnabled,
   pullKenosShellSettings,
