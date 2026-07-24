@@ -140,8 +140,8 @@ export const LIFE_OS_SITE_META = {
     name: "PORTAL.OS",
     shortName: "PORTAL",
     description: {
-      zh: "Life OS 统一入口 · 在同一账号下切换 Planner / Finance / Fitness / Music",
-      en: "Life OS portal · switch between Planner, Finance, Fitness, and Music",
+      zh: "Korben 统一入口 · 在同一账号下切换 Planner / Finance / Fitness / Music",
+      en: "Korben portal · switch between Planner, Finance, Fitness, and Music",
     },
     themeColor: {
       light: "#f3f6f8",
@@ -206,8 +206,8 @@ export const LIFE_OS_SITE_META = {
     name: "Korben Library",
     shortName: "Library",
     description: {
-      zh: "第二大脑 · 收集 / 连接 / 回忆，Life OS 的长期记忆层",
-      en: "Second brain · capture, connect, recall — the long-term memory layer of Life OS",
+      zh: "第二大脑 · 收集 / 连接 / 回忆，Korben 的长期记忆层",
+      en: "Second brain · capture, connect, recall — the long-term memory layer of Korben",
     },
     themeColor: {
       light: "#f7f6f2",
@@ -381,7 +381,7 @@ export const LIFE_OS_PWA_APPS = {
   },
   portal: {
     id: "portal",
-    name: "Life OS Portal",
+    name: "Korben Portal",
     workspace: "portal",
     port: 5195,
     shellType: "main-col-wrap",

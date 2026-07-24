@@ -124,7 +124,7 @@ export async function readCanonicalFocusSource({
       suggestions: [],
       state: sourceState('permission_denied', {
         source: CANONICAL_FOCUS_READ_SOURCE,
-        message: '登录 Life OS 后才能读取你的 Focus。',
+        message: '登录 Korben 后才能读取你的 Focus。',
       }),
     })
   }

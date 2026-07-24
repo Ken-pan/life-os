@@ -22,7 +22,7 @@ describe('domainAggregation.core', () => {
       recentIds: ['plan', 'finance'],
     })
     assert.equal(shelf.kenosHome.isKenos, true)
-    assert.equal(shelf.kenosHome.title, 'Kenos')
+    assert.equal(shelf.kenosHome.title, 'Korben')
     assert.equal(shelf.kenosHome.subtitle, 'Today · Ask · Inbox')
     assert.equal(shelf.active[0]?.id, 'money')
     assert.ok(shelf.recent.some((c) => c.id === 'plan'))

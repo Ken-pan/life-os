@@ -65,7 +65,7 @@
 
   function planDetail(need, skipped, unit) {
     if (skipped > 0)
-      return `${need} ${unit}需抓，${skipped} 已在 Finance OS 跳过`
+      return `${need} ${unit}需抓，${skipped} 已在 Korben Money 跳过`
     return `${need} ${unit}需抓`
   }
 
@@ -1033,24 +1033,24 @@
     let netWorthSkipped = 0
     let netWorthExpanded = 0
     try {
-      setCrawlState('starting', '读取 Finance OS 快照与抓取计划…', {
+      setCrawlState('starting', '读取 Korben Money 快照与抓取计划…', {
         progress: 3,
       })
       const snap = await loadAppSnapshot()
       if (snap) {
         if (snap.privacyRedacted) {
           console.info(
-            `[FOS] 抓取计划：Finance OS ${snap.txnCount} 笔交易，隐私模式下快照已最小化`,
+            `[FOS] 抓取计划：Korben Money ${snap.txnCount} 笔交易，隐私模式下快照已最小化`,
           )
-          appendCrawlLog('info', '读取到 Finance OS 快照（隐私模式）', {
+          appendCrawlLog('info', '读取到 Korben Money 快照（隐私模式）', {
             txnCount: snap.txnCount,
           })
         } else {
           console.info(
-            `[FOS] 抓取计划：Finance OS ${snap.txnCount} 笔交易，` +
+            `[FOS] 抓取计划：Korben Money ${snap.txnCount} 笔交易，` +
               `${snap.accounts.length} 账户，${snap.cashFlows.length} 订阅/账单`,
           )
-          appendCrawlLog('info', '读取到 Finance OS 快照', {
+          appendCrawlLog('info', '读取到 Korben Money 快照', {
             txnCount: snap.txnCount,
             accountCount: snap.accounts.length,
             cashFlowCount: snap.cashFlows.length,
@@ -1058,9 +1058,9 @@
         }
       } else {
         console.info(
-          '[FOS] 尚无 Finance OS 快照：打开 Finance OS 后可跳过已同步数据',
+          '[FOS] 尚无 Korben Money 快照：打开 Korben Money 后可跳过已同步数据',
         )
-        appendCrawlLog('warn', '尚无 Finance OS 快照，无法预先跳过已同步数据')
+        appendCrawlLog('warn', '尚无 Korben Money 快照，无法预先跳过已同步数据')
       }
 
       // 1) Dashboard：账户余额
@@ -1351,7 +1351,7 @@
         (skippedAccounts ? `（跳过 ${skippedAccounts} 已一致）` : '') +
         ` + ${recurNeed} 项订阅` +
         (skippedRecurring ? `（跳过 ${skippedRecurring} 已有）` : '') +
-        '，打开 Finance OS 即写入'
+        '，打开 Korben Money 即写入'
       setCrawlState('done', doneMsg, {
         progress: 100,
         stats: {
@@ -1476,7 +1476,7 @@
             if (need.length === 0) {
               if (skippedDuplicate > 0) {
                 console.info(
-                  `[FOS] RocketMoney 交易 ${skippedDuplicate} 笔已在 Finance OS，跳过`,
+                  `[FOS] RocketMoney 交易 ${skippedDuplicate} 笔已在 Korben Money，跳过`,
                 )
               }
               return
@@ -1508,7 +1508,7 @@
             if (need.length === 0) {
               if (skipped > 0)
                 console.info(
-                  `[FOS] Net Worth ${skipped} 账户已在 Finance OS，跳过`,
+                  `[FOS] Net Worth ${skipped} 账户已在 Korben Money，跳过`,
                 )
               return
             }
@@ -1536,7 +1536,7 @@
             if (need.length === 0) {
               if (skipped > 0)
                 console.info(
-                  `[FOS] Recurring ${skipped} 项已在 Finance OS，跳过`,
+                  `[FOS] Recurring ${skipped} 项已在 Korben Money，跳过`,
                 )
               return
             }
@@ -1578,7 +1578,7 @@
             if (need.length === 0) {
               if (skipped > 0)
                 console.info(
-                  `[FOS] Dashboard ${skipped} 组余额已在 Finance OS，跳过`,
+                  `[FOS] Dashboard ${skipped} 组余额已在 Korben Money，跳过`,
                 )
               return
             }

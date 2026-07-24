@@ -167,7 +167,7 @@ function defineDomain(partial) {
 export const DOMAIN_REGISTRY = Object.freeze({
   kenos: defineDomain({
     id: 'kenos',
-    label: 'Kenos',
+    label: 'Korben',
     subtitle: 'Today · Ask · Inbox',
     strategy: 'native',
     appId: 'aios',

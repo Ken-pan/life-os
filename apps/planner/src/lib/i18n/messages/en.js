@@ -58,7 +58,7 @@ export default {
     },
   },
   home: {
-    title: 'Today',
+    title: 'Plan',
     overdue: 'Overdue',
     today: 'Today',
     nodate: 'To schedule',
@@ -375,9 +375,9 @@ export default {
     notifyUnsupported: 'Notifications not supported in this browser',
     sync: 'Cloud sync',
     syncDesc:
-      'Sign in with your Life OS account to back up tasks and sync across devices.',
+      'Sign in with your Korben account to back up tasks and sync across devices.',
     cloudSsoHint:
-      'Same Life OS account as Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
+      'Same Korben account as Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
     notSignedIn: 'Not signed in',
     syncAuto: 'Auto-sync after sign-in',
     syncUnavailable: 'Supabase is not configured; cloud sync is unavailable',
@@ -532,7 +532,7 @@ export default {
     errNetwork: 'Network error — check your connection',
     errGeneric: 'Something went wrong',
     footnote:
-      'Same Life OS account as Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
+      'Same Korben account as Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
   },
   sync: {
     now: 'Sync now',

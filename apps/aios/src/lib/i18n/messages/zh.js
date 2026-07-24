@@ -291,12 +291,12 @@ export default {
       '接入外部 MCP server(HTTP)的工具:配一个 URL,它的工具就自动出现在对话里,一次接入白嫖一批能力。配置存在本设备,不上云。',
     mcpLifeOsHint:
       '登录后会自动接入 Home / Planner / Finance / Fitness（用当前 JWT）。「一键接入」可手动补齐或刷新工具。四站 /api/mcp 已上线。',
-    mcpFleetAdd: '刷新 Life OS MCP 舰队',
-    mcpFleetAdding: '正在接入 Life OS MCP…',
+    mcpFleetAdd: '刷新 Korben MCP 舰队',
+    mcpFleetAdding: '正在接入 Korben MCP…',
     mcpFleetAdded: '已加入 {names}；共 {n} 个工具。可点「测试」逐站验证。',
     mcpFleetUpToDate:
-      'Life OS 四站已在列表里；已用当前 token 刷新。共 {n} 个工具。',
-    mcpNeedLogin: '请先登录 Life OS 云同步，再用登录态作为 MCP token。',
+      'Korben 四站已在列表里；已用当前 token 刷新。共 {n} 个工具。',
+    mcpNeedLogin: '请先登录 Korben 云同步，再用登录态作为 MCP token。',
     mcpToolCount: '{n} 个工具',
     mcpName: '名称',
     mcpNamePlaceholder: '名称(如 GitHub)',
@@ -339,9 +339,9 @@ export default {
     langEn: 'English',
     cloud: '云端同步',
     cloudDesc:
-      '登录 Life OS 账户后,对话和长期记忆会同步到云端,多台设备共用一份数据。不登录则一切留在本机。',
+      '登录 Korben 账号后,对话和长期记忆会同步到云端,多台设备共用一份数据。不登录则一切留在本机。',
     cloudSsoHint:
-      '与 Planner / Fitness / Finance / Music / Home 等共用同一 Life OS 账号；本机登录一次后，其它站点可自动接上。',
+      '与 Planner / Fitness / Finance / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
     cloudEmail: '邮箱',
     cloudPassword: '密码',
     cloudSignIn: '登录',

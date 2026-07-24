@@ -41,16 +41,16 @@
   {#if auth.user}
     <div class="settings-block">
       <h1 class="portal-unauth-title">已登录</h1>
-      <p class="portal-unauth-desc">正在以 {auth.user.email} 进入 Life OS…</p>
+      <p class="portal-unauth-desc">正在以 {auth.user.email} 进入 Korben…</p>
     </div>
   {:else if !isSupabaseConfigured}
     <div class="settings-block">
-      <h1 class="portal-unauth-title">欢迎使用 Life OS</h1>
+      <h1 class="portal-unauth-title">欢迎使用 Korben</h1>
       <p class="portal-unauth-desc">云端身份未配置。请设置 Supabase 环境变量后刷新页面。</p>
     </div>
   {:else}
     <form class="settings-block portal-auth-form" onsubmit={submit}>
-      <h1 class="portal-unauth-title">登录 Life OS</h1>
+      <h1 class="portal-unauth-title">登录 Korben</h1>
       <p class="portal-unauth-desc">使用同一账号切换 Planner、Finance、Fitness 与 Music。</p>
 
       <div class="field">

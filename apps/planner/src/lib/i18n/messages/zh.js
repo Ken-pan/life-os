@@ -58,7 +58,7 @@ export default {
     },
   },
   home: {
-    title: '今日',
+    title: '计划',
     overdue: '已过期',
     today: '今日',
     nodate: '待安排',
@@ -364,9 +364,9 @@ export default {
     notifyDeniedHelp: '请点击地址栏左侧的站点图标，在权限设置中允许「通知」。',
     notifyUnsupported: '当前浏览器不支持通知',
     sync: '云同步',
-    syncDesc: '登录 Life OS 账号后可把任务备份到云端，并在多设备间同步。',
+    syncDesc: '登录 Korben 账号后可把任务备份到云端，并在多设备间同步。',
     cloudSsoHint:
-      '与 Fitness / Finance / Music / Home 等共用同一 Life OS 账号；本机登录一次后，其它站点可自动接上。',
+      '与 Fitness / Finance / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
     notSignedIn: '未登录',
     syncAuto: '登录后自动同步',
     syncUnavailable: '未配置 Supabase，云同步不可用',
@@ -518,7 +518,7 @@ export default {
     errNetwork: '网络错误，请检查连接',
     errGeneric: '操作失败，请重试',
     footnote:
-      '与 Fitness / Finance / Music / Home 等共用同一 Life OS 账号；本机登录一次后，其它站点可自动接上。',
+      '与 Fitness / Finance / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
   },
   sync: {
     now: '立即同步',

@@ -186,7 +186,7 @@ export async function ensureNativeUnlock(opts = {}) {
   let result
   try {
     result = await nativeAuthenticate({
-      reason: opts.reason || 'Unlock this Kenos surface',
+      reason: opts.reason || 'Unlock this Korben surface',
       cancelTitle: opts.cancelTitle || 'Cancel',
       reuseDuration: opts.reuseDuration ?? 10,
       storageKey,
@@ -249,7 +249,7 @@ export function clearNativeUnlock(storageKey = 'kenos.nativeUnlock') {
 export function createNativeUnlockController(opts) {
   let generation = 0
   const storageKey = String(opts.storageKey || 'kenos.nativeUnlock')
-  const reason = opts.reason || 'Unlock this Kenos surface'
+  const reason = opts.reason || 'Unlock this Korben surface'
 
   return {
     /**

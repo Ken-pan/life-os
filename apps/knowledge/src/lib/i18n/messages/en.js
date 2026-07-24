@@ -156,15 +156,15 @@ export default {
     statusTitle: 'By status',
     statusCenter: 'projects',
     plannerOffline:
-      'Not signed in to Life OS cloud — Planner linkage is off (Settings → Cloud).',
+      'Not signed in to Korben cloud — Planner linkage is off (Settings → Cloud).',
     plannerError: 'Failed to read Planner: {message}',
     sensing: 'Sensing…',
   },
   cloud: {
     title: 'Cloud linkage',
-    desc: 'Sign in with the unified Life OS account and the Projects view reads Planner projects & tasks directly (read-only, RLS scoped to you).',
+    desc: 'Sign in with the unified Korben account and the Projects view reads Planner projects & tasks directly (read-only, RLS scoped to you).',
     ssoHint:
-      'Same Life OS account as Planner / Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
+      'Same Korben account as Planner / Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
     email: 'Email',
     password: 'Password',
     signIn: 'Sign in',

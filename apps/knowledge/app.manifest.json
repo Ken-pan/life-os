@@ -3,8 +3,8 @@
   "name": "Korben Library",
   "shortName": "Library",
   "description": {
-    "zh": "第二大脑 · 收集 / 连接 / 回忆，Life OS 的长期记忆层",
-    "en": "Second brain · capture, connect, recall — the long-term memory layer of Life OS"
+    "zh": "第二大脑 · 收集 / 连接 / 回忆，Korben 的长期记忆层",
+    "en": "Second brain · capture, connect, recall — the long-term memory layer of Korben"
   },
   "themeColor": {
     "light": "#f7f6f2",

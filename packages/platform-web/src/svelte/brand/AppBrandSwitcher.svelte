@@ -222,7 +222,7 @@
       class="brand-switcher-menu"
       role="menu"
       tabindex="-1"
-      aria-label="切换 Life OS 应用"
+      aria-label="切换 Korben 应用"
       onkeydown={handleMenuKeydown}
     >
       {#each switcherApps as entry, index (entry.id)}

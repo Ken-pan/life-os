@@ -80,7 +80,7 @@
 <div
   class="portal-status-summary"
   role="status"
-  aria-label={`Life OS 连接状态：账号已连接，${productionCount} 个生产应用可用，跨站 SSO 已启用${portalPreferences.pendingEvents ? `，${portalPreferences.pendingEvents} 条待处理事件` : ''}`}
+  aria-label={`Korben 连接状态：账号已连接，${productionCount} 个生产应用可用，跨站 SSO 已启用${portalPreferences.pendingEvents ? `，${portalPreferences.pendingEvents} 条待处理事件` : ''}`}
 >
   <span class="chip portal-status-chip portal-status-chip--ok">账号已连接</span>
   <span

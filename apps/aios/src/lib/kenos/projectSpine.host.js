@@ -19,7 +19,7 @@ async function requireSession() {
     error,
   } = await supabase.auth.getSession()
   if (error) throw error
-  if (!session?.user?.id) throw new Error('需要先登录 Life OS 账户(设置 → 云同步登录)')
+  if (!session?.user?.id) throw new Error('需要先登录 Korben 账号(设置 → 云同步登录)')
   return session
 }
 

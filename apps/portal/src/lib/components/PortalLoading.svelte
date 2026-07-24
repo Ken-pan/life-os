@@ -5,7 +5,7 @@
   const portalBrand = getLifeOsBrand('portal')
 </script>
 
-<div class="portal-loading" role="status" aria-live="polite" aria-label="正在初始化 Life OS">
+<div class="portal-loading" role="status" aria-live="polite" aria-label="正在初始化 Korben">
   <div class="portal-loading-inner">
     <BrandMark
       size={56}

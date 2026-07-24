@@ -64,5 +64,5 @@ export async function userIdOf(supabase) {
  */
 export function needLogin(appLabel) {
   const who = appLabel ? `${appLabel} ` : ''
-  return `需要登录：请在 AIOS 设置 → MCP 为 ${who}server 配置 Life OS access token。`
+  return `需要登录：请在 AIOS 设置 → MCP 为 ${who}server 配置 Korben access token。`
 }

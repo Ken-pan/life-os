@@ -16,8 +16,8 @@ assert.equal(jwtFromRequest(reqWith({})), '')
 assert.equal(jwtFromRequest(reqWith({ authorization: 'Basic xyz' })), '')
 
 // —— needLogin：带/不带 appLabel ——
-assert.equal(needLogin('Home'), '需要登录：请在 AIOS 设置 → MCP 为 Home server 配置 Life OS access token。')
-assert.equal(needLogin('Planner'), '需要登录：请在 AIOS 设置 → MCP 为 Planner server 配置 Life OS access token。')
+assert.equal(needLogin('Home'), '需要登录：请在 AIOS 设置 → MCP 为 Home server 配置 Korben access token。')
+assert.equal(needLogin('Planner'), '需要登录：请在 AIOS 设置 → MCP 为 Planner server 配置 Korben access token。')
 assert.match(needLogin(), /需要登录/)
 
 // —— userIdOf：fake supabase auth.getUser ——

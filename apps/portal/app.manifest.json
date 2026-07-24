@@ -3,8 +3,8 @@
   "name": "PORTAL.OS",
   "shortName": "PORTAL",
   "description": {
-    "zh": "Life OS 统一入口 · 在同一账号下切换 Planner / Finance / Fitness / Music",
-    "en": "Life OS portal · switch between Planner, Finance, Fitness, and Music"
+    "zh": "Korben 统一入口 · 在同一账号下切换 Planner / Finance / Fitness / Music",
+    "en": "Korben portal · switch between Planner, Finance, Fitness, and Music"
   },
   "themeColor": { "light": "#f3f6f8", "dark": "#14161a" },
   "defaultTheme": "auto",
@@ -19,7 +19,7 @@
   "shellType": "main-col-wrap",
   "wordmarkAccent": { "light": "#3d9ed6", "dark": "#5cb8ea" },
   "registryOrder": 6,
-  "pwaName": "Life OS Portal",
+  "pwaName": "Korben Portal",
   "waitSelector": ".app-shell, .portal-loading",
   "production": false,
   "pwaTestEnabled": true,

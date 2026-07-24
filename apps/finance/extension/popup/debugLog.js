@@ -1,4 +1,4 @@
-// Finance OS Sync — debug log 导出（Agent 友好结构）。
+// Korben Money Sync — debug log 导出（Agent 友好结构）。
 (() => {
   const SCHEMA = "finance-os-sync-debug/v2";
 
@@ -188,7 +188,7 @@
         hint: "查看 sync.dlq 各条 reason；在 popup 可「全部重新入队」",
         items: dlq.slice(0, 5).map((d) => ({ id: d.id, reason: d.reason, source: d.source, kind: d.kind })),
       });
-      suggestedNextSteps.push("打开 Finance OS 并确认 ExtensionSyncBridge 正常，然后重试 DLQ");
+      suggestedNextSteps.push("打开 Korben Money 并确认 ExtensionSyncBridge 正常，然后重试 DLQ");
     }
 
     if ((inFlight?.length ?? 0) > 0 && (queue?.length ?? 0) > 0) {
@@ -196,9 +196,9 @@
         severity: "warn",
         code: "INFLIGHT_STUCK",
         message: `${inFlight.length} 条投递中且队列仍有 ${queue.length} 条待同步`,
-        hint: "Finance OS 页面可能未打开或未 ACK",
+        hint: "Korben Money 页面可能未打开或未 ACK",
       });
-      suggestedNextSteps.push("打开 Finance OS（localhost 或 Netlify）并查看右下角同步 toast");
+      suggestedNextSteps.push("打开 Korben Money（localhost 或 Netlify）并查看右下角同步 toast");
     }
 
     if (rhEnrich?.failures?.length) {
@@ -214,8 +214,8 @@
       issues.push({
         severity: "info",
         code: "NO_APP_SNAPSHOT",
-        message: "尚无 Finance OS 抓取计划快照",
-        hint: "至少打开一次 Finance OS，扩展才能跳过已同步数据",
+        message: "尚无 Korben Money 抓取计划快照",
+        hint: "至少打开一次 Korben Money，扩展才能跳过已同步数据",
       });
     }
 
@@ -276,7 +276,7 @@
       meta: {
         exportedAt: new Date().toISOString(),
         extension: {
-          name: manifest.name ?? "Finance OS Sync",
+          name: manifest.name ?? "Korben Money Sync",
           version: manifest.version ?? "unknown",
           manifestVersion: manifest.manifest_version ?? manifest.manifestVersion ?? 3,
         },
@@ -372,9 +372,9 @@
           PROBE_TIMEOUT: "页面 DOM 探测超时（选择器/加载/折叠）",
           ROUTE_TIMEOUT: "SPA 路由跳转超时",
           DLQ_NON_EMPTY: "capture 多次投递未 ACK",
-          INFLIGHT_STUCK: "队列有数据但 Finance OS 未确认",
+          INFLIGHT_STUCK: "队列有数据但 Korben Money 未确认",
           RH_ENRICH_PARTIAL: "Robinhood 后台详情补齐部分失败",
-          NO_APP_SNAPSHOT: "未拉取 Finance OS 快照",
+          NO_APP_SNAPSHOT: "未拉取 Korben Money 快照",
           CRAWL_EXCEPTION: "未捕获异常",
         },
       },

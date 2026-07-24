@@ -365,7 +365,7 @@ export default {
     signUp: '注册',
     signedIn: '已登录',
     signedInDesc:
-      '可与 Life OS 账号同步元数据；可在设置中将本地音频备份到私有云存储。',
+      '可与 Korben 账号同步元数据；可在设置中将本地音频备份到私有云存储。',
     goSettings: '前往设置',
     email: '邮箱',
     password: '密码',
@@ -382,7 +382,7 @@ export default {
     confirmHint: '确认后即可登录并同步歌单元数据。',
     backSignIn: '返回登录',
     footnote:
-      '与 Planner / Fitness / Finance / Home 等共用同一 Life OS 账号；本机登录一次后，其它站点可自动接上。',
+      '与 Planner / Fitness / Finance / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
     errInvalidCredentials: '邮箱或密码不正确',
     errEmailNotConfirmed: '请先验证邮箱',
     errAlreadyRegistered: '该邮箱已注册',
@@ -407,7 +407,7 @@ export default {
     offlineQueued: '离线中：本地播放不受影响，联网后会自动同步',
     pending: '网络已恢复，正在准备同步…',
     notSignedIn: '请先登录',
-    signInFirst: '登录 Life OS 账号',
+    signInFirst: '登录 Korben 账号',
   },
   cloudAudio: {
     title: '云备份',

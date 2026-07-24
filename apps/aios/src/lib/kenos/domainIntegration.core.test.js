@@ -41,7 +41,7 @@ describe('domainIntegration.core — registry', () => {
       assert.equal(DOMAIN_REGISTRY[id].id, id)
     }
     // Shelf Current title = Space name only (destination lives in subtitle).
-    assert.equal(DOMAIN_REGISTRY.kenos.label, 'Kenos')
+    assert.equal(DOMAIN_REGISTRY.kenos.label, 'Korben')
     assert.equal(DOMAIN_REGISTRY.kenos.subtitle, 'Today · Ask · Inbox')
     // Code domain — aios-owned native route, Cursor-sensitive.
     assert.equal(DOMAIN_REGISTRY.code.homePath, '/code')

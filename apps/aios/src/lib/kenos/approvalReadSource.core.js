@@ -15,7 +15,7 @@ export async function readCanonicalApprovalSource({
   if (!authorized) {
     return { items: [], state: sourceState('permission_denied', {
       source: CANONICAL_APPROVAL_READ_SOURCE,
-      message: '登录 Life OS 后才能读取你的 Approval。',
+      message: '登录 Korben 后才能读取你的 Approval。',
     }) }
   }
   if (!online) {

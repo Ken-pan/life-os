@@ -178,7 +178,7 @@ export default {
     title: '设置',
     localOnlyTitle: '本机数据',
     localOnlyDesc:
-      'Health 目前只在本机运行，没有 Life OS 云账号登录。专注状态与本地代理数据不会跨站同步。',
+      'Health 目前只在本机运行，没有 Korben 云账号登录。专注状态与本地代理数据不会跨站同步。',
     appearance: '外观',
     theme: '主题',
     themeDesc: '选「跟随系统」时，会跟随设备的浅色 / 深色模式',

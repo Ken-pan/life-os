@@ -171,7 +171,7 @@ export async function readCanonicalWorkSource({
       cards: [],
       state: sourceState('permission_denied', {
         source: CANONICAL_WORK_PROJECTS_SOURCE,
-        message: '登录 Life OS 后才能读取你的 Work。',
+        message: '登录 Korben 后才能读取你的 Work。',
       }),
     })
   }

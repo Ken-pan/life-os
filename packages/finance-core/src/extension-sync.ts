@@ -653,7 +653,7 @@ export function holdingsCaptureToSnapshot(
     timezone: env.timezone,
     source: {
       type: 'chrome_extension_dom_capture',
-      description: `Finance OS Sync 扩展从 ${data.institution} 页面自动抓取`,
+      description: `Korben Money Sync 扩展从 ${data.institution} 页面自动抓取`,
     },
     accountMapping: {
       institution: data.institution,

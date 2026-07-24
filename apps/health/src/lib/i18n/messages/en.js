@@ -184,7 +184,7 @@ export default {
     title: 'Settings',
     localOnlyTitle: 'Local only',
     localOnlyDesc:
-      'Health runs on this device only — there is no Life OS cloud account sign-in. Focus state and the local agent stay on-device and do not sync across apps.',
+      'Health runs on this device only — there is no Korben cloud account sign-in. Focus state and the local agent stay on-device and do not sync across apps.',
     appearance: 'Appearance',
     theme: 'Theme',
     themeDesc: 'Choose System to follow the device light / dark mode',

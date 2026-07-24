@@ -37,7 +37,7 @@ function unavailableWithoutAuth(source) {
   return sourceState(online() ? 'permission_denied' : 'offline', {
     source,
     message: online()
-      ? '登录 Life OS 后才能读取这个用户范围内的来源。'
+      ? '登录 Korben 后才能读取这个用户范围内的来源。'
       : '设备当前离线；登录态恢复后可安全重试。',
     retryable: !online(),
   })

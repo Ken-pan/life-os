@@ -303,13 +303,13 @@ export default {
       'Connect external MCP servers (HTTP): add a URL and its tools show up in chat automatically — one hookup, a batch of new capabilities. Config stays on this device, not synced.',
     mcpLifeOsHint:
       'On sign-in, Home / Planner / Finance / Fitness MCP are added automatically (current JWT). Use the button to refresh tools. All four /api/mcp endpoints are live.',
-    mcpFleetAdd: 'Refresh Life OS MCP fleet',
-    mcpFleetAdding: 'Adding Life OS MCP…',
+    mcpFleetAdd: 'Refresh Korben MCP fleet',
+    mcpFleetAdding: 'Adding Korben MCP…',
     mcpFleetAdded: 'Added {names}; {n} tools total. Use Test per server.',
     mcpFleetUpToDate:
-      'All four Life OS servers already listed; refreshed token. {n} tools.',
+      'All four Korben servers already listed; refreshed token. {n} tools.',
     mcpNeedLogin:
-      'Sign in to Life OS cloud sync first — that session becomes the MCP Bearer token.',
+      'Sign in to Korben cloud sync first — that session becomes the MCP Bearer token.',
     mcpToolCount: '{n} tools',
     mcpName: 'Name',
     mcpNamePlaceholder: 'Name (e.g. GitHub)',
@@ -353,9 +353,9 @@ export default {
     langEn: 'English',
     cloud: 'Cloud sync',
     cloudDesc:
-      'Sign in with your Life OS account to sync chats and long-term memories across devices. Without signing in, everything stays on this device.',
+      'Sign in with your Korben account to sync chats and long-term memories across devices. Without signing in, everything stays on this device.',
     cloudSsoHint:
-      'Same Life OS account as Planner / Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
+      'Same Korben account as Planner / Fitness / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
     cloudEmail: 'Email',
     cloudPassword: 'Password',
     cloudSignIn: 'Sign in',

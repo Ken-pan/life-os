@@ -152,15 +152,15 @@ export default {
     statusTitle: '按状态',
     statusCenter: '项目',
     plannerOffline:
-      '未登录 Life OS 云端，Planner 联动关闭（设置 → 云端联动）。',
+      '未登录 Korben 云端，Planner 联动关闭（设置 → 云端联动）。',
     plannerError: '读取 Planner 失败：{message}',
     sensing: '感知中…',
   },
   cloud: {
     title: '云端联动',
-    desc: '登录 Life OS 统一账户后，项目视图可直读 Planner 的项目与任务（只读，RLS 只放行本人数据）。',
+    desc: '登录 Korben 统一账号后，项目视图可直读 Planner 的项目与任务（只读，RLS 只放行本人数据）。',
     ssoHint:
-      '与 Planner / Fitness / Finance / Music / Home 等共用同一 Life OS 账号；本机登录一次后，其它站点可自动接上。',
+      '与 Planner / Fitness / Finance / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
     email: '邮箱',
     password: '密码',
     signIn: '登录',

@@ -168,9 +168,9 @@
 </script>
 
 <SettingsSyncBlock
-  title="Life OS 账号"
+  title="Korben 账号"
   unavailableDesc="未配置 Supabase"
-  signedOutDesc="与 Planner / Fitness / Finance / Music 等共用同一 Life OS 账号；本机登录一次后，其它站点可自动接上。"
+  signedOutDesc="与 Planner / Fitness / Finance / Music 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。"
   signedInDesc="布局数据仍保存在本机；登录用于跨站 SSO 与 Portal 最近打开记录。"
   email={auth.user?.email}
   configured={isSupabaseConfigured}

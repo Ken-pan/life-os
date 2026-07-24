@@ -200,7 +200,7 @@ async function renderCrawlState(queue = []) {
       el.className = 'crawl-state'
       const warn = document.createElement('div')
       warn.className = 'crawl-warning compact'
-      warn.textContent = `已有 ${pendingRocket} 份 Rocket Money 数据待同步，建议先打开 Finance OS。`
+      warn.textContent = `已有 ${pendingRocket} 份 Rocket Money 数据待同步，建议先打开 Korben Money。`
       el.appendChild(warn)
     } else {
       el.style.display = 'none'
@@ -264,7 +264,7 @@ async function renderCrawlState(queue = []) {
   if (!running && pendingRocket > 0) {
     const warn = document.createElement('div')
     warn.className = 'crawl-warning'
-    warn.textContent = `已有 ${pendingRocket} 份 Rocket Money 数据待同步，重复抓取前建议先打开 Finance OS。`
+    warn.textContent = `已有 ${pendingRocket} 份 Rocket Money 数据待同步，重复抓取前建议先打开 Korben Money。`
     el.appendChild(warn)
   }
 
@@ -425,7 +425,7 @@ function renderInFlightList(inFlight) {
   const heading = document.createElement('div')
   heading.className = 'meta'
   heading.style.margin = '6px 0 4px'
-  heading.textContent = '投递中（已发给 Finance OS，等待 ACK）'
+  heading.textContent = '投递中（已发给 Korben Money，等待 ACK）'
   el.appendChild(heading)
   for (const item of inFlight) {
     el.appendChild(
@@ -444,7 +444,7 @@ async function renderSnapshotPlan(snapshot, txnWatermark) {
   if (!snapshot?.exportedAt) {
     el.className = 'plan-box missing'
     el.innerHTML =
-      '尚未拉取 Finance OS 快照。<br>先打开 Finance OS 页面，或点下方「更新抓取计划」。'
+      '尚未拉取 Korben Money 快照。<br>先打开 Korben Money 页面，或点下方「更新抓取计划」。'
     return
   }
   el.className = 'plan-box'
@@ -492,13 +492,13 @@ function renderDirectAuth(auth, lastSync) {
     const lastDirect =
       lastSync?.direct && lastSync.at ? ` · 上次直连 ${fmtTime(lastSync.at)}` : ''
     status.className = 'plan-box'
-    status.textContent = `已登录 ${auth.email ?? ''} — 交易抓到即自动落库,无需打开 Finance OS 页面${lastDirect}`
+    status.textContent = `已登录 ${auth.email ?? ''} — 交易抓到即自动落库,无需打开 Korben Money 页面${lastDirect}`
     form.style.display = 'none'
     logout.style.display = ''
   } else {
     status.className = 'plan-box missing'
     status.textContent =
-      '未登录:交易需打开 Finance OS 页面同步。用 Life OS 账号登录后,抓到的交易直接写入云端。'
+      '未登录:交易需打开 Korben Money 页面同步。用 Korben 账号登录后,抓到的交易直接写入云端。'
     form.style.display = 'flex'
     logout.style.display = 'none'
   }
@@ -598,7 +598,7 @@ document.getElementById('crawl-rh')?.addEventListener('click', async () => {
     )
   } else if (res?.error === 'content_script_unreachable') {
     alert(
-      '无法连接 Robinhood 页面脚本。请在 chrome://extensions 重新加载 Finance OS Sync，然后刷新 Robinhood 页再试。',
+      '无法连接 Robinhood 页面脚本。请在 chrome://extensions 重新加载 Korben Money Sync，然后刷新 Robinhood 页再试。',
     )
   }
   await refresh()
@@ -661,7 +661,7 @@ document
           )
           el.textContent =
             `已入队：${parts.join(' · ')}。` +
-            '打开 Finance OS 页面完成匹配与标注。'
+            '打开 Korben Money 页面完成匹配与标注。'
         }
       }
     } finally {
@@ -746,7 +746,7 @@ document.getElementById('refresh-plan').addEventListener('click', async () => {
   }, 2000)
 })
 
-/** 打开已有 Finance OS 标签页（money.kenos.space / kenos-money.netlify.app / 本地 dev），或新开生产站。 */
+/** 打开已有 Korben Money 标签页（money.kenos.space / kenos-money.netlify.app / 本地 dev），或新开生产站。 */
 document.getElementById('open-app').addEventListener('click', async () => {
   const btn = document.getElementById('open-app')
   if (btn) btn.disabled = true

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <style>
-      /* Finance OS 设计系统 tokens 子集（与 src/app.css 保持同步）。
+      /* Korben Money 设计系统 tokens 子集（与 src/app.css 保持同步）。
          popup 无法引用 app 的样式表，故在此镜像一份；改主题时两处同改。 */
       :root {
         --bg: #f2f4f2;
@@ -536,20 +536,20 @@
       <img src="brand-mark.png" alt="" width="30" height="30" />
       <div class="brand-copy">
         <h1>Finance<span class="accent"> OS</span> Sync</h1>
-        <p>打开券商/记账页面自动抓取 · 打开 Finance OS 自动写入</p>
+        <p>打开券商/记账页面自动抓取 · 打开 Korben Money 自动写入</p>
       </div>
     </header>
     <main>
       <section>
-        <h2>抓取计划（Finance OS）</h2>
-        <div id="snapshot-plan" class="plan-box missing">尚未拉取。打开 Finance OS 后会自动更新。</div>
+        <h2>抓取计划（Korben Money）</h2>
+        <div id="snapshot-plan" class="plan-box missing">尚未拉取。打开 Korben Money 后会自动更新。</div>
         <button id="refresh-plan" class="btn ghost">更新抓取计划</button>
       </section>
       <section>
         <h2>直连账号（免开页面同步）</h2>
         <div id="direct-status" class="plan-box missing">读取中…</div>
         <form id="direct-login-form" style="display:none; flex-direction:column; gap:6px">
-          <input id="direct-email" class="direct-input" type="email" placeholder="Life OS 邮箱" autocomplete="username" />
+          <input id="direct-email" class="direct-input" type="email" placeholder="Korben 邮箱" autocomplete="username" />
           <input id="direct-password" class="direct-input" type="password" placeholder="密码" autocomplete="current-password" />
           <button id="direct-login" class="btn" type="submit">登录并启用直连</button>
           <div id="direct-login-error" class="crawl-state" style="display:none"></div>
@@ -557,12 +557,12 @@
         <button id="direct-logout" class="btn ghost" style="display:none" type="button">退出直连账号</button>
       </section>
       <section>
-        <h2>同步到 Finance OS</h2>
-        <button id="open-app" class="btn">打开 Finance OS 并同步</button>
+        <h2>同步到 Korben Money</h2>
+        <button id="open-app" class="btn">打开 Korben Money 并同步</button>
         <button id="release-inflight" class="btn ghost" style="display:none">
           重置投递中并重试
         </button>
-        <div id="sync-health" class="sync-health ok" aria-live="polite">等待 Finance OS 页面响应…</div>
+        <div id="sync-health" class="sync-health ok" aria-live="polite">等待 Korben Money 页面响应…</div>
       </section>
       <section>
         <h2>主动抓取</h2>
@@ -596,8 +596,8 @@
       </section>
     </main>
     <footer>
-      待同步不会自动消失：须打开 Finance OS 页面（本地任意端口或 Netlify），
-      扩展 bridge 才能把数据写入。改完扩展后请「重新加载扩展」并刷新 Finance OS 标签页。
+      待同步不会自动消失：须打开 Korben Money 页面（本地任意端口或 Netlify），
+      扩展 bridge 才能把数据写入。改完扩展后请「重新加载扩展」并刷新 Korben Money 标签页。
     </footer>
     <script src="debugLog.js"></script>
     <script src="syncStateLogic.js"></script>

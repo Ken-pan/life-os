@@ -62,7 +62,7 @@ export const zhCN: MessageTree = {
     staleBanner: '部分余额可能已过期。做出重大决策前，请先更新账户。',
   },
   onboarding: {
-    title: '开始使用 Finance OS',
+    title: '开始使用 Korben Money',
     subtitle: '按顺序完成以下步骤，即可建立可信的财务基线。',
     step: {
       accounts: {
@@ -113,7 +113,7 @@ export const zhCN: MessageTree = {
     safeToSpendAfterPurchaseExplainTitle: '「{label}」怎么算？',
   },
   terminology: {
-    productName: 'Finance OS',
+    productName: 'Korben Money',
     liquidCash: '流动现金',
     accessible: '能动的钱',
     locked: '不能动的钱',
@@ -198,7 +198,7 @@ export const zhCN: MessageTree = {
       '本账户最多 1 台电脑 + 1 部手机。要在这台新设备上使用，请先在已授权的设备上进入「设置 → 账户与设备」移除对应槽位。',
     signOut: '退出登录',
     loginHint:
-      '使用 Life OS 账号登录（与 Planner / Fitness / Music / Home 等共用）。仅授权设备可访问。',
+      '使用 Korben 账号登录（与 Planner / Fitness / Music / Home 等共用）。仅授权设备可访问。',
     email: '邮箱',
     password: '密码',
     login: '登录',
@@ -614,7 +614,7 @@ export const zhCN: MessageTree = {
     intro:
       '当前账户：{email} · 最多 {max} 个设备槽（1 台电脑 + 1 部手机，{used}/{max} 已使用）。系统通过本机持久化标识识别设备，认得出后再次打开几乎无需等待。',
     ssoHint:
-      '与 Planner / Fitness / Music / Home 等共用同一 Life OS 账号；本机登录一次后，其它站点可自动接上。',
+      '与 Planner / Fitness / Music / Home 等共用同一 Korben 账号；本机登录一次后，其它站点可自动接上。',
     loadFailed: '加载设备列表失败',
     removeFailed: '移除失败',
     loading: '加载中…',
@@ -1739,7 +1739,7 @@ export const enUS: MessageTree = {
       'Some balances may be stale. Update accounts before major decisions.',
   },
   onboarding: {
-    title: 'Get started with Finance OS',
+    title: 'Get started with Korben Money',
     subtitle:
       'Complete these steps in order to build a trusted financial baseline.',
     step: {
@@ -1792,7 +1792,7 @@ export const enUS: MessageTree = {
     safeToSpendAfterPurchaseExplainTitle: 'How "{label}" is calculated',
   },
   terminology: {
-    productName: 'Finance OS',
+    productName: 'Korben Money',
     liquidCash: 'Liquid cash',
     accessible: 'Accessible cash',
     locked: 'Locked assets',
@@ -1882,7 +1882,7 @@ export const enUS: MessageTree = {
       'This account allows 1 computer + 1 phone. To use this device, remove a slot under Settings → Accounts & devices on an authorized device.',
     signOut: 'Sign out',
     loginHint:
-      'Sign in with your Life OS account (shared with Planner / Fitness / Music / Home). Only authorized devices can access.',
+      'Sign in with your Korben account (shared with Planner / Fitness / Music / Home). Only authorized devices can access.',
     email: 'Email',
     password: 'Password',
     login: 'Sign in',
@@ -2313,7 +2313,7 @@ export const enUS: MessageTree = {
     intro:
       'Signed in as {email} · up to {max} device slots (1 computer + 1 phone, {used}/{max} used). This browser is recognized locally for fast return visits.',
     ssoHint:
-      'Same Life OS account as Planner / Fitness / Music / Home — sign in once on this device and the other sites can pick it up.',
+      'Same Korben account as Planner / Fitness / Music / Home — sign in once on this device and the other sites can pick it up.',
     loadFailed: 'Failed to load devices',
     removeFailed: 'Failed to remove device',
     loading: 'Loading…',

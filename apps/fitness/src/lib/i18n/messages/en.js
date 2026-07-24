@@ -247,7 +247,7 @@ export default {
     signInDesc:
       'Sign in to back up data and avoid losing it after clearing cache or switching phones.',
     cloudSsoHint:
-      'Same Life OS account as Planner / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
+      'Same Korben account as Planner / Finance / Music / Home — sign in once on this device and the other sites can pick it up.',
     signInLink: 'Sign in / Sign up',
     programTemplate: 'Program template',
     programPick: 'Switch program',
@@ -521,7 +521,7 @@ export default {
     noAccount: 'No account yet?',
     hasAccount: 'Already have an account?',
     footnote:
-      'Same Life OS account as Planner / Finance / Music / Home. Sign in to back up workouts and restore on another device — data is private to you.',
+      'Same Korben account as Planner / Finance / Music / Home. Sign in to back up workouts and restore on another device — data is private to you.',
     signUpSuccess: 'Account created — signed in',
     signInSuccess: 'Signed in',
     syncSwitchedLoaded: 'Account switched — cloud data loaded',

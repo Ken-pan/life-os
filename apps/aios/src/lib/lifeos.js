@@ -56,7 +56,7 @@ function resolvePeriod(args = {}) {
 }
 
 const NEED_LOGIN =
-  '需要先登录 Life OS 账户才能读取跨 app 数据(设置 → 云同步登录)。'
+  '需要先登录 Korben 账号才能读取跨 app 数据(设置 → 云同步登录)。'
 
 /* —————————————————————— 今日快照 —————————————————————— */
 
