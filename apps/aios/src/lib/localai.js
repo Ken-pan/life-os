@@ -10,6 +10,7 @@ import {
   mapUiModelToKimi,
   messagesHaveImageParts,
   resolveChatBackendKind,
+  isTransientChatError,
 } from '$lib/cloudChat.core.js'
 import {
   DEFAULT_GATEWAY,
@@ -29,7 +30,7 @@ export { isHeavyLocalModel }
  *  live binding:consumers 以 `${GATEWAY}/...` 在调用时读取最新值。 */
 const GATEWAY_KEY = 'aios_gateway_url_v1'
 export { DEFAULT_GATEWAY, SAME_ORIGIN_GATEWAY }
-export { mapUiModelToKimi, resolveChatBackendKind }
+export { mapUiModelToKimi, resolveChatBackendKind, isTransientChatError }
 
 function pageHostname() {
   if (!browser) return ''
@@ -242,6 +243,27 @@ function withHeavyChatSlot(fn) {
  *   finishReason: string | null,
  * }>}
  */
+/** 只在**首字节前**重试的封装:doFetch 必须只做「发请求 + 校验状态」并返回
+ *  Response,流式解析放到外面 —— 否则重试会把已吐出的 token 重复一遍。 */
+async function withTtfbRetry(doFetch, { signal, retries = 2 } = {}) {
+  let lastErr
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await doFetch()
+    } catch (err) {
+      if (err?.name === 'AbortError' || signal?.aborted) throw err
+      if (attempt === retries || !isTransientChatError(err)) throw err
+      lastErr = err
+      await new Promise((r) => {
+        const to = setTimeout(r, 500 * (attempt + 1))
+        signal?.addEventListener?.('abort', () => { clearTimeout(to); r() }, { once: true })
+      })
+      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
+    }
+  }
+  throw lastErr
+}
+
 export async function streamChat({
   model,
   messages,
@@ -270,23 +292,29 @@ export async function streamChat({
     }
     if (tools?.length) body.tools = tools
 
-    const res = await fetch('/api/ai/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal,
-    })
-    if (!res.ok || !res.body) {
-      let code = `kimi_${res.status}`
-      try {
-        const errBody = await res.json()
-        if (errBody?.error === 'not_configured') code = 'kimi_not_configured'
-        else if (typeof errBody?.error === 'string') code = errBody.error
-      } catch {
-        /* keep status code */
-      }
-      throw new Error(code)
-    }
+    const res = await withTtfbRetry(
+      async () => {
+        const r = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal,
+        })
+        if (!r.ok || !r.body) {
+          let code = `kimi_${r.status}`
+          try {
+            const errBody = await r.json()
+            if (errBody?.error === 'not_configured') code = 'kimi_not_configured'
+            else if (typeof errBody?.error === 'string') code = errBody.error
+          } catch {
+            /* keep status code */
+          }
+          throw new Error(code)
+        }
+        return r
+      },
+      { signal },
+    )
     return parseChatCompletionStream(res, onDelta)
   }
 
@@ -316,15 +344,19 @@ export async function streamChat({
     }
     if (tools?.length) body.tools = tools
 
-    const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal,
-    })
-    if (!res.ok || !res.body) {
-      throw new Error(`gateway ${res.status}`)
-    }
+    const res = await withTtfbRetry(
+      async () => {
+        const r = await fetch(`${GATEWAY}/v1/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal,
+        })
+        if (!r.ok || !r.body) throw new Error(`gateway ${r.status}`)
+        return r
+      },
+      { signal },
+    )
     return parseChatCompletionStream(res, onDelta)
   }
 
