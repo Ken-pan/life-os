@@ -73,10 +73,12 @@ final class KenosSpotlightHandoffTests: XCTestCase {
             currentDomainId: "money"
         )
         XCTAssertNotNil(surface)
-        XCTAssertEqual(surface?.title, "Money")
+        // 展示名已随 Korben 品牌统一改为 Finance;域 id 仍冻结为 "money"
+        // (深链/持久化契约),两者刻意不同步 —— 下面两条断言正是这条边界的护栏。
+        XCTAssertEqual(surface?.title, "Finance")
         XCTAssertEqual(surface?.deepLink, "kenos://domain/money")
         XCTAssertFalse(surface?.deepLink.contains("secret") == true)
-        XCTAssertEqual(KenosUserActivityFoundation.lastTitle, "Money")
+        XCTAssertEqual(KenosUserActivityFoundation.lastTitle, "Finance")
         XCTAssertEqual(KenosUserActivityFoundation.lastDeepLink, "kenos://domain/money")
     }
 
