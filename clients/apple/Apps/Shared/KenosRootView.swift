@@ -2110,6 +2110,38 @@ struct DailyBetaSettingsView: View {
                 .font(KenosTypography.caption)
             }
 
+            // Korben Shell V2 dogfood 开关 —— 只在开发构建里出现。
+            // flag 是 `static let`(冻结在启动那一刻),中途翻转会拆掉当前壳并
+            // 重挂 WebView(丢登录/滚动/历史),所以这里只写偏好、下次启动生效。
+            if KenosDevMode.isDevelopmentBuild {
+                Section {
+                    Toggle(L("Korben Shell V2", "Korben 新壳 V2"), isOn: Binding(
+                        get: { KorbenShellV2Feature.dogfoodPreference },
+                        set: { KorbenShellV2Feature.setDogfoodEnabled($0) }
+                    ))
+                    .accessibilityIdentifier("kenos.settings.korbenShellV2")
+                    LabeledContent(L("Current session", "本次会话")) {
+                        Text(
+                            KorbenShellV2Feature.isEnabled
+                                ? L("Korben Shell V2", "新壳 V2")
+                                : L("Legacy shell", "旧壳")
+                        )
+                        .foregroundStyle(.secondary)
+                    }
+                    .accessibilityIdentifier("kenos.settings.korbenShellV2.active")
+                } header: {
+                    Text(L("Dogfood", "内测"))
+                } footer: {
+                    Text(
+                        L(
+                            "Takes effect on next launch — swipe the app away and reopen. Turning it off restores the legacy shell; no data is migrated either way.",
+                            "下次启动生效 —— 上划关掉 App 再打开。关掉即回到旧壳;两边都不迁移任何数据。"
+                        )
+                    )
+                    .font(KenosTypography.caption)
+                }
+            }
+
             Section {
                 Toggle(L("Ask after screenshots", "截图后询问是否反馈"), isOn: Binding(
                     get: { model.askAfterScreenshotEnabled },
