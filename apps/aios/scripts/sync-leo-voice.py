@@ -71,6 +71,36 @@ def ensure_hf_model(repo: str) -> None:
     subprocess.check_call(["huggingface-cli", "download", repo])
 
 
+def ensure_trailing_silence(path: Path, seconds: float = 0.5) -> None:
+    """给克隆参考音补足尾部静音,根治「说话前一声呼麦」。
+
+    Qwen3-TTS 的 ICL 语音克隆坑:生成的第一个 token 会受参考音**结尾音素**
+    影响,ref 尾部不够静就把气声/尾音漏进合成开头(听感 = 说话前一声「呼麦」)。
+    官方修法是给参考音补 ~0.5s 尾静音再编码。见:
+    https://ocdevel.com/blog/20260302-qwen-tts-voice-cloning
+
+    幂等:先剪掉已有的纯零尾帧,再补足 ``seconds``——重复 sync 不会越补越长。
+    仅用标准库 ``wave``,不引 numpy。
+    """
+    import wave
+
+    with wave.open(str(path), "rb") as w:
+        ch, sw, fr, n = w.getnchannels(), w.getsampwidth(), w.getframerate(), w.getnframes()
+        frames = w.readframes(n)
+    fsize = ch * sw
+    zero = b"\x00" * fsize
+    end = len(frames)
+    while end >= fsize and frames[end - fsize : end] == zero:
+        end -= fsize  # 剪掉尾部纯零帧(幂等关键)
+    padded = frames[:end] + zero * int(seconds * fr)
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(ch)
+        w.setsampwidth(sw)
+        w.setframerate(fr)
+        w.writeframes(padded)
+    print(f"  padded trailing silence -> {seconds}s @ {path.name}")
+
+
 def generate_voice_design(out_wav: Path) -> Path:
     venv_py = (
         Path.home()
@@ -169,6 +199,8 @@ def main() -> int:
     designed = REF_DIR / "leo_voicedesign_ref.wav"
     if not designed.exists() or designed.stat().st_size < 1000:
         generate_voice_design(designed)
+    # 补尾静音,消除克隆语音「说话前呼麦」伪影(幂等,详见函数注释)
+    ensure_trailing_silence(designed, 0.5)
     entries.append(
         {
             "id": "leo_voicedesign_ref",
