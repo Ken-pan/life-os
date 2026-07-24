@@ -479,13 +479,72 @@ Orb 保留(导航,不是输入口)。
 合成结果而非内容像素)+ Dock 上沿 14pt 渐隐。纯视觉,不进布局计算,
 `bottomObstruction` 的 5 个单测不受影响。
 
-### 仍 OPEN(未做)
+### 原「仍 OPEN」项的结局 → 见 §8l
 - **P1-1 Space Peek**:Orb Tap 目前打开的是接近全屏的 Space Center,不是「从 Orb 原点
   生长、82–86% 宽、保留当前页 12–20% 可见」的 Peek。
 - **P1-2 Assist 内容仍通用**:未利用当前页面可见信息(如「账户未连接 → 收件箱不可用」)。
 - **P1-3 Canvas 能力**:仍只是大号 Capture,缺文件/对象/计划/Agent 进度。
 - **P1-5 Plan 标题**:Space 名与其中一个筛选区同名(都叫「今日」)。
 - **System Strip ACTIVE/TRAY/MULTI-RUNTIME**:需造 fixture 才能证明。
+
+## 8l. GATE 5C / 5D 收口 + P0-3 web 半边(2026-07-23,真机 iPhone 17 Pro)
+
+```
+5C-1 Space Peek:        PASS(真机实拍 + 几何断言)
+5C-2 Assist 接地:       PASS(真机实拍 + 8 单测)
+5D  Strip 三态/Tray:    PASS(真机实拍,ACTIVE/TRAY/MULTI-RUNTIME 首次拿到证据)
+P0-3 web 半边:          PASS(44 文件,9 app build 通过)
+P1-5 Plan 页头:         PASS(「今日/TODAY」→「计划/PLAN」)
+P1-6 胶囊纯图标:        PASS(全部项带文字)
+```
+
+证据等级:**AUTOMATED VERIFIED(真机)** —— `KorbenGate5CDUITests` 6/6 在
+iPhone 17 Pro 真机通过,截图随 xcresult 存档;单测 203 例全绿。
+
+### 5C-1 Space Peek —— 问题不是"面板不好看",是**Tap 没有语义**
+Orb Tap 与 Swipe Up 此前都调 `openSpaceSwitcher()`,两种意图落到同一个近全屏
+面板。新 Peek 是**局部**卡(84%×71%,贴左下与 Orb 同列,从左下角生长),
+当前页始终露在外。用 overlay 而非 sheet —— sheet 只能从屏幕底边整幅推上来,
+拿不到"从 Orb 原点长出来"这个语义。UI 测试用**比例断言**锁死这条边界
+(宽 <0.92 / 高 <0.86 屏),铺满即视为退化回 Center。
+
+### 5C-2 Assist 接地 —— 事实一直都在,只是没用
+壳早就掌握 `continuityURL.path` 与 `domainDockItems`,但面板只读 Space 名,
+于是任何页面上都长一样。新增 `KorbenAssistContext`(纯函数)由路由推导所在区
+(**最长前缀**匹配,二级页仍归属父区)+ 同域跳转建议。
+纪律不变:确定性投影,不是 AI 判断;面板不许说"我看了你的计划"。
+
+### 5D Strip 夹具 —— 为什么之前证不出来
+三态依赖真运行态(得真在训练、真有待批 Agent),几轮评审 Strip 始终是空的,
+`ACTIVE/TRAY/MULTI-RUNTIME` 只能记 NOT TESTED。夹具(`-korbenStripFixture
+attention|runtime|both`)把它们变成可复现启动参数,与 `KenosDevMode` 同源双门,
+**生产构建永不激活**(单测锁死)。Tray 与 Strip 读同一份事实,否则夹具态下
+二者会自相矛盾。「Attention 排在 Runtime 左侧」由**坐标断言**锁住 —— 单测
+只能证明模型顺序,证明不了渲染顺序。
+
+### 只有实拍能发现的三个问题(代码审查全部照不到)
+1. **Peek 里空间名全英文**:那份中英映射私有在 `KenosGlobalDock`,Peek 抄不到 →
+   抽成共享 `KenosLocalizedTitles`。中文界面同时隐藏英文副标题(两列网格里
+   必被截断成 "Cash flow and decisio…")。
+2. **Assist 在 Today 态报出「当前:今日 · Home」这种不存在的位置**:域外
+   `domainDockItems` 退回兜底项(Home/Browse/Library),路由匹配必然命中 Home。
+   改为只在域内推导区名 —— 宁可少说,不编造。
+3. **Strip 三单元同屏时中间 runtime 被挤成「Train…」**:允许小幅缩字优先于
+   省略号。
+
+### 测试环境本身的坑
+- **系统通知横幅正落在 System Strip 上**:上一轮 Tray 断言的红,真因是一条
+  Apple TV 键盘通知吃掉了点击(点开了 Apple TV 遥控键盘)。测试须显式收横幅。
+- **`accessibilityIdentifier` 无 `.contain`** 让 Assist 子元素被合并进容器 ——
+  与 System Strip 早先**同一个坑**第二次出现,已在两处都声明为容器。
+
+### 仍 OPEN
+- **P1-3 Canvas 能力**:仍只是大号 Capture,缺文件/对象/计划/Agent 进度。
+  (这是唯一一条 Gate5C 里没做完的 —— 它需要新的数据面,不是 chrome 调整。)
+- **P6 Action Button / App Intents / Live Activity**:仍卡 App Group entitlement。
+- web 侧遗留裁决项(见提交 `01118885` 的 subagent 报告):`Life OS 产品` 分类
+  标签与其正则耦合、产品列表里的裸 `Finance`、`Kenos IA` 占位项目名、
+  `PORTAL.OS` 式命名、uiux-review-gallery 生成物。
 
 ## 9. Device Gate 通过后的 P2 边界(预告,未开工)
 只做 System Strip(Runtime + Attention 投影)+ System Tray:高度 ≤36pt、无状态 0pt、同一条最多 3 单元(`♪ Daily Mix · 1:42 | 专注 · 18:23 | 2 待确认`),不做大型顶部 Runtime 卡。**不碰**:Orb 新手势、Intent 分类、Korben Assist、App Group、Lens、Per-Space WebView Pool。能力支线并行:App Group closure(先于 Live Activity/Widget 扩展)、Music Runtime 审计(先于后台音频 entitlement)。
