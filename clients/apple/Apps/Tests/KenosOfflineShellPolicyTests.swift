@@ -93,6 +93,38 @@ final class KenosOfflineShellPolicyTests: XCTestCase {
         )
     }
 
+    /// LAN 冷启动但开启了自动回退 → 不该整屏硬门(回退在路上,给横幅)。
+    func testAutoFallbackSuppressesHardGate() {
+        let lanColdWithFallback = KenosOfflineShellPolicy.ProbeContext(
+            didPaint: false,
+            originHost: "kens-mac.tail04e0e6.ts.net",
+            isLanDependent: true,
+            useProductionOverride: false,
+            canAutoFallbackToProduction: true
+        )
+        XCTAssertFalse(
+            KenosOfflineShellPolicy.shouldUseHardUnavailableGate(lanColdWithFallback),
+            "生产回退可用时不该硬门"
+        )
+        XCTAssertTrue(
+            KenosOfflineShellPolicy.shouldShowSyncPausedBanner(
+                probeFailed: true,
+                context: lanColdWithFallback
+            ),
+            "改为非阻塞横幅"
+        )
+
+        // 没有自动回退(用户显式关了 preferProductionFallback)时仍硬门。
+        let lanColdNoFallback = KenosOfflineShellPolicy.ProbeContext(
+            didPaint: false,
+            originHost: "kens-mac.tail04e0e6.ts.net",
+            isLanDependent: true,
+            useProductionOverride: false,
+            canAutoFallbackToProduction: false
+        )
+        XCTAssertTrue(KenosOfflineShellPolicy.shouldUseHardUnavailableGate(lanColdNoFallback))
+    }
+
     func testSyncPausedBannerWhenProductionProbeFailsBeforePaint() {
         let ctx = KenosOfflineShellPolicy.ProbeContext(
             didPaint: false,

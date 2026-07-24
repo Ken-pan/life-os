@@ -14,6 +14,7 @@ enum KenosDailyBetaConfig {
     static let preferProductionFallbackKey = "kenos.dailyBeta.preferProductionFallback"
     static let useProductionOverrideKey = "kenos.dailyBeta.useProductionOverride"
     static let resolvedProductionShellKey = "kenos.dailyBeta.resolvedProductionShell"
+    static let phoneHomeBaseResolvedKey = "kenos.dailyBeta.phoneHomeBaseResolved.v1"
 
     /// Preferred www primary, then Netlify canary (site renamed off aios-*).
     static let productionShellCandidates: [URL] = [
@@ -108,6 +109,41 @@ enum KenosDailyBetaConfig {
                 UserDefaults.standard.removeObject(forKey: KenosOriginResolver.lastKnownGoodHostnameKey)
             }
         }
+    }
+
+    /// **手机的「家」默认是生产,不是 Mac 上的开发服务器。**
+    ///
+    /// Debug 构建把 Mac 的 Tailscale dev origin(`…ts.net:5219`)烧进 bundle 当默认
+    /// origin。手机通常不在 Mac 旁、或 dev server 没开 —— 冷启动连不上就直接硬门
+    /// 「Daily Beta shell offline」。装一次、连不上一次,反复出现。
+    ///
+    /// 这里在**首次启动**把默认落到生产,幂等一次(靠 `phoneHomeBaseResolvedKey`)。
+    /// 只在「用户从未手动配过 origin」且「配置 origin 确实是 LAN 依赖」时生效 ——
+    /// 已经手填过 canary/生产地址的用户不受影响。要回到 Daily Beta 的用户仍可在
+    /// 设置里「重试 LAN / 填写 origin」,那会清掉这个 override
+    /// (见 `retryLanOrigin` / `setUserOrigin`),所以这不是把开发口堵死,
+    /// 只是把**默认**从「Mac 依赖」翻成「随处可用」。
+    @discardableResult
+    static func ensurePhoneHomeBaseDefault() -> Bool {
+        #if os(iOS)
+        let defaults = UserDefaults.standard
+        guard defaults.object(forKey: phoneHomeBaseResolvedKey) == nil else { return false }
+        defer { defaults.set(true, forKey: phoneHomeBaseResolvedKey) }
+        // 用户已显式配过 LAN/canary origin → 尊重它。
+        guard userOrigin == nil else { return false }
+        // 已经在生产上(或非 LAN 依赖)→ 无需干预。
+        guard isConfiguredOriginLanDependent else { return false }
+        // 已经处于 override → 不重复。
+        guard !useProductionOverride else { return false }
+        useProductionOverride = true
+        KenosLog.info("phone home base defaulted to production", category: .network, metadata: [
+            "lan": configuredLanOrigin.host ?? "",
+            "prod": productionKenOsOrigin.host ?? "",
+        ])
+        return true
+        #else
+        return false
+        #endif
     }
 
     /// One-time: clear sticky DHCP IPv4 UserDefaults override when bundle provides `.local`.

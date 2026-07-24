@@ -60,6 +60,9 @@ final class KenosAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificatio
         // Bridge UILaunchScreen → first SwiftUI frame (empty launch dict was pure white).
         UIWindow.appearance().backgroundColor = Self.ink
         KenosLog.bootstrap(source: "didFinishLaunching")
+        // 手机默认家 = 生产(而非 Mac dev server)。必须在任何 Web 面读取 origin
+        // 之前跑,幂等一次;否则冷启动会先撞上「Daily Beta shell offline」硬门。
+        KenosDailyBetaConfig.ensurePhoneHomeBaseDefault()
         if let launchOptions, !launchOptions.isEmpty {
             let keys = launchOptions.keys.map(\.rawValue).sorted().joined(separator: ",")
             KenosLog.info("launch options", category: .lifecycle, metadata: ["keys": keys])

@@ -274,7 +274,9 @@ struct KenosDomainModeShell: View {
             didPaint: domainDidPaint,
             originHost: model.continuityURL?.host,
             isLanDependent: KenosDailyBetaConfig.isLanDependentOrigin,
-            useProductionOverride: KenosDailyBetaConfig.useProductionOverride
+            useProductionOverride: KenosDailyBetaConfig.useProductionOverride,
+            canAutoFallbackToProduction: KenosDailyBetaConfig.isLanDependentOrigin
+                && KenosDailyBetaConfig.preferProductionFallback
         )
     }
 

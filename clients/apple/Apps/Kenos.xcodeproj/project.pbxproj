@@ -229,6 +229,7 @@
 		F5D0BA0F944D45F0B9B91D9D /* KorbenQuickCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC2570DE872D125BC85BF602 /* KorbenQuickCapture.swift */; };
 		F67F3063CB2ECB048625E786 /* KenosMetricKitSubscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50FC9B550D021F3AE74E4F87 /* KenosMetricKitSubscriber.swift */; };
 		F6C481223AB087F7121BEC84 /* KenosHomeScanBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95A7D0AB6811C6BA010586CA /* KenosHomeScanBridgeTests.swift */; };
+		F6CDA23CC68D7E5BA95CAAA8 /* KorbenOriginSmokeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBDAF209B46420F1B933394 /* KorbenOriginSmokeUITests.swift */; };
 		F894AEB3D30616040B4BF2EA /* KenosWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A2BF1F1ABD5C921CE340D2 /* KenosWatchApp.swift */; };
 		F95CBB80C8CAA1AA09DD2E1E /* KorbenStripFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 175D67A956696484BCA34013 /* KorbenStripFixtureTests.swift */; };
 		FA47852FB36C27784BA26FAA /* KorbenSpaceSurfaceHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC7BB2F77ACB05CFAA04A46 /* KorbenSpaceSurfaceHost.swift */; };
@@ -382,6 +383,7 @@
 		99343F216B6A9BF94345A4FE /* KenosShellStateSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosShellStateSync.swift; sourceTree = "<group>"; };
 		994FADABE97C972B294A3131 /* KenosDomainHomePathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosDomainHomePathTests.swift; sourceTree = "<group>"; };
 		9E4CA529CC374819893279BE /* KenosStore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KenosStore; path = ../Packages/KenosStore; sourceTree = SOURCE_ROOT; };
+		9FBDAF209B46420F1B933394 /* KorbenOriginSmokeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KorbenOriginSmokeUITests.swift; sourceTree = "<group>"; };
 		A7112113E29AEA26DC0C4EF6 /* KenosAssistantDockHideTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KenosAssistantDockHideTests.swift; sourceTree = "<group>"; };
 		A97F062CEFB13E16D490B065 /* KorbenShellV2Feature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KorbenShellV2Feature.swift; sourceTree = "<group>"; };
 		AC2570DE872D125BC85BF602 /* KorbenQuickCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KorbenQuickCapture.swift; sourceTree = "<group>"; };
@@ -809,6 +811,7 @@
 			children = (
 				2E49368CC7144413C665B257 /* KorbenExperienceAuditUITests.swift */,
 				F635CDFAF82A01E8837CDC25 /* KorbenGate5CDUITests.swift */,
+				9FBDAF209B46420F1B933394 /* KorbenOriginSmokeUITests.swift */,
 				28776B9C96103EE1F5431C90 /* KorbenShellDeviceGateUITests.swift */,
 			);
 			path = UITests;
@@ -1267,6 +1270,7 @@
 			files = (
 				F3F6399E4D9E4230CFB0A3AC /* KorbenExperienceAuditUITests.swift in Sources */,
 				68AE53C36B23619CBD606977 /* KorbenGate5CDUITests.swift in Sources */,
+				F6CDA23CC68D7E5BA95CAAA8 /* KorbenOriginSmokeUITests.swift in Sources */,
 				81E303FE08E8A14F7649839B /* KorbenShellDeviceGateUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

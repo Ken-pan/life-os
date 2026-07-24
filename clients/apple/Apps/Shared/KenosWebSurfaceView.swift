@@ -1635,7 +1635,9 @@ struct KenosDailyBetaSurface: View {
             didPaint: shellDidPaint,
             originHost: KenosDailyBetaConfig.kenOsOrigin.host,
             isLanDependent: KenosDailyBetaConfig.isLanDependentOrigin,
-            useProductionOverride: KenosDailyBetaConfig.useProductionOverride
+            useProductionOverride: KenosDailyBetaConfig.useProductionOverride,
+            canAutoFallbackToProduction: KenosDailyBetaConfig.isLanDependentOrigin
+                && KenosDailyBetaConfig.preferProductionFallback
         )
     }
 

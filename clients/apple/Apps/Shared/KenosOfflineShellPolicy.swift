@@ -47,6 +47,9 @@ enum KenosOfflineShellPolicy {
         var originHost: String?
         var isLanDependent: Bool
         var useProductionOverride: Bool
+        /// 配置为 LAN 且开启了「LAN 连不上就自动切生产」——意味着**马上会有**
+        /// 一次生产回退。此时不该整屏硬门,给非阻塞横幅让回退悄悄完成。
+        var canAutoFallbackToProduction: Bool = false
 
         var mayHaveCachedShell: Bool {
             KenosAppBoundDomains.isProductionHost(originHost) || useProductionOverride
@@ -57,6 +60,8 @@ enum KenosOfflineShellPolicy {
     static func shouldUseHardUnavailableGate(_ context: ProbeContext) -> Bool {
         if context.didPaint { return false }
         if context.mayHaveCachedShell { return false }
+        // 生产回退在路上 → 用横幅而不是整屏硬门,别把用户堵在死界面上等异步切换。
+        if context.canAutoFallbackToProduction { return false }
         return true
     }
 
