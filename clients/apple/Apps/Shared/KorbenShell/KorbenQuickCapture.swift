@@ -57,14 +57,12 @@ struct KorbenQuickCaptureSheet: View {
     }
 
     var body: some View {
-        // 键盘在时可用高度会低于内容总高,VStack 会**挤压**首个元素 ——
-        // 真机实拍里 Canvas 档的标题行就这么被压成了 0 高凭空消失。
-        // 超高就该滚动,不该压扁。
+        // 键盘在时,「sheet 高 − 键盘高」比 Canvas 档的内容总高更小。VStack 遇到
+        // 这种情况会把最上面的元素挤出上边界(实拍连丢三轮标题),所以内容必须
+        // **可滚动**而不是被挤压。Capture 档内容不足一屏时 ScrollView 不会滚,
+        // 行为与之前一致。
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                // 两档共用同一套 capture UI —— Canvas 档不再是空占位(真机 review B4:
-                // 一句说明撑满 95% 屏高完全不成立),多出的高度**真正用于书写**:
-                // 输入区行数放大,并在底部给出真 agent 入口。
                 captureLayer(expanded: detent == Self.canvasDetent)
             }
             .padding(18)
@@ -84,15 +82,19 @@ struct KorbenQuickCaptureSheet: View {
     // ── Capture UI(两档共用;expanded = Canvas 档,书写区放大)──
     private func captureLayer(expanded: Bool) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(
-                expanded
-                    ? "Korben Canvas"
-                    : (prefersChinese ? "记录或交办" : "Capture or delegate")
-            )
-            .font(.system(size: expanded ? 20 : 17, weight: .semibold))
-
-            // Scope chip — 捕获携带当前上下文(只显示,P4B 才做定向路由)。
-            HStack(spacing: 8) {
+            // 标题与 Scope 合并成一行。此前是上下两行,Canvas 档内容总高超出
+            // 「sheet 高 - 键盘高」约 68pt,VStack 把最上面的标题挤出了上边界
+            // ——连续三轮实拍都拍不到「Korben Canvas」。合并省下约 42pt,
+            // 同时读起来更像一条「在哪儿记什么」的说明。
+            HStack(spacing: 10) {
+                Text(
+                    expanded
+                        ? "Korben Canvas"
+                        : (prefersChinese ? "记录或交办" : "Capture or delegate")
+                )
+                .font(.system(size: expanded ? 19 : 17, weight: .semibold))
+                Spacer(minLength: 0)
+                // Scope chip — 捕获携带当前上下文(只显示,P4B 才做定向路由)。
                 scopeChip(scopeLabel, selected: true)
             }
 
@@ -102,10 +104,18 @@ struct KorbenQuickCaptureSheet: View {
                 axis: .vertical
             )
             .focused($textFocused)
-            // Canvas 档原为 10...20:书写区独占 44% 屏高,把拆分预览和主按钮
-            // 一起顶到键盘之下(真机实拍连"创建 N 条"都要滚动才看得到)。
-            // 6...12 仍比 Capture 档大一倍,同时给预览留出位置。
             .lineLimit(expanded ? (6...12) : (3...5))
+            // **弹性吃掉剩余高度**。此前输入框是固有高度,sheet 又几乎满屏,
+            // 于是输入区与键盘之间空出一大片死白(真机实拍两轮都在)。
+            // 让输入框占住这段空间:同一块面积从"浪费"变成"可以继续写",
+            // 而且只有它是弹性的 —— 标题/识别行/按钮都保持固有高度,不会
+            // 再出现 VStack 挤压把标题压成 0 高的情况。
+            // 用**最小高度**撑饱满,而不是用 maxHeight:.infinity 去抢剩余空间 ——
+            // 在 ScrollView 里"无限大"会把兄弟节点全推出可视区。220pt 让 Capture
+            // 档的输入区看起来是一块可写的面,而不是输入框下面一片死白。
+            // alignment 显式给 .top:默认居中会让占位文字和光标停在框正中间,
+            // 打第一个字时文字"从中间开始"。
+            .frame(minHeight: expanded ? 0 : 220, alignment: .top)
             .textFieldStyle(.plain)
             .padding(12)
             .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
@@ -229,6 +239,8 @@ struct KorbenQuickCaptureSheet: View {
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
+        // 上限 + 自身滚动:条目再多也只吃掉这么多高度,不会把标题/按钮挤出去。
+        .frame(maxHeight: 190)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("korben.canvas.breakdown")
     }

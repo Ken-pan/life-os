@@ -172,7 +172,9 @@ struct KorbenSystemStrip: View {
                             .monospacedDigit()
                     }
                 } else {
-                    Text(live.title)
+                    // liveAccessory.title 来自英文 SSOT(Training/Music…),
+                    // 中文界面直接渲染会在 Strip 上留一个英文词(真机实拍)。
+                    Text(KenosLocalizedTitles.navigation(live.title, chinese: prefersChinese))
                         .font(.system(size: 12, weight: .medium))
                         .lineLimit(1)
                         // 三单元同屏时中间的 runtime 最先被挤("Train…",真机实拍)。
@@ -186,7 +188,7 @@ struct KorbenSystemStrip: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(live.title)
+        .accessibilityLabel(KenosLocalizedTitles.navigation(live.title, chinese: prefersChinese))
         .accessibilityHint(prefersChinese ? "回到进行中的会话" : "Returns to the running session")
         .accessibilityIdentifier("korben.strip.runtime")
     }
