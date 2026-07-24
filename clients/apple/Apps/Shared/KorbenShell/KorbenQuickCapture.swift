@@ -29,6 +29,18 @@ struct KorbenQuickCaptureSheet: View {
         KenosShellSettingsStore.current.resolvedLocale() == "zh"
     }
 
+    /// Canvas 档的拆分结果(Capture 档不拆,故只在展开态消费)。
+    private var canvasItems: [KorbenCanvasComposition.Item] {
+        KorbenCanvasComposition.parse(model.captureText)
+    }
+
+    /// 主动作文案随条数变化 —— 按下去会发生什么,按之前就该知道。
+    private func createTitle(expanded: Bool) -> String {
+        let n = expanded ? canvasItems.count : 1
+        guard n > 1 else { return prefersChinese ? "创建" : "Create" }
+        return prefersChinese ? "创建 \(n) 条" : "Create \(n)"
+    }
+
     /// ContextSnapshot 简版:当前 Space(P4B 扩 route/entity)。
     private var scopeLabel: String {
         let projection = KorbenShellProjection.make(from: model)
@@ -87,10 +99,12 @@ struct KorbenQuickCaptureSheet: View {
 
             // 识别行 — P4B:本地启发式分类的实时预览(候选 ≠ 已写入)。
             Label(
-                KorbenCaptureRouter.summary(
-                    for: KorbenCaptureRouter.classify(model.captureText),
-                    chinese: prefersChinese
-                ),
+                expanded
+                    ? KorbenCanvasComposition.summary(items: canvasItems, chinese: prefersChinese)
+                    : KorbenCaptureRouter.summary(
+                        for: KorbenCaptureRouter.classify(model.captureText),
+                        chinese: prefersChinese
+                    ),
                 systemImage: "tray.and.arrow.down"
             )
             .font(.system(size: 12))
@@ -107,10 +121,11 @@ struct KorbenQuickCaptureSheet: View {
                 Spacer()
                 Button {
                     // P4B:回执 + 10s Undo 窗口(失败自动回填文本不丢 Draft)。
-                    shellState.undoReceipt = model.korbenSubmitCapture()
+                    // Canvas 档按行拆条(P1-3 能力层),Capture 档保持单条。
+                    shellState.undoReceipt = model.korbenSubmitCapture(splitLines: expanded)
                     dismiss()
                 } label: {
-                    Text(prefersChinese ? "创建" : "Create")
+                    Text(createTitle(expanded: expanded))
                         .font(.system(size: 15, weight: .semibold))
                         .padding(.horizontal, 18)
                         .padding(.vertical, 9)
@@ -122,6 +137,13 @@ struct KorbenQuickCaptureSheet: View {
                     model.captureText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 )
                 .accessibilityIdentifier("korben.quickCapture.create")
+            }
+
+            // Canvas 档的**能力层**(P1-3):把这段脑内倾倒按行拆成多条各自定向的
+            // 草稿,并在创建**前**就把结果摊开给你核对 —— 这才是 Canvas 与
+            // Quick Capture 的实质区别(此前它只是同一个输入框拉高到 95%)。
+            if expanded, canvasItems.count > 1 {
+                canvasBreakdown
             }
 
             // Canvas 档:多出的高度给书写区之后,底部给真 agent 入口。
@@ -153,6 +175,48 @@ struct KorbenQuickCaptureSheet: View {
                 .accessibilityIdentifier("korben.canvas.openConversation")
             }
         }
+    }
+
+    /// 拆分预览 —— 逐条列出将要创建什么、哪条已识别去向。
+    private var canvasBreakdown: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(canvasItems.prefix(6)) { item in
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Image(systemName: "circle.fill")
+                        .font(.system(size: 4))
+                        .foregroundStyle(.tertiary)
+                    Text(item.text)
+                        .font(.system(size: 13))
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    if let hint = item.routing.targetHint {
+                        Text(KenosLocalizedTitles.navigation(
+                            hint.capitalized, chinese: prefersChinese
+                        ))
+                        .font(.system(size: 10, weight: .medium))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(.white.opacity(0.08), in: Capsule())
+                        .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            // 超过 6 条只列前 6 —— 但**说清楚**还有几条,不假装列全了。
+            if canvasItems.count > 6 {
+                Text(
+                    prefersChinese
+                        ? "…另外 \(canvasItems.count - 6) 条"
+                        : "…and \(canvasItems.count - 6) more"
+                )
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("korben.canvas.breakdown")
     }
 
     private func scopeChip(_ text: String, selected: Bool) -> some View {

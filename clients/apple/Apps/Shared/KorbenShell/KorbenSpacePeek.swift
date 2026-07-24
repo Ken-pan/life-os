@@ -85,6 +85,13 @@ struct KorbenSpacePeek: View {
         VStack(alignment: .leading, spacing: 0) {
             header
             Divider().overlay(.white.opacity(0.08))
+            // 回 Today 的路。Peek 列的是「其它空间」,而 Today 不是其中之一 ——
+            // 它是壳的家。没有这一行时,从任何 Domain 打开 Peek 都回不去
+            // (真机测试实测:Peek 里根本不存在 Today 目标),只能绕道 Center。
+            if projection.shellMode == .domain {
+                todayRow
+                Divider().overlay(.white.opacity(0.08))
+            }
             ScrollView {
                 LazyVGrid(
                     columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
@@ -137,6 +144,31 @@ struct KorbenSpacePeek: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
+    }
+
+    /// Today 行 —— 与网格里的空间磁贴刻意不同形(整行 vs 磁贴):它是回家,
+    /// 不是又一个平级目的地。
+    private var todayRow: some View {
+        Button {
+            shellState.showsSpacePeek = false
+            model.dismissContinuity()
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "house")
+                    .font(.system(size: 15, weight: .medium))
+                Text(prefersChinese ? "今日" : "Today")
+                    .font(.system(size: 15, weight: .medium))
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 46)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("korben.spacePeek.today")
     }
 
     private var currentSpaceLabel: String {

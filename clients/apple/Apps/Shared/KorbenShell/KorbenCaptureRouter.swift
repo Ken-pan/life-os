@@ -84,45 +84,71 @@ enum KorbenCaptureRouter {
 }
 
 /// P4B ActionReceipt — 每次写入的本地回执(Undo 凭据)。
+///
+/// 承载**一批** draft:Canvas 会把多行拆成多条草稿一次性入队,撤销必须是
+/// 整批的 —— 只撤一半会留下用户从没打算保留的残条。单条 capture 就是
+/// 批量大小为 1 的特例,两条路径共用同一套回执与 Undo,不分叉。
 struct KorbenActionReceipt: Identifiable, Equatable {
     let id = UUID()
-    let draftId: UUID
-    let idempotencyKey: String
+    let draftIds: [UUID]
+    let idempotencyKeys: [String]
     /// Undo 恢复用的原始输入(失败/撤销都不丢 Draft)。
     let text: String
     let createdAt = Date()
+
+    var itemCount: Int { draftIds.count }
 }
 
 extension KenosAppModel {
     /// P4B 提交:分类 hint 附着草稿 → 幂等入队 → 返回回执(10s Undo 窗口)。
+    ///
+    /// `splitLines`(Canvas 档)会把每一行拆成独立草稿,各自带自己的 hint。
+    /// 部分失败按**全批回滚**处理:已入队的撤掉、文本原样回填 —— 半批成功
+    /// 是最难收拾的状态(用户不知道哪几条进去了,重试必然重复)。
     @discardableResult
-    func korbenSubmitCapture() -> KorbenActionReceipt? {
+    func korbenSubmitCapture(splitLines: Bool = false) -> KorbenActionReceipt? {
         let text = captureText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return nil }
-        let routing = KorbenCaptureRouter.classify(text)
-        let draft = KenosCaptureFactory.makeDraft(
-            text: text,
-            sourceContext: "ios_korben_quick_capture",
-            targetHint: routing.targetHint
-        )
-        lastCapture = draft
+
+        let payloads: [(text: String, hint: String?)] = splitLines
+            ? KorbenCanvasComposition.parse(text).map { ($0.text, $0.routing.targetHint) }
+            : [(text, KorbenCaptureRouter.classify(text).targetHint)]
+        guard !payloads.isEmpty else { return nil }
+
         captureText = ""
-        let key = "capture-\(draft.id.uuidString)"
-        do {
-            try queue.enqueueR1Draft(
-                actionType: "capture.review",
-                safeSummary: "Review capture draft",
-                idempotencyKey: key,
-                correlationId: draft.correlationId
+        var draftIds: [UUID] = []
+        var keys: [String] = []
+        for payload in payloads {
+            let draft = KenosCaptureFactory.makeDraft(
+                text: payload.text,
+                sourceContext: "ios_korben_quick_capture",
+                targetHint: payload.hint
             )
-        } catch {
-            // 失败不丢 Draft:文本回填,让用户重试。lastCapture 也回滚 ——
-            // 否则它指向一条从未入队的 draft,别处会当「最近已保存」误显。
-            captureText = text
-            if lastCapture?.id == draft.id { lastCapture = nil }
-            return nil
+            let key = "capture-\(draft.id.uuidString)"
+            do {
+                try queue.enqueueR1Draft(
+                    actionType: "capture.review",
+                    safeSummary: "Review capture draft",
+                    idempotencyKey: key,
+                    correlationId: draft.correlationId
+                )
+            } catch {
+                // 全批回滚:撤掉已入队的,文本回填让用户重试。lastCapture 也回滚 ——
+                // 否则它指向一条从未入队的 draft,别处会当「最近已保存」误显。
+                for k in keys {
+                    if let a = queue.actions.first(where: { $0.idempotencyKey == k }) {
+                        try? queue.cancel(a.id)
+                    }
+                }
+                captureText = text
+                lastCapture = nil
+                return nil
+            }
+            lastCapture = draft
+            draftIds.append(draft.id)
+            keys.append(key)
         }
-        return KorbenActionReceipt(draftId: draft.id, idempotencyKey: key, text: text)
+        return KorbenActionReceipt(draftIds: draftIds, idempotencyKeys: keys, text: text)
     }
 
     /// P4B Undo:仅当队列项仍 pending(未派发)才撤销 + 恢复输入文本。
@@ -131,11 +157,19 @@ extension KenosAppModel {
     /// - Returns: true 表示确实撤销;false 表示已派发无法撤销。
     @discardableResult
     func korbenUndoCapture(_ receipt: KorbenActionReceipt) -> Bool {
-        let action = queue.actions.first { $0.idempotencyKey == receipt.idempotencyKey }
-        let cancellable = action.map { $0.status == .pending || $0.status == .retry || $0.status == .failed } ?? false
-        guard let action, cancellable else { return false }
-        try? queue.cancel(action.id)
-        if lastCapture?.id == receipt.draftId { lastCapture = nil }
+        let actions = receipt.idempotencyKeys.compactMap { key in
+            queue.actions.first { $0.idempotencyKey == key }
+        }
+        let cancellable = actions.filter {
+            $0.status == .pending || $0.status == .retry || $0.status == .failed
+        }
+        // 批量语义:只要**有任何一条**已派发,就不算撤销成功 —— 否则会回填
+        // 输入框,用户以为全撤了、重新创建一次,已派发那条就重复了。
+        guard !cancellable.isEmpty, cancellable.count == actions.count,
+              actions.count == receipt.idempotencyKeys.count
+        else { return false }
+        for a in cancellable { try? queue.cancel(a.id) }
+        if let last = lastCapture?.id, receipt.draftIds.contains(last) { lastCapture = nil }
         captureText = receipt.text
         return true
     }
@@ -158,7 +192,13 @@ struct KorbenUndoPill: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 15))
                 .foregroundStyle(Color(red: 0.33, green: 0.84, blue: 0.55))
-            Text(prefersChinese ? "已保存草稿" : "Draft saved")
+            Text(
+                receipt.itemCount > 1
+                    ? (prefersChinese
+                        ? "已保存 \(receipt.itemCount) 条草稿"
+                        : "\(receipt.itemCount) drafts saved")
+                    : (prefersChinese ? "已保存草稿" : "Draft saved")
+            )
                 .font(.system(size: 13, weight: .medium))
             Button(prefersChinese ? "撤销" : "Undo") {
                 let undone = model.korbenUndoCapture(receipt)

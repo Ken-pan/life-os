@@ -71,23 +71,27 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         )
     }
 
-    /// 经 Orb → Space Switcher 真实点按切换 Space。
-    /// 切换器是带 List 的 sheet,靠后的 Space(如 Money)在折叠线以下且懒加载,
-    /// 未滚动到可见时查询命中不到 —— 需滚动查找。
-    private func switchSpace(_ app: XCUIApplication, rowText: String) {
-        app.buttons["korben.orb"].tap()
-        XCTAssertTrue(switcherVisible(app, timeout: 5), "Orb tap 后 Switcher 应打开")
-        let row = app.buttons.containing(NSPredicate(format: "label CONTAINS %@", rowText)).firstMatch
-        // 先等一拍首屏渲染;找不到就在 sheet 内向上滚,最多 5 次。
-        var found = row.waitForExistence(timeout: 3)
+    /// 经 Orb Tap → **Space Peek** 真实点按切换 Space。
+    ///
+    /// Gate5C-1 起 Orb Tap 打开的是 Peek 而不是 Space Switcher(Swipe Up 才是
+    /// 全目录 Center)。按 Space **id** 定位磁贴而不是按可见文案 —— 展示名会随
+    /// 界面语言变化(「计划」/「Plan」),按文案找会在切中文后整套变红。
+    private func switchSpace(_ app: XCUIApplication, spaceId: String) {
+        app.buttons["korben.orb"].firstMatch.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["korben.spacePeek"].waitForExistence(timeout: 5),
+            "Orb tap 后 Space Peek 应打开"
+        )
+        let tile = app.buttons["korben.spacePeek.tile.\(spaceId)"].firstMatch
+        var found = tile.waitForExistence(timeout: 3)
         var scrolls = 0
-        while !(found && row.isHittable) && scrolls < 5 {
+        while !(found && tile.isHittable) && scrolls < 4 {
             app.swipeUp()
             scrolls += 1
-            found = row.exists
+            found = tile.exists
         }
-        XCTAssertTrue(found, "Switcher 内应有 \(rowText) 行(滚动 \(scrolls) 次后仍未见)")
-        row.tap()
+        XCTAssertTrue(found, "Peek 内应有 \(spaceId) 磁贴(滚动 \(scrolls) 次后仍未见)")
+        tile.tap()
         // Domain WKWebView 加载余量
         sleep(6)
     }
@@ -101,8 +105,8 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         XCTAssertFalse(app.otherElements["korben.domainCapsule"].exists, "Today 不应有 Domain 胶囊")
         attachScreenshot(app, name: "T1-today")
 
-        for (row, label) in [("Plan", "plan"), ("Fitness", "fitness"), ("Money", "finance")] {
-            switchSpace(app, rowText: row)
+        for (row, label) in [("plan", "plan"), ("training", "fitness"), ("money", "finance")] {
+            switchSpace(app, spaceId: row)
             assertSingleKorbenChrome(app, context: label)
             XCTAssertTrue(
                 app.otherElements["korben.domainCapsule"].waitForExistence(timeout: 8),
@@ -111,12 +115,15 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
             attachScreenshot(app, name: "T1-\(label)")
         }
 
-        // 回 Today —— 精确点切换器的系统 Today(域胶囊也有个叫 Today 的 tab,不能用
-        // firstMatch 否则会误点域内 tab,停留在 domain)。
-        app.buttons["korben.orb"].tap()
-        XCTAssertTrue(switcherVisible(app, timeout: 5), "回 Today 前 Switcher 应打开")
-        let todayRow = app.buttons["kenos.switcher.system.today"]
-        XCTAssertTrue(todayRow.waitForExistence(timeout: 5))
+        // 回 Today —— 走 Peek 里的 Today 行。用专属 identifier 而不是文案匹配:
+        // 域胶囊里也有叫「今日」的 tab,按文案找会误点域内 tab、停在 domain。
+        app.buttons["korben.orb"].firstMatch.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["korben.spacePeek"].waitForExistence(timeout: 5),
+            "回 Today 前 Space Peek 应打开"
+        )
+        let todayRow = app.buttons["korben.spacePeek.today"]
+        XCTAssertTrue(todayRow.waitForExistence(timeout: 5), "域内 Peek 必须给出回 Today 的路")
         todayRow.tap()
         sleep(3)
         assertSingleKorbenChrome(app, context: "back-to-Today")
@@ -124,16 +131,21 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         attachScreenshot(app, name: "T1-back-today")
     }
 
+    /// Orb Tap 反复开关 —— Gate5C-1 起落点是 Space Peek(不是 Switcher),
+    /// 关闭走点背板(Peek 是"瞄一眼",取消必须零代价,没有也不该有 Close 按钮)。
     func testOrbTapOpenCloseThreeTimes() {
         let app = launchKorben()
-        let orb = app.buttons["korben.orb"]
+        let orb = app.buttons["korben.orb"].firstMatch
         XCTAssertTrue(orb.waitForExistence(timeout: 15))
+        let peek = app.descendants(matching: .any)["korben.spacePeek"]
         for i in 1...3 {
             orb.tap()
-            XCTAssertTrue(switcherVisible(app, timeout: 5), "第 \(i) 次:Switcher 应打开")
-            let close = app.buttons["Close"].firstMatch
-            XCTAssertTrue(close.waitForExistence(timeout: 3), "第 \(i) 次:应有 Close")
-            close.tap()
+            XCTAssertTrue(peek.waitForExistence(timeout: 5), "第 \(i) 次:Peek 应打开")
+            // dy 取 0.09 而不是更靠上:0.06 会落进状态栏,那不是 app 的可点区域,
+            // 点了什么都不会发生(第一轮就是这么假红的)。Peek 卡自底部起 71%,
+            // 顶部这一带确定是背板。
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.09)).tap()
+            XCTAssertFalse(peek.waitForExistence(timeout: 2), "第 \(i) 次:点背板应关闭 Peek")
             XCTAssertTrue(orb.waitForExistence(timeout: 5), "第 \(i) 次:关闭后 Orb 应回来")
         }
         assertSingleKorbenChrome(app, context: "after-3x-open-close")
@@ -146,7 +158,7 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         XCTAssertTrue(app.buttons["korben.intentDock"].waitForExistence(timeout: 15))
         intentDockRoundTrip(app, context: "Today")
 
-        switchSpace(app, rowText: "Plan")
+        switchSpace(app, spaceId: "plan")
         XCTAssertTrue(app.buttons["korben.intentDock"].waitForExistence(timeout: 8))
         intentDockRoundTrip(app, context: "Plan")
     }
@@ -179,8 +191,8 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
     func testDomainScrollToEnd() {
         let app = launchKorben()
         XCTAssertTrue(app.buttons["korben.orb"].waitForExistence(timeout: 15))
-        for (row, label) in [("Plan", "plan"), ("Fitness", "fitness"), ("Money", "finance")] {
-            switchSpace(app, rowText: row)
+        for (row, label) in [("plan", "plan"), ("training", "fitness"), ("money", "finance")] {
+            switchSpace(app, spaceId: row)
             let web = app.webViews.firstMatch
             _ = web.waitForExistence(timeout: 8)
             for _ in 0..<6 { app.swipeUp() }
@@ -195,7 +207,7 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
     func testBackgroundForegroundKeepsChrome() {
         let app = launchKorben()
         XCTAssertTrue(app.buttons["korben.orb"].waitForExistence(timeout: 15))
-        switchSpace(app, rowText: "Plan")
+        switchSpace(app, spaceId: "plan")
         XCTAssertTrue(app.otherElements["korben.domainCapsule"].waitForExistence(timeout: 8))
 
         XCUIDevice.shared.press(.home)
@@ -220,7 +232,7 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(orb.frame.height, 44)
         XCTAssertGreaterThanOrEqual(dock.frame.height, 44)
 
-        switchSpace(app, rowText: "Plan")
+        switchSpace(app, spaceId: "plan")
         let capsule = app.otherElements["korben.domainCapsule"]
         XCTAssertTrue(capsule.waitForExistence(timeout: 8))
         let item0 = app.buttons["korben.domainCapsule.0"]
@@ -239,7 +251,7 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
     func testDomainCapsuleRealTap() {
         let app = launchKorben()
         XCTAssertTrue(app.buttons["korben.orb"].waitForExistence(timeout: 15))
-        switchSpace(app, rowText: "Plan")
+        switchSpace(app, spaceId: "plan")
         let item1 = app.buttons["korben.domainCapsule.1"]
         XCTAssertTrue(item1.waitForExistence(timeout: 8), "Plan 应有第二个胶囊项(日历)")
         item1.tap()
@@ -263,7 +275,7 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         attachScreenshot(app, name: "G4-1-today-rest")
 
         // 2 / 3 — Plan 顶部与底部
-        switchSpace(app, rowText: "Plan")
+        switchSpace(app, spaceId: "plan")
         sleep(2)
         attachScreenshot(app, name: "G4-2-plan-top")
         for _ in 0..<8 { app.swipeUp() }
@@ -287,7 +299,7 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         _ = app.buttons["korben.intentDock"].waitForExistence(timeout: 6)
 
         // 4 — Fitness 历史(域胶囊最后一个 slot 通常是历史/统计)
-        switchSpace(app, rowText: "Fitness")
+        switchSpace(app, spaceId: "training")
         sleep(2)
         let lastSlot = app.buttons["korben.domainCapsule.2"]
         if lastSlot.waitForExistence(timeout: 6), lastSlot.isHittable {
@@ -297,7 +309,7 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         attachScreenshot(app, name: "G4-4-fitness-history")
 
         // 6 — Finance 锁定页
-        switchSpace(app, rowText: "Money")
+        switchSpace(app, spaceId: "money")
         sleep(3)
         attachScreenshot(app, name: "G4-6-finance-locked")
     }
@@ -323,7 +335,7 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         )
 
         // 不回归:Plan 滚到底仍完整
-        switchSpace(app, rowText: "Plan")
+        switchSpace(app, spaceId: "plan")
         for _ in 0..<8 { app.swipeUp() }
         sleep(2)
         attachScreenshot(app, name: "G4-3B-plan-bottom-regression")
@@ -397,18 +409,18 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         sleep(2)
         attachScreenshot(app, name: "RA-2-today-bottom")
 
-        switchSpace(app, rowText: "Plan")
+        switchSpace(app, spaceId: "plan")
         sleep(2)
         attachScreenshot(app, name: "RA-3-plan-top")
         for _ in 0..<8 { app.swipeUp() }
         sleep(2)
         attachScreenshot(app, name: "RA-4-plan-bottom")
 
-        switchSpace(app, rowText: "Fitness")
+        switchSpace(app, spaceId: "training")
         sleep(2)
         attachScreenshot(app, name: "RA-5-fitness")
 
-        switchSpace(app, rowText: "Money")
+        switchSpace(app, spaceId: "money")
         sleep(3)
         attachScreenshot(app, name: "RA-6-finance-locked")
     }
@@ -420,11 +432,11 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         XCTAssertTrue(orb.waitForExistence(timeout: 15))
         sleep(2)
 
-        // B1 Orb 轻点 → Space Switcher
+        // B1 Orb 轻点 → Space Peek(局部卡,当前页仍露在外)
         orb.tap()
-        _ = switcherVisible(app, timeout: 5)
-        attachScreenshot(app, name: "RB-1-space-switcher")
-        app.buttons["Close"].firstMatch.tap()
+        _ = app.descendants(matching: .any)["korben.spacePeek"].waitForExistence(timeout: 5)
+        attachScreenshot(app, name: "RB-1-space-peek")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.09)).tap()
         _ = orb.waitForExistence(timeout: 5)
 
         // B2 Orb 右拉 → Korben Assist 面板(短按后立即右拖,避开 280ms 长按判定)
@@ -484,7 +496,7 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         }
 
         // B5 域胶囊切换(Plan → 日历)
-        switchSpace(app, rowText: "Plan")
+        switchSpace(app, spaceId: "plan")
         let slot1 = app.buttons["korben.domainCapsule.1"]
         if slot1.waitForExistence(timeout: 8), slot1.isHittable {
             slot1.tap()
@@ -554,7 +566,7 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         _ = app.buttons["korben.orb"].waitForExistence(timeout: 15)
         sleep(3)
         attachScreenshot(app, name: "RC-5-dynamic-type-today")
-        switchSpace(app, rowText: "Plan")
+        switchSpace(app, spaceId: "plan")
         sleep(2)
         attachScreenshot(app, name: "RC-6-dynamic-type-plan")
     }
@@ -569,7 +581,7 @@ final class KorbenShellDeviceGateUITests: XCTestCase {
         assertSingleKorbenChrome(app, context: "dynamicType-Today")
         attachScreenshot(app, name: "T7-ax-large-today")
 
-        switchSpace(app, rowText: "Plan")
+        switchSpace(app, spaceId: "plan")
         XCTAssertTrue(app.otherElements["korben.domainCapsule"].waitForExistence(timeout: 8))
         // 胶囊与 Dock 仍在屏内且可点
         let dock = app.buttons["korben.intentDock"]
