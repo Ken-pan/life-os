@@ -67,19 +67,25 @@ enum KenosLiveActivityFoundation {
         var subtitle: String
         var progress: Double?
         var endsAt: Date?
+        /// 本次会话的具体深链(web upsert 下发,如 `/day/abs/focus` 的训练链)。
+        /// 灵动岛点击目标随会话走,不再是静态 kind 通用链(通用链会经 resume
+        /// 解析到「上一个挂起的会话」= 用户报的"点灵动岛去到错误的那个")。
+        var deepLink: String?
 
         init(
             kind: Kind,
             title: String,
             subtitle: String,
             progress: Double? = nil,
-            endsAt: Date? = nil
+            endsAt: Date? = nil,
+            deepLink: String? = nil
         ) {
             self.kind = kind
             self.title = title
             self.subtitle = subtitle
             self.progress = progress
             self.endsAt = endsAt
+            self.deepLink = deepLink
         }
 
         init?(dict: [String: Any]) {
@@ -105,12 +111,19 @@ enum KenosLiveActivityFoundation {
             } else if let ms = dict["endsAtMs"] as? NSNumber {
                 endsAt = Date(timeIntervalSince1970: ms.doubleValue / 1000)
             }
+            // 深链只接受 kenos:// scheme 的字符串,防注入任意 URL。
+            var deepLink: String?
+            if let raw = (dict["deepLink"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+               raw.hasPrefix("kenos://") {
+                deepLink = raw
+            }
             self.init(
                 kind: kind,
                 title: title.isEmpty ? kind.rawValue.capitalized : title,
                 subtitle: subtitle,
                 progress: progress,
-                endsAt: endsAt
+                endsAt: endsAt,
+                deepLink: deepLink
             )
         }
     }
@@ -208,7 +221,8 @@ enum KenosLiveActivityFoundation {
                 title: snapshot.title,
                 subtitle: snapshot.subtitle,
                 progress: snapshot.progress,
-                endsAt: snapshot.endsAt
+                endsAt: snapshot.endsAt,
+                deepLink: snapshot.deepLink
             )
             // Prefer session end; otherwise mark stale after 8h so Lock Screen doesn't keep dead work.
             let staleDate = snapshot.endsAt ?? Date().addingTimeInterval(8 * 60 * 60)

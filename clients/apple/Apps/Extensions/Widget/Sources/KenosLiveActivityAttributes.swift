@@ -16,17 +16,29 @@ public struct KenosDomainActivityAttributes: ActivityAttributes {
         public var subtitle: String
         public var progress: Double?
         public var endsAt: Date?
+        /// 本次会话的**具体**深链(如 `kenos://training?path=/day/abs/focus`)。
+        /// 随每次 upsert 更新 —— 灵动岛显示的是当前会话,点它就该进当前会话。
+        /// 早于本字段的活动解码为 nil,回退到 attributes 的静态 kind 深链。
+        public var deepLink: String?
 
         public init(
             title: String,
             subtitle: String,
             progress: Double? = nil,
-            endsAt: Date? = nil
+            endsAt: Date? = nil,
+            deepLink: String? = nil
         ) {
             self.title = title
             self.subtitle = subtitle
             self.progress = progress.map { min(1, max(0, $0)) }
             self.endsAt = endsAt
+            self.deepLink = deepLink
+        }
+
+        /// 点击目标:优先用本次会话的具体深链,回退到静态 kind 深链。
+        public func tapURL(fallback: URL) -> URL {
+            if let deepLink, let url = URL(string: deepLink) { return url }
+            return fallback
         }
     }
 

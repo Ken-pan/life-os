@@ -48,12 +48,20 @@ export function publishTrainingLiveActivity(opts) {
       Number(timer.remain) > 0
         ? Date.now() + Number(timer.remain) * 1000
         : undefined,
+    // 本次会话的具体深链 —— 灵动岛点击直达**这个** day 的 focus,而不是走
+    // 静态通用链 `kenos://training/session`(会经 resume 解析到上一个挂起的
+    // day,用户报的「点灵动岛去到错误的那个」根因)。无 dayId 时省略,原生
+    // 回退到 kind 静态链。
+    deepLink: dayId
+      ? `kenos://training?path=/day/${encodeURIComponent(dayId)}/focus`
+      : undefined,
   }
   const key = JSON.stringify([
     payload.title,
     payload.subtitle,
     Math.round((payload.progress || 0) * 100),
     Math.round((payload.endsAtMs || 0) / 5000),
+    payload.deepLink || '', // 换 day 必刷新点击目标,即便 label 撞车
   ])
   const now = Date.now()
   if (key === lastKey && now - lastAt < 2000) {

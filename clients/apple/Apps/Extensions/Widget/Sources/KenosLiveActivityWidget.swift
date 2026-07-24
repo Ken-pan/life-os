@@ -8,7 +8,7 @@ struct KenosLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: KenosDomainActivityAttributes.self) { context in
             KenosLiveActivityLockScreenView(context: context)
-                .widgetURL(context.attributes.deepLinkURL)
+                .widgetURL(context.state.tapURL(fallback: context.attributes.deepLinkURL))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -52,7 +52,7 @@ struct KenosLiveActivityWidget: Widget {
                                 .tint(Color(kenosRGB: context.attributes.accentRGB))
                         }
                         Spacer(minLength: 0)
-                        Link(destination: context.attributes.deepLinkURL) {
+                        Link(destination: context.state.tapURL(fallback: context.attributes.deepLinkURL)) {
                             Text("Open")
                                 .font(.caption.weight(.semibold))
                                 .padding(.horizontal, 12)
@@ -88,7 +88,7 @@ struct KenosLiveActivityWidget: Widget {
                 Image(systemName: context.attributes.systemImageName)
                     .foregroundStyle(Color(kenosRGB: context.attributes.accentRGB))
             }
-            .widgetURL(context.attributes.deepLinkURL)
+            .widgetURL(context.state.tapURL(fallback: context.attributes.deepLinkURL))
         }
     }
 
