@@ -141,11 +141,20 @@ struct KorbenAssistPreviewBubble: View {
     let committed: Bool
     let orbCenter: CGPoint
 
+    /// 此前这里写死中文,英文壳下会露出中文提示(壳内其余文案都走 prefersChinese)。
+    private var prefersChinese: Bool {
+        KenosShellSettingsStore.current.resolvedLocale() == "zh"
+    }
+
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "sparkle")
                 .font(.system(size: 13, weight: .medium))
-            Text(committed ? "松手进入 Ask" : "Korben")
+            Text(
+                committed
+                    ? (prefersChinese ? "松手打开 Korben" : "Release to open Korben")
+                    : "Korben"
+            )
                 .font(.system(size: 13, weight: .medium))
         }
         .foregroundStyle(.primary.opacity(0.92))

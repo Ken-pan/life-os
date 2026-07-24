@@ -30,7 +30,16 @@ struct KorbenSystemStrip: View {
 
     @MainActor
     static func units(model: KenosAppModel) -> [KorbenStripModel.Unit] {
-        KorbenStripModel.units(
+        // Gate5D 夹具(仅开发构建 + 显式启动参数)——让三态可复现地截图。
+        if let mode = KorbenStripFixture.current {
+            let f = KorbenStripFixture.stripInputs(for: mode)
+            return KorbenStripModel.units(
+                attentionCount: f.attentionCount,
+                primaryRuntimeTitle: f.primaryRuntimeTitle,
+                activeRuntimeCount: f.activeRuntimeCount
+            )
+        }
+        return KorbenStripModel.units(
             attentionCount: model.pendingApprovalCount,
             primaryRuntimeTitle: model.liveAccessory?.title,
             activeRuntimeCount: max(activeRuntimeCount(model: model), model.liveAccessory == nil ? 0 : 1)
@@ -76,8 +85,15 @@ struct KorbenSystemStrip: View {
         switch unit {
         case .attention(let count):
             attentionUnit(count: count)
-        case .runtime:
-            if let live = model.liveAccessory { runtimeUnit(live) }
+        case .runtime(let title):
+            // 有真 accessory 就渲染真的(含 Focus 实时计时);夹具态没有 accessory,
+            // 退化为「只显示标题、点击开 Tray」的静态单元 —— 夹具不伪造可点的
+            // runtime 目标,点了只会打开 Tray,不会跳进一个不存在的会话。
+            if let live = model.liveAccessory {
+                runtimeUnit(live)
+            } else {
+                fixtureRuntimeUnit(title: title)
+            }
         case .secondaryRuntimes(let count):
             secondaryRuntimesUnit(count: count)
         }
@@ -101,6 +117,29 @@ struct KorbenSystemStrip: View {
         )
         .accessibilityHint(prefersChinese ? "打开系统托盘" : "Opens the System Tray")
         .accessibilityIdentifier("korben.strip.secondaryRuntimes")
+    }
+
+    /// 夹具态 Runtime 单元 —— 与真单元同样的排版/标识符,便于同一套断言复用。
+    private func fixtureRuntimeUnit(title: String) -> some View {
+        Button {
+            shellState.showsSystemTray = true
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "waveform.path.ecg")
+                    .font(.system(size: 12, weight: .medium))
+                Text(title)
+                    .font(.system(size: 12, weight: .medium))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(.primary.opacity(0.88))
+            .padding(.horizontal, 12)
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityHint(prefersChinese ? "打开系统托盘" : "Opens the System Tray")
+        .accessibilityIdentifier("korben.strip.runtime")
     }
 
     /// Runtime 单元(Focus 显示实时计时;其余显示 accessory 标题)。
@@ -182,8 +221,68 @@ struct KorbenSystemTray: View {
         KenosShellSettingsStore.current.resolvedLocale() == "zh"
     }
 
+    /// Tray 与 Strip 必须读同一份事实 —— 否则夹具态下 Strip 说「2 待确认」、
+    /// Tray 展开却说「现在没有进行中的事项」,证据自相矛盾。
+    private var fixtureUnits: [KorbenStripModel.Unit]? {
+        guard KorbenStripFixture.current != nil else { return nil }
+        return KorbenSystemStrip.units(model: model)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
+            if let units = fixtureUnits {
+                fixtureBody(units)
+            } else {
+                liveBody
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(.white.opacity(0.08), lineWidth: 0.5)
+        )
+        .padding(.horizontal, KorbenShellMetrics.chromeHorizontalInset)
+        .accessibilityIdentifier("korben.systemTray")
+    }
+
+    /// 夹具态 Tray:逐条列出 Strip 上的单元,行不可跳转(布景不假装有去处)。
+    @ViewBuilder
+    private func fixtureBody(_ units: [KorbenStripModel.Unit]) -> some View {
+        ForEach(Array(units.enumerated()), id: \.offset) { _, unit in
+            switch unit {
+            case .attention(let count):
+                trayHeading(prefersChinese ? "需要处理" : "Needs attention")
+                trayStaticRow(
+                    prefersChinese ? "\(count) 项待确认" : "\(count) pending approvals"
+                )
+            case .runtime(let title):
+                trayHeading(prefersChinese ? "正在进行" : "Running")
+                trayStaticRow(title)
+            case .secondaryRuntimes(let count):
+                trayStaticRow(
+                    prefersChinese ? "另有 \(count) 项进行中" : "\(count) more running"
+                )
+            }
+        }
+    }
+
+    private func trayHeading(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(.secondary)
+    }
+
+    private func trayStaticRow(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 15, weight: .medium))
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var liveBody: some View {
+        Group {
             if let live = model.liveAccessory {
                 Text(prefersChinese ? "正在进行" : "Running")
                     .font(.system(size: 12, weight: .semibold))
@@ -232,15 +331,6 @@ struct KorbenSystemTray: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(.white.opacity(0.08), lineWidth: 0.5)
-        )
-        .padding(.horizontal, KorbenShellMetrics.chromeHorizontalInset)
-        .accessibilityIdentifier("korben.systemTray")
     }
 }
 

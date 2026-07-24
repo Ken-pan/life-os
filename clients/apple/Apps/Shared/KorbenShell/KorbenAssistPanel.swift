@@ -22,14 +22,30 @@ struct KorbenAssistPanel: View {
         KorbenShellProjection.make(from: model)
     }
 
-    /// 上下文行数(空间恒有 + runtime? + 待确认?)
+    /// Gate5C-2:面板内容由**当前路由**推导,不再只知道 Space。
+    private var context: KorbenAssistContext {
+        KorbenAssistContext.make(
+            spaceLabel: spaceLabel,
+            path: model.continuityURL?.path ?? "/",
+            items: model.domainDockItems.map { ($0.title, $0.path ?? "/") },
+            runtimeTitle: model.liveAccessory?.title,
+            pendingApprovals: model.pendingApprovalCount
+        )
+    }
+
+    /// 同域内的跳转建议只在域内给 —— 域外(Today)没有"另一个区"这回事。
+    private var sectionJumps: [KorbenAssistContext.Section] {
+        projection.shellMode == .domain ? context.siblingSections : []
+    }
+
+    /// 上下文行数(位置恒有 + runtime? + 待确认?)
     private var contextRowCount: Int {
         1 + (model.liveAccessory != nil ? 1 : 0) + (model.pendingApprovalCount > 0 ? 1 : 0)
     }
 
-    /// 操作行数(待确认时多一条)
+    /// 操作行数(待确认 + 域内跳转建议各自可变)
     private var actionRowCount: Int {
-        2 + (model.pendingApprovalCount > 0 ? 1 : 0)
+        2 + (model.pendingApprovalCount > 0 ? 1 : 0) + sectionJumps.count
     }
 
     /// 按内容推导 sheet 高度 —— 行数会随待确认/runtime 变化,不能写死 fraction。
@@ -65,8 +81,9 @@ struct KorbenAssistPanel: View {
             VStack(alignment: .leading, spacing: 6) {
                 contextRow(
                     icon: "square.grid.2x2",
-                    text: prefersChinese ? "当前空间:\(spaceLabel)" : "Space: \(spaceLabel)"
+                    text: context.locationLine(chinese: prefersChinese)
                 )
+                .accessibilityIdentifier("korben.assist.location")
                 if let live = model.liveAccessory {
                     contextRow(icon: "waveform.path.ecg", text: live.title)
                 }
@@ -95,6 +112,18 @@ struct KorbenAssistPanel: View {
                         dismiss()
                         model.openApprovals()
                     }
+                }
+                // 域内跳转建议 —— 由当前路由推导出的**同域其它区**。这是面板里
+                // 唯一会随页面变化的一组行,也正是「不再通用」的证据。
+                ForEach(sectionJumps, id: \.index) { section in
+                    actionRow(
+                        icon: "arrow.turn.up.right",
+                        title: prefersChinese ? "去 \(section.title)" : "Go to \(section.title)"
+                    ) {
+                        dismiss()
+                        model.selectDomainDockSlot(section.index)
+                    }
+                    .accessibilityIdentifier("korben.assist.jump.\(section.index)")
                 }
                 actionRow(
                     icon: "clock.arrow.circlepath",

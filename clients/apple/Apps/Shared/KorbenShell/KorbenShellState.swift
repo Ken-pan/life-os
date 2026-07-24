@@ -101,6 +101,9 @@ final class KorbenShellState: ObservableObject {
     // ── P4B Receipt / Undo(10s 窗口)──
     @Published var undoReceipt: KorbenActionReceipt?
 
+    // ── Gate5C-1 Space Peek(Orb Tap;与 Space Center 是两种意图,不是两种尺寸)──
+    @Published var showsSpacePeek = false
+
     // ── P5 Korben Assist ──
     @Published var showsAssist = false
 }

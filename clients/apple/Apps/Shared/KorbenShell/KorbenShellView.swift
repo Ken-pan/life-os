@@ -65,6 +65,13 @@ struct KorbenShellView: View {
                     .transition(.opacity)
                 }
 
+                // Gate5C-1 Space Peek — Orb Tap 的落点(从 Orb 左下角生长的局部卡)。
+                // 用 overlay 而非 sheet:sheet 只能从屏幕底边整幅推上来,拿不到
+                // 「从 Orb 原点长出来、当前页仍露在外面」这个语义。
+                if shellState.showsSpacePeek {
+                    KorbenSpacePeek(model: model, shellState: shellState)
+                }
+
                 // P3 Recent Fan — Hold 展开;拖过目标高亮,松手切换。
                 if shellState.orbFanVisible {
                     KorbenOrbFanOverlay(shellState: shellState)
@@ -99,6 +106,7 @@ struct KorbenShellView: View {
             .animation(.easeInOut(duration: 0.2), value: projection.showsKorbenChrome)
             .animation(.easeInOut(duration: 0.2), value: shellState.showsSystemTray)
             .animation(.easeInOut(duration: 0.15), value: shellState.orbFanVisible)
+            .animation(.spring(response: 0.34, dampingFraction: 0.86), value: shellState.showsSpacePeek)
             .coordinateSpace(name: "korben.shell")
             // P4A Quick Capture / Canvas 两档 sheet(Intent Dock 的 Layer 1/2)。
             .sheet(isPresented: $shellState.showsQuickCapture) {

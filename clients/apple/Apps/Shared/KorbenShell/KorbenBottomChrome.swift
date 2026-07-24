@@ -137,20 +137,17 @@ struct KorbenBottomChrome: View {
         return Button {
             model.selectDomainDockSlot(index)
         } label: {
-            Group {
-                // 图标/字比 Intent Dock(15pt 占位文案)更小一档,强化从属关系。
-                if selected {
-                    HStack(spacing: 5) {
-                        Image(systemName: item.systemImage)
-                            .font(.system(size: 14, weight: .medium))
-                        Text(item.title)
-                            .font(.system(size: 10.5, weight: .semibold))
-                            .lineLimit(1)
-                    }
-                } else {
-                    Image(systemName: item.systemImage)
-                        .font(.system(size: 15, weight: .regular))
-                }
+            // P1-6:非激活项此前是**纯图标**,只有点进去才知道是什么 —— 图标语义
+            // 在这个尺寸上并不自明(checklist / calendar / tray 三个灰色小图标肉眼
+            // 难分)。现在所有项都带文字,选中/未选中的区分改由 tint + 字重承担,
+            // 不再由「有没有字」承担。图标/字仍比 Intent Dock 小一档,保持从属。
+            VStack(spacing: 2) {
+                Image(systemName: item.systemImage)
+                    .font(.system(size: 14, weight: selected ? .medium : .regular))
+                Text(item.title)
+                    .font(.system(size: 10, weight: selected ? .semibold : .regular))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
             .foregroundStyle(
                 selected
@@ -214,13 +211,17 @@ struct KorbenBottomChrome: View {
         .accessibilityLabel(prefersChinese ? "空间" : "Spaces")
         .accessibilityHint(
             prefersChinese
-                ? "打开空间切换器。长按显示最近空间。"
-                : "Opens the Space switcher. Hold for recent Spaces."
+                ? "打开空间预览。长按显示最近空间。"
+                : "Opens the Space peek. Hold for recent Spaces."
         )
         .accessibilityIdentifier("korben.orb")
         .accessibilityAddTraits(.isButton)
-        // 手势的可点击替代路径(VoiceOver)。
-        .accessibilityAction(named: prefersChinese ? "打开空间切换器" : "Open Space switcher") {
+        // 手势的可点击替代路径(VoiceOver)——与手势语法一一对应:
+        // Tap→Peek、Swipe Up→Center、Hold→最近、Drag Right→Korben。
+        .accessibilityAction(named: prefersChinese ? "空间预览" : "Space peek") {
+            shellState.showsSpacePeek = true
+        }
+        .accessibilityAction(named: prefersChinese ? "全部空间" : "All Spaces") {
             model.openSpaceSwitcher()
         }
         .accessibilityAction(named: prefersChinese ? "最近空间" : "Recent Spaces") {
@@ -276,7 +277,9 @@ struct KorbenBottomChrome: View {
                     if moved < KorbenOrbGestureResolver.tapMaxMovement
                         && dt < KorbenOrbGestureResolver.tapMaxDuration
                     {
-                        model.openSpaceSwitcher() // Tap → Peek(P1 起的点击路径)
+                        // Tap → Space Peek(局部,当前页仍在);Swipe Up 才是全目录
+                        // Space Center。此前两者都开 Center,Tap 因此没有自己的语义。
+                        shellState.showsSpacePeek = true
                     }
                 case .fan:
                     if let i = shellState.orbFanHighlight,
