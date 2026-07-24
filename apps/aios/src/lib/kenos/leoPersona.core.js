@@ -18,7 +18,7 @@
  *   - 跨字段去重(外貌≠性格≠背景≠想要≠质感)
  */
 
-export const ASSISTANT_PERSONAS = Object.freeze(['korben', 'leo'])
+export const ASSISTANT_PERSONAS = Object.freeze(['korben', 'leo', 'adrian'])
 export const LEO_INTENSITIES = Object.freeze(['flirty', 'explicit'])
 export const LEO_STYLES = Object.freeze(['chat', 'roleplay'])
 export const LEO_PACINGS = Object.freeze(['slow', 'normal', 'fast'])
@@ -37,6 +37,13 @@ export const LEO_DEFAULT_SAFEWORDS = Object.freeze([
  * 社区横评见 fitness `character/leo_kuft/VOICE.md`。
  */
 export const LEO_DEFAULT_TTS_VOICE = 'leo'
+
+/**
+ * Adrian Lin 本机朗读音色。
+ * `adrian` = Qwen3-TTS Base 克隆（VoiceDesign C4b「温暖 devoted·近场私密」参考音）。
+ * 服务端按 voice=adrian 切 Base + 本地 ref(见 stt_server `_is_adrian_voice`)。
+ */
+export const ADRIAN_DEFAULT_TTS_VOICE = 'adrian'
 
 /**
  * 社区 / 云端音色档案（尚未接 API，选型 SSOT）。
@@ -201,7 +208,9 @@ let firstMesAltFlip = 0
 
 /** @param {unknown} value */
 export function normalizeAssistantPersona(value) {
-  return value === 'leo' ? 'leo' : 'korben'
+  if (value === 'leo') return 'leo'
+  if (value === 'adrian') return 'adrian'
+  return 'korben'
 }
 
 /** @param {unknown} value */
@@ -646,16 +655,21 @@ export function leoFirstMessage(settings = {}) {
  */
 export function resolveSpeechPersona(settings) {
   const leo = isLeoPersona(settings)
+  const adrian = normalizeAssistantPersona(settings?.assistantPersona) === 'adrian'
+  // Leo / Adrian 都是本机克隆音色(英文为主·亲密),共用同一套朗读预处理
+  const clone = leo || adrian
   const intensity = normalizeLeoIntensity(settings?.leoIntensity)
   const style = normalizeLeoStyle(settings?.leoStyle)
-  // Leo 模式固定克隆音色;不沿用 Korben 的 Dylan / Aiden 等残留设置
+  // 克隆人格固定克隆音色;不沿用 Korben 的 Dylan / Aiden 等残留设置
   const saved =
     typeof settings?.ttsVoice === 'string' ? settings.ttsVoice.trim() : ''
   const voice = leo
     ? LEO_DEFAULT_TTS_VOICE
-    : saved || 'dylan'
+    : adrian
+      ? ADRIAN_DEFAULT_TTS_VOICE
+      : saved || 'dylan'
   return {
-    persona: leo ? 'leo' : 'korben',
+    persona: leo ? 'leo' : adrian ? 'adrian' : 'korben',
     intensity,
     style,
     voice,
@@ -675,13 +689,14 @@ export function resolveSpeechPersona(settings) {
      * @param {{ codeOmitted?: string }} [opts]
      */
     prepareText(text, opts = {}) {
-      return leo
+      return clone
         ? leoSpeakPrep(text, { ...opts, intensity })
         : String(text || '').trim()
     },
     /**
      * @param {string} text
-     * @returns {string | undefined} Korben 用网关默认 instruct
+     * @returns {string | undefined} Korben 用网关默认 instruct;
+     *   Adrian 走 Base 克隆(服务端忽略 instruct)故返回 undefined
      */
     instructFor(text) {
       return leo ? leoTtsInstruct(text, intensity, style) : undefined

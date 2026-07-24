@@ -425,8 +425,8 @@
         speech.persona === 'leo'
           ? speech.resolveRate(S.settings.ttsRate)
           : S.settings.ttsRate,
-      // Leo/Aiden:整段钉英式语种 + 合并气声碎片,避免句间「换人」感
-      ...(speech.persona === 'leo'
+      // Leo/Adrian:整段钉英式语种 + 合并气声碎片,避免句间「换人」感
+      ...(speech.persona === 'leo' || speech.persona === 'adrian'
         ? { langCode: 'a', coalesceBreathBeats: true }
         : {}),
       onStart() {
